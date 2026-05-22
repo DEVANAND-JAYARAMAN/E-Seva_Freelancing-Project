@@ -1,9 +1,15 @@
 export function ActivityChart() {
-  const points = "0,66 22,50 44,56 66,32 88,40 110,18 132,34 154,24 176,42 198,30 220,14";
-  const areaPath = "M 0,66 L 22,50 L 44,56 L 66,32 L 88,40 L 110,18 L 132,34 L 154,24 L 176,42 L 198,30 L 220,14 L 220,80 L 0,80 Z";
+  const points =
+    "0,66 22,50 44,56 66,32 88,40 110,18 132,34 154,24 176,42 198,30 220,14";
+  const areaPath =
+    "M 0,66 L 22,50 L 44,56 L 66,32 L 88,40 L 110,18 L 132,34 L 154,24 L 176,42 L 198,30 L 220,14 L 220,80 L 0,80 Z";
 
   return (
-    <svg className="w-full h-full overflow-visible" viewBox="0 0 220 80" aria-hidden="true">
+    <svg
+      className="w-full h-full overflow-visible"
+      viewBox="0 0 220 80"
+      aria-hidden="true"
+    >
       <defs>
         {/* Glowing Gradient for Chart Area */}
         <linearGradient id="chartGlow" x1="0" y1="0" x2="0" y2="1">
@@ -12,7 +18,13 @@ export function ActivityChart() {
         </linearGradient>
         {/* Soft Drop Shadow Filter for Line */}
         <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="3" stdDeviation="2.5" floodColor="#005c3a" floodOpacity="0.15" />
+          <feDropShadow
+            dx="0"
+            dy="3"
+            stdDeviation="2.5"
+            floodColor="#005c3a"
+            floodOpacity="0.15"
+          />
         </filter>
       </defs>
 
@@ -30,7 +42,7 @@ export function ActivityChart() {
         filter="url(#glow)"
         style={{
           strokeLinecap: "round",
-          strokeLinejoin: "round"
+          strokeLinejoin: "round",
         }}
       />
 

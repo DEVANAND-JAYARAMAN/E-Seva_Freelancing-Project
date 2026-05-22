@@ -14,7 +14,8 @@ export function WalletHealth() {
             2895.00
           </div>
           <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed max-w-[240px]">
-            Main wallet has enough balance for current service flow. API wallet needs a refill.
+            Main wallet has enough balance for current service flow. API wallet
+            needs a refill.
           </p>
         </div>
 
