@@ -1,5 +1,5 @@
 import { ArrowUpRight, Download } from "lucide-react";
-import { ActivityChart } from "../charts/ActivityChart";
+import { ActivityChart } from "../../components/charts/ActivityChart";
 
 export function DashboardOverview() {
   return (

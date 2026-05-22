@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
-import { ThemeProvider } from "../components/ThemeProvider";
+import { ThemeProvider } from "../src/store/context/ThemeProvider";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({

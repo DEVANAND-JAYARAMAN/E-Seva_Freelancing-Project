@@ -1,13 +1,9 @@
 import {
-  CheckCircle2,
   CircleDollarSign,
-  CreditCard,
-  FileText,
   Home,
   UserCheck,
   Users,
   Wallet,
-  Workflow,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 

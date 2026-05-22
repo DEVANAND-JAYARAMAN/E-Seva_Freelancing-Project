@@ -1,5 +1,5 @@
-import { AppShell } from "../AppShell";
-import { PlaceholderPage } from "./PlaceholderPage";
+import { AppShell } from "../../layouts/AppShell";
+import { PlaceholderPage } from "../PlaceholderPage";
 
 export function PdfPage() {
   return (

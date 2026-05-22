@@ -1,9 +1,9 @@
-import { AppShell } from "../../AppShell";
-import { DashboardOverview } from "./DashboardOverview";
-import { ServiceQueue } from "./ServiceQueue";
-import { StatsGrid } from "./StatsGrid";
-import { WalletHealth } from "./WalletHealth";
-import { WalletSummary } from "./WalletSummary";
+import { AppShell } from "../layouts/AppShell";
+import { DashboardOverview } from "./dashboard/DashboardOverview";
+import { ServiceQueue } from "./dashboard/ServiceQueue";
+import { StatsGrid } from "./dashboard/StatsGrid";
+import { WalletHealth } from "./dashboard/WalletHealth";
+import { WalletSummary } from "./dashboard/WalletSummary";
 
 export function DashboardPage() {
   return (
