@@ -1,0 +1,272 @@
+### E-Service Backend API Tests
+### Use with VS Code REST Client extension
+
+@baseUrl = http://localhost:8080
+@apiUrl = {{baseUrl}}/api/v1
+
+### Variables (update these after login)
+@accessToken = YOUR_ACCESS_TOKEN_HERE
+@refreshToken = YOUR_REFRESH_TOKEN_HERE
+
+###############################################
+### 1. Health Check
+###############################################
+
+GET {{baseUrl}}/health
+
+###############################################
+### 2. Authentication Tests
+###############################################
+
+### 2.1 Login with Default Admin
+POST {{apiUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@eservice.com",
+  "password": "admin123"
+}
+
+### 2.2 Login with Wrong Password (Should Fail)
+POST {{apiUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@eservice.com",
+  "password": "wrongpassword"
+}
+
+### 2.3 Login with Non-existent User (Should Fail)
+POST {{apiUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "nonexistent@test.com",
+  "password": "password123"
+}
+
+###############################################
+### 3. Registration Tests
+###############################################
+
+### 3.1 Register New Retailer
+POST {{apiUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "retailer1@test.com",
+  "password": "password123",
+  "full_name": "Test Retailer One",
+  "phone": "+1234567890",
+  "role": "retailer"
+}
+
+### 3.2 Register New Distributor
+POST {{apiUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "distributor1@test.com",
+  "password": "password123",
+  "full_name": "Test Distributor",
+  "phone": "+9876543210",
+  "role": "distributor"
+}
+
+### 3.3 Register with Duplicate Email (Should Fail)
+POST {{apiUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "admin@eservice.com",
+  "password": "password123",
+  "full_name": "Duplicate User",
+  "role": "retailer"
+}
+
+### 3.4 Register with Short Password (Should Fail)
+POST {{apiUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "newuser@test.com",
+  "password": "123",
+  "full_name": "New User",
+  "role": "retailer"
+}
+
+### 3.5 Register with Invalid Email (Should Fail)
+POST {{apiUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "invalid-email",
+  "password": "password123",
+  "full_name": "Invalid Email User",
+  "role": "retailer"
+}
+
+###############################################
+### 4. Protected Routes (Require Authentication)
+###############################################
+
+### 4.1 Get User Profile
+GET {{apiUrl}}/profile
+Authorization: Bearer {{accessToken}}
+
+### 4.2 Get Profile Without Token (Should Fail)
+GET {{apiUrl}}/profile
+
+### 4.3 Get Profile With Invalid Token (Should Fail)
+GET {{apiUrl}}/profile
+Authorization: Bearer invalid_token_12345
+
+###############################################
+### 5. Token Management
+###############################################
+
+### 5.1 Refresh Access Token
+POST {{apiUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "{{refreshToken}}"
+}
+
+### 5.2 Refresh with Invalid Token (Should Fail)
+POST {{apiUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refresh_token": "invalid_refresh_token"
+}
+
+### 5.3 Logout
+POST {{apiUrl}}/auth/logout
+Content-Type: application/json
+
+{
+  "refresh_token": "{{refreshToken}}"
+}
+
+###############################################
+### 6. Wallet Routes (Protected)
+###############################################
+
+### 6.1 Get Wallet Balance
+GET {{apiUrl}}/wallet/balance
+Authorization: Bearer {{accessToken}}
+
+### 6.2 Request Wallet Top-up
+POST {{apiUrl}}/wallet/request
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "amount": 1000.00,
+  "payment_reference": "TXN123456789"
+}
+
+###############################################
+### 7. Application Routes (Protected)
+###############################################
+
+### 7.1 List Applications
+GET {{apiUrl}}/applications
+Authorization: Bearer {{accessToken}}
+
+### 7.2 Submit Application
+POST {{apiUrl}}/applications
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+  "service_type": "aadhaar_update",
+  "details": {
+    "name": "John Doe",
+    "aadhaar_number": "1234-5678-9012"
+  }
+}
+
+###############################################
+### 8. Admin Routes (Admin Only)
+###############################################
+
+### 8.1 List All Users (Admin Only)
+GET {{apiUrl}}/admin/users
+Authorization: Bearer {{accessToken}}
+
+###############################################
+### 9. CORS Test
+###############################################
+
+### 9.1 OPTIONS Request (Preflight)
+OPTIONS {{apiUrl}}/auth/login
+Origin: http://localhost:3000
+
+###############################################
+### 10. Security Tests
+###############################################
+
+### 10.1 SQL Injection Attempt (Should Fail)
+POST {{apiUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "admin@eservice.com' OR '1'='1",
+  "password": "anything"
+}
+
+### 10.2 XSS Attempt in Registration (Should be Sanitized)
+POST {{apiUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "xss@test.com",
+  "password": "password123",
+  "full_name": "<script>alert('XSS')</script>",
+  "role": "retailer"
+}
+
+###############################################
+### 11. Edge Cases
+###############################################
+
+### 11.1 Register with Empty Fields (Should Fail)
+POST {{apiUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "",
+  "password": "",
+  "full_name": ""
+}
+
+### 11.2 Login with Empty Fields (Should Fail)
+POST {{apiUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "",
+  "password": ""
+}
+
+### 11.3 Very Long Email (Should Fail)
+POST {{apiUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "verylongemailaddressthatexceedsthemaximumlengthallowedinthedatabase@verylongdomainname.com",
+  "password": "password123",
+  "full_name": "Test User",
+  "role": "retailer"
+}
+
+###############################################
+### Notes:
+### 1. After successful login, copy the access_token and refresh_token
+### 2. Update @accessToken and @refreshToken variables at the top
+### 3. Some tests are expected to fail (marked with "Should Fail")
+### 4. Run tests in order for best results
+### 5. Check backend logs for detailed error messages
+###############################################
