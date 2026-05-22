@@ -1,4 +1,4 @@
-import { stats } from "../data";
+import { stats } from "../../data";
 
 export function StatsGrid() {
   // Map tone styles using proper Tailwind classes adapting beautifully to both modes

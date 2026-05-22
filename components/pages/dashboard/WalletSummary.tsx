@@ -1,4 +1,4 @@
-import { walletCards } from "../data";
+import { walletCards } from "../../data";
 
 export function WalletSummary() {
   return (

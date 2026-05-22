@@ -1,4 +1,4 @@
-import { services } from "../data";
+import { services } from "../../data";
 import { FileText, User, Wallet } from "lucide-react";
 
 export function ServiceQueue() {
