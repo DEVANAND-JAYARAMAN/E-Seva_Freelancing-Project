@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { Sidebar } from "./Sidebar";
+import { Sidebar } from "./pages/bar/Sidebar";
 import { CommandBar } from "./CommandBar";
-import { TopBar } from "./TopBar";
+import { TopBar } from "./pages/bar/TopBar";
 
 type AppShellProps = {
   activePage?: string;
