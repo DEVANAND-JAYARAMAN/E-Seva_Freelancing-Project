@@ -2,7 +2,10 @@ import { walletCards } from "../data";
 
 export function WalletSummary() {
   return (
-    <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" aria-label="Wallet summary">
+    <section
+      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+      aria-label="Wallet summary"
+    >
       {walletCards.map((card) => {
         const Icon = card.icon;
         const isMoney = card.label.toLowerCase().includes("wallet");
@@ -20,7 +23,11 @@ export function WalletSummary() {
                 {card.label}
               </p>
               <strong className="block text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight mt-0.5">
-                {isMoney && <span className="text-lg font-bold text-slate-400 dark:text-slate-600 mr-0.5">₹</span>}
+                {isMoney && (
+                  <span className="text-lg font-bold text-slate-400 dark:text-slate-600 mr-0.5">
+                    ₹
+                  </span>
+                )}
                 {card.value}
               </strong>
             </div>

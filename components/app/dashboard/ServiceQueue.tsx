@@ -4,18 +4,41 @@ import { FileText, User, Wallet } from "lucide-react";
 export function ServiceQueue() {
   // Map status styles using tailwind
   const statusClasses: Record<string, string> = {
-    Approved: "bg-[#e8f5e9] dark:bg-emerald-950/30 text-[#005c3a] dark:text-emerald-400",
-    Pending: "bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400",
-    "In process": "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400",
-    Resubmit: "bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400",
+    Approved:
+      "bg-[#e8f5e9] dark:bg-emerald-950/30 text-[#005c3a] dark:text-emerald-400",
+    Pending:
+      "bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400",
+    "In process":
+      "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400",
+    Resubmit:
+      "bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400",
   };
 
   // Map icons and their background colors based on status
-  const iconConfig: Record<string, { icon: typeof FileText; bg: string; text: string }> = {
-    Approved: { icon: FileText, bg: "bg-[#e8f5e9] dark:bg-emerald-950/30", text: "text-[#005c3a] dark:text-emerald-400" },
-    Pending: { icon: FileText, bg: "bg-amber-50 dark:bg-amber-950/30", text: "text-amber-600 dark:text-amber-400" },
-    "In process": { icon: User, bg: "bg-blue-50 dark:bg-blue-950/30", text: "text-blue-600 dark:text-blue-400" },
-    Resubmit: { icon: Wallet, bg: "bg-purple-50 dark:bg-purple-950/30", text: "text-purple-600 dark:text-purple-400" },
+  const iconConfig: Record<
+    string,
+    { icon: typeof FileText; bg: string; text: string }
+  > = {
+    Approved: {
+      icon: FileText,
+      bg: "bg-[#e8f5e9] dark:bg-emerald-950/30",
+      text: "text-[#005c3a] dark:text-emerald-400",
+    },
+    Pending: {
+      icon: FileText,
+      bg: "bg-amber-50 dark:bg-amber-950/30",
+      text: "text-amber-600 dark:text-amber-400",
+    },
+    "In process": {
+      icon: User,
+      bg: "bg-blue-50 dark:bg-blue-950/30",
+      text: "text-blue-600 dark:text-blue-400",
+    },
+    Resubmit: {
+      icon: Wallet,
+      bg: "bg-purple-50 dark:bg-purple-950/30",
+      text: "text-purple-600 dark:text-purple-400",
+    },
   };
 
   return (
@@ -31,8 +54,14 @@ export function ServiceQueue() {
 
       <div className="space-y-4">
         {services.map((service) => {
-          const statusStyle = statusClasses[service.status] || "bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300";
-          const config = iconConfig[service.status] || { icon: FileText, bg: "bg-slate-50 dark:bg-slate-900", text: "text-slate-500" };
+          const statusStyle =
+            statusClasses[service.status] ||
+            "bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300";
+          const config = iconConfig[service.status] || {
+            icon: FileText,
+            bg: "bg-slate-50 dark:bg-slate-900",
+            text: "text-slate-500",
+          };
           const Icon = config.icon;
 
           return (
@@ -42,7 +71,9 @@ export function ServiceQueue() {
             >
               {/* Icon, Name & Time */}
               <div className="flex items-center gap-3 min-w-0">
-                <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${config.bg} ${config.text}`}>
+                <span
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${config.bg} ${config.text}`}
+                >
                   <Icon size={18} className="stroke-[2.5]" />
                 </span>
                 <div className="min-w-0">
@@ -57,7 +88,9 @@ export function ServiceQueue() {
 
               {/* Status Pill & Amount */}
               <div className="flex items-center gap-6">
-                <span className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wide uppercase ${statusStyle}`}>
+                <span
+                  className={`inline-flex items-center justify-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold tracking-wide uppercase ${statusStyle}`}
+                >
                   {service.status}
                 </span>
                 <div className="flex items-baseline gap-0.5 w-16 justify-end">

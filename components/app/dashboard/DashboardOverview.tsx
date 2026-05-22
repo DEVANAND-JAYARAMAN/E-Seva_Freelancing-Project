@@ -15,7 +15,8 @@ export function DashboardOverview() {
           Service payment dashboard
         </h2>
         <p className="text-slate-500 dark:text-slate-400 text-sm sm:text-base leading-relaxed max-w-xl">
-          Track approvals, wallet balance, payment requests, and service movement from one clean top-bar workspace.
+          Track approvals, wallet balance, payment requests, and service
+          movement from one clean top-bar workspace.
         </p>
         <div className="flex flex-wrap items-center gap-3 pt-2">
           <button className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] dark:hover:bg-emerald-500 text-white font-bold text-sm shadow-sm active:scale-[0.98] transition-all duration-200">
@@ -23,7 +24,10 @@ export function DashboardOverview() {
             <ArrowUpRight size={16} />
           </button>
           <button className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-white dark:bg-[#0c1222]/30 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 font-bold text-sm border border-slate-200 dark:border-slate-800/80 active:scale-[0.98] transition-all duration-200">
-            <Download size={15} className="text-slate-500 dark:text-slate-400" />
+            <Download
+              size={15}
+              className="text-slate-500 dark:text-slate-400"
+            />
             <span>Export report</span>
           </button>
         </div>
@@ -31,7 +35,6 @@ export function DashboardOverview() {
 
       {/* Today collection card */}
       <div className="bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 text-slate-800 dark:text-slate-100 rounded-3xl p-6 shadow-sm hover:shadow-md flex flex-col justify-between min-h-[250px] transition-all duration-300">
-        
         {/* Top row */}
         <div className="flex items-center justify-between">
           <span className="text-sm font-bold text-slate-400 dark:text-slate-500">
