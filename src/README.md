@@ -15,12 +15,6 @@ src/
 │   └── CommandBar.tsx       # Reusable command & action bars
 ├── config/                  # App configurations, constants, mockup data schemas
 │   └── data.ts              # Core navigation, statistics, status mockup configurations
-├── dashboard/               # Feature-based modular dashboard components
-│   ├── DashboardOverview.tsx
-│   ├── ServiceQueue.tsx
-│   ├── StatsGrid.tsx
-│   ├── WalletHealth.tsx
-│   └── WalletSummary.tsx
 ├── hooks/                   # Globally available custom React hooks
 │   └── useLocalStorage.ts  # SSR-safe local storage state syncer
 ├── layouts/                 # Core application shells, navbars, sidebars, structures
@@ -29,12 +23,26 @@ src/
 │   └── TopBar.tsx           # Global utility navbar with theme toggling
 ├── pages/                   # Application page containers
 │   ├── ActivationPage.tsx   # Activation workflows
-│   ├── DashboardPage.tsx    # Primary operations page
 │   ├── PaymentsPage.tsx     # Payment management page
 │   ├── PermissionPage.tsx   # User roles and ACL controls
 │   ├── PlaceholderPage.tsx  # Generic module wrapper
 │   ├── UsersPage.tsx        # Customer and retailer tables
-│   └── WalletPage.tsx       # Detailed financial analytics
+│   ├── WalletPage.tsx       # Detailed financial analytics
+│   ├── dashboard/           # Feature-based modular dashboard components
+│   │   ├── DashboardPage.tsx# Primary operations page
+│   │   ├── DashboardOverview.tsx
+│   │   ├── ServiceQueue.tsx
+│   │   ├── StatsGrid.tsx
+│   │   ├── WalletHealth.tsx
+│   │   └── WalletSummary.tsx
+│   └── retailers/           # Modular retailer directory
+│       ├── RetailersPage.tsx# Retailers list and administration
+│       ├── RetailerForm.tsx # Registration and editing form
+│       ├── RetailerTable.tsx# Interactive tables and filters
+│       ├── RetailerStats.tsx# Operational summary insights
+│       └── types.ts         # Strictly-typed interfaces
+
+
 ├── pdf/                     # PDF templates, download engines, generators
 │   └── PdfPage.tsx          # PDF document generation page
 ├── routes/                  # Centralized router paths & route authentication guards
@@ -42,7 +50,12 @@ src/
 │   └── ProtectedRoute.tsx   # Role-based JWT/Session protection wrapper
 ├── services/                # API service handlers (Axios clients, endpoints, requests)
 ├── status/                  # Status tracking and workflow modules
-│   └── StatusPage.tsx       # Service tickets and live queue statuses
+│   ├── StatusPage.tsx       # Service tickets and live queue statuses
+│   ├── StatusStats.tsx      # Operational metric filters
+│   ├── StatusTable.tsx      # Dynamic search-driven listings
+│   ├── StatusDetailModal.tsx# Administrative workflow updates
+│   └── types.ts             # Strictly-typed interfaces
+
 ├── store/                   # Global state providers and contexts
 │   └── context/
 │       ├── AuthContext.tsx  # State manager for authentication & authorization
