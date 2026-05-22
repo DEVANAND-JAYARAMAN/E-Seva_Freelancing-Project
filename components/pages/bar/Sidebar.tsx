@@ -1,7 +1,7 @@
 "use client";
 
 import { X, Leaf } from "lucide-react";
-import { navItems } from "./data";
+import { navItems } from "../../data";
 
 type SidebarProps = {
   activePage: string;

@@ -1,5 +1,5 @@
 import { Bell, Menu, Moon, Sun, Leaf, Settings } from "lucide-react";
-import { useTheme } from "./ThemeProvider";
+import { useTheme } from "../../ThemeProvider";
 
 type TopBarProps = {
   onMenuClick: () => void;
