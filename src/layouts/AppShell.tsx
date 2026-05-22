@@ -33,11 +33,12 @@ export function AppShell({
         {/* Outer content container */}
         <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto w-full space-y-6">
           {/* Action and Search Command Bar (Desktop top header & mobile details) */}
-          <CommandBar />
+          {activePage === "Dashboard" && <CommandBar />}
 
           {/* Page content */}
           <div className="pt-2">{children}</div>
         </main>
+
       </div>
     </div>
   );

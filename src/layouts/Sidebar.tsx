@@ -1,6 +1,7 @@
 "use client";
 
 import { X, Leaf } from "lucide-react";
+import Link from "next/link";
 import { navItems } from "../config/data";
 
 type SidebarProps = {
@@ -28,14 +29,14 @@ export function Sidebar({ activePage, isOpen, onClose }: SidebarProps) {
       >
         {/* Header/Brand Section */}
         <div className="flex h-20 items-center justify-between px-6 border-b border-slate-50 dark:border-slate-900/50">
-          <a href="/" className="flex items-center gap-3 group">
+          <Link href="/" className="flex items-center gap-3 group">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#005c3a] dark:bg-emerald-600 text-white shadow-md shadow-emerald-900/10 transition-all group-hover:scale-105 group-hover:rotate-3 duration-300">
               <Leaf size={16} fill="white" />
             </span>
             <span className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">
               Thuruvan
             </span>
-          </a>
+          </Link>
           <button
             onClick={onClose}
             className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900 lg:hidden transition-colors"
@@ -52,7 +53,7 @@ export function Sidebar({ activePage, isOpen, onClose }: SidebarProps) {
             const isActive = item.label === activePage;
 
             return (
-              <a
+              <Link
                 href={item.href}
                 key={item.label}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold transition-all duration-200 group ${
@@ -70,7 +71,7 @@ export function Sidebar({ activePage, isOpen, onClose }: SidebarProps) {
                   }`}
                 />
                 <span className="transition-colors">{item.label}</span>
-              </a>
+              </Link>
             );
           })}
         </nav>
@@ -78,3 +79,4 @@ export function Sidebar({ activePage, isOpen, onClose }: SidebarProps) {
     </>
   );
 }
+

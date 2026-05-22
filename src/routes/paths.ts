@@ -18,10 +18,16 @@ export const PATHS = {
   ACTIVATION: "/activation",
   PERMISSION: "/permission",
   SETTINGS: "/settings",
+  PANCARD: "/pancard",
+  DISTRIBUTORS: "/distributors",
+  RETAILERS: "/retailers",
+  API_WALLET: "/api-wallet",
+  CRM: "/crm",
+  BILLING: "/billing",
 
   // Fallbacks
   NOT_FOUND: "/404",
 } as const;
 
 export type PathKeys = keyof typeof PATHS;
-export type PathValues = typeof PATHS[PathKeys];
+export type PathValues = (typeof PATHS)[PathKeys];

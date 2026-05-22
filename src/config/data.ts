@@ -4,6 +4,15 @@ import {
   UserCheck,
   Users,
   Wallet,
+  Activity,
+  CreditCard,
+  FileText,
+  Cpu,
+  Fingerprint,
+  Building2,
+  Store,
+  Terminal,
+  Receipt,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -36,7 +45,20 @@ export type ServiceItem = {
 
 export const navItems: NavItem[] = [
   { label: "Dashboard", href: "/", icon: Home },
+  { label: "Status", href: "/status", icon: Activity },
+  { label: "User Activation", href: "/activation", icon: UserCheck },
+  { label: "Service Payment", href: "/payments", icon: CreditCard },
+  { label: "PDF Services", href: "/pdf", icon: FileText },
+  { label: "Our Service", href: "/services", icon: Cpu },
+  { label: "PanCard Services", href: "/pancard", icon: Fingerprint },
+  { label: "Distributors", href: "/distributors", icon: Building2 },
+  { label: "Retailers", href: "/retailers", icon: Store },
+  { label: "API Wallet", href: "/api-wallet", icon: Terminal },
+  { label: "Wallet", href: "/wallets", icon: Wallet },
+  { label: "CRM", href: "/crm", icon: Users },
+  { label: "Billing", href: "/billing", icon: Receipt },
 ];
+
 
 export const stats: StatCard[] = [
   { label: "Today Payment", value: "50.00", change: "+12%", tone: "mint" },
