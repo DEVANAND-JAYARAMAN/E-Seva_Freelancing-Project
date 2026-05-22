@@ -1,4 +1,4 @@
-import { Bell, Menu, Moon, Sun, Sparkles } from "lucide-react";
+import { Bell, Menu, Moon, Sun, Leaf, Settings } from "lucide-react";
 import { useTheme } from "./ThemeProvider";
 
 type TopBarProps = {
@@ -22,8 +22,8 @@ export function TopBar({ onMenuClick }: TopBarProps) {
 
         {/* Small Brand Logo shown only on mobile */}
         <div className="flex items-center gap-2 lg:hidden">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-teal-500 to-indigo-500 text-white shadow-md">
-            <Sparkles size={14} />
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#005c3a] dark:bg-emerald-600 text-white shadow-md">
+            <Leaf size={14} fill="white" />
           </span>
           <span className="font-extrabold text-slate-800 dark:text-white text-base">
             Thuruvan
@@ -41,7 +41,7 @@ export function TopBar({ onMenuClick }: TopBarProps) {
         </div>
       </div>
 
-      {/* Global Utilities (Notifications, Theme, Mini Profile) */}
+      {/* Global Utilities (Notifications, Settings, Theme, Mini Profile) */}
       <div className="flex items-center gap-3">
         {/* Toggle Theme button */}
         <button
@@ -56,18 +56,30 @@ export function TopBar({ onMenuClick }: TopBarProps) {
           )}
         </button>
 
-        {/* Notifications button */}
-        <button
-          className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200/80 dark:border-slate-800/60 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/60 hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
+        {/* Notifications link */}
+        <a
+          href="#notifications"
+          className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200/80 dark:border-slate-800/60 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/60 hover:text-slate-800 dark:hover:text-slate-200 active:scale-95 transition-all duration-300"
           aria-label="Notifications"
         >
           <Bell size={18} />
-          <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-rose-500 ring-2 ring-white dark:ring-[#060913]" />
-        </button>
+          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#005c3a] dark:bg-emerald-600 text-[10px] font-bold text-white shadow-sm ring-2 ring-white dark:ring-[#060913]">
+            3
+          </span>
+        </a>
+
+        {/* Settings link */}
+        <a
+          href="#settings"
+          className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200/80 dark:border-slate-800/60 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/60 hover:text-slate-800 dark:hover:text-slate-200 active:scale-95 transition-all duration-300"
+          aria-label="Settings"
+        >
+          <Settings size={18} />
+        </a>
 
         {/* User profile bubble */}
         <div className="flex items-center gap-2 pl-3 border-l border-slate-200 dark:border-slate-800/65">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-900 dark:bg-slate-800 text-xs font-bold text-white shadow-inner">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#005c3a] dark:bg-emerald-600 text-xs font-bold text-white shadow-inner">
             T
           </div>
           <span className="hidden sm:block text-sm font-bold text-slate-700 dark:text-slate-300">

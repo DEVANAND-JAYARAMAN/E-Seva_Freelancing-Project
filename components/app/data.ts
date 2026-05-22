@@ -4,7 +4,6 @@ import {
   CreditCard,
   FileText,
   Home,
-  ShieldCheck,
   UserCheck,
   Users,
   Wallet,
@@ -41,7 +40,6 @@ export type ServiceItem = {
 
 export const navItems: NavItem[] = [
   { label: "Dashboard", href: "/", icon: Home },
-  { label: "Permission", href: "/permission", icon: ShieldCheck },
   { label: "Status", href: "/status", icon: Workflow },
   { label: "Activation", href: "/activation", icon: CheckCircle2 },
   { label: "Payments", href: "/payments", icon: CreditCard },
