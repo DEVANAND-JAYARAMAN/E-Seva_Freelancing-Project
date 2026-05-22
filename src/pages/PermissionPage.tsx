@@ -1,4 +1,4 @@
-import { AppShell } from "../AppShell";
+import { AppShell } from "../layouts/AppShell";
 import { PlaceholderPage } from "./PlaceholderPage";
 
 export function PermissionPage() {
