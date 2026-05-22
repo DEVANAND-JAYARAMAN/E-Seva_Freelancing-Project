@@ -25,13 +25,18 @@ export function TopBar({ onMenuClick }: TopBarProps) {
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-teal-500 to-indigo-500 text-white shadow-md">
             <Sparkles size={14} />
           </span>
-          <span className="font-extrabold text-slate-800 dark:text-white text-base">Thuruvan</span>
+          <span className="font-extrabold text-slate-800 dark:text-white text-base">
+            Thuruvan
+          </span>
         </div>
 
         {/* Desktop Greeting Info */}
         <div className="hidden lg:block">
           <h1 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-            Welcome back, <span className="text-slate-800 dark:text-slate-200 font-extrabold capitalize">{theme === "dark" ? "Thuruvan ✦" : "Thuruvan"}</span>
+            Welcome back,{" "}
+            <span className="text-slate-800 dark:text-slate-200 font-extrabold capitalize">
+              {theme === "dark" ? "Thuruvan ✦" : "Thuruvan"}
+            </span>
           </h1>
         </div>
       </div>

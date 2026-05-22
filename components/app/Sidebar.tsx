@@ -64,8 +64,8 @@ export function Sidebar({ activePage, isOpen, onClose }: SidebarProps) {
                 <Icon
                   size={18}
                   className={`transition-all duration-200 ${
-                    isActive 
-                      ? "text-[#005c3a] dark:text-emerald-400 scale-105" 
+                    isActive
+                      ? "text-[#005c3a] dark:text-emerald-400 scale-105"
                       : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"
                   }`}
                 />
@@ -82,7 +82,10 @@ export function Sidebar({ activePage, isOpen, onClose }: SidebarProps) {
             href="#settings"
             className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/40 hover:text-slate-950 dark:hover:text-slate-100 transition-all duration-200"
           >
-            <Settings size={18} className="text-slate-400 dark:text-slate-500" />
+            <Settings
+              size={18}
+              className="text-slate-400 dark:text-slate-500"
+            />
             <span>Settings</span>
           </a>
 
@@ -117,7 +120,10 @@ export function Sidebar({ activePage, isOpen, onClose }: SidebarProps) {
                   </p>
                 </div>
               </div>
-              <ChevronDown size={14} className="text-slate-400 dark:text-slate-500 mr-1" />
+              <ChevronDown
+                size={14}
+                className="text-slate-400 dark:text-slate-500 mr-1"
+              />
             </button>
           </div>
         </div>

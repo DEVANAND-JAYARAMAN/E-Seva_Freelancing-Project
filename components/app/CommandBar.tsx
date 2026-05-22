@@ -11,7 +11,10 @@ export function CommandBar() {
       {/* Search Input Box */}
       <div className="flex-1 max-w-xl">
         <label className="flex items-center gap-3 px-4 py-2.5 rounded-2xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-[#0c1222]/50 focus-within:bg-white dark:focus-within:bg-[#0c1222]/80 shadow-sm focus-within:ring-4 focus-within:ring-emerald-500/5 dark:focus-within:ring-emerald-500/5 focus-within:border-[#005c3a] dark:focus-within:border-emerald-500 transition-all duration-300 group cursor-text">
-          <Search size={18} className="text-slate-400 dark:text-slate-500 group-focus-within:text-[#005c3a] dark:group-focus-within:text-emerald-400 transition-colors" />
+          <Search
+            size={18}
+            className="text-slate-400 dark:text-slate-500 group-focus-within:text-[#005c3a] dark:group-focus-within:text-emerald-400 transition-colors"
+          />
           <input
             type="text"
             className="w-full bg-transparent border-0 outline-none text-sm text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500"
@@ -38,7 +41,10 @@ export function CommandBar() {
           aria-label="Toggle Theme"
           title="Toggle color theme"
         >
-          <Leaf size={16} className={`transition-transform duration-300 ${theme === 'dark' ? 'rotate-12 fill-emerald-400' : 'fill-[#005c3a]'}`} />
+          <Leaf
+            size={16}
+            className={`transition-transform duration-300 ${theme === "dark" ? "rotate-12 fill-emerald-400" : "fill-[#005c3a]"}`}
+          />
         </button>
       </div>
     </section>

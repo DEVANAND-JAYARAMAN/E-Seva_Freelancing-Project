@@ -10,7 +10,10 @@ type AppShellProps = {
   children: ReactNode;
 };
 
-export function AppShell({ activePage = "Dashboard", children }: AppShellProps) {
+export function AppShell({
+  activePage = "Dashboard",
+  children,
+}: AppShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -38,7 +41,9 @@ export function AppShell({ activePage = "Dashboard", children }: AppShellProps) 
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#005c3a] dark:bg-emerald-600 text-white shadow-sm">
                 <Leaf size={14} fill="white" />
               </span>
-              <span className="font-extrabold text-slate-800 dark:text-white text-base">Thuruvan</span>
+              <span className="font-extrabold text-slate-800 dark:text-white text-base">
+                Thuruvan
+              </span>
             </div>
           </div>
         </header>
