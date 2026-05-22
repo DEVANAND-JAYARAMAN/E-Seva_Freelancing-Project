@@ -1,5 +1,13 @@
 import type { Metadata } from "next";
+import { Plus_Jakarta_Sans } from "next/font/google";
+import { ThemeProvider } from "../components/app/ThemeProvider";
 import "./globals.css";
+
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-jakarta",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Thuruvan Dashboard",
@@ -12,8 +20,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" className={`${jakarta.variable} font-sans`}>
+      <body className="min-h-screen transition-colors duration-300">
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
     </html>
   );
 }

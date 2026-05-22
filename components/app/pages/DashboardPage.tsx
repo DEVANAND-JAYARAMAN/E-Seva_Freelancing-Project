@@ -8,14 +8,24 @@ import { WalletSummary } from "../dashboard/WalletSummary";
 export function DashboardPage() {
   return (
     <AppShell activePage="Dashboard">
-      <section className="dashboard-grid">
+      <section className="flex flex-col gap-6 w-full">
+        {/* Operations Overview and Today Collection */}
         <DashboardOverview />
+
+        {/* Wallets and Accounts Summary */}
         <WalletSummary />
+
+        {/* Metrics Grid */}
         <StatsGrid />
 
-        <section className="content-grid">
-          <ServiceQueue />
-          <WalletHealth />
+        {/* Live Queues & Wallet Warnings */}
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          <div className="lg:col-span-2">
+            <ServiceQueue />
+          </div>
+          <div className="lg:col-span-1">
+            <WalletHealth />
+          </div>
         </section>
       </section>
     </AppShell>
