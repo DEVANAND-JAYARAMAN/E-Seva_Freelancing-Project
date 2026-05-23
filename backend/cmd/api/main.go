@@ -2,9 +2,11 @@ package main
 
 import (
 	"eservice-backend/config"
+	"eservice-backend/internal/application"
 	"eservice-backend/internal/auth"
 	"eservice-backend/internal/middleware"
 	"eservice-backend/internal/platform/postgres"
+	"eservice-backend/internal/wallet"
 	"log"
 
 	"github.com/gin-contrib/cors"
@@ -32,6 +34,8 @@ func main() {
 
 	// Initialize repositories
 	authRepo := auth.NewRepository(db)
+	walletRepo := wallet.NewRepository(db)
+	appRepo := application.NewRepository(db)
 
 	// Initialize services
 	authService := auth.NewService(
@@ -40,9 +44,13 @@ func main() {
 		cfg.JWT.ExpiryHours,
 		cfg.JWT.RefreshExpiryHours,
 	)
+	walletService := wallet.NewService(walletRepo)
+	appService := application.NewService(appRepo, walletService)
 
 	// Initialize handlers
 	authHandler := auth.NewHandler(authService)
+	walletHandler := wallet.NewHandler(walletService)
+	appHandler := application.NewHandler(appService)
 
 	// Setup router
 	router := gin.Default()
@@ -93,28 +101,35 @@ func main() {
 				adminRoutes.GET("/users", func(c *gin.Context) {
 					c.JSON(200, gin.H{"message": "Admin users endpoint"})
 				})
+
+				// Wallet Approval / Rejection routes
+				adminRoutes.GET("/wallet/requests", walletHandler.GetAllRechargeRequests)
+				adminRoutes.POST("/wallet/requests/:id/approve", walletHandler.ApproveRecharge)
+				adminRoutes.POST("/wallet/requests/:id/reject", walletHandler.RejectRecharge)
+
+				// Application Processing
+				adminRoutes.GET("/applications", appHandler.GetAllApplications)
+				adminRoutes.PATCH("/applications/:id/status", appHandler.UpdateApplicationStatus)
 			}
 
 			// Wallet routes (for all authenticated users)
 			walletRoutes := protected.Group("/wallet")
 			{
-				walletRoutes.GET("/balance", func(c *gin.Context) {
-					c.JSON(200, gin.H{"message": "Wallet balance endpoint"})
-				})
-				walletRoutes.POST("/request", func(c *gin.Context) {
-					c.JSON(200, gin.H{"message": "Wallet top-up request endpoint"})
-				})
+				walletRoutes.GET("/balance", walletHandler.GetBalance)
+				walletRoutes.POST("/request", walletHandler.RequestRecharge)
+				walletRoutes.GET("/requests", walletHandler.GetUserRechargeRequests)
+				walletRoutes.GET("/transactions", walletHandler.GetTransactionHistory)
+				walletRoutes.GET("/check-balance", walletHandler.CheckBalance)
 			}
 
 			// Application routes
 			applicationRoutes := protected.Group("/applications")
 			{
-				applicationRoutes.GET("", func(c *gin.Context) {
-					c.JSON(200, gin.H{"message": "List applications endpoint"})
-				})
-				applicationRoutes.POST("", func(c *gin.Context) {
-					c.JSON(200, gin.H{"message": "Submit application endpoint"})
-				})
+				applicationRoutes.GET("", appHandler.GetUserApplications)
+				applicationRoutes.POST("", appHandler.SubmitApplication)
+				applicationRoutes.GET("/:id", appHandler.GetApplication)
+				applicationRoutes.GET("/services", appHandler.GetServiceTypes)
+				applicationRoutes.GET("/services/:id", appHandler.GetServiceType)
 			}
 		}
 	}

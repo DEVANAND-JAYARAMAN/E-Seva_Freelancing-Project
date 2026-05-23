@@ -123,10 +123,62 @@ func (db *DB) InitSchema() error {
 	CREATE INDEX IF NOT EXISTS idx_audit_logs_user_id ON audit_logs(user_id);
 	CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
 
+	-- Service types table
+	CREATE TABLE IF NOT EXISTS service_types (
+		id SERIAL PRIMARY KEY,
+		name VARCHAR(255) NOT NULL,
+		code VARCHAR(50) UNIQUE NOT NULL,
+		description TEXT,
+		charge DECIMAL(10, 2) NOT NULL,
+		is_active BOOLEAN DEFAULT TRUE,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	);
+
+	-- Applications table
+	CREATE TABLE IF NOT EXISTS applications (
+		id SERIAL PRIMARY KEY,
+		user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+		service_type_id INTEGER NOT NULL REFERENCES service_types(id),
+		service_code VARCHAR(50) NOT NULL,
+		service_name VARCHAR(255) NOT NULL,
+		service_charge DECIMAL(10, 2) NOT NULL,
+		application_data JSONB NOT NULL,
+		status VARCHAR(50) DEFAULT 'pending',
+		document_urls JSONB,
+		admin_notes TEXT,
+		submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		processed_at TIMESTAMP,
+		processed_by INTEGER REFERENCES users(id),
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		CONSTRAINT valid_application_status CHECK (status IN ('pending', 'processing', 'completed', 'rejected', 'resubmit'))
+	);
+
+	-- Create indexes for applications
+	CREATE INDEX IF NOT EXISTS idx_applications_user_id ON applications(user_id);
+	CREATE INDEX IF NOT EXISTS idx_applications_status ON applications(status);
+	CREATE INDEX IF NOT EXISTS idx_applications_service_type_id ON applications(service_type_id);
+	CREATE INDEX IF NOT EXISTS idx_applications_submitted_at ON applications(submitted_at);
+
 	-- Create default admin user (password: admin123)
 	INSERT INTO users (email, password_hash, full_name, role, status)
 	VALUES ('admin@eservice.com', '$2a$10$YQs8qE5Z5Z5Z5Z5Z5Z5Z5uK5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z5Z', 'System Admin', 'admin', 'active')
 	ON CONFLICT (email) DO NOTHING;
+
+	-- Insert default service types
+	INSERT INTO service_types (name, code, description, charge, is_active) VALUES
+	('Aadhaar Card Update', 'AADHAAR_UPDATE', 'Update Aadhaar card details', 50.00, true),
+	('PAN Card Application', 'PAN_NEW', 'New PAN card application', 100.00, true),
+	('PAN Card Correction', 'PAN_CORRECTION', 'PAN card details correction', 75.00, true),
+	('Voter ID Application', 'VOTER_NEW', 'New Voter ID application', 60.00, true),
+	('Ration Card Application', 'RATION_NEW', 'New Ration card application', 80.00, true),
+	('Passport Application', 'PASSPORT_NEW', 'New Passport application', 150.00, true),
+	('Driving License', 'DL_NEW', 'New Driving License application', 200.00, true),
+	('Birth Certificate', 'BIRTH_CERT', 'Birth certificate application', 40.00, true),
+	('Income Certificate', 'INCOME_CERT', 'Income certificate application', 50.00, true),
+	('Caste Certificate', 'CASTE_CERT', 'Caste certificate application', 50.00, true)
+	ON CONFLICT (code) DO NOTHING;
 	`
 
 	_, err := db.Exec(schema)

@@ -17,12 +17,18 @@ func NewRepository(db *postgres.DB) *Repository {
 }
 
 func (r *Repository) CreateUser(user *models.User) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return fmt.Errorf("error starting transaction: %w", err)
+	}
+	defer tx.Rollback()
+
 	query := `
 		INSERT INTO users (email, password_hash, full_name, phone, role, status)
 		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id, created_at, updated_at
 	`
-	err := r.db.QueryRow(
+	err = tx.QueryRow(
 		query,
 		user.Email,
 		user.PasswordHash,
@@ -41,9 +47,24 @@ func (r *Repository) CreateUser(user *models.User) error {
 		INSERT INTO wallets (user_id, main_balance, api_balance)
 		VALUES ($1, 0.00, 0.00)
 	`
-	_, err = r.db.Exec(walletQuery, user.ID)
+	_, err = tx.Exec(walletQuery, user.ID)
 	if err != nil {
 		return fmt.Errorf("error creating wallet: %w", err)
+	}
+
+	// Create initial transaction ledger record
+	ledgerQuery := `
+		INSERT INTO wallet_transactions 
+		(user_id, transaction_type, wallet_type, amount, balance_before, balance_after, description, status)
+		VALUES ($1, 'credit', 'main', 0.00, 0.00, 0.00, 'Wallet initialized on account creation', 'completed')
+	`
+	_, err = tx.Exec(ledgerQuery, user.ID)
+	if err != nil {
+		return fmt.Errorf("error creating initial wallet transaction: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("error committing transaction: %w", err)
 	}
 
 	return nil
