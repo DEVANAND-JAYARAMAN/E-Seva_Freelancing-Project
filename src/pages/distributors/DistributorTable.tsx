@@ -10,34 +10,34 @@ import {
   MapPin,
   Fingerprint,
 } from "lucide-react";
-import type { Retailer } from "./types";
+import type { Distributor } from "./types";
 
-type RetailerTableProps = {
-  retailers: Retailer[];
-  onEdit: (retailer: Retailer) => void;
+type DistributorTableProps = {
+  distributors: Distributor[];
+  onEdit: (distributor: Distributor) => void;
   onToggleStatus: (id: string) => void;
 };
 
-export function RetailerTable({
-  retailers,
+export function DistributorTable({
+  distributors,
   onEdit,
   onToggleStatus,
-}: RetailerTableProps) {
+}: DistributorTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<
     "All" | "Active" | "Suspended"
   >("All");
 
-  // Filter retailers based on search and status selects
-  const filteredRetailers = retailers.filter((retailer) => {
+  // Filter distributors based on search and status selects
+  const filteredDistributors = distributors.filter((distributor) => {
     const matchesSearch =
-      retailer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      retailer.shopName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      retailer.phone.includes(searchTerm) ||
-      retailer.city.toLowerCase().includes(searchTerm.toLowerCase());
+      distributor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      distributor.shopName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      distributor.phone.includes(searchTerm) ||
+      distributor.city.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus =
-      statusFilter === "All" ? true : retailer.status === statusFilter;
+      statusFilter === "All" ? true : distributor.status === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
@@ -54,7 +54,7 @@ export function RetailerTable({
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by owner, shop name, phone or location..."
+            placeholder="Search by distributor name, shop, phone or location..."
             className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-100 dark:border-slate-900/80 bg-slate-50/50 dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 dark:focus:ring-emerald-500/20 text-sm font-semibold transition-all duration-200 focus:border-[#005c3a] dark:focus:border-emerald-500 text-slate-800 dark:text-slate-200"
           />
         </div>
@@ -88,7 +88,7 @@ export function RetailerTable({
           <thead>
             <tr className="bg-slate-50/40 dark:bg-[#090d16]/30 border-b border-slate-50 dark:border-slate-900/30">
               <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                Owner & Shop
+                Owner & Agency
               </th>
               <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                 Contact Details
@@ -108,24 +108,24 @@ export function RetailerTable({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50 dark:divide-slate-900/30">
-            {filteredRetailers.length > 0 ? (
-              filteredRetailers.map((retailer) => (
+            {filteredDistributors.length > 0 ? (
+              filteredDistributors.map((distributor) => (
                 <tr
-                  key={retailer.id}
+                  key={distributor.id}
                   className="hover:bg-slate-50/30 dark:hover:bg-[#0a0f18]/10 transition-colors"
                 >
                   {/* Owner & Shop */}
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#005c3a]/5 dark:bg-emerald-500/5 text-[#005c3a] dark:text-emerald-400 font-extrabold text-sm border border-[#005c3a]/10 dark:border-emerald-500/10">
-                        {retailer.name.substring(0, 2).toUpperCase()}
+                        {distributor.name.substring(0, 2).toUpperCase()}
                       </div>
                       <div>
                         <div className="font-bold text-slate-800 dark:text-slate-100 text-sm">
-                          {retailer.name}
+                          {distributor.name}
                         </div>
                         <div className="text-xs font-semibold text-[#005c3a] dark:text-emerald-400/80">
-                          {retailer.shopName}
+                          {distributor.shopName}
                         </div>
                       </div>
                     </div>
@@ -135,21 +135,23 @@ export function RetailerTable({
                   <td className="py-4 px-6 space-y-1">
                     <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400">
                       <Phone size={12} className="text-slate-400" />
-                      <span>{retailer.phone}</span>
+                      <span>{distributor.phone}</span>
                     </div>
                     <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
                       <Mail size={12} className="text-slate-400" />
                       <span className="truncate max-w-[180px]">
-                        {retailer.email}
+                        {distributor.email}
                       </span>
                     </div>
-                    {retailer.aadhaarNo && (
+                    {distributor.aadhaarNo && (
                       <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
                         <Fingerprint
                           size={12}
                           className="text-[#005c3a] dark:text-emerald-400 shrink-0"
                         />
-                        <span className="font-mono">{retailer.aadhaarNo}</span>
+                        <span className="font-mono">
+                          {distributor.aadhaarNo}
+                        </span>
                       </div>
                     )}
                   </td>
@@ -158,7 +160,7 @@ export function RetailerTable({
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-400">
                       <MapPin size={13} className="text-slate-400" />
-                      <span>{retailer.city}</span>
+                      <span>{distributor.city}</span>
                     </div>
                   </td>
 
@@ -166,7 +168,7 @@ export function RetailerTable({
                   <td className="py-4 px-6 text-right">
                     <span className="font-extrabold text-slate-800 dark:text-slate-100 text-sm">
                       ₹
-                      {retailer.balance.toLocaleString("en-IN", {
+                      {distributor.balance.toLocaleString("en-IN", {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                       })}
@@ -177,12 +179,12 @@ export function RetailerTable({
                   <td className="py-4 px-6 text-center">
                     <span
                       className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-extrabold tracking-wider uppercase ${
-                        retailer.status === "Active"
+                        distributor.status === "Active"
                           ? "bg-[#e8f5e9] dark:bg-emerald-950/40 text-[#005c3a] dark:text-emerald-400"
                           : "bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400"
                       }`}
                     >
-                      {retailer.status}
+                      {distributor.status}
                     </span>
                   </td>
 
@@ -190,26 +192,26 @@ export function RetailerTable({
                   <td className="py-4 px-6">
                     <div className="flex items-center justify-center gap-2">
                       <button
-                        onClick={() => onEdit(retailer)}
+                        onClick={() => onEdit(distributor)}
                         className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200/60 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors"
                         title="Edit profile"
                       >
                         <Edit size={13} />
                       </button>
                       <button
-                        onClick={() => onToggleStatus(retailer.id)}
+                        onClick={() => onToggleStatus(distributor.id)}
                         className={`flex h-8 w-8 items-center justify-center rounded-lg border transition-colors ${
-                          retailer.status === "Active"
+                          distributor.status === "Active"
                             ? "border-rose-100 dark:border-rose-900/30 hover:bg-rose-50 dark:hover:bg-rose-950/10 text-rose-500 hover:text-rose-600"
                             : "border-emerald-100 dark:border-emerald-900/30 hover:bg-[#e8f5e9] dark:hover:bg-emerald-950/20 text-emerald-600 hover:text-[#005c3a]"
                         }`}
                         title={
-                          retailer.status === "Active"
-                            ? "Suspend merchant"
-                            : "Activate merchant"
+                          distributor.status === "Active"
+                            ? "Suspend partner"
+                            : "Activate partner"
                         }
                       >
-                        {retailer.status === "Active" ? (
+                        {distributor.status === "Active" ? (
                           <UserX size={13} />
                         ) : (
                           <UserCheck size={13} />
@@ -228,7 +230,7 @@ export function RetailerTable({
                       className="text-slate-300 dark:text-slate-700"
                     />
                     <span className="text-xs font-bold uppercase tracking-wider">
-                      No retailers found
+                      No distributors found
                     </span>
                     <span className="text-xs text-slate-400 dark:text-slate-500">
                       Try adjusting your search criteria or register a new one.
@@ -244,7 +246,8 @@ export function RetailerTable({
       {/* Pagination / Item Counter */}
       <div className="flex items-center justify-between text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest pt-2">
         <span>
-          Showing {filteredRetailers.length} of {retailers.length} retailers
+          Showing {filteredDistributors.length} of {distributors.length}{" "}
+          distributors
         </span>
       </div>
     </div>

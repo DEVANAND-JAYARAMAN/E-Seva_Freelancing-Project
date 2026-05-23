@@ -11,7 +11,6 @@ import {
   Fingerprint,
   Building2,
   Store,
-  Terminal,
   Receipt,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -53,12 +52,10 @@ export const navItems: NavItem[] = [
   { label: "PanCard Services", href: "/pancard", icon: Fingerprint },
   { label: "Distributors", href: "/distributors", icon: Building2 },
   { label: "Retailers", href: "/retailers", icon: Store },
-  { label: "API Wallet", href: "/api-wallet", icon: Terminal },
   { label: "Wallet", href: "/wallets", icon: Wallet },
   { label: "CRM", href: "/crm", icon: Users },
   { label: "Billing", href: "/billing", icon: Receipt },
 ];
-
 
 export const stats: StatCard[] = [
   { label: "Today Payment", value: "50.00", change: "+12%", tone: "mint" },
@@ -100,5 +97,130 @@ export const services: ServiceItem[] = [
     status: "Resubmit",
     time: "42 min ago",
     amount: "500.00",
+  },
+];
+
+// Rich types for Wallets and Payments implementation
+export type WalletTransaction = {
+  id: string;
+  date: string;
+  type: "credit" | "debit";
+  description: string;
+  amount: number;
+  reference: string;
+  status: "Success" | "Pending" | "Failed";
+  walletType: "Main" | "API";
+};
+
+export type PaymentRequest = {
+  id: string;
+  retailerId: string;
+  retailerName: string;
+  shopName: string;
+  amount: number;
+  paymentMode: "UPI" | "IMPS" | "NEFT" | "Bank Transfer";
+  utrNumber: string;
+  status: "Pending" | "Approved" | "Resubmit" | "Rejected";
+  requestDate: string;
+  walletType: "Main" | "API";
+  remarks?: string;
+  adminNotes?: string;
+};
+
+// Seed mockup data for Wallet and Payment requests
+export const initialTransactions: WalletTransaction[] = [
+  {
+    id: "tx-1",
+    date: "2026-05-23 09:30 AM",
+    type: "credit",
+    description: "Wallet Recharge Approved (UTR: 629810458129)",
+    amount: 1500.0,
+    reference: "629810458129",
+    status: "Success",
+    walletType: "Main",
+  },
+  {
+    id: "tx-2",
+    date: "2026-05-23 09:45 AM",
+    type: "debit",
+    description: "PAN Card Application Charge",
+    amount: 120.0,
+    reference: "PAN-889104",
+    status: "Success",
+    walletType: "Main",
+  },
+  {
+    id: "tx-3",
+    date: "2026-05-23 10:02 AM",
+    type: "debit",
+    description: "Aadhaar Address Update Charge",
+    amount: 200.0,
+    reference: "ADR-665123",
+    status: "Success",
+    walletType: "Main",
+  },
+  {
+    id: "tx-4",
+    date: "2026-05-23 10:15 AM",
+    type: "credit",
+    description: "API Wallet Allocation",
+    amount: 1000.0,
+    reference: "API-ALLOC-90",
+    status: "Success",
+    walletType: "API",
+  },
+  {
+    id: "tx-5",
+    date: "2026-05-22 04:12 PM",
+    type: "credit",
+    description: "Recharge Request (UTR: 881029471923)",
+    amount: 500.0,
+    reference: "881029471923",
+    status: "Success",
+    walletType: "Main",
+  },
+];
+
+export const initialPaymentRequests: PaymentRequest[] = [
+  {
+    id: "req-1",
+    retailerId: "ret-1",
+    retailerName: "Deva",
+    shopName: "Jayaraman Multi Services",
+    amount: 2500.0,
+    paymentMode: "UPI",
+    utrNumber: "771092837482",
+    status: "Pending",
+    requestDate: "2026-05-23 10:30 AM",
+    walletType: "Main",
+    remarks: "Added money for bulk PAN applications",
+  },
+  {
+    id: "req-2",
+    retailerId: "ret-2",
+    retailerName: "Alam",
+    shopName: "Digital Point",
+    amount: 5000.0,
+    paymentMode: "Bank Transfer",
+    utrNumber: "N20260523000918",
+    status: "Pending",
+    requestDate: "2026-05-23 10:15 AM",
+    walletType: "API",
+    remarks: "API recharge for monthly quota",
+  },
+  {
+    id: "req-3",
+    retailerId: "ret-3",
+    retailerName: "Priya Sharma",
+    shopName: "Priya Online E-Seva",
+    amount: 500.0,
+    paymentMode: "UPI",
+    utrNumber: "991827364510",
+    status: "Resubmit",
+    requestDate: "2026-05-22 02:42 PM",
+    walletType: "Main",
+    remarks: "Emergency load",
+    adminNotes:
+      "Screenshot uploaded is blurry, please re-upload clear payment slip.",
   },
 ];
