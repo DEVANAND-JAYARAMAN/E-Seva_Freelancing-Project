@@ -1,4 +1,4 @@
-export interface Retailer {
+export interface Distributor {
   id: string;
   name: string;
   shopName: string;
@@ -11,9 +11,9 @@ export interface Retailer {
   aadhaarNo?: string;
 }
 
-export interface RetailerStatsData {
-  totalRetailers: number;
-  activeRetailers: number;
-  suspendedRetailers: number;
+export interface DistributorStatsData {
+  totalDistributors: number;
+  activeDistributors: number;
+  suspendedDistributors: number;
   totalBalance: number;
 }

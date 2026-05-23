@@ -21,7 +21,6 @@ export const PATHS = {
   PANCARD: "/pancard",
   DISTRIBUTORS: "/distributors",
   RETAILERS: "/retailers",
-  API_WALLET: "/api-wallet",
   CRM: "/crm",
   BILLING: "/billing",
 
