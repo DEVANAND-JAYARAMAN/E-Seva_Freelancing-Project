@@ -1,22 +1,22 @@
 import { useState, useEffect } from "react";
 import { X, Save } from "lucide-react";
-import type { Retailer } from "./types";
+import type { Distributor } from "./types";
 
-type RetailerFormProps = {
+type DistributorFormProps = {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (
-    retailerData: Omit<Retailer, "id" | "createdDate"> & { id?: string },
+    distributorData: Omit<Distributor, "id" | "createdDate"> & { id?: string },
   ) => void;
-  retailer?: Retailer | null; // If passed, we are in Edit mode
+  distributor?: Distributor | null; // If passed, we are in Edit mode
 };
 
-export function RetailerForm({
+export function DistributorForm({
   isOpen,
   onClose,
   onSubmit,
-  retailer,
-}: RetailerFormProps) {
+  distributor,
+}: DistributorFormProps) {
   const [name, setName] = useState("");
   const [shopName, setShopName] = useState("");
   const [email, setEmail] = useState("");
@@ -28,17 +28,17 @@ export function RetailerForm({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Sync state with selected retailer when in Edit mode
+  // Sync state with selected distributor when in Edit mode
   useEffect(() => {
-    if (retailer) {
-      setName(retailer.name);
-      setShopName(retailer.shopName);
-      setEmail(retailer.email);
-      setPhone(retailer.phone);
-      setCity(retailer.city);
-      setBalance(retailer.balance.toString());
-      setStatus(retailer.status);
-      setAadhaarNo(retailer.aadhaarNo ?? "");
+    if (distributor) {
+      setName(distributor.name);
+      setShopName(distributor.shopName);
+      setEmail(distributor.email);
+      setPhone(distributor.phone);
+      setCity(distributor.city);
+      setBalance(distributor.balance.toString());
+      setStatus(distributor.status);
+      setAadhaarNo(distributor.aadhaarNo ?? "");
     } else {
       // Reset form fields
       setName("");
@@ -51,7 +51,7 @@ export function RetailerForm({
       setAadhaarNo("");
     }
     setErrors({});
-  }, [retailer, isOpen]);
+  }, [distributor, isOpen]);
 
   if (!isOpen) return null;
 
@@ -93,7 +93,7 @@ export function RetailerForm({
     if (!validate()) return;
 
     onSubmit({
-      id: retailer?.id,
+      id: distributor?.id,
       name: name.trim(),
       shopName: shopName.trim(),
       email: email.toLowerCase().trim(),
@@ -115,12 +115,12 @@ export function RetailerForm({
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-50 dark:border-slate-900/40">
           <div>
             <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">
-              {retailer ? "Edit Retailer" : "Register New Retailer"}
+              {distributor ? "Edit Distributor" : "Register New Distributor"}
             </h3>
             <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 mt-0.5">
-              {retailer
-                ? "Modify retailer profile settings"
-                : "Create a new agent merchant profile"}
+              {distributor
+                ? "Modify distributor profile settings"
+                : "Create a new partner distributor profile"}
             </p>
           </div>
           <button
@@ -298,7 +298,9 @@ export function RetailerForm({
               className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] dark:hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider shadow-sm active:scale-[0.98] transition-all"
             >
               <Save size={13} />
-              <span>{retailer ? "Update Retailer" : "Add Retailer"}</span>
+              <span>
+                {distributor ? "Update Distributor" : "Add Distributor"}
+              </span>
             </button>
           </div>
         </form>
