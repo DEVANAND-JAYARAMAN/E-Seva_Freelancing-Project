@@ -242,6 +242,17 @@ type GatewayRechargeRequestPayload struct {
 }
 
 // InitiateGatewayRecharge handles payment gateway recharge
+// @Summary Initiate Payment Gateway Recharge
+// @Description Creates a new Mugavi payment gateway order and returns the payment URL and QR code.
+// @Tags Wallet
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param request body GatewayRechargeRequestPayload true "Gateway Recharge Request"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /wallet/recharge/gateway [post]
 func (h *Handler) InitiateGatewayRecharge(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {

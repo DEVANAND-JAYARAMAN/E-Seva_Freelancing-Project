@@ -1,0 +1,76 @@
+basePath: /api/v1
+definitions:
+  wallet.GatewayRechargeRequestPayload:
+    properties:
+      amount:
+        type: number
+      customer_email:
+        type: string
+      customer_mobile:
+        type: string
+      redirect_url:
+        type: string
+    required:
+    - amount
+    - customer_email
+    - customer_mobile
+    - redirect_url
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is the backend API for the E-Service platform.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: E-Service API
+  version: "1.0"
+paths:
+  /wallet/recharge/gateway:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new Mugavi payment gateway order and returns the payment
+        URL and QR code.
+      parameters:
+      - description: Gateway Recharge Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/wallet.GatewayRechargeRequestPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Initiate Payment Gateway Recharge
+      tags:
+      - Wallet
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
