@@ -87,6 +87,9 @@ func main() {
 			authRoutes.POST("/logout", authHandler.Logout)
 		}
 
+		// Webhooks (Public)
+		v1.POST("/webhooks/mugavi", walletHandler.GatewayWebhook)
+
 		// Protected routes
 		protected := v1.Group("")
 		protected.Use(middleware.AuthMiddleware(authService))
@@ -117,6 +120,7 @@ func main() {
 			{
 				walletRoutes.GET("/balance", walletHandler.GetBalance)
 				walletRoutes.POST("/request", walletHandler.RequestRecharge)
+				walletRoutes.POST("/recharge/gateway", walletHandler.InitiateGatewayRecharge)
 				walletRoutes.GET("/requests", walletHandler.GetUserRechargeRequests)
 				walletRoutes.GET("/transactions", walletHandler.GetTransactionHistory)
 				walletRoutes.GET("/check-balance", walletHandler.CheckBalance)

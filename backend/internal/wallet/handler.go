@@ -233,3 +233,70 @@ func (h *Handler) CheckBalance(c *gin.Context) {
 		"required_amount":        amount,
 	})
 }
+
+type GatewayRechargeRequestPayload struct {
+	Amount         float64 `json:"amount" binding:"required,gt=0"`
+	CustomerMobile string  `json:"customer_mobile" binding:"required"`
+	CustomerEmail  string  `json:"customer_email" binding:"required"`
+	RedirectURL    string  `json:"redirect_url" binding:"required"`
+}
+
+// InitiateGatewayRecharge handles payment gateway recharge
+func (h *Handler) InitiateGatewayRecharge(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	var req GatewayRechargeRequestPayload
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	data, err := h.service.InitiateGatewayRecharge(
+		userID.(int),
+		req.Amount,
+		req.CustomerMobile,
+		req.CustomerEmail,
+		req.RedirectURL,
+	)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Payment initiated successfully",
+		"data":    data,
+	})
+}
+
+type MugaviWebhookPayload struct {
+	OrderID       string  `json:"order_id" form:"order_id"`
+	Status        string  `json:"status" form:"status"`
+	TransactionID string  `json:"transaction_id" form:"transaction_id"`
+	Amount        float64 `json:"amount" form:"amount"`
+}
+
+// GatewayWebhook handles incoming webhook callbacks from Mugavi
+func (h *Handler) GatewayWebhook(c *gin.Context) {
+	var payload MugaviWebhookPayload
+	if err := c.ShouldBind(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// For security, you might want to verify a webhook signature here 
+	// if the gateway provides one.
+
+	err := h.service.ProcessGatewayCallback(payload.OrderID, payload.TransactionID, payload.Status)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Webhook processed successfully"})
+}
+

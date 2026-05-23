@@ -277,6 +277,38 @@ func (r *Repository) GetRechargeRequests(status string, limit, offset int) ([]mo
 	return requests, nil
 }
 
+// GetRechargeRequestByReference retrieves a recharge request by payment reference
+func (r *Repository) GetRechargeRequestByReference(reference string) (*models.WalletRequest, error) {
+	query := `
+		SELECT id, user_id, amount, payment_reference, payment_proof_url,
+		       status, requested_at, processed_at, processed_by, admin_notes
+		FROM wallet_requests
+		WHERE payment_reference = $1
+		LIMIT 1
+	`
+	var req models.WalletRequest
+	err := r.db.QueryRow(query, reference).Scan(
+		&req.ID,
+		&req.UserID,
+		&req.Amount,
+		&req.PaymentReference,
+		&req.PaymentProofURL,
+		&req.Status,
+		&req.RequestedAt,
+		&req.ProcessedAt,
+		&req.ProcessedBy,
+		&req.AdminNotes,
+	)
+	if err == sql.ErrNoRows {
+		return nil, fmt.Errorf("request not found")
+	}
+	if err != nil {
+		return nil, fmt.Errorf("error fetching request by reference: %w", err)
+	}
+	return &req, nil
+}
+
+
 // GetUserRechargeRequests retrieves recharge requests for a specific user
 func (r *Repository) GetUserRechargeRequests(userID int) ([]models.WalletRequest, error) {
 	query := `

@@ -3,6 +3,7 @@ package wallet
 import (
 	"eservice-backend/internal/models"
 	"fmt"
+	"time"
 )
 
 type Service struct {
@@ -186,3 +187,69 @@ func (s *Service) CheckBalance(userID int, requiredAmount float64) (bool, error)
 
 	return wallet.MainBalance >= requiredAmount, nil
 }
+
+// InitiateGatewayRecharge initiates a recharge using Mugavi payment gateway
+func (s *Service) InitiateGatewayRecharge(userID int, amount float64, mobile, email, redirectURL string) (*MugaviPaymentResponseData, error) {
+	if amount <= 0 {
+		return nil, fmt.Errorf("amount must be greater than zero")
+	}
+
+	// Generate a unique order ID
+	orderID := fmt.Sprintf("ORD%d%d", time.Now().Unix(), userID)
+
+	// Create request payload
+	req := MugaviPaymentRequest{
+		Amount:         amount,
+		CustomerMobile: mobile,
+		CustomerEmail:  email,
+		OrderID:        orderID,
+		RedirectURL:    redirectURL,
+	}
+
+	// Call Mugavi Gateway
+	resp, err := CreateMugaviOrder(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initiate payment: %w", err)
+	}
+
+	// Save to DB as pending
+	request := &models.WalletRequest{
+		UserID:           userID,
+		Amount:           amount,
+		PaymentReference: orderID, // Use orderID as reference
+		Status:           "pending",
+	}
+
+	if err := s.repo.CreateRechargeRequest(request); err != nil {
+		// Even if saving to DB fails, we should probably still return an error
+		// or log it, but let's return error so they can try again.
+		return nil, fmt.Errorf("failed to save request: %w", err)
+	}
+
+	return &resp.Data, nil
+}
+
+// ProcessGatewayCallback processes the webhook callback from the gateway
+func (s *Service) ProcessGatewayCallback(orderID, txnID, status string) error {
+	if status != "success" && status != "SUCCESS" {
+		// If failed, we might want to mark it as rejected or failed in DB
+		// But for now we only process successful ones.
+		return nil
+	}
+
+	// Fetch request by orderID
+	request, err := s.repo.GetRechargeRequestByReference(orderID)
+	if err != nil {
+		return fmt.Errorf("could not find request: %w", err)
+	}
+
+	if request.Status != "pending" {
+		return nil // already processed
+	}
+
+	// Automatically approve the request
+	// Using 0 as adminID to indicate System
+	notes := fmt.Sprintf("Auto-approved by payment gateway (Txn: %s)", txnID)
+	return s.repo.ApproveRechargeRequest(request.ID, 0, notes)
+}
+
