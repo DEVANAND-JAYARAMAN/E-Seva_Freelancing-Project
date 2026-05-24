@@ -15,7 +15,6 @@ export const PATHS = {
   STATUS: "/status",
   PDF: "/pdf",
   USERS: "/users",
-  ACTIVATION: "/activation",
   PERMISSION: "/permission",
   SETTINGS: "/settings",
   PANCARD: "/pancard",
