@@ -1,6 +1,11 @@
 import React, { useState } from "react";
 import { CheckCircle2 } from "lucide-react";
-import { InputField, SelectField, TextAreaField, SubmitButton } from "../form/FormFields";
+import {
+  InputField,
+  SelectField,
+  TextAreaField,
+  SubmitButton,
+} from "../form/FormFields";
 import { validateField, PATTERNS } from "../form/validators";
 import { NewCanRegistrationForm } from "./NewCanRegistrationForm";
 
@@ -10,7 +15,11 @@ interface CanEditFormsProps {
   onCancel: () => void;
 }
 
-export const CanEditForms: React.FC<CanEditFormsProps> = ({ serviceId, serviceName, onCancel }) => {
+export const CanEditForms: React.FC<CanEditFormsProps> = ({
+  serviceId,
+  serviceName,
+  onCancel,
+}) => {
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -21,11 +30,21 @@ export const CanEditForms: React.FC<CanEditFormsProps> = ({ serviceId, serviceNa
     switch (serviceId) {
       case "new-can-reg":
         return [
-          { name: "fullName", label: "Full Name", type: "text", placeholder: "Enter candidate full name" },
+          {
+            name: "fullName",
+            label: "Full Name",
+            type: "text",
+            placeholder: "Enter candidate full name",
+          },
           { name: "dob", label: "Date of Birth", type: "date" },
           { name: "mobileNo", label: "Mobile Number", type: "phone" },
           { name: "aadhaarNo", label: "Aadhaar Number", type: "aadhaar" },
-          { name: "fatherName", label: "Father Name", type: "text", placeholder: "Enter father name" },
+          {
+            name: "fatherName",
+            label: "Father Name",
+            type: "text",
+            placeholder: "Enter father name",
+          },
           { name: "address", label: "Full Address", type: "textarea" },
         ];
       case "name-correction":
@@ -162,14 +181,22 @@ export const CanEditForms: React.FC<CanEditFormsProps> = ({ serviceId, serviceNa
   const handleFieldChange = (name: string, value: string, type: string) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
-      
+
       // Live validation on edit
       if (errors[name]) {
         let rule = {};
         if (type === "phone") {
-          rule = { required: true, pattern: PATTERNS.PHONE, patternMessage: "Must be a 10-digit number" };
+          rule = {
+            required: true,
+            pattern: PATTERNS.PHONE,
+            patternMessage: "Must be a 10-digit number",
+          };
         } else if (type === "aadhaar") {
-          rule = { required: true, pattern: PATTERNS.AADHAAR, patternMessage: "Must be a 12-digit number" };
+          rule = {
+            required: true,
+            pattern: PATTERNS.AADHAAR,
+            patternMessage: "Must be a 12-digit number",
+          };
         } else {
           rule = { required: true, requiredMessage: "This field is required" };
         }
@@ -198,11 +225,19 @@ export const CanEditForms: React.FC<CanEditFormsProps> = ({ serviceId, serviceNa
     fields.forEach((f) => {
       const value = formData[f.name] || "";
       let rule = {};
-      
+
       if (f.type === "phone") {
-        rule = { required: true, pattern: PATTERNS.PHONE, patternMessage: "Must be a 10-digit number" };
+        rule = {
+          required: true,
+          pattern: PATTERNS.PHONE,
+          patternMessage: "Must be a 10-digit number",
+        };
       } else if (f.type === "aadhaar") {
-        rule = { required: true, pattern: PATTERNS.AADHAAR, patternMessage: "Must be a 12-digit number" };
+        rule = {
+          required: true,
+          pattern: PATTERNS.AADHAAR,
+          patternMessage: "Must be a 12-digit number",
+        };
       } else {
         rule = { required: true, requiredMessage: `${f.label} is required` };
       }
@@ -242,7 +277,8 @@ export const CanEditForms: React.FC<CanEditFormsProps> = ({ serviceId, serviceNa
             Request Placed Successfully!
           </h5>
           <p className="text-sm text-slate-400 dark:text-slate-555 mt-2 max-w-md leading-relaxed">
-            Your request for **{serviceName}** has been registered. The updates will be processed shortly.
+            Your request for **{serviceName}** has been registered. The updates
+            will be processed shortly.
           </p>
         </div>
       </div>
@@ -292,7 +328,7 @@ export const CanEditForms: React.FC<CanEditFormsProps> = ({ serviceId, serviceNa
                   <SelectField
                     name={f.name}
                     label={f.label}
-                    options={f.options || []}
+                    options={(f as any).options || []}
                     value={formData[f.name] || ""}
                     error={errors[f.name]}
                     disabled={isSubmitting}
@@ -313,14 +349,20 @@ export const CanEditForms: React.FC<CanEditFormsProps> = ({ serviceId, serviceNa
                     name={f.name}
                     value={formData[f.name] || ""}
                     disabled={isSubmitting}
-                    onChange={(e) => handleFieldChange(f.name, e.target.value, f.type)}
+                    onChange={(e) =>
+                      handleFieldChange(f.name, e.target.value, f.type)
+                    }
                     className={`w-full px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/20 dark:focus:ring-emerald-500/20 bg-white dark:bg-[#0a0f18]/30 ${
                       errors[f.name]
                         ? "border-red-500"
                         : "border-slate-250 dark:border-slate-800/80 focus:border-[#005c3a] dark:focus:border-emerald-500"
                     }`}
                   />
-                  {errors[f.name] && <span className="text-[10px] font-bold text-red-500">{errors[f.name]}</span>}
+                  {errors[f.name] && (
+                    <span className="text-[10px] font-bold text-red-500">
+                      {errors[f.name]}
+                    </span>
+                  )}
                 </div>
               );
             }
@@ -330,7 +372,13 @@ export const CanEditForms: React.FC<CanEditFormsProps> = ({ serviceId, serviceNa
                 <InputField
                   name={f.name}
                   label={f.label}
-                  type={f.type === "file" ? "file" : f.type === "password" ? "password" : "text"}
+                  type={
+                    f.type === "file"
+                      ? "file"
+                      : f.type === "password"
+                        ? "password"
+                        : "text"
+                  }
                   placeholder={f.placeholder || f.label}
                   value={formData[f.name] || ""}
                   error={errors[f.name]}
