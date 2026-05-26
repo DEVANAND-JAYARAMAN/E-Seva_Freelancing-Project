@@ -10,6 +10,7 @@ import { msmeApplySchema } from "../form/formConfig";
 import { FormSchema } from "../form/types";
 import { PanToMsmeUdhayamFind } from "./PanToMsmeUdhayamFind";
 import { MobileToMsmeUdhayamFind } from "./MobileToMsmeUdhayamFind";
+import { ServiceCard } from "../ServiceCard";
 
 interface MsmeService {
   id: string;
@@ -194,27 +195,15 @@ export function MsmePage() {
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {msmeServicesList.map((service) => {
-                return (
-                  <article
-                    key={service.id}
-                    onClick={() => handleCardClick(service)}
-                    className="bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 shadow-sm hover:shadow-md cursor-pointer group transition-all duration-300 flex flex-col items-center text-center gap-4 relative overflow-hidden hover:translate-y-[-4px]"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-b from-slate-50/10 to-transparent dark:from-slate-900/5 dark:to-transparent pointer-events-none" />
-                    
-                    <div className="h-20 w-20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      {renderServiceIcon(service.id, "w-16 h-16")}
-                    </div>
-
-                    <div className="space-y-1.5 mt-1">
-                      <h4 className="font-extrabold text-slate-900 dark:text-white group-hover:text-[#005c3a] dark:group-hover:text-emerald-400 transition-colors text-sm leading-snug">
-                        {service.name}
-                      </h4>
-                    </div>
-                  </article>
-                );
-              })}
+              {msmeServicesList.map((service) => (
+                <ServiceCard
+                  key={service.id}
+                  id={service.id}
+                  name={service.name}
+                  icon={renderServiceIcon(service.id, "w-16 h-16")}
+                  onClick={() => handleCardClick(service)}
+                />
+              ))}
             </div>
           </div>
         ) : (
