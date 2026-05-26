@@ -18,12 +18,16 @@ export const AdhaarToRation: React.FC<AdhaarToRationProps> = ({ onCancel }) => {
   const handleFieldChange = (name: string, value: string) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
-      
+
       // Live validation on edit
       if (errors[name]) {
         let rule = {};
         if (name === "adhaarNo") {
-          rule = { required: true, pattern: PATTERNS.AADHAAR, patternMessage: "Must be a valid 12-digit Adhaar" };
+          rule = {
+            required: true,
+            pattern: PATTERNS.AADHAAR,
+            patternMessage: "Must be a valid 12-digit Adhaar",
+          };
         }
 
         const errorMsg = validateField(name, value, rule, updated);
@@ -45,14 +49,19 @@ export const AdhaarToRation: React.FC<AdhaarToRationProps> = ({ onCancel }) => {
     e.preventDefault();
 
     const newErrors: Record<string, string> = {};
-    
+
     // Adhaar No validation
-    const adhaarErr = validateField("adhaarNo", formData.adhaarNo, {
-      required: true,
-      requiredMessage: "Adhaar Number is required",
-      pattern: PATTERNS.AADHAAR,
-      patternMessage: "Must be a valid 12-digit Adhaar",
-    }, formData);
+    const adhaarErr = validateField(
+      "adhaarNo",
+      formData.adhaarNo,
+      {
+        required: true,
+        requiredMessage: "Adhaar Number is required",
+        pattern: PATTERNS.AADHAAR,
+        patternMessage: "Must be a valid 12-digit Adhaar",
+      },
+      formData,
+    );
     if (adhaarErr) newErrors.adhaarNo = adhaarErr;
 
     if (Object.keys(newErrors).length > 0) {
@@ -82,7 +91,8 @@ export const AdhaarToRation: React.FC<AdhaarToRationProps> = ({ onCancel }) => {
             Search Placed Successfully!
           </h5>
           <p className="text-sm text-slate-400 dark:text-slate-555 mt-2 max-w-md leading-relaxed">
-            Your search request for **Adhaar To Ration Number Find** has been registered. The results will be updated soon.
+            Your search request for **Adhaar To Ration Number Find** has been
+            registered. The results will be updated soon.
           </p>
         </div>
       </div>
@@ -116,7 +126,7 @@ export const AdhaarToRation: React.FC<AdhaarToRationProps> = ({ onCancel }) => {
               type="text"
               placeholder="Enter 12-digit Adhaar number"
               value={formData.adhaarNo}
-              onChange={(e) => handleFieldChange(e.target.name, e.target.value)}
+              onChange={(val) => handleFieldChange("adhaarNo", val)}
               error={errors.adhaarNo}
               disabled={isSubmitting}
             />
