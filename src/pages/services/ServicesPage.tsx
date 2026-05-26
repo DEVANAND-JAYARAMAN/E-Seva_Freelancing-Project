@@ -636,6 +636,38 @@ export function ServicesPage() {
       router.push(PATHS.MSME);
       return;
     }
+    if (service.id === "utisl-pan") {
+      router.push(PATHS.UTISL_PAN);
+      return;
+    }
+    if (service.id === "employment-services") {
+      router.push(PATHS.EMPLOYMENT_SERVICES);
+      return;
+    }
+    if (service.id === "fssai") {
+      router.push(PATHS.FSSAI);
+      return;
+    }
+    if (service.id === "voter-id") {
+      router.push(PATHS.VOTER_ID);
+      return;
+    }
+    if (service.id === "registration-dept") {
+      router.push(PATHS.REGISTRATION_DEPT);
+      return;
+    }
+    if (service.id === "rto-services") {
+      router.push(PATHS.RTO_SERVICES);
+      return;
+    }
+    if (service.id === "can-edit") {
+      router.push(PATHS.CAN_EDIT);
+      return;
+    }
+    if (service.id === "aadhaar-card-address") {
+      router.push(PATHS.AADHAAR_ADDRESS);
+      return;
+    }
     setSelectedService(service);
     setFormData({});
     setErrors({});
