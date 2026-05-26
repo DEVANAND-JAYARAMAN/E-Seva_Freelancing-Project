@@ -1,0 +1,77 @@
+{
+  "TableName": "Eservice_Users",
+  "Description": "DynamoDB Table for storing Admin, Distributor, and Retailer authentication data.",
+  "KeySchema": [
+    {
+      "AttributeName": "email",
+      "KeyType": "HASH"
+    }
+  ],
+  "AttributeDefinitions": [
+    {
+      "AttributeName": "email",
+      "AttributeType": "S"
+    },
+    {
+      "AttributeName": "user_id",
+      "AttributeType": "S"
+    }
+  ],
+  "GlobalSecondaryIndexes": [
+    {
+      "IndexName": "UserIdIndex",
+      "KeySchema": [
+        {
+          "AttributeName": "user_id",
+          "KeyType": "HASH"
+        }
+      ],
+      "Projection": {
+        "ProjectionType": "ALL"
+      },
+      "ProvisionedThroughput": {
+        "ReadCapacityUnits": 5,
+        "WriteCapacityUnits": 5
+      }
+    }
+  ],
+  "BillingMode": "PAY_PER_REQUEST",
+  "ItemStructureExample": {
+    "email": {
+      "Type": "String",
+      "Description": "Primary Partition Key. Ideal for O(1) login lookups by email."
+    },
+    "user_id": {
+      "Type": "String",
+      "Description": "UUID for internal relationships (e.g., wallets, applications)."
+    },
+    "password_hash": {
+      "Type": "String",
+      "Description": "Bcrypt hashed password string."
+    },
+    "full_name": {
+      "Type": "String",
+      "Description": "User's full name."
+    },
+    "role": {
+      "Type": "String",
+      "Description": "Role based access control. Allowed values: 'admin', 'distributor', 'retailer'."
+    },
+    "phone": {
+      "Type": "String",
+      "Description": "Contact phone number."
+    },
+    "status": {
+      "Type": "String",
+      "Description": "Account status (e.g., 'active', 'suspended')."
+    },
+    "created_at": {
+      "Type": "String",
+      "Description": "ISO 8601 Timestamp string of creation time."
+    },
+    "updated_at": {
+      "Type": "String",
+      "Description": "ISO 8601 Timestamp string of last update."
+    }
+  }
+}
