@@ -14,6 +14,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
+import { ServiceCard } from "./ServiceCard";
 
 // Service item interface
 export interface EService {
@@ -635,6 +636,38 @@ export function ServicesPage() {
       router.push(PATHS.MSME);
       return;
     }
+    if (service.id === "utisl-pan") {
+      router.push(PATHS.UTISL_PAN);
+      return;
+    }
+    if (service.id === "employment-services") {
+      router.push(PATHS.EMPLOYMENT_SERVICES);
+      return;
+    }
+    if (service.id === "fssai") {
+      router.push(PATHS.FSSAI);
+      return;
+    }
+    if (service.id === "voter-id") {
+      router.push(PATHS.VOTER_ID);
+      return;
+    }
+    if (service.id === "registration-dept") {
+      router.push(PATHS.REGISTRATION_DEPT);
+      return;
+    }
+    if (service.id === "rto-services") {
+      router.push(PATHS.RTO_SERVICES);
+      return;
+    }
+    if (service.id === "can-edit") {
+      router.push(PATHS.CAN_EDIT);
+      return;
+    }
+    if (service.id === "aadhaar-card-address") {
+      router.push(PATHS.AADHAAR_ADDRESS);
+      return;
+    }
     setSelectedService(service);
     setFormData({});
     setErrors({});
@@ -724,29 +757,17 @@ export function ServicesPage() {
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {topServices.map((service) => {
-                return (
-                  <article
-                    key={service.id}
-                    onClick={() => handleServiceClick(service)}
-                    className="bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 shadow-sm hover:shadow-md cursor-pointer group transition-all duration-300 flex items-center gap-5 border-l-4 hover:border-l-[#005c3a] hover:translate-y-[-2px]"
-                  >
-                    <div className="shrink-0 group-hover:scale-105 transition-transform duration-300">
-                      {renderServiceImage(service.id, "w-12 h-12")}
-                    </div>
-                    <div className="space-y-1">
-                      <h4 className="font-extrabold text-slate-900 dark:text-white group-hover:text-[#005c3a] dark:group-hover:text-emerald-400 transition-colors text-sm uppercase tracking-wide">
-                        {service.name}
-                      </h4>
-                      {service.subName && (
-                        <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase">
-                          {service.subName}
-                        </p>
-                      )}
-                    </div>
-                  </article>
-                );
-              })}
+              {topServices.map((service) => (
+                <ServiceCard
+                  key={service.id}
+                  id={service.id}
+                  name={service.name}
+                  subName={service.subName}
+                  icon={renderServiceImage(service.id, "w-12 h-12")}
+                  onClick={() => handleServiceClick(service)}
+                  layout="horizontal"
+                />
+              ))}
             </div>
           </div>
         )}
@@ -762,34 +783,16 @@ export function ServicesPage() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {allServices.map((service) => {
-                return (
-                  <article
-                    key={service.id}
-                    onClick={() => handleServiceClick(service)}
-                    className="bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 shadow-sm hover:shadow-md cursor-pointer group transition-all duration-300 flex flex-col items-center text-center gap-3.5 relative overflow-hidden hover:translate-y-[-4px]"
-                  >
-                    {/* Glossy Gradient Glow in background */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-slate-50/10 to-transparent dark:from-slate-900/5 dark:to-transparent pointer-events-none" />
-                    
-                    {/* Real Image Container directly centered without wrapper */}
-                    <div className="h-16 w-16 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      {renderServiceImage(service.id, "w-14 h-14")}
-                    </div>
-
-                    <div className="space-y-1 mt-1">
-                      <h4 className="font-extrabold text-slate-900 dark:text-white group-hover:text-[#005c3a] dark:group-hover:text-emerald-400 transition-colors text-sm leading-snug">
-                        {service.name}
-                      </h4>
-                      {service.subName && (
-                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                          {service.subName}
-                        </p>
-                      )}
-                    </div>
-                  </article>
-                );
-              })}
+              {allServices.map((service) => (
+                <ServiceCard
+                  key={service.id}
+                  id={service.id}
+                  name={service.name}
+                  subName={service.subName}
+                  icon={renderServiceImage(service.id, "w-14 h-14")}
+                  onClick={() => handleServiceClick(service)}
+                />
+              ))}
             </div>
           </div>
         ) : (
