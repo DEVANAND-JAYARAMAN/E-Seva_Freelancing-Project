@@ -13,6 +13,7 @@ export const PATHS = {
   PAYMENTS: "/payments",
   SERVICES: "/services",
   MSME: "/services/msme",
+  RATION_CARD: "/services/ration-card",
   STATUS: "/status",
   PDF: "/pdf",
   USERS: "/users",
