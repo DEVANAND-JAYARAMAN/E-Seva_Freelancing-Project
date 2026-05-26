@@ -30,88 +30,129 @@ export const CanEditForms: React.FC<CanEditFormsProps> = ({ serviceId, serviceNa
         ];
       case "name-correction":
         return [
-          { name: "canNo", label: "CAN Number", type: "text", placeholder: "Enter CAN Number" },
-          { name: "correctName", label: "Correct Name", type: "text", placeholder: "Enter correct candidate name" },
-          { name: "proof", label: "Name Proof Document (Aadhaar/TC)", type: "file" },
-        ];
-      case "dob-correction":
-        return [
-          { name: "canNo", label: "CAN Number", type: "text", placeholder: "Enter CAN Number" },
-          { name: "correctDob", label: "Correct Date of Birth", type: "date" },
-          { name: "proof", label: "DOB Proof Document (Birth Certificate/TC)", type: "file" },
-        ];
-      case "mobile-number":
-        return [
-          { name: "canNo", label: "CAN Number", type: "text", placeholder: "Enter CAN Number" },
-          { name: "newMobile", label: "New Mobile Number", type: "phone" },
-        ];
-      case "certificate-find":
-        return [
-          { name: "regNo", label: "Registration / Application Number", type: "text", placeholder: "Enter registration number" },
-          { name: "certType", label: "Certificate Type", type: "select", options: [
-              { label: "Community Certificate", value: "Community" },
-              { label: "Income Certificate", value: "Income" },
-              { label: "Nativity Certificate", value: "Nativity" },
-              { label: "First Graduate Certificate", value: "First Graduate" },
-            ] 
-          },
-          { name: "candidateName", label: "Candidate Name", type: "text", placeholder: "Enter candidate name" },
-        ];
-      case "legal-heir-cert-no":
-        return [
-          { name: "deceasedName", label: "Deceased Person Name", type: "text", placeholder: "Enter deceased name" },
-          { name: "deathCertNo", label: "Death Certificate Number", type: "text", placeholder: "Enter death certificate number" },
           { name: "district", label: "District", type: "select", options: [
               { label: "Chennai", value: "Chennai" },
               { label: "Coimbatore", value: "Coimbatore" },
               { label: "Madurai", value: "Madurai" },
               { label: "Trichy", value: "Trichy" },
-            ] 
+            ]
           },
+          { name: "candidateName", label: "Name", type: "select", options: [] },
+          { name: "aadhaarFront", label: "Aadhaar Card (Front)", type: "file" },
+        ];
+      case "dob-correction":
+        return [
+          { name: "district", label: "District", type: "select", options: [
+              { label: "Chennai", value: "Chennai" },
+              { label: "Coimbatore", value: "Coimbatore" },
+              { label: "Madurai", value: "Madurai" },
+              { label: "Trichy", value: "Trichy" },
+            ]
+          },
+          { name: "dob", label: "DOB", type: "text", placeholder: "ddmmyyyy (e.g. 05041997)" },
+          { name: "aadhaarFront", label: "Aadhaar Card (Front)", type: "file" },
+        ];
+      case "mobile-number":
+        return [
+          { name: "canNumber", label: "Can Number", type: "text", placeholder: "Enter Can Number" },
+          { name: "newMobile", label: "New mobile Number", type: "phone" },
+        ];
+      case "certificate-find":
+        return [
+          { name: "applicantName", label: "Applicant Name", type: "text", placeholder: "Enter applicant name" },
+          { name: "canNumber", label: "Can Number", type: "text", placeholder: "Enter Can Number" },
+          { name: "aadhaarNo", label: "Aadhaar Number", type: "aadhaar" },
+          { name: "certificateName", label: "Certificate Name", type: "text", placeholder: "Enter certificate name" },
+        ];
+      case "legal-heir-cert-no":
+        return [
+          { name: "applicantName", label: "Applicant Name", type: "text", placeholder: "Enter applicant name" },
+          { name: "aadhaarCard", label: "Aadhaar Card (Front & Back)", type: "file" },
+          { name: "canNumber", label: "Can Number", type: "text", placeholder: "Enter Can Number" },
+          { name: "legalHeirCertificateNumber", label: "Legal Heir Certificate Number", type: "text", placeholder: "Enter legal heir certificate number" },
         ];
       case "find-can-number":
         return [
           { name: "aadhaarNo", label: "Aadhaar Number", type: "aadhaar" },
-          { name: "mobileNo", label: "Mobile Number", type: "phone" },
         ];
       case "name-cell-number":
         return [
-          { name: "candidateName", label: "Candidate Name", type: "text", placeholder: "Enter candidate name" },
-          { name: "cellNo", label: "Cell Number", type: "phone" },
+          { name: "district", label: "District", type: "select", options: [
+              { label: "Chennai", value: "Chennai" },
+              { label: "Coimbatore", value: "Coimbatore" },
+              { label: "Madurai", value: "Madurai" },
+              { label: "Trichy", value: "Trichy" },
+            ]
+          },
+          { name: "name", label: "Name", type: "text", placeholder: "Enter name" },
+          { name: "canNumber", label: "Can Number", type: "text", placeholder: "Enter Can Number" },
+          { name: "mobileNo", label: "Mobile Number", type: "phone" },
+          { name: "aadhaarFront", label: "Aadhaar Card (Front)", type: "file" },
         ];
       case "name-dob":
         return [
-          { name: "candidateName", label: "Candidate Name", type: "text", placeholder: "Enter candidate name" },
-          { name: "dob", label: "Date of Birth", type: "date" },
+          { name: "district", label: "District", type: "select", options: [
+              { label: "Chennai", value: "Chennai" },
+              { label: "Coimbatore", value: "Coimbatore" },
+              { label: "Madurai", value: "Madurai" },
+              { label: "Trichy", value: "Trichy" },
+            ]
+          },
+          { name: "name", label: "Name", type: "text", placeholder: "Enter name" },
+          { name: "canNumber", label: "Can Number", type: "text", placeholder: "Enter Can Number" },
+          { name: "dob", label: "Date Of Birth", type: "date" },
+          { name: "aadhaarFront", label: "Aadhaar Card (Front)", type: "file" },
         ];
       case "cell-number-dob":
         return [
-          { name: "cellNo", label: "Cell Number", type: "phone" },
-          { name: "dob", label: "Date of Birth", type: "date" },
+          { name: "district", label: "District", type: "select", options: [
+              { label: "Chennai", value: "Chennai" },
+              { label: "Coimbatore", value: "Coimbatore" },
+              { label: "Madurai", value: "Madurai" },
+              { label: "Trichy", value: "Trichy" },
+            ]
+          },
+          { name: "dob", label: "Date Of Birth", type: "date" },
+          { name: "aadhaarFront", label: "Aadhaar Card (Front)", type: "file" },
+          { name: "canNumber", label: "Can Number", type: "text", placeholder: "Enter Can Number" },
+          { name: "mobileNo", label: "Mobile Number", type: "phone" },
         ];
       case "name-cell-number-dob":
         return [
-          { name: "candidateName", label: "Candidate Name", type: "text", placeholder: "Enter candidate name" },
-          { name: "cellNo", label: "Cell Number", type: "phone" },
-          { name: "dob", label: "Date of Birth", type: "date" },
+          { name: "district", label: "District", type: "select", options: [
+              { label: "Chennai", value: "Chennai" },
+              { label: "Coimbatore", value: "Coimbatore" },
+              { label: "Madurai", value: "Madurai" },
+              { label: "Trichy", value: "Trichy" },
+            ]
+          },
+          { name: "mobileNo", label: "Mobile Number", type: "phone" },
+          { name: "name", label: "Name", type: "text", placeholder: "Enter name" },
+          { name: "canNumber", label: "Can Number", type: "text", placeholder: "Enter Can Number" },
+          { name: "dob", label: "Date Of Birth", type: "date" },
+          { name: "aadhaarFront", label: "Aadhaar Card (Front)", type: "file" },
         ];
       case "saved-app-removed":
       case "return-app-removed":
         return [
-          { name: "appNo", label: "Application Number", type: "text", placeholder: "Enter application number to remove" },
-          { name: "reason", label: "Reason for Removal", type: "text", placeholder: "Enter reason" },
+          { name: "tamilName", label: "பெயர் தமிழில்", type: "text", placeholder: "பெயர் தமிழில்" },
+          { name: "aadhaarCard", label: "Aadhaar Card", type: "file" },
+          { name: "nameEnglish", label: "Name English", type: "text", placeholder: "Name English" },
+          { name: "smartCard", label: "Smart Card", type: "file" },
         ];
       case "father-name-correction":
         return [
-          { name: "canNo", label: "CAN Number", type: "text", placeholder: "Enter CAN Number" },
-          { name: "correctFatherName", label: "Correct Father's Name", type: "text", placeholder: "Enter correct father name" },
-          { name: "proof", label: "Proof Document (Aadhaar/TC)", type: "file" },
+          { name: "relationship", label: "உறவுமுறை", type: "text", placeholder: "உறவுமுறை" },
+          { name: "aadhaarCard", label: "Aadhaar Card", type: "file" },
+          { name: "smartCard", label: "Smart Card", type: "file" },
         ];
       case "address-correction":
         return [
-          { name: "canNo", label: "CAN Number", type: "text", placeholder: "Enter CAN Number" },
-          { name: "correctAddress", label: "Correct Address", type: "textarea" },
-          { name: "proof", label: "Address Proof Document (Aadhaar/Gas Bill)", type: "file" },
+          { name: "tamilName", label: "பெயர் தமிழில்", type: "text", placeholder: "பெயர் தமிழில்" },
+          { name: "dob", label: "DOB", type: "date", placeholder: "mm/dd/yyyy" },
+          { name: "aadhaarCard", label: "Aadhaar Card", type: "file" },
+          { name: "nameEnglish", label: "Name English", type: "text", placeholder: "Name English" },
+          { name: "smartCard", label: "Smart Card", type: "file" },
         ];
       default:
         return [];
