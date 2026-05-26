@@ -614,7 +614,7 @@ export function PaymentsPage() {
                   No Payment Category Found
                 </h4>
                 <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-                  No payment options match your search term "{searchTerm}".
+                  No payment options match your search term &quot;{searchTerm}&quot;.
                 </p>
               </div>
             )}

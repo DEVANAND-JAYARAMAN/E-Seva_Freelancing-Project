@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { PATHS } from "../../routes/paths";
 import {
   Plus,
   Home,
@@ -426,6 +428,7 @@ function renderServiceImage(id: string, className = "w-14 h-14") {
 }
 
 export function ServicesPage() {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedService, setSelectedService] = useState<EService | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -628,6 +631,10 @@ export function ServicesPage() {
 
   // Open interactive form drawer
   const handleServiceClick = (service: EService) => {
+    if (service.id === "msme") {
+      router.push(PATHS.MSME);
+      return;
+    }
     setSelectedService(service);
     setFormData({});
     setErrors({});
@@ -684,12 +691,9 @@ export function ServicesPage() {
         {/* Navigation Breadcrumb Mock Address Bar */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-2xl p-4 shadow-sm">
           <div className="flex items-center gap-2 text-sm text-slate-500 font-semibold w-full md:w-auto">
-            <span className="text-[#005c3a] dark:text-emerald-400 font-bold flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900 p-2 rounded-xl border border-slate-100 dark:border-slate-800">
-              <Home size={14} />
-              <span>thuruvancommunication.in</span>
-            </span>
-            <span className="text-slate-350 select-none">/</span>
-            <span className="text-slate-400 dark:text-slate-500 font-bold uppercase text-xs tracking-wider">
+            <span 
+              className="text-slate-400 dark:text-slate-500 font-bold uppercase text-xs tracking-wider"
+            >
               Services Directory
             </span>
           </div>
@@ -706,10 +710,6 @@ export function ServicesPage() {
                 className="w-full pl-9 pr-4 py-2 border border-slate-100 dark:border-slate-800/80 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a]/50 outline-none transition-all"
               />
             </div>
-
-            <button className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-500 hover:text-[#007bff] dark:hover:text-blue-400 transition-colors" title="Settings">
-              <Settings size={15} />
-            </button>
           </div>
         </div>
 
@@ -799,7 +799,7 @@ export function ServicesPage() {
               No Utility Services Found
             </h4>
             <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-              No services match your search term "{searchTerm}". Please clear or adjust filters.
+              No services match your search term &quot;{searchTerm}&quot;. Please clear or adjust filters.
             </p>
           </div>
         )}
