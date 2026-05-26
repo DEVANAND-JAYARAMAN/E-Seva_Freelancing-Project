@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { PATHS } from "../../routes/paths";
 import {
   Plus,
   Home,
@@ -12,6 +14,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
+import { ServiceCard } from "./ServiceCard";
 
 // Service item interface
 export interface EService {
@@ -426,6 +429,7 @@ function renderServiceImage(id: string, className = "w-14 h-14") {
 }
 
 export function ServicesPage() {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedService, setSelectedService] = useState<EService | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -628,6 +632,14 @@ export function ServicesPage() {
 
   // Open interactive form drawer
   const handleServiceClick = (service: EService) => {
+    if (service.id === "msme") {
+      router.push(PATHS.MSME);
+      return;
+    }
+    if (service.id === "ration-card") {
+      router.push(PATHS.RATION_CARD);
+      return;
+    }
     setSelectedService(service);
     setFormData({});
     setErrors({});
@@ -684,12 +696,9 @@ export function ServicesPage() {
         {/* Navigation Breadcrumb Mock Address Bar */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-2xl p-4 shadow-sm">
           <div className="flex items-center gap-2 text-sm text-slate-500 font-semibold w-full md:w-auto">
-            <span className="text-[#005c3a] dark:text-emerald-400 font-bold flex items-center gap-1.5 bg-slate-50 dark:bg-slate-900 p-2 rounded-xl border border-slate-100 dark:border-slate-800">
-              <Home size={14} />
-              <span>thuruvancommunication.in</span>
-            </span>
-            <span className="text-slate-350 select-none">/</span>
-            <span className="text-slate-400 dark:text-slate-500 font-bold uppercase text-xs tracking-wider">
+            <span 
+              className="text-slate-400 dark:text-slate-500 font-bold uppercase text-xs tracking-wider"
+            >
               Services Directory
             </span>
           </div>
@@ -706,10 +715,6 @@ export function ServicesPage() {
                 className="w-full pl-9 pr-4 py-2 border border-slate-100 dark:border-slate-800/80 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a]/50 outline-none transition-all"
               />
             </div>
-
-            <button className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-500 hover:text-[#007bff] dark:hover:text-blue-400 transition-colors" title="Settings">
-              <Settings size={15} />
-            </button>
           </div>
         </div>
 
@@ -724,29 +729,17 @@ export function ServicesPage() {
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {topServices.map((service) => {
-                return (
-                  <article
-                    key={service.id}
-                    onClick={() => handleServiceClick(service)}
-                    className="bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 shadow-sm hover:shadow-md cursor-pointer group transition-all duration-300 flex items-center gap-5 border-l-4 hover:border-l-[#005c3a] hover:translate-y-[-2px]"
-                  >
-                    <div className="shrink-0 group-hover:scale-105 transition-transform duration-300">
-                      {renderServiceImage(service.id, "w-12 h-12")}
-                    </div>
-                    <div className="space-y-1">
-                      <h4 className="font-extrabold text-slate-900 dark:text-white group-hover:text-[#005c3a] dark:group-hover:text-emerald-400 transition-colors text-sm uppercase tracking-wide">
-                        {service.name}
-                      </h4>
-                      {service.subName && (
-                        <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase">
-                          {service.subName}
-                        </p>
-                      )}
-                    </div>
-                  </article>
-                );
-              })}
+              {topServices.map((service) => (
+                <ServiceCard
+                  key={service.id}
+                  id={service.id}
+                  name={service.name}
+                  subName={service.subName}
+                  icon={renderServiceImage(service.id, "w-12 h-12")}
+                  onClick={() => handleServiceClick(service)}
+                  layout="horizontal"
+                />
+              ))}
             </div>
           </div>
         )}
@@ -762,34 +755,16 @@ export function ServicesPage() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-              {allServices.map((service) => {
-                return (
-                  <article
-                    key={service.id}
-                    onClick={() => handleServiceClick(service)}
-                    className="bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 shadow-sm hover:shadow-md cursor-pointer group transition-all duration-300 flex flex-col items-center text-center gap-3.5 relative overflow-hidden hover:translate-y-[-4px]"
-                  >
-                    {/* Glossy Gradient Glow in background */}
-                    <div className="absolute inset-0 bg-gradient-to-b from-slate-50/10 to-transparent dark:from-slate-900/5 dark:to-transparent pointer-events-none" />
-                    
-                    {/* Real Image Container directly centered without wrapper */}
-                    <div className="h-16 w-16 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      {renderServiceImage(service.id, "w-14 h-14")}
-                    </div>
-
-                    <div className="space-y-1 mt-1">
-                      <h4 className="font-extrabold text-slate-900 dark:text-white group-hover:text-[#005c3a] dark:group-hover:text-emerald-400 transition-colors text-sm leading-snug">
-                        {service.name}
-                      </h4>
-                      {service.subName && (
-                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                          {service.subName}
-                        </p>
-                      )}
-                    </div>
-                  </article>
-                );
-              })}
+              {allServices.map((service) => (
+                <ServiceCard
+                  key={service.id}
+                  id={service.id}
+                  name={service.name}
+                  subName={service.subName}
+                  icon={renderServiceImage(service.id, "w-14 h-14")}
+                  onClick={() => handleServiceClick(service)}
+                />
+              ))}
             </div>
           </div>
         ) : (
@@ -799,7 +774,7 @@ export function ServicesPage() {
               No Utility Services Found
             </h4>
             <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-              No services match your search term "{searchTerm}". Please clear or adjust filters.
+              No services match your search term &quot;{searchTerm}&quot;. Please clear or adjust filters.
             </p>
           </div>
         )}
