@@ -22,7 +22,7 @@ export function CanEditPage() {
     { id: "new-can-reg", name: "New Can Registration" },
     { id: "name-correction", name: "Name Correction" },
     { id: "dob-correction", name: "DOB Correction" },
-    { id: "mobile-number", name: "Mobile Number" },
+    { id: "mobile-number", name: "Can Number" },
     { id: "certificate-find", name: "Certificate Find" },
     { id: "legal-heir-cert-no", name: "Legal Heir Certificate Number" },
     { id: "find-can-number", name: "Find Can Number" },
