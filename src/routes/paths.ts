@@ -3,12 +3,12 @@
  */
 export const PATHS = {
   // Auth Routes
-  LOGIN: "/login",
+  LOGIN: "/",
   REGISTER: "/register",
   FORGOT_PASSWORD: "/forgot-password",
 
   // Application Routes
-  DASHBOARD: "/",
+  DASHBOARD: "/dashboard",
   WALLETS: "/wallets",
   PAYMENTS: "/payments",
   SERVICES: "/services",
