@@ -12,6 +12,7 @@ export const PATHS = {
   WALLETS: "/wallets",
   PAYMENTS: "/payments",
   SERVICES: "/services",
+  MSME: "/services/msme",
   STATUS: "/status",
   PDF: "/pdf",
   USERS: "/users",
