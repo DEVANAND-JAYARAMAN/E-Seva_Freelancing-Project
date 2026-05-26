@@ -636,6 +636,10 @@ export function ServicesPage() {
       router.push(PATHS.MSME);
       return;
     }
+    if (service.id === "ration-card") {
+      router.push(PATHS.RATION_CARD);
+      return;
+    }
     setSelectedService(service);
     setFormData({});
     setErrors({});
