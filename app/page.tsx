@@ -1,5 +1,5 @@
-import { DashboardPage } from "../src/pages/dashboard/DashboardPage";
+import { AuthPage } from "../src/pages/auth/AuthPage";
 
 export default function Home() {
-  return <DashboardPage />;
+  return <AuthPage initialMode="login" />;
 }

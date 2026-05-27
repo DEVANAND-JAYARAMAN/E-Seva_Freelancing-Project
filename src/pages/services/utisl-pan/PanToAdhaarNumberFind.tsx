@@ -3,13 +3,13 @@ import { CheckCircle2 } from "lucide-react";
 import { InputField, SubmitButton } from "../form/FormFields";
 import { validateField, PATTERNS } from "../form/validators";
 
-interface AdhaarToRationProps {
+interface PanToAdhaarNumberFindProps {
   onCancel: () => void;
 }
 
-export const AdhaarToRation: React.FC<AdhaarToRationProps> = ({ onCancel }) => {
+export const PanToAdhaarNumberFind: React.FC<PanToAdhaarNumberFindProps> = ({ onCancel }) => {
   const [formData, setFormData] = useState<Record<string, string>>({
-    adhaarNo: "",
+    panNo: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -18,18 +18,10 @@ export const AdhaarToRation: React.FC<AdhaarToRationProps> = ({ onCancel }) => {
   const handleFieldChange = (name: string, value: string) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
-
+      
       // Live validation on edit
       if (errors[name]) {
-        let rule = {};
-        if (name === "adhaarNo") {
-          rule = {
-            required: true,
-            pattern: PATTERNS.AADHAAR,
-            patternMessage: "Must be a valid 12-digit Adhaar",
-          };
-        }
-
+        let rule = { required: true, pattern: PATTERNS.PAN, patternMessage: "Must be a valid 10-character PAN" };
         const errorMsg = validateField(name, value, rule, updated);
         setErrors((prevErrors) => {
           const next = { ...prevErrors };
@@ -49,20 +41,15 @@ export const AdhaarToRation: React.FC<AdhaarToRationProps> = ({ onCancel }) => {
     e.preventDefault();
 
     const newErrors: Record<string, string> = {};
-
-    // Adhaar No validation
-    const adhaarErr = validateField(
-      "adhaarNo",
-      formData.adhaarNo,
-      {
-        required: true,
-        requiredMessage: "Adhaar Number is required",
-        pattern: PATTERNS.AADHAAR,
-        patternMessage: "Must be a valid 12-digit Adhaar",
-      },
-      formData,
-    );
-    if (adhaarErr) newErrors.adhaarNo = adhaarErr;
+    
+    // Pan No validation
+    const panErr = validateField("panNo", formData.panNo, {
+      required: true,
+      requiredMessage: "PAN Number is required",
+      pattern: PATTERNS.PAN,
+      patternMessage: "Must be a valid 10-character PAN",
+    }, formData);
+    if (panErr) newErrors.panNo = panErr;
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -91,8 +78,7 @@ export const AdhaarToRation: React.FC<AdhaarToRationProps> = ({ onCancel }) => {
             Search Placed Successfully!
           </h5>
           <p className="text-sm text-slate-400 dark:text-slate-555 mt-2 max-w-md leading-relaxed">
-            Your search request for **Adhaar To Ration Number Find** has been
-            registered. The results will be updated soon.
+            Your search request for **Pan To Adhaar Number Find** has been registered. The results will be updated soon.
           </p>
         </div>
       </div>
@@ -101,14 +87,14 @@ export const AdhaarToRation: React.FC<AdhaarToRationProps> = ({ onCancel }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 w-full">
-      {/* Form Header matching Mobile Finder layout exactly */}
+      {/* Form Header matching layout exactly */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between border-b border-slate-100 dark:border-slate-900/50 pb-4 gap-2">
         <div>
           <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-            Adhaar To Ration Number Find
+            Pan To Adhaar Number Find
           </h2>
           <p className="text-xs text-slate-450 dark:text-slate-500 mt-0.5">
-            Locate your Ration Card details by verifying Adhaar Number
+            Locate your Aadhaar details by verifying your PAN Number
           </p>
         </div>
         <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none">
@@ -121,14 +107,14 @@ export const AdhaarToRation: React.FC<AdhaarToRationProps> = ({ onCancel }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="md:col-span-2">
             <InputField
-              name="adhaarNo"
-              label="Adhaar Number"
+              name="panNo"
+              label="Pan Number"
               type="text"
-              placeholder="Enter 12-digit Adhaar number"
-              value={formData.adhaarNo}
-              onChange={(val) => handleFieldChange("adhaarNo", val)}
-              error={errors.adhaarNo}
+              placeholder="Enter 10-character PAN (e.g. ABCDE1234F)"
+              value={formData.panNo}
+              error={errors.panNo}
               disabled={isSubmitting}
+              onChange={(val) => handleFieldChange("panNo", val.toUpperCase())}
             />
           </div>
         </div>

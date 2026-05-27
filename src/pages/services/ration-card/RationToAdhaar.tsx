@@ -18,12 +18,15 @@ export const RationToAdhaar: React.FC<RationToAdhaarProps> = ({ onCancel }) => {
   const handleFieldChange = (name: string, value: string) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
-      
+
       // Live validation on edit
       if (errors[name]) {
         let rule = {};
         if (name === "rationCardNo") {
-          rule = { required: true, patternMessage: "Must be a valid Ration Card Number" };
+          rule = {
+            required: true,
+            patternMessage: "Must be a valid Ration Card Number",
+          };
         }
 
         const errorMsg = validateField(name, value, rule, updated);
@@ -45,13 +48,18 @@ export const RationToAdhaar: React.FC<RationToAdhaarProps> = ({ onCancel }) => {
     e.preventDefault();
 
     const newErrors: Record<string, string> = {};
-    
+
     // Ration Card No validation
-    const rationErr = validateField("rationCardNo", formData.rationCardNo, {
-      required: true,
-      requiredMessage: "Ration Card Number is required",
-      patternMessage: "Must be a valid Ration Card Number",
-    }, formData);
+    const rationErr = validateField(
+      "rationCardNo",
+      formData.rationCardNo,
+      {
+        required: true,
+        requiredMessage: "Ration Card Number is required",
+        patternMessage: "Must be a valid Ration Card Number",
+      },
+      formData,
+    );
     if (rationErr) newErrors.rationCardNo = rationErr;
 
     if (Object.keys(newErrors).length > 0) {
@@ -81,7 +89,8 @@ export const RationToAdhaar: React.FC<RationToAdhaarProps> = ({ onCancel }) => {
             Search Placed Successfully!
           </h5>
           <p className="text-sm text-slate-400 dark:text-slate-555 mt-2 max-w-md leading-relaxed">
-            Your search request for **Ration To Adhaar Number Find** has been registered. The results will be updated soon.
+            Your search request for **Ration To Adhaar Number Find** has been
+            registered. The results will be updated soon.
           </p>
         </div>
       </div>
@@ -115,7 +124,7 @@ export const RationToAdhaar: React.FC<RationToAdhaarProps> = ({ onCancel }) => {
               type="text"
               placeholder="Enter ration card number"
               value={formData.rationCardNo}
-              onChange={(e) => handleFieldChange(e.target.name, e.target.value)}
+              onChange={(val) => handleFieldChange("rationCardNo", val)}
               error={errors.rationCardNo}
               disabled={isSubmitting}
             />

@@ -3,13 +3,15 @@ import { CheckCircle2 } from "lucide-react";
 import { InputField, SubmitButton } from "../form/FormFields";
 import { validateField, PATTERNS } from "../form/validators";
 
-interface AdhaarToRationProps {
+interface UpdateCellNumberWithoutOtpProps {
   onCancel: () => void;
 }
 
-export const AdhaarToRation: React.FC<AdhaarToRationProps> = ({ onCancel }) => {
+export const UpdateCellNumberWithoutOtp: React.FC<UpdateCellNumberWithoutOtpProps> = ({ onCancel }) => {
   const [formData, setFormData] = useState<Record<string, string>>({
-    adhaarNo: "",
+    epicNo: "",
+    nameAsPerAadhaar: "",
+    mobileNo: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -18,16 +20,16 @@ export const AdhaarToRation: React.FC<AdhaarToRationProps> = ({ onCancel }) => {
   const handleFieldChange = (name: string, value: string) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
-
+      
       // Live validation on edit
       if (errors[name]) {
         let rule = {};
-        if (name === "adhaarNo") {
-          rule = {
-            required: true,
-            pattern: PATTERNS.AADHAAR,
-            patternMessage: "Must be a valid 12-digit Adhaar",
-          };
+        if (name === "epicNo") {
+          rule = { required: true, requiredMessage: "Voter Id/EPIC Number is required" };
+        } else if (name === "nameAsPerAadhaar") {
+          rule = { required: true, requiredMessage: "Name As Per Aadhaar is required" };
+        } else if (name === "mobileNo") {
+          rule = { required: true, requiredMessage: "Mobile number is required", pattern: PATTERNS.PHONE, patternMessage: "Must be a valid 10-digit number" };
         }
 
         const errorMsg = validateField(name, value, rule, updated);
@@ -49,20 +51,15 @@ export const AdhaarToRation: React.FC<AdhaarToRationProps> = ({ onCancel }) => {
     e.preventDefault();
 
     const newErrors: Record<string, string> = {};
+    
+    const epicErr = validateField("epicNo", formData.epicNo, { required: true, requiredMessage: "Voter Id/EPIC Number is required" }, formData);
+    if (epicErr) newErrors.epicNo = epicErr;
 
-    // Adhaar No validation
-    const adhaarErr = validateField(
-      "adhaarNo",
-      formData.adhaarNo,
-      {
-        required: true,
-        requiredMessage: "Adhaar Number is required",
-        pattern: PATTERNS.AADHAAR,
-        patternMessage: "Must be a valid 12-digit Adhaar",
-      },
-      formData,
-    );
-    if (adhaarErr) newErrors.adhaarNo = adhaarErr;
+    const nameErr = validateField("nameAsPerAadhaar", formData.nameAsPerAadhaar, { required: true, requiredMessage: "Name As Per Aadhaar is required" }, formData);
+    if (nameErr) newErrors.nameAsPerAadhaar = nameErr;
+
+    const mobileErr = validateField("mobileNo", formData.mobileNo, { required: true, requiredMessage: "Mobile number is required", pattern: PATTERNS.PHONE, patternMessage: "Must be 10 digits" }, formData);
+    if (mobileErr) newErrors.mobileNo = mobileErr;
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -88,11 +85,10 @@ export const AdhaarToRation: React.FC<AdhaarToRationProps> = ({ onCancel }) => {
         </span>
         <div>
           <h5 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-            Search Placed Successfully!
+            Update Request Registered!
           </h5>
           <p className="text-sm text-slate-400 dark:text-slate-555 mt-2 max-w-md leading-relaxed">
-            Your search request for **Adhaar To Ration Number Find** has been
-            registered. The results will be updated soon.
+            Your request to **Update Cell Number (Without OTP)** has been successfully queued for background update.
           </p>
         </div>
       </div>
@@ -101,14 +97,14 @@ export const AdhaarToRation: React.FC<AdhaarToRationProps> = ({ onCancel }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 w-full">
-      {/* Form Header matching Mobile Finder layout exactly */}
+      {/* Form Header matching layout exactly */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between border-b border-slate-100 dark:border-slate-900/50 pb-4 gap-2">
         <div>
           <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-            Adhaar To Ration Number Find
+            Update Cell Number (Without OTP)
           </h2>
-          <p className="text-xs text-slate-450 dark:text-slate-500 mt-0.5">
-            Locate your Ration Card details by verifying Adhaar Number
+          <p className="text-xs text-slate-450 dark:text-slate-555 mt-0.5">
+            Link your mobile number with your EPIC card directly without OTP (background verification)
           </p>
         </div>
         <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none">
@@ -116,19 +112,45 @@ export const AdhaarToRation: React.FC<AdhaarToRationProps> = ({ onCancel }) => {
         </div>
       </div>
 
-      {/* Form Sections */}
+      {/* Form Fields */}
       <div className="space-y-5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="md:col-span-2">
+          <div>
             <InputField
-              name="adhaarNo"
-              label="Adhaar Number"
+              name="epicNo"
+              label="Voter Id Number/Epic Number"
               type="text"
-              placeholder="Enter 12-digit Adhaar number"
-              value={formData.adhaarNo}
-              onChange={(val) => handleFieldChange("adhaarNo", val)}
-              error={errors.adhaarNo}
+              placeholder="Voter Id Number/Epic Number"
+              value={formData.epicNo}
+              error={errors.epicNo}
               disabled={isSubmitting}
+              onChange={(val) => handleFieldChange("epicNo", val.toUpperCase())}
+            />
+          </div>
+
+          <div>
+            <InputField
+              name="nameAsPerAadhaar"
+              label="Name As Per Aadhaar"
+              type="text"
+              placeholder="Enter name exactly as in Aadhaar"
+              value={formData.nameAsPerAadhaar}
+              error={errors.nameAsPerAadhaar}
+              disabled={isSubmitting}
+              onChange={(val) => handleFieldChange("nameAsPerAadhaar", val)}
+            />
+          </div>
+
+          <div>
+            <InputField
+              name="mobileNo"
+              label="Mobile Number"
+              type="text"
+              placeholder="Enter 10-digit mobile number"
+              value={formData.mobileNo}
+              error={errors.mobileNo}
+              disabled={isSubmitting}
+              onChange={(val) => handleFieldChange("mobileNo", val.replace(/\D/g, "").substring(0, 10))}
             />
           </div>
         </div>
@@ -145,7 +167,7 @@ export const AdhaarToRation: React.FC<AdhaarToRationProps> = ({ onCancel }) => {
           Cancel
         </button>
         <SubmitButton
-          text="Search Details"
+          text="Update Number"
           loading={isSubmitting}
           disabled={isSubmitting}
         />

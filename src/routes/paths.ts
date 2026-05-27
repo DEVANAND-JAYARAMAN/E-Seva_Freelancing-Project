@@ -3,12 +3,12 @@
  */
 export const PATHS = {
   // Auth Routes
-  LOGIN: "/login",
+  LOGIN: "/",
   REGISTER: "/register",
   FORGOT_PASSWORD: "/forgot-password",
 
   // Application Routes
-  DASHBOARD: "/",
+  DASHBOARD: "/dashboard",
   WALLETS: "/wallets",
   PAYMENTS: "/payments",
   SERVICES: "/services",
@@ -20,6 +20,14 @@ export const PATHS = {
   PERMISSION: "/permission",
   SETTINGS: "/settings",
   PANCARD: "/pancard",
+  CAN_EDIT: "/services/can-edit",
+  AADHAAR_ADDRESS: "/services/aadhaar-card-address",
+  UTISL_PAN: "/services/utisl-pan",
+  EMPLOYMENT_SERVICES: "/services/employment-services",
+  FSSAI: "/services/fssai",
+  VOTER_ID: "/services/voter-id",
+  REGISTRATION_DEPT: "/services/registration-dept",
+  RTO_SERVICES: "/services/rto-services",
   DISTRIBUTORS: "/distributors",
   RETAILERS: "/retailers",
   CRM: "/crm",

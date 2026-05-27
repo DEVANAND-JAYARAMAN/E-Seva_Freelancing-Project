@@ -3,13 +3,15 @@ import { CheckCircle2 } from "lucide-react";
 import { InputField, SubmitButton } from "../form/FormFields";
 import { validateField, PATTERNS } from "../form/validators";
 
-interface AdhaarToRationProps {
+interface EidToAadhaarPdfProps {
   onCancel: () => void;
 }
 
-export const AdhaarToRation: React.FC<AdhaarToRationProps> = ({ onCancel }) => {
+export const EidToAadhaarPdf: React.FC<EidToAadhaarPdfProps> = ({ onCancel }) => {
   const [formData, setFormData] = useState<Record<string, string>>({
-    adhaarNo: "",
+    eidNo: "",
+    fullName: "",
+    mobileNo: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -18,16 +20,16 @@ export const AdhaarToRation: React.FC<AdhaarToRationProps> = ({ onCancel }) => {
   const handleFieldChange = (name: string, value: string) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
-
+      
       // Live validation on edit
       if (errors[name]) {
         let rule = {};
-        if (name === "adhaarNo") {
-          rule = {
-            required: true,
-            pattern: PATTERNS.AADHAAR,
-            patternMessage: "Must be a valid 12-digit Adhaar",
-          };
+        if (name === "eidNo") {
+          rule = { required: true, requiredMessage: "EID Number is required" };
+        } else if (name === "fullName") {
+          rule = { required: true, requiredMessage: "Full Name is required" };
+        } else if (name === "mobileNo") {
+          rule = { required: true, requiredMessage: "Mobile number is required", pattern: PATTERNS.PHONE, patternMessage: "Must be a valid 10-digit number" };
         }
 
         const errorMsg = validateField(name, value, rule, updated);
@@ -49,20 +51,15 @@ export const AdhaarToRation: React.FC<AdhaarToRationProps> = ({ onCancel }) => {
     e.preventDefault();
 
     const newErrors: Record<string, string> = {};
+    
+    const eidErr = validateField("eidNo", formData.eidNo, { required: true, requiredMessage: "EID Enrolment Number is required" }, formData);
+    if (eidErr) newErrors.eidNo = eidErr;
 
-    // Adhaar No validation
-    const adhaarErr = validateField(
-      "adhaarNo",
-      formData.adhaarNo,
-      {
-        required: true,
-        requiredMessage: "Adhaar Number is required",
-        pattern: PATTERNS.AADHAAR,
-        patternMessage: "Must be a valid 12-digit Adhaar",
-      },
-      formData,
-    );
-    if (adhaarErr) newErrors.adhaarNo = adhaarErr;
+    const nameErr = validateField("fullName", formData.fullName, { required: true, requiredMessage: "Full Name is required" }, formData);
+    if (nameErr) newErrors.fullName = nameErr;
+
+    const mobileErr = validateField("mobileNo", formData.mobileNo, { required: true, requiredMessage: "Mobile number is required", pattern: PATTERNS.PHONE, patternMessage: "Must be exactly 10 digits" }, formData);
+    if (mobileErr) newErrors.mobileNo = mobileErr;
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -91,8 +88,7 @@ export const AdhaarToRation: React.FC<AdhaarToRationProps> = ({ onCancel }) => {
             Search Placed Successfully!
           </h5>
           <p className="text-sm text-slate-400 dark:text-slate-555 mt-2 max-w-md leading-relaxed">
-            Your search request for **Adhaar To Ration Number Find** has been
-            registered. The results will be updated soon.
+            Your search request for **EID to Adhaar PDF Apply** has been registered. The results will be updated soon.
           </p>
         </div>
       </div>
@@ -101,14 +97,13 @@ export const AdhaarToRation: React.FC<AdhaarToRationProps> = ({ onCancel }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 w-full">
-      {/* Form Header matching Mobile Finder layout exactly */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between border-b border-slate-100 dark:border-slate-900/50 pb-4 gap-2">
         <div>
           <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-            Adhaar To Ration Number Find
+            EID to Adhaar PDF Apply
           </h2>
-          <p className="text-xs text-slate-450 dark:text-slate-500 mt-0.5">
-            Locate your Ration Card details by verifying Adhaar Number
+          <p className="text-xs text-slate-450 dark:text-slate-555 mt-0.5">
+            Locate and download your Aadhaar Card PDF using 14-digit Enrolment ID (EID)
           </p>
         </div>
         <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none">
@@ -116,25 +111,49 @@ export const AdhaarToRation: React.FC<AdhaarToRationProps> = ({ onCancel }) => {
         </div>
       </div>
 
-      {/* Form Sections */}
       <div className="space-y-5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div>
+            <InputField
+              name="eidNo"
+              label="EID Enrolment Number"
+              type="text"
+              placeholder="Enter 14-digit Enrolment ID"
+              value={formData.eidNo}
+              error={errors.eidNo}
+              disabled={isSubmitting}
+              onChange={(val) => handleFieldChange("eidNo", val.replace(/\D/g, "").slice(0, 14))}
+            />
+          </div>
+
+          <div>
+            <InputField
+              name="fullName"
+              label="Full Name"
+              type="text"
+              placeholder="Enter applicant full name"
+              value={formData.fullName}
+              error={errors.fullName}
+              disabled={isSubmitting}
+              onChange={(val) => handleFieldChange("fullName", val)}
+            />
+          </div>
+
           <div className="md:col-span-2">
             <InputField
-              name="adhaarNo"
-              label="Adhaar Number"
+              name="mobileNo"
+              label="Mobile Number"
               type="text"
-              placeholder="Enter 12-digit Adhaar number"
-              value={formData.adhaarNo}
-              onChange={(val) => handleFieldChange("adhaarNo", val)}
-              error={errors.adhaarNo}
+              placeholder="Enter registered mobile number"
+              value={formData.mobileNo}
+              error={errors.mobileNo}
               disabled={isSubmitting}
+              onChange={(val) => handleFieldChange("mobileNo", val.replace(/\D/g, "").substring(0, 10))}
             />
           </div>
         </div>
       </div>
 
-      {/* Button Footer */}
       <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-900/60 mt-8">
         <button
           type="button"
