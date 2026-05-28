@@ -1,6 +1,7 @@
 {
     "swagger": "2.0",
     "info": {
+<<<<<<< Updated upstream
         "description": "This is the backend API for the E-Service platform.",
         "title": "E-Service API",
         "termsOfService": "http://swagger.io/terms/",
@@ -26,6 +27,65 @@
                     }
                 ],
                 "description": "Creates a new Mugavi payment gateway order and returns the payment URL and QR code.",
+=======
+        "description": "Backend API for E-Seva Platform managing services, retailers, and notifications.",
+        "title": "E-Seva Platform API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/api",
+    "paths": {
+        "/admin/notifications": {
+            "get": {
+                "description": "Get a list of notifications for the Admin Panel",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Get Notifications",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handlers.Notification"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/requests": {
+            "get": {
+                "description": "Fetch all service requests simultaneously for Admin Panel",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Get Admin Service Requests",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handlers.ServiceApplication"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/retailer": {
+            "post": {
+                "description": "Add a new Retailer or Distributor and trigger a notification",
+>>>>>>> Stashed changes
                 "consumes": [
                     "application/json"
                 ],
@@ -33,17 +93,31 @@
                     "application/json"
                 ],
                 "tags": [
+<<<<<<< Updated upstream
                     "Wallet"
                 ],
                 "summary": "Initiate Payment Gateway Recharge",
                 "parameters": [
                     {
                         "description": "Gateway Recharge Request",
+=======
+                    "Admin"
+                ],
+                "summary": "Add Retailer or Distributor",
+                "parameters": [
+                    {
+                        "description": "User Data",
+>>>>>>> Stashed changes
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
+<<<<<<< Updated upstream
                             "$ref": "#/definitions/wallet.GatewayRechargeRequestPayload"
+=======
+                            "type": "object",
+                            "additionalProperties": true
+>>>>>>> Stashed changes
                         }
                     }
                 ],
@@ -59,6 +133,7 @@
                         "description": "Bad Request",
                         "schema": {
                             "type": "object",
+<<<<<<< Updated upstream
                             "additionalProperties": {
                                 "type": "string"
                             }
@@ -71,6 +146,51 @@
                             "additionalProperties": {
                                 "type": "string"
                             }
+=======
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/services/request": {
+            "post": {
+                "description": "Retailer or Distributor submits a new service request application",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Services"
+                ],
+                "summary": "Submit a Service Request",
+                "parameters": [
+                    {
+                        "description": "Service Application Data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ServiceApplication"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+>>>>>>> Stashed changes
                         }
                     }
                 }
@@ -78,6 +198,7 @@
         }
     },
     "definitions": {
+<<<<<<< Updated upstream
         "wallet.GatewayRechargeRequestPayload": {
             "type": "object",
             "required": [
@@ -86,10 +207,36 @@
                 "customer_mobile",
                 "redirect_url"
             ],
+=======
+        "handlers.Notification": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "isRead": {
+                    "type": "boolean"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "type": {
+                    "description": "\"NEW_REQUEST\", \"NEW_RETAILER\"",
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.ServiceApplication": {
+            "type": "object",
+>>>>>>> Stashed changes
             "properties": {
                 "amount": {
                     "type": "number"
                 },
+<<<<<<< Updated upstream
                 "customer_email": {
                     "type": "string"
                 },
@@ -97,10 +244,36 @@
                     "type": "string"
                 },
                 "redirect_url": {
+=======
+                "applicationId": {
+                    "type": "string"
+                },
+                "createdDate": {
+                    "type": "string"
+                },
+                "formData": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "retailerId": {
+                    "type": "string"
+                },
+                "retailerName": {
+                    "type": "string"
+                },
+                "serviceId": {
+                    "type": "string"
+                },
+                "serviceName": {
+                    "type": "string"
+                },
+                "status": {
+>>>>>>> Stashed changes
                     "type": "string"
                 }
             }
         }
+<<<<<<< Updated upstream
     },
     "securityDefinitions": {
         "BearerAuth": {
@@ -108,5 +281,7 @@
             "name": "Authorization",
             "in": "header"
         }
+=======
+>>>>>>> Stashed changes
     }
 }

@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 basePath: /api/v1
 definitions:
   wallet.GatewayRechargeRequestPayload:
@@ -38,11 +39,100 @@ paths:
         URL and QR code.
       parameters:
       - description: Gateway Recharge Request
+=======
+basePath: /api
+definitions:
+  handlers.Notification:
+    properties:
+      createdAt:
+        type: string
+      id:
+        type: string
+      isRead:
+        type: boolean
+      message:
+        type: string
+      type:
+        description: '"NEW_REQUEST", "NEW_RETAILER"'
+        type: string
+    type: object
+  handlers.ServiceApplication:
+    properties:
+      amount:
+        type: number
+      applicationId:
+        type: string
+      createdDate:
+        type: string
+      formData:
+        additionalProperties: true
+        type: object
+      retailerId:
+        type: string
+      retailerName:
+        type: string
+      serviceId:
+        type: string
+      serviceName:
+        type: string
+      status:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Backend API for E-Seva Platform managing services, retailers, and notifications.
+  title: E-Seva Platform API
+  version: "1.0"
+paths:
+  /admin/notifications:
+    get:
+      description: Get a list of notifications for the Admin Panel
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.Notification'
+            type: array
+      summary: Get Notifications
+      tags:
+      - Admin
+  /admin/requests:
+    get:
+      description: Fetch all service requests simultaneously for Admin Panel
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/handlers.ServiceApplication'
+            type: array
+      summary: Get Admin Service Requests
+      tags:
+      - Admin
+  /admin/retailer:
+    post:
+      consumes:
+      - application/json
+      description: Add a new Retailer or Distributor and trigger a notification
+      parameters:
+      - description: User Data
+>>>>>>> Stashed changes
         in: body
         name: request
         required: true
         schema:
+<<<<<<< Updated upstream
           $ref: '#/definitions/wallet.GatewayRechargeRequestPayload'
+=======
+          additionalProperties: true
+          type: object
+>>>>>>> Stashed changes
       produces:
       - application/json
       responses:
@@ -54,6 +144,7 @@ paths:
         "400":
           description: Bad Request
           schema:
+<<<<<<< Updated upstream
             additionalProperties:
               type: string
             type: object
@@ -73,4 +164,39 @@ securityDefinitions:
     in: header
     name: Authorization
     type: apiKey
+=======
+            additionalProperties: true
+            type: object
+      summary: Add Retailer or Distributor
+      tags:
+      - Admin
+  /services/request:
+    post:
+      consumes:
+      - application/json
+      description: Retailer or Distributor submits a new service request application
+      parameters:
+      - description: Service Application Data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.ServiceApplication'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Submit a Service Request
+      tags:
+      - Services
+>>>>>>> Stashed changes
 swagger: "2.0"

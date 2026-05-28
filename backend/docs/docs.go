@@ -9,6 +9,7 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
+<<<<<<< Updated upstream
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
             "name": "API Support",
@@ -19,11 +20,15 @@ const docTemplate = `{
             "name": "Apache 2.0",
             "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
         },
+=======
+        "contact": {},
+>>>>>>> Stashed changes
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+<<<<<<< Updated upstream
         "/wallet/recharge/gateway": {
             "post": {
                 "security": [
@@ -32,6 +37,57 @@ const docTemplate = `{
                     }
                 ],
                 "description": "Creates a new Mugavi payment gateway order and returns the payment URL and QR code.",
+=======
+        "/admin/notifications": {
+            "get": {
+                "description": "Get a list of notifications for the Admin Panel",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Get Notifications",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handlers.Notification"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/requests": {
+            "get": {
+                "description": "Fetch all service requests simultaneously for Admin Panel",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "Get Admin Service Requests",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/handlers.ServiceApplication"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/retailer": {
+            "post": {
+                "description": "Add a new Retailer or Distributor and trigger a notification",
+>>>>>>> Stashed changes
                 "consumes": [
                     "application/json"
                 ],
@@ -39,17 +95,31 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
+<<<<<<< Updated upstream
                     "Wallet"
                 ],
                 "summary": "Initiate Payment Gateway Recharge",
                 "parameters": [
                     {
                         "description": "Gateway Recharge Request",
+=======
+                    "Admin"
+                ],
+                "summary": "Add Retailer or Distributor",
+                "parameters": [
+                    {
+                        "description": "User Data",
+>>>>>>> Stashed changes
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
+<<<<<<< Updated upstream
                             "$ref": "#/definitions/wallet.GatewayRechargeRequestPayload"
+=======
+                            "type": "object",
+                            "additionalProperties": true
+>>>>>>> Stashed changes
                         }
                     }
                 ],
@@ -65,6 +135,7 @@ const docTemplate = `{
                         "description": "Bad Request",
                         "schema": {
                             "type": "object",
+<<<<<<< Updated upstream
                             "additionalProperties": {
                                 "type": "string"
                             }
@@ -77,6 +148,51 @@ const docTemplate = `{
                             "additionalProperties": {
                                 "type": "string"
                             }
+=======
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/services/request": {
+            "post": {
+                "description": "Retailer or Distributor submits a new service request application",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Services"
+                ],
+                "summary": "Submit a Service Request",
+                "parameters": [
+                    {
+                        "description": "Service Application Data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handlers.ServiceApplication"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+>>>>>>> Stashed changes
                         }
                     }
                 }
@@ -84,6 +200,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
+<<<<<<< Updated upstream
         "wallet.GatewayRechargeRequestPayload": {
             "type": "object",
             "required": [
@@ -92,10 +209,36 @@ const docTemplate = `{
                 "customer_mobile",
                 "redirect_url"
             ],
+=======
+        "handlers.Notification": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "isRead": {
+                    "type": "boolean"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "type": {
+                    "description": "\"NEW_REQUEST\", \"NEW_RETAILER\"",
+                    "type": "string"
+                }
+            }
+        },
+        "handlers.ServiceApplication": {
+            "type": "object",
+>>>>>>> Stashed changes
             "properties": {
                 "amount": {
                     "type": "number"
                 },
+<<<<<<< Updated upstream
                 "customer_email": {
                     "type": "string"
                 },
@@ -103,10 +246,36 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "redirect_url": {
+=======
+                "applicationId": {
+                    "type": "string"
+                },
+                "createdDate": {
+                    "type": "string"
+                },
+                "formData": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "retailerId": {
+                    "type": "string"
+                },
+                "retailerName": {
+                    "type": "string"
+                },
+                "serviceId": {
+                    "type": "string"
+                },
+                "serviceName": {
+                    "type": "string"
+                },
+                "status": {
+>>>>>>> Stashed changes
                     "type": "string"
                 }
             }
         }
+<<<<<<< Updated upstream
     },
     "securityDefinitions": {
         "BearerAuth": {
@@ -114,6 +283,8 @@ const docTemplate = `{
             "name": "Authorization",
             "in": "header"
         }
+=======
+>>>>>>> Stashed changes
     }
 }`
 
@@ -121,10 +292,17 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "localhost:8080",
+<<<<<<< Updated upstream
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "E-Service API",
 	Description:      "This is the backend API for the E-Service platform.",
+=======
+	BasePath:         "/api",
+	Schemes:          []string{},
+	Title:            "E-Seva Platform API",
+	Description:      "Backend API for E-Seva Platform managing services, retailers, and notifications.",
+>>>>>>> Stashed changes
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
