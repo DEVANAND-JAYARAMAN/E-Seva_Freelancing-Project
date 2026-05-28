@@ -9,31 +9,32 @@ interface ServicePriceRow {
   slNo: number;
   serviceName: string;
   admin: string;
+  othersiteAdmin: string;
   distributor: string;
   retailer: string;
-  needCoordinator: boolean;
+  customer: string;
 }
 
 export function PdfServicePage() {
   const router = useRouter();
   const [prices, setPrices] = useState<ServicePriceRow[]>([
-    { slNo: 1, serviceName: "Adhaar to Pan Number", admin: "12.00", distributor: "30.00", retailer: "30.00", needCoordinator: false },
-    { slNo: 2, serviceName: "Pan To Pan Details", admin: "10.00", distributor: "30.00", retailer: "30.00", needCoordinator: false },
-    { slNo: 3, serviceName: "Driving License PDF", admin: "10.00", distributor: "30.00", retailer: "30.00", needCoordinator: false },
-    { slNo: 4, serviceName: "RC Pdf", admin: "12.00", distributor: "30.00", retailer: "30.00", needCoordinator: false },
-    { slNo: 5, serviceName: "Adhaar to Smart card Number FIND", admin: "12.00", distributor: "20.00", retailer: "20.00", needCoordinator: false },
-    { slNo: 6, serviceName: "Cell Number Link In Voter ID", admin: "20.00", distributor: "60.00", retailer: "60.00", needCoordinator: false },
-    { slNo: 7, serviceName: "EPIC INSTANT PDF", admin: "10.00", distributor: "40.00", retailer: "40.00", needCoordinator: false },
-    { slNo: 8, serviceName: "Adhaar verification", admin: "10.00", distributor: "20.00", retailer: "20.00", needCoordinator: false },
-    { slNo: 9, serviceName: "PAN TO GST Number Find", admin: "15.00", distributor: "70.00", retailer: "70.00", needCoordinator: false },
-    { slNo: 10, serviceName: "E-Shram PDF", admin: "30.00", distributor: "130.00", retailer: "130.00", needCoordinator: false },
-    { slNo: 11, serviceName: "Rc To Mobile Number Find", admin: "11.00", distributor: "0.00", retailer: "0.00", needCoordinator: false },
+    { slNo: 1, serviceName: "Adhaar to Pan Number", admin: "12.00", othersiteAdmin: "0.00", distributor: "30.00", retailer: "30.00", customer: "25.00" },
+    { slNo: 2, serviceName: "Pan To Pan Details", admin: "10.00", othersiteAdmin: "0.00", distributor: "30.00", retailer: "30.00", customer: "25.00" },
+    { slNo: 3, serviceName: "Driving License PDF", admin: "10.00", othersiteAdmin: "", distributor: "30.00", retailer: "30.00", customer: "25.00" },
+    { slNo: 4, serviceName: "RC Pdf", admin: "12.00", othersiteAdmin: "", distributor: "30.00", retailer: "30.00", customer: "25.00" },
+    { slNo: 5, serviceName: "Adhaar to Smart card Number FIND", admin: "12.00", othersiteAdmin: "", distributor: "20.00", retailer: "20.00", customer: "25.00" },
+    { slNo: 6, serviceName: "Cell Number Link In Voter ID", admin: "20.00", othersiteAdmin: "", distributor: "60.00", retailer: "60.00", customer: "60.00" },
+    { slNo: 7, serviceName: "EPIC INSTANT PDF", admin: "10.00", othersiteAdmin: "", distributor: "40.00", retailer: "40.00", customer: "40.00" },
+    { slNo: 8, serviceName: "Adhaar verification", admin: "10.00", othersiteAdmin: "", distributor: "20.00", retailer: "20.00", customer: "20.00" },
+    { slNo: 9, serviceName: "PAN TO GST Number Find", admin: "15.00", othersiteAdmin: "", distributor: "70.00", retailer: "70.00", customer: "70.00" },
+    { slNo: 10, serviceName: "E-Shram PDF", admin: "30.00", othersiteAdmin: "", distributor: "130.00", retailer: "130.00", customer: "130.00" },
+    { slNo: 11, serviceName: "Rc To Mobile Number Find", admin: "11.00", othersiteAdmin: "", distributor: "", retailer: "", customer: "" },
   ]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const handleInputChange = (index: number, field: "admin" | "distributor" | "retailer", value: string) => {
+  const handleInputChange = (index: number, field: "admin" | "othersiteAdmin" | "distributor" | "retailer" | "customer", value: string) => {
     setPrices((prev) => {
       const next = [...prev];
       next[index] = { ...next[index], [field]: value };
@@ -41,13 +42,7 @@ export function PdfServicePage() {
     });
   };
 
-  const handleCheckboxChange = (index: number, value: boolean) => {
-    setPrices((prev) => {
-      const next = [...prev];
-      next[index] = { ...next[index], needCoordinator: value };
-      return next;
-    });
-  };
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,10 +101,11 @@ export function PdfServicePage() {
                   <tr className="border-b border-slate-200/60 dark:border-slate-900 bg-slate-100/40 dark:bg-transparent">
                     <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest w-[80px]">Sl No</th>
                     <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest">Service Name</th>
-                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest text-center w-[150px]">Admin</th>
-                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest text-center w-[150px]">Distributor</th>
-                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest text-center w-[150px]">Retailer</th>
-                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest text-center w-[160px]">Need Coordinator</th>
+                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest text-center w-[120px]">Admin</th>
+                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest text-center w-[130px]">Othersite Admin</th>
+                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest text-center w-[120px]">Distributor</th>
+                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest text-center w-[120px]">Retailer</th>
+                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest text-center w-[120px]">Customer</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200/60 dark:divide-slate-900/60">
@@ -122,52 +118,63 @@ export function PdfServicePage() {
                       <td className="py-4 px-5 text-xs font-extrabold text-slate-700 dark:text-slate-300">{row.serviceName}</td>
                       
                       {/* Admin input capsule */}
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-2">
                         <div className="relative flex items-center justify-center">
-                          <span className="absolute left-6 text-xs font-bold text-slate-400 dark:text-slate-600 select-none">₹</span>
                           <input
                             type="text"
                             value={row.admin}
                             onChange={(e) => handleInputChange(idx, "admin", e.target.value)}
-                            className="w-28 h-9 pl-8 pr-3 text-xs font-black text-center bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-800/80 rounded-full focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-white transition-all outline-none"
+                            className="w-24 h-9 px-3 text-xs font-black text-center bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-800/80 rounded-lg focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-white transition-all outline-none"
+                          />
+                        </div>
+                      </td>
+
+                      {/* Othersite Admin input capsule */}
+                      <td className="py-3 px-2">
+                        <div className="relative flex items-center justify-center">
+                          <input
+                            type="text"
+                            value={row.othersiteAdmin}
+                            onChange={(e) => handleInputChange(idx, "othersiteAdmin", e.target.value)}
+                            className="w-24 h-9 px-3 text-xs font-black text-center bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-800/80 rounded-lg focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-white transition-all outline-none"
                           />
                         </div>
                       </td>
 
                       {/* Distributor input capsule */}
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-2">
                         <div className="relative flex items-center justify-center">
-                          <span className="absolute left-6 text-xs font-bold text-slate-400 dark:text-slate-600 select-none">₹</span>
                           <input
                             type="text"
                             value={row.distributor}
                             onChange={(e) => handleInputChange(idx, "distributor", e.target.value)}
-                            className="w-28 h-9 pl-8 pr-3 text-xs font-black text-center bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-800/80 rounded-full focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-white transition-all outline-none"
+                            className="w-24 h-9 px-3 text-xs font-black text-center bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-800/80 rounded-lg focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-white transition-all outline-none"
                           />
                         </div>
                       </td>
 
                       {/* Retailer input capsule */}
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-2">
                         <div className="relative flex items-center justify-center">
-                          <span className="absolute left-6 text-xs font-bold text-slate-400 dark:text-slate-600 select-none">₹</span>
                           <input
                             type="text"
                             value={row.retailer}
                             onChange={(e) => handleInputChange(idx, "retailer", e.target.value)}
-                            className="w-28 h-9 pl-8 pr-3 text-xs font-black text-center bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-800/80 rounded-full focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-white transition-all outline-none"
+                            className="w-24 h-9 px-3 text-xs font-black text-center bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-800/80 rounded-lg focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-white transition-all outline-none"
                           />
                         </div>
                       </td>
 
-                      {/* Coordinator Checkbox */}
-                      <td className="py-3 px-4 text-center">
-                        <input
-                          type="checkbox"
-                          checked={row.needCoordinator}
-                          onChange={(e) => handleCheckboxChange(idx, e.target.checked)}
-                          className="h-4.5 w-4.5 rounded bg-white dark:bg-[#131926] border-slate-300 dark:border-slate-800 text-emerald-600 dark:text-emerald-500 focus:ring-emerald-500 focus:ring-offset-0 focus:outline-none cursor-pointer"
-                        />
+                      {/* Customer input capsule */}
+                      <td className="py-3 px-2">
+                        <div className="relative flex items-center justify-center">
+                          <input
+                            type="text"
+                            value={row.customer}
+                            onChange={(e) => handleInputChange(idx, "customer", e.target.value)}
+                            className="w-24 h-9 px-3 text-xs font-black text-center bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-800/80 rounded-lg focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-white transition-all outline-none"
+                          />
+                        </div>
                       </td>
                     </tr>
                   ))}

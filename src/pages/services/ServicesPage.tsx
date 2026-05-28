@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
 import { ServiceCard } from "./ServiceCard";
+import { ServicePaymentScreen, ServiceSuccessScreen } from "../../components/ServicePaymentScreen";
 
 // Service item interface
 export interface EService {
@@ -26,6 +27,10 @@ export interface EService {
   glowColor: string;
   category: "Top" | "All";
   formFields: string[];
+  price?: {
+    retailer: string | number;
+    distributor: string | number;
+  };
 }
 
 // Reusable custom vectors designed to look like "real images related to the heading"
@@ -1156,7 +1161,8 @@ export function ServicesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedService, setSelectedService] = useState<EService | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [submissionSuccess, setSubmissionSuccess] = useState(false);
+  const [paymentPhase, setPaymentPhase] = useState<"form" | "payment" | "success">("form");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -1186,6 +1192,7 @@ export function ServicesPage() {
         "aadhaarNo",
         "aadhaarUpload",
       ],
+      price: { retailer: 0, distributor: 0 },
     },
 
     // All Services Group
@@ -1197,6 +1204,7 @@ export function ServicesPage() {
       glowColor: "shadow-sky-500/10",
       category: "All",
       formFields: ["softwareType", "quantity", "customerEmail"],
+      price: { retailer: 0, distributor: 0 },
     },
     {
       id: "msme",
@@ -1206,6 +1214,7 @@ export function ServicesPage() {
       glowColor: "shadow-blue-600/10",
       category: "All",
       formFields: ["enterpriseName", "ownerName", "aadhaarNo", "businessType"],
+      price: { retailer: 100, distributor: 100 },
     },
     {
       id: "ration-card",
@@ -1215,6 +1224,7 @@ export function ServicesPage() {
       glowColor: "shadow-emerald-500/10",
       category: "All",
       formFields: ["rationType", "headOfFamily", "membersCount", "address"],
+      price: { retailer: 50, distributor: 50 },
     },
     {
       id: "gst",
@@ -1224,6 +1234,7 @@ export function ServicesPage() {
       glowColor: "shadow-amber-600/10",
       category: "All",
       formFields: ["gstType", "tradeName", "ownerName", "panNo", "state"],
+      price: { retailer: 1500, distributor: 1500 },
     },
     {
       id: "aadhaar-card-address",
@@ -1233,6 +1244,7 @@ export function ServicesPage() {
       glowColor: "shadow-rose-500/10",
       category: "All",
       formFields: ["aadhaarNo", "fullName", "newAddress", "addressProof"],
+      price: { retailer: 200, distributor: 200 },
     },
     {
       id: "can-edit",
@@ -1242,6 +1254,7 @@ export function ServicesPage() {
       glowColor: "shadow-indigo-500/10",
       category: "All",
       formFields: ["canNo", "fullName", "dob", "fieldsToEdit"],
+      price: { retailer: 30, distributor: 30 },
     },
     {
       id: "rto-services",
@@ -1251,6 +1264,7 @@ export function ServicesPage() {
       glowColor: "shadow-orange-500/10",
       category: "All",
       formFields: ["rtoType", "vehicleNumber", "ownerName", "licenseNo"],
+      price: { retailer: 60, distributor: 60 },
     },
     {
       id: "registration-dept",
@@ -1261,6 +1275,7 @@ export function ServicesPage() {
       glowColor: "shadow-pink-500/10",
       category: "All",
       formFields: ["documentType", "partiesNames", "stampValue", "district"],
+      price: { retailer: 400, distributor: 400 },
     },
     {
       id: "voter-id",
@@ -1270,6 +1285,7 @@ export function ServicesPage() {
       glowColor: "shadow-cyan-500/10",
       category: "All",
       formFields: ["voterType", "epicNo", "fullName", "constituency"],
+      price: { retailer: 60, distributor: 60 },
     },
     {
       id: "fssai",
@@ -1279,6 +1295,7 @@ export function ServicesPage() {
       glowColor: "shadow-lime-500/10",
       category: "All",
       formFields: ["fssaiType", "foodBusinessName", "ownerName", "address"],
+      price: { retailer: 300, distributor: 300 },
     },
     {
       id: "certificate-courses",
@@ -1326,6 +1343,7 @@ export function ServicesPage() {
       glowColor: "shadow-green-600/10",
       category: "All",
       formFields: ["district", "taluk", "village", "surveyNo", "subdivisionNo"],
+      price: { retailer: 20, distributor: 20 },
     },
     {
       id: "utisl-pan",
@@ -1335,6 +1353,7 @@ export function ServicesPage() {
       glowColor: "shadow-sky-500/10",
       category: "All",
       formFields: ["applicantName", "dob", "aadhaarNo", "couponNumber"],
+      price: { retailer: 0, distributor: 0 },
     },
     {
       id: "pstm-certificate",
@@ -1416,7 +1435,7 @@ export function ServicesPage() {
     setSelectedService(service);
     setFormData({});
     setErrors({});
-    setSubmissionSuccess(false);
+    setPaymentPhase("form");
     setIsModalOpen(true);
   };
 
@@ -1456,13 +1475,17 @@ export function ServicesPage() {
       return;
     }
 
-    // Submit mock handler
-    setSubmissionSuccess(true);
+    // Proceed to payment phase
+    setPaymentPhase("payment");
+  };
+
+  const handlePaymentSuccess = () => {
+    setPaymentPhase("success");
     setTimeout(() => {
       setIsModalOpen(false);
-      setSubmissionSuccess(false);
+      setPaymentPhase("form");
       setFormData({});
-    }, 2000);
+    }, 3000);
   };
 
   return (
@@ -1514,6 +1537,7 @@ export function ServicesPage() {
                   icon={renderServiceImage(service.id, "w-12 h-12")}
                   onClick={() => handleServiceClick(service)}
                   layout="horizontal"
+                  price={service.price}
                 />
               ))}
             </div>
@@ -1539,6 +1563,7 @@ export function ServicesPage() {
                   subName={service.subName}
                   icon={renderServiceImage(service.id, "w-14 h-14")}
                   onClick={() => handleServiceClick(service)}
+                  price={service.price}
                 />
               ))}
             </div>
@@ -1571,21 +1596,16 @@ export function ServicesPage() {
             {/* Modal Dialog */}
             <div className="relative w-full max-w-md bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-250 z-10 p-6 flex flex-col gap-5">
               {/* Form Success State Screen */}
-              {submissionSuccess ? (
-                <div className="py-10 flex flex-col items-center justify-center text-center gap-4">
-                  <span className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-450 animate-bounce">
-                    <CheckCircle2 size={36} className="stroke-[2.5]" />
-                  </span>
-                  <div>
-                    <h5 className="text-xl font-extrabold text-slate-900 dark:text-white uppercase tracking-tight">
-                      Application Submitted!
-                    </h5>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1.5 max-w-xs leading-relaxed">
-                      Your service request for{" "}
-                      <strong>{selectedService.name}</strong> has been
-                      successfully placed. It is now queued for validation.
-                    </p>
-                  </div>
+              {paymentPhase === "success" ? (
+                <ServiceSuccessScreen serviceName={selectedService.name} />
+              ) : paymentPhase === "payment" ? (
+                <div className="py-2">
+                  <ServicePaymentScreen
+                    serviceName={selectedService.name}
+                    retailerCharge={selectedService.price?.retailer || 0}
+                    onBack={() => setPaymentPhase("form")}
+                    onSuccess={handlePaymentSuccess}
+                  />
                 </div>
               ) : (
                 <>
