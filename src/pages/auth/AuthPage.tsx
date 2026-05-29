@@ -13,7 +13,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Leaf,
-  Sparkles,
+  Users,
 } from "lucide-react";
 import { InputField, SubmitButton } from "../services/form/FormFields";
 import { validateField, PATTERNS } from "../services/form/validators";
@@ -29,7 +29,9 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
 
   // Navigation & transition state
   const [mode, setMode] = useState<AuthMode>(initialMode);
-  const [formData, setFormData] = useState<Record<string, string>>({});
+  const [formData, setFormData] = useState<Record<string, string>>({
+    role: "retailer",
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -202,9 +204,10 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
       if (mode === "login") {
         router.push("/dashboard");
       } else if (mode === "register") {
-        setFormData({});
+        setFormData({ role: "retailer" });
         setMode("login");
       } else {
+        setFormData({ role: "retailer" });
         setMode("login");
       }
     }, 800);
@@ -235,7 +238,6 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
           {/* Description */}
           <div className="space-y-4 pt-12">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/5 text-[10px] font-black uppercase tracking-wider">
-              <Sparkles size={11} className="text-yellow-300 fill-yellow-300" />
               <span>Next-Gen E-Seva Portal</span>
             </span>
             <h1 className="text-3xl lg:text-4xl font-extrabold tracking-tight leading-tight max-w-sm">
@@ -294,6 +296,75 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
 
             {/* Action Form */}
             <form onSubmit={handleAuthSubmit} className="space-y-4">
+              {mode === "register" && (
+                <div className="flex flex-col gap-2 w-full">
+                  <label className="text-[11px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider">
+                    Select Account Type
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div
+                      onClick={() => handleFieldChange("role", "retailer")}
+                      className={`cursor-pointer p-3.5 rounded-xl border-2 transition-all flex flex-col gap-2 relative ${
+                        formData.role === "retailer"
+                          ? "border-[#005c3a] dark:border-emerald-600 bg-emerald-50/10 dark:bg-emerald-950/10"
+                          : "border-slate-200 dark:border-slate-800/80 hover:border-slate-350 dark:hover:border-slate-700 bg-transparent"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className={`p-1.5 rounded-lg transition-colors ${
+                          formData.role === "retailer"
+                            ? "bg-[#005c3a] dark:bg-emerald-600 text-white"
+                            : "bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400"
+                        }`}>
+                          <User size={16} />
+                        </span>
+                        {formData.role === "retailer" && (
+                          <span className="absolute top-3.5 right-3.5 h-2 w-2 rounded-full bg-[#005c3a] dark:bg-emerald-500" />
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-black text-slate-800 dark:text-slate-200">
+                          Retailer
+                        </h4>
+                        <p className="text-[10px] leading-tight text-slate-400 dark:text-slate-500 font-medium mt-1">
+                          Apply utility services, wallets & instant forms.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div
+                      onClick={() => handleFieldChange("role", "distributor")}
+                      className={`cursor-pointer p-3.5 rounded-xl border-2 transition-all flex flex-col gap-2 relative ${
+                        formData.role === "distributor"
+                          ? "border-[#005c3a] dark:border-emerald-600 bg-emerald-50/10 dark:bg-emerald-950/10"
+                          : "border-slate-200 dark:border-slate-800/80 hover:border-slate-350 dark:hover:border-slate-700 bg-transparent"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className={`p-1.5 rounded-lg transition-colors ${
+                          formData.role === "distributor"
+                            ? "bg-[#005c3a] dark:bg-emerald-600 text-white"
+                            : "bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400"
+                        }`}>
+                          <Users size={16} />
+                        </span>
+                        {formData.role === "distributor" && (
+                          <span className="absolute top-3.5 right-3.5 h-2 w-2 rounded-full bg-[#005c3a] dark:bg-emerald-500" />
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-black text-slate-800 dark:text-slate-200">
+                          Distributor
+                        </h4>
+                        <p className="text-[10px] leading-tight text-slate-400 dark:text-slate-500 font-medium mt-1">
+                          Manage sub-retailer network & earn commissions.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {mode === "register" && (
                 <InputField
                   name="fullName"
@@ -363,7 +434,7 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
                   <label className="flex items-center gap-1.5 cursor-pointer text-slate-500 dark:text-slate-400 select-none">
                     <input
                       type="checkbox"
-                      className="h-3.5 w-3.5 rounded border-slate-300 text-[#005c3a] focus:ring-[#005c3a]"
+                      className="h-3.5 w-3.5 rounded border-slate-350 text-[#005c3a] focus:ring-[#005c3a] dark:bg-[#0a0f18]/30"
                     />
                     <span>Remember me</span>
                   </label>
@@ -402,7 +473,7 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
                   <span
                     onClick={() => {
                       setErrors({});
-                      setFormData({});
+                      setFormData({ role: "retailer" });
                       setMode("register");
                     }}
                     className="text-[#005c3a] dark:text-emerald-400 hover:text-emerald-650 cursor-pointer transition-colors"

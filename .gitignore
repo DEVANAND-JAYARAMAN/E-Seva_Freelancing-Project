@@ -8,3 +8,9 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 next-dev*.log
+
+# Editor directories and tools
+.vscode/
+
+# Build artifacts
+*.exe

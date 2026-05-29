@@ -6,7 +6,6 @@ import {
   Search,
   Plus,
   CheckCircle2,
-  Sparkles,
   AlertCircle,
   Settings,
   Wallet,
@@ -562,7 +561,7 @@ export function PaymentsPage() {
               <div className="flex items-center gap-2">
                 <span className="flex h-2 w-2 rounded-full bg-[#005c3a] dark:bg-emerald-500 animate-pulse" />
                 <h3 className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-                  Available E-Seva Utility Payments <Sparkles size={12} className="text-amber-500" />
+                  Available E-Seva Utility Payments
                 </h3>
               </div>
               <div className="relative max-w-xs w-full sm:w-64">
@@ -621,7 +620,7 @@ export function PaymentsPage() {
           </div>
         ) : (
           /* FULL PAGE CONFIGURATION MATRIX VIEW ("OPEN NEW PAGE") */
-          <div className="w-full bg-white dark:bg-[#090d16] border-2 border-emerald-500/80 rounded-3xl p-6 shadow-md transition-all relative overflow-hidden animate-in fade-in duration-200">
+          <div className="w-full bg-white dark:bg-[#090d16] border border-slate-200 dark:border-slate-900 rounded-3xl p-6 shadow-md transition-all relative overflow-hidden animate-in fade-in duration-200">
             {/* Glassmorphic Background Accents */}
             <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent pointer-events-none" />
 
@@ -629,15 +628,15 @@ export function PaymentsPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 dark:border-slate-900/50 pb-4 mb-6 gap-3">
               <div>
                 <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                  Service Payment - {activeCatalogItem.name} <Sparkles size={16} className="text-amber-500" />
+                  Service Payment - {activeCatalogItem.name}
                 </h2>
-                <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-1">
+                <p className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-widest mt-1">
                   Configure service commission prices & coordinator eligibility
                 </p>
               </div>
               <button
                 onClick={() => setActiveCatalogItem(null)}
-                className="flex items-center justify-center gap-1.5 h-9 px-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-xs font-bold text-slate-500 hover:text-slate-750 transition-colors self-start sm:self-auto"
+                className="flex items-center justify-center gap-1.5 h-9 px-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-750 dark:hover:text-slate-200 transition-colors self-start sm:self-auto"
               >
                 <ArrowLeft size={13} />
                 <span>Back to Catalog</span>
@@ -646,10 +645,10 @@ export function PaymentsPage() {
 
             {/* Configuration Pricing Form Table */}
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-              <div className="overflow-x-auto w-full border border-slate-100 dark:border-slate-900/40 rounded-2xl">
+              <div className="overflow-x-auto w-full border border-slate-200 dark:border-slate-900/60 rounded-2xl">
                 <table className="w-full min-w-[700px] border-collapse text-left">
                   <thead>
-                    <tr className="border-b border-slate-150 dark:border-slate-850 text-slate-450 dark:text-slate-550 text-[10px] font-extrabold uppercase tracking-widest bg-slate-50/50 dark:bg-slate-950/20">
+                    <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-[10px] font-extrabold uppercase tracking-widest bg-slate-50 dark:bg-slate-950/40">
                       <th className="py-4 px-5 text-center w-20">Sl No</th>
                       <th className="py-4 px-5">Service Name</th>
                       <th className="py-4 px-5 text-center w-36">Admin</th>
@@ -658,7 +657,7 @@ export function PaymentsPage() {
                       <th className="py-4 px-5 text-center w-40">Need Coordinator</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-900/40 text-xs font-semibold text-slate-755 dark:text-slate-350 bg-white/20">
+                  <tbody className="divide-y divide-slate-200 dark:divide-slate-900/60 text-xs font-semibold text-slate-700 dark:text-slate-350">
                     {editingRows.map((row, index) => {
                       return (
                         <tr
@@ -666,19 +665,19 @@ export function PaymentsPage() {
                           className="hover:bg-slate-50/50 dark:hover:bg-slate-950/10 transition-colors"
                         >
                           {/* Sl No */}
-                          <td className="py-4 px-5 text-center font-bold text-slate-400">
+                          <td className="py-4 px-5 text-center font-bold text-slate-400 dark:text-slate-500">
                             {index + 1}
                           </td>
 
                           {/* Service Name */}
-                          <td className="py-4 px-5 font-extrabold text-slate-900 dark:text-white tracking-wide">
+                          <td className="py-4 px-5 font-extrabold text-slate-800 dark:text-slate-100 tracking-wide">
                             {row.name}
                           </td>
 
                           {/* Admin Input */}
                           <td className="py-4 px-5 text-center">
                             <div className="relative inline-block w-full">
-                              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-[10px]">
+                              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 font-bold text-[10px]">
                                 ₹
                               </span>
                               <input
@@ -689,7 +688,7 @@ export function PaymentsPage() {
                                 onChange={(e) =>
                                   handlePriceChange(row.id, "adminPrice", e.target.value)
                                 }
-                                className="w-full pl-7 pr-3 py-1.5 text-center border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-[#0a0f18]/30 font-extrabold text-slate-800 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a] outline-none transition-all"
+                                className="w-full pl-7 pr-3 py-1.5 text-center border border-slate-200 dark:border-slate-850 rounded-xl bg-slate-50 dark:bg-[#0a0f18]/30 font-extrabold text-slate-800 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a] dark:focus:border-emerald-500 outline-none transition-all"
                               />
                             </div>
                           </td>
@@ -697,7 +696,7 @@ export function PaymentsPage() {
                           {/* Distributor Input */}
                           <td className="py-4 px-5 text-center">
                             <div className="relative inline-block w-full">
-                              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-[10px]">
+                              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 font-bold text-[10px]">
                                 ₹
                               </span>
                               <input
@@ -708,7 +707,7 @@ export function PaymentsPage() {
                                 onChange={(e) =>
                                   handlePriceChange(row.id, "distributorPrice", e.target.value)
                                 }
-                                className="w-full pl-7 pr-3 py-1.5 text-center border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-[#0a0f18]/30 font-extrabold text-slate-800 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a] outline-none transition-all"
+                                className="w-full pl-7 pr-3 py-1.5 text-center border border-slate-200 dark:border-slate-850 rounded-xl bg-slate-50 dark:bg-[#0a0f18]/30 font-extrabold text-slate-800 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a] dark:focus:border-emerald-500 outline-none transition-all"
                               />
                             </div>
                           </td>
@@ -716,7 +715,7 @@ export function PaymentsPage() {
                           {/* Retailer Input */}
                           <td className="py-4 px-5 text-center">
                             <div className="relative inline-block w-full">
-                              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-[10px]">
+                              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 font-bold text-[10px]">
                                 ₹
                               </span>
                               <input
@@ -727,7 +726,7 @@ export function PaymentsPage() {
                                 onChange={(e) =>
                                   handlePriceChange(row.id, "retailerPrice", e.target.value)
                                 }
-                                className="w-full pl-7 pr-3 py-1.5 text-center border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-[#0a0f18]/30 font-extrabold text-slate-800 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a] outline-none transition-all"
+                                className="w-full pl-7 pr-3 py-1.5 text-center border border-slate-200 dark:border-slate-850 rounded-xl bg-slate-50 dark:bg-[#0a0f18]/30 font-extrabold text-slate-800 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a] dark:focus:border-emerald-500 outline-none transition-all"
                               />
                             </div>
                           </td>
