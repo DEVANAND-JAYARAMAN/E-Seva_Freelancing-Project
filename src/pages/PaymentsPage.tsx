@@ -6,7 +6,6 @@ import {
   Search,
   Plus,
   CheckCircle2,
-  Sparkles,
   AlertCircle,
   Settings,
   Wallet,
@@ -562,7 +561,7 @@ export function PaymentsPage() {
               <div className="flex items-center gap-2">
                 <span className="flex h-2 w-2 rounded-full bg-[#005c3a] dark:bg-emerald-500 animate-pulse" />
                 <h3 className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-                  Available E-Seva Utility Payments <Sparkles size={12} className="text-amber-500" />
+                  Available E-Seva Utility Payments
                 </h3>
               </div>
               <div className="relative max-w-xs w-full sm:w-64">
@@ -629,7 +628,7 @@ export function PaymentsPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 dark:border-slate-900/50 pb-4 mb-6 gap-3">
               <div>
                 <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                  Service Payment - {activeCatalogItem.name} <Sparkles size={16} className="text-amber-500" />
+                  Service Payment - {activeCatalogItem.name}
                 </h2>
                 <p className="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-widest mt-1">
                   Configure service commission prices & coordinator eligibility

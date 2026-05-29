@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Users, Sparkles, Search, Mail, Phone, MapPin, CheckCircle, Clock, AlertCircle } from "lucide-react";
+import { Plus, Users, Search, Mail, Phone, MapPin, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
 

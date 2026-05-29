@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Store, Sparkles } from "lucide-react";
+import { Plus, Store } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
 import { RetailerStats } from "./RetailerStats";
@@ -137,8 +137,7 @@ export function RetailersPage() {
                 <Store size={12} />
               </span>
               <span className="text-[10px] font-extrabold text-[#005c3a] dark:text-emerald-400 uppercase tracking-widest flex items-center gap-1">
-                Merchant Operations{" "}
-                <Sparkles size={10} className="animate-pulse" />
+                Merchant Operations
               </span>
             </div>
             <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">

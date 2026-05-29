@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { AppShell } from "../layouts/AppShell";
-import { Sparkles, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface ServicePriceRow {
@@ -72,7 +72,6 @@ export function PdfServicePage() {
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-2">
               <span>Service Payment - TNeGA Services</span>
-              <Sparkles size={18} className="text-yellow-500 dark:text-yellow-400 fill-yellow-500 dark:fill-yellow-400" />
             </h1>
             <p className="text-[10px] font-extrabold text-slate-450 dark:text-slate-500 tracking-widest uppercase mt-1">
               Configure service commission prices & coordinator eligibility
@@ -86,14 +85,7 @@ export function PdfServicePage() {
                 Saved Successfully
               </span>
             )}
-            <button
-              type="button"
-              onClick={() => router.push("/services")}
-              className="flex h-9 px-4 items-center justify-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white text-xs font-bold transition-all outline-none"
-            >
-              <ArrowLeft size={13} />
-              <span>Back to Catalog</span>
-            </button>
+
           </div>
         </div>
 

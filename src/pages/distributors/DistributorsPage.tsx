@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Building2, Sparkles } from "lucide-react";
+import { Plus, Building2 } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
 import { DistributorStats } from "./DistributorStats";
@@ -136,8 +136,7 @@ export function DistributorsPage() {
                 <Building2 size={12} />
               </span>
               <span className="text-[10px] font-extrabold text-[#005c3a] dark:text-emerald-400 uppercase tracking-widest flex items-center gap-1">
-                Channel Partners{" "}
-                <Sparkles size={10} className="animate-pulse" />
+                Channel Partners
               </span>
             </div>
             <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
