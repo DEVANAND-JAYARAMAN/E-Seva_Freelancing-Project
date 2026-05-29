@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { AppShell } from "../layouts/AppShell";
 import { useAuth } from "../store/context/AuthContext";
-import { User, Mail, Shield, Wallet, Smartphone, Building, Sparkles, CheckCircle2 } from "lucide-react";
+import { User, Mail, Shield, Wallet, Smartphone, Building, CheckCircle2 } from "lucide-react";
 
 export function ProfilePage() {
   const { user } = useAuth();
@@ -51,7 +51,6 @@ export function ProfilePage() {
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
                 <h2 className="text-2xl sm:text-3xl font-black tracking-tight">{formData.name}</h2>
                 <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-white/10 border border-white/10 text-[10px] font-black uppercase tracking-wider">
-                  <Sparkles size={10} className="text-yellow-300 fill-yellow-300" />
                   <span>{user?.role || "Administrator"}</span>
                 </span>
               </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Receipt, Sparkles, Search, FileText, CheckCircle, Clock, AlertTriangle, ArrowUpRight, ArrowDownRight, DollarSign } from "lucide-react";
+import { Plus, Receipt, Search, FileText, CheckCircle, Clock, AlertTriangle, ArrowUpRight, ArrowDownRight, DollarSign } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
 
@@ -149,7 +149,7 @@ export function BillingPage() {
                 <Receipt size={12} />
               </span>
               <span className="text-[10px] font-extrabold text-[#8d6e63] dark:text-amber-400 uppercase tracking-widest flex items-center gap-1">
-                Accounts Department <Sparkles size={10} className="animate-pulse" />
+                Accounts Department
               </span>
             </div>
             <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">

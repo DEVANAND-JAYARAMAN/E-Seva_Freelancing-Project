@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import {
-  Clock,
   RefreshCw,
   Loader,
   AlertTriangle,
@@ -118,14 +117,7 @@ export function StatusPage() {
         {/* Header Block */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-50 dark:border-slate-900/30 pb-6">
           <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <span className="flex h-5 w-5 items-center justify-center rounded bg-[#e8f5e9] dark:bg-emerald-950/40 text-[#005c3a] dark:text-emerald-400">
-                <Clock size={12} />
-              </span>
-              <span className="text-[10px] font-extrabold text-[#005c3a] dark:text-emerald-400 uppercase tracking-widest flex items-center gap-1">
-                Real-Time Tracking
-              </span>
-            </div>
+
             <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
               Service Status Operations
             </h2>
