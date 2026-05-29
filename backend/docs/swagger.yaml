@@ -1,47 +1,48 @@
-<<<<<<< Updated upstream
 basePath: /api/v1
 definitions:
-  wallet.GatewayRechargeRequestPayload:
+  auth.AuthResponse:
     properties:
-      amount:
-        type: number
-      customer_email:
+      access_token:
         type: string
-      customer_mobile:
+      refresh_token:
         type: string
-      redirect_url:
+      user: {}
+    type: object
+  auth.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
         type: string
     required:
-    - amount
-    - customer_email
-    - customer_mobile
-    - redirect_url
+    - email
+    - password
     type: object
-host: localhost:8080
-info:
-  contact:
-    email: support@swagger.io
-    name: API Support
-    url: http://www.swagger.io/support
-  description: This is the backend API for the E-Service platform.
-  license:
-    name: Apache 2.0
-    url: http://www.apache.org/licenses/LICENSE-2.0.html
-  termsOfService: http://swagger.io/terms/
-  title: E-Service API
-  version: "1.0"
-paths:
-  /wallet/recharge/gateway:
-    post:
-      consumes:
-      - application/json
-      description: Creates a new Mugavi payment gateway order and returns the payment
-        URL and QR code.
-      parameters:
-      - description: Gateway Recharge Request
-=======
-basePath: /api
-definitions:
+  auth.RefreshTokenRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  auth.RegisterRequest:
+    properties:
+      email:
+        type: string
+      full_name:
+        type: string
+      password:
+        minLength: 6
+        type: string
+      phone:
+        type: string
+      role:
+        type: string
+    required:
+    - email
+    - full_name
+    - password
+    type: object
   handlers.Notification:
     properties:
       createdAt:
@@ -78,11 +79,34 @@ definitions:
       status:
         type: string
     type: object
+  wallet.GatewayRechargeRequestPayload:
+    properties:
+      amount:
+        type: number
+      customer_email:
+        type: string
+      customer_mobile:
+        type: string
+      redirect_url:
+        type: string
+    required:
+    - amount
+    - customer_email
+    - customer_mobile
+    - redirect_url
+    type: object
 host: localhost:8080
 info:
-  contact: {}
-  description: Backend API for E-Seva Platform managing services, retailers, and notifications.
-  title: E-Seva Platform API
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is the backend API for the E-Service platform.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: E-Service API
   version: "1.0"
 paths:
   /admin/notifications:
@@ -122,17 +146,12 @@ paths:
       description: Add a new Retailer or Distributor and trigger a notification
       parameters:
       - description: User Data
->>>>>>> Stashed changes
         in: body
         name: request
         required: true
         schema:
-<<<<<<< Updated upstream
-          $ref: '#/definitions/wallet.GatewayRechargeRequestPayload'
-=======
           additionalProperties: true
           type: object
->>>>>>> Stashed changes
       produces:
       - application/json
       responses:
@@ -144,7 +163,33 @@ paths:
         "400":
           description: Bad Request
           schema:
-<<<<<<< Updated upstream
+            additionalProperties: true
+            type: object
+      summary: Add Retailer or Distributor
+      tags:
+      - Admin
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Login user with email and password to receive tokens.
+      parameters:
+      - description: Login Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.AuthResponse'
+        "400":
+          description: Bad Request
+          schema:
             additionalProperties:
               type: string
             type: object
@@ -154,22 +199,111 @@ paths:
             additionalProperties:
               type: string
             type: object
-      security:
-      - BearerAuth: []
-      summary: Initiate Payment Gateway Recharge
+      summary: Login user
       tags:
-      - Wallet
-securityDefinitions:
-  BearerAuth:
-    in: header
-    name: Authorization
-    type: apiKey
-=======
+      - Auth
+  /auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Logout the user by invalidating their refresh token.
+      parameters:
+      - description: Logout Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Logout user
+      tags:
+      - Auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Refresh the JWT access token using a refresh token.
+      parameters:
+      - description: Refresh Token Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Refresh Access Token
+      tags:
+      - Auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user with email, password, full name, phone, and
+        role.
+      parameters:
+      - description: Registration Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
             additionalProperties: true
             type: object
-      summary: Add Retailer or Distributor
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register a new user
       tags:
-      - Admin
+      - Auth
   /services/request:
     post:
       consumes:
@@ -198,5 +332,47 @@ securityDefinitions:
       summary: Submit a Service Request
       tags:
       - Services
->>>>>>> Stashed changes
+  /wallet/recharge/gateway:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new Mugavi payment gateway order and returns the payment
+        URL and QR code.
+      parameters:
+      - description: Gateway Recharge Request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/wallet.GatewayRechargeRequestPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Initiate Payment Gateway Recharge
+      tags:
+      - Wallet
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

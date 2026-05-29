@@ -37,6 +37,16 @@ type AuthResponse struct {
 	User         interface{} `json:"user"`
 }
 
+// Register creates a new user
+// @Summary Register a new user
+// @Description Register a new user with email, password, full name, phone, and role.
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body RegisterRequest true "Registration Request"
+// @Success 201 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string
+// @Router /auth/register [post]
 func (h *Handler) Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -56,6 +66,17 @@ func (h *Handler) Register(c *gin.Context) {
 	})
 }
 
+// Login authenticates a user
+// @Summary Login user
+// @Description Login user with email and password to receive tokens.
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body LoginRequest true "Login Request"
+// @Success 200 {object} AuthResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /auth/login [post]
 func (h *Handler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -76,6 +97,17 @@ func (h *Handler) Login(c *gin.Context) {
 	})
 }
 
+// RefreshToken refreshes an access token
+// @Summary Refresh Access Token
+// @Description Refresh the JWT access token using a refresh token.
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body RefreshTokenRequest true "Refresh Token Request"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Router /auth/refresh [post]
 func (h *Handler) RefreshToken(c *gin.Context) {
 	var req RefreshTokenRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -94,6 +126,17 @@ func (h *Handler) RefreshToken(c *gin.Context) {
 	})
 }
 
+// Logout logs out a user
+// @Summary Logout user
+// @Description Logout the user by invalidating their refresh token.
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param request body RefreshTokenRequest true "Logout Request"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /auth/logout [post]
 func (h *Handler) Logout(c *gin.Context) {
 	var req RefreshTokenRequest
 	if err := c.ShouldBindJSON(&req); err != nil {

@@ -9,7 +9,6 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-<<<<<<< Updated upstream
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
             "name": "API Support",
@@ -20,24 +19,11 @@ const docTemplate = `{
             "name": "Apache 2.0",
             "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
         },
-=======
-        "contact": {},
->>>>>>> Stashed changes
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-<<<<<<< Updated upstream
-        "/wallet/recharge/gateway": {
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Creates a new Mugavi payment gateway order and returns the payment URL and QR code.",
-=======
         "/admin/notifications": {
             "get": {
                 "description": "Get a list of notifications for the Admin Panel",
@@ -87,7 +73,6 @@ const docTemplate = `{
         "/admin/retailer": {
             "post": {
                 "description": "Add a new Retailer or Distributor and trigger a notification",
->>>>>>> Stashed changes
                 "consumes": [
                     "application/json"
                 ],
@@ -95,31 +80,18 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-<<<<<<< Updated upstream
-                    "Wallet"
-                ],
-                "summary": "Initiate Payment Gateway Recharge",
-                "parameters": [
-                    {
-                        "description": "Gateway Recharge Request",
-=======
                     "Admin"
                 ],
                 "summary": "Add Retailer or Distributor",
                 "parameters": [
                     {
                         "description": "User Data",
->>>>>>> Stashed changes
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-<<<<<<< Updated upstream
-                            "$ref": "#/definitions/wallet.GatewayRechargeRequestPayload"
-=======
                             "type": "object",
                             "additionalProperties": true
->>>>>>> Stashed changes
                         }
                     }
                 ],
@@ -135,7 +107,47 @@ const docTemplate = `{
                         "description": "Bad Request",
                         "schema": {
                             "type": "object",
-<<<<<<< Updated upstream
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "description": "Login user with email and password to receive tokens.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Login user",
+                "parameters": [
+                    {
+                        "description": "Login Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/auth.AuthResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
                             "additionalProperties": {
                                 "type": "string"
                             }
@@ -148,8 +160,160 @@ const docTemplate = `{
                             "additionalProperties": {
                                 "type": "string"
                             }
-=======
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/logout": {
+            "post": {
+                "description": "Logout the user by invalidating their refresh token.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Logout user",
+                "parameters": [
+                    {
+                        "description": "Logout Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.RefreshTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/refresh": {
+            "post": {
+                "description": "Refresh the JWT access token using a refresh token.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Refresh Access Token",
+                "parameters": [
+                    {
+                        "description": "Refresh Token Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.RefreshTokenRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/register": {
+            "post": {
+                "description": "Register a new user with email, password, full name, phone, and role.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Register a new user",
+                "parameters": [
+                    {
+                        "description": "Registration Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/auth.RegisterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
                             "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -192,7 +356,64 @@ const docTemplate = `{
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
->>>>>>> Stashed changes
+                        }
+                    }
+                }
+            }
+        },
+        "/wallet/recharge/gateway": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Creates a new Mugavi payment gateway order and returns the payment URL and QR code.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Wallet"
+                ],
+                "summary": "Initiate Payment Gateway Recharge",
+                "parameters": [
+                    {
+                        "description": "Gateway Recharge Request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/wallet.GatewayRechargeRequestPayload"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -200,16 +421,70 @@ const docTemplate = `{
         }
     },
     "definitions": {
-<<<<<<< Updated upstream
-        "wallet.GatewayRechargeRequestPayload": {
+        "auth.AuthResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "refresh_token": {
+                    "type": "string"
+                },
+                "user": {}
+            }
+        },
+        "auth.LoginRequest": {
             "type": "object",
             "required": [
-                "amount",
-                "customer_email",
-                "customer_mobile",
-                "redirect_url"
+                "email",
+                "password"
             ],
-=======
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth.RefreshTokenRequest": {
+            "type": "object",
+            "required": [
+                "refresh_token"
+            ],
+            "properties": {
+                "refresh_token": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth.RegisterRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "full_name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "full_name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
         "handlers.Notification": {
             "type": "object",
             "properties": {
@@ -233,20 +508,10 @@ const docTemplate = `{
         },
         "handlers.ServiceApplication": {
             "type": "object",
->>>>>>> Stashed changes
             "properties": {
                 "amount": {
                     "type": "number"
                 },
-<<<<<<< Updated upstream
-                "customer_email": {
-                    "type": "string"
-                },
-                "customer_mobile": {
-                    "type": "string"
-                },
-                "redirect_url": {
-=======
                 "applicationId": {
                     "type": "string"
                 },
@@ -270,12 +535,33 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "status": {
->>>>>>> Stashed changes
+                    "type": "string"
+                }
+            }
+        },
+        "wallet.GatewayRechargeRequestPayload": {
+            "type": "object",
+            "required": [
+                "amount",
+                "customer_email",
+                "customer_mobile",
+                "redirect_url"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "number"
+                },
+                "customer_email": {
+                    "type": "string"
+                },
+                "customer_mobile": {
+                    "type": "string"
+                },
+                "redirect_url": {
                     "type": "string"
                 }
             }
         }
-<<<<<<< Updated upstream
     },
     "securityDefinitions": {
         "BearerAuth": {
@@ -283,8 +569,6 @@ const docTemplate = `{
             "name": "Authorization",
             "in": "header"
         }
-=======
->>>>>>> Stashed changes
     }
 }`
 
@@ -292,17 +576,10 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "localhost:8080",
-<<<<<<< Updated upstream
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
 	Title:            "E-Service API",
 	Description:      "This is the backend API for the E-Service platform.",
-=======
-	BasePath:         "/api",
-	Schemes:          []string{},
-	Title:            "E-Seva Platform API",
-	Description:      "Backend API for E-Seva Platform managing services, retailers, and notifications.",
->>>>>>> Stashed changes
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

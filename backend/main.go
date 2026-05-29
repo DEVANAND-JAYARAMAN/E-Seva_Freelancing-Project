@@ -7,8 +7,8 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
-	_ "eseva-backend/docs"
-	"eseva-backend/handlers"
+	_ "eservice-backend/docs"
+	"eservice-backend/handlers"
 )
 
 // @title E-Seva Platform API
