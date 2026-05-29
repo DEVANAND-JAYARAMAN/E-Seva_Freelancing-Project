@@ -7,6 +7,10 @@ interface ServiceCardProps {
   icon: ReactNode;
   onClick: () => void;
   layout?: "vertical" | "horizontal";
+  price?: {
+    retailer: string | number;
+    distributor: string | number;
+  };
 }
 
 export function ServiceCard({
@@ -16,6 +20,7 @@ export function ServiceCard({
   icon,
   onClick,
   layout = "vertical",
+  price,
 }: ServiceCardProps) {
   if (layout === "horizontal") {
     return (
@@ -34,6 +39,16 @@ export function ServiceCard({
             <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase">
               {subName}
             </p>
+          )}
+          {price && (
+            <div className="flex flex-wrap gap-2 mt-1.5">
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20">
+                R: ₹{price.retailer}
+              </span>
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-500/20">
+                D: ₹{price.distributor}
+              </span>
+            </div>
           )}
         </div>
       </article>
@@ -59,6 +74,16 @@ export function ServiceCard({
           <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
             {subName}
           </p>
+        )}
+        {price && (
+          <div className="flex flex-wrap justify-center gap-2 mt-2 pt-1">
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/20">
+              R: ₹{price.retailer}
+            </span>
+            <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-500/20">
+              D: ₹{price.distributor}
+            </span>
+          </div>
         )}
       </div>
     </article>

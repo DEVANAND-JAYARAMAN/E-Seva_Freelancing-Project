@@ -9,7 +9,6 @@ import {
   ArrowUpRight,
   ArrowDownLeft,
   History,
-  Sparkles,
   X,
   CheckCircle2,
   AlertCircle,
@@ -236,8 +235,7 @@ export function WalletPage() {
                 <Wallet size={12} />
               </span>
               <span className="text-[10px] font-extrabold text-[#005c3a] dark:text-emerald-400 uppercase tracking-widest flex items-center gap-1">
-                E-Seva Wallet Hub{" "}
-                <Sparkles size={10} className="text-amber-500 animate-pulse" />
+                E-Seva Wallet Hub
               </span>
             </div>
             <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
