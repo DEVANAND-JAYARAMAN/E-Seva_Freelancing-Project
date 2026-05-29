@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { InputField, TextAreaField, SubmitButton } from "../form/FormFields";
 import { validateField, PATTERNS } from "../form/validators";
+import { ServicePaymentScreen, ServiceSuccessScreen } from "../../../components/ServicePaymentScreen";
 
 interface AddressCorrectionAbove18Props {
   onCancel: () => void;
@@ -16,7 +17,7 @@ export const AddressCorrectionAbove18: React.FC<AddressCorrectionAbove18Props> =
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submissionSuccess, setSubmissionSuccess] = useState(false);
+  const [paymentPhase, setPaymentPhase] = useState<"form" | "payment" | "success">("form");
 
   const handleFieldChange = (name: string, value: string) => {
     setFormData((prev) => {
@@ -72,31 +73,30 @@ export const AddressCorrectionAbove18: React.FC<AddressCorrectionAbove18Props> =
       return;
     }
 
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSubmissionSuccess(true);
-      setTimeout(() => {
-        setSubmissionSuccess(false);
-        onCancel();
-      }, 2500);
-    }, 1500);
+    setPaymentPhase("payment");
   };
 
-  if (submissionSuccess) {
+  const handlePaymentSuccess = () => {
+    setPaymentPhase("success");
+    setTimeout(() => {
+      setPaymentPhase("form");
+      onCancel();
+    }, 3000);
+  };
+
+  if (paymentPhase === "success") {
+    return <ServiceSuccessScreen serviceName="Address Correction (above 18)" />;
+  }
+
+  if (paymentPhase === "payment") {
     return (
-      <div className="py-16 flex flex-col items-center justify-center text-center gap-4">
-        <span className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-400 animate-bounce">
-          <CheckCircle2 size={44} className="stroke-[2.5]" />
-        </span>
-        <div>
-          <h5 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-            Application Placed Successfully!
-          </h5>
-          <p className="text-sm text-slate-400 dark:text-slate-555 mt-2 max-w-md leading-relaxed">
-            Your request for **Adress Correction (above 18)** has been successfully registered. You can monitor the progress inside status.
-          </p>
-        </div>
+      <div className="py-6">
+        <ServicePaymentScreen
+          serviceName="Address Correction (above 18)"
+          retailerCharge={100} // Hardcoded or imported from config
+          onBack={() => setPaymentPhase("form")}
+          onSuccess={handlePaymentSuccess}
+        />
       </div>
     );
   }
