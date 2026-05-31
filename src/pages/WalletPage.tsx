@@ -137,7 +137,7 @@ export function WalletPage() {
   };
 
   // Submit Recharge Request
-  const handleRechargeSubmit = (e: React.FormEvent) => {
+  const handleRechargeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError("");
 
