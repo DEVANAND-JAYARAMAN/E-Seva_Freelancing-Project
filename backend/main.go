@@ -9,6 +9,8 @@ import (
 
 	_ "eservice-backend/docs"
 	"eservice-backend/handlers"
+	"eservice-backend/auth"
+	"eservice-backend/db"
 )
 
 // @title E-Seva Platform API
@@ -18,8 +20,8 @@ import (
 // @BasePath /api
 
 func main() {
-	// Initialize DynamoDB Client (Mocked or real based on AWS Config)
-	// handlers.InitDB()
+	// Initialize DynamoDB Client (from the new db package)
+	db.ConnectDynamoDB()
 
 	r := gin.Default()
 
@@ -43,6 +45,12 @@ func main() {
 
 	api := r.Group("/api")
 	{
+		authGroup := api.Group("/auth")
+		{
+			authGroup.POST("/signup", auth.Signup)
+			authGroup.POST("/login", auth.Login)
+		}
+
 		// 1. Submit a service request after payment
 		api.POST("/services/request", handlers.SubmitServiceRequest)
 
