@@ -14,7 +14,7 @@ type AuthContextType = {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, token: string) => Promise<void>;
+  login: (userData: User, token: string) => Promise<void>;
   logout: () => void;
   updateWallet: (newBalance: number) => void;
 };
@@ -45,21 +45,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth();
   }, []);
 
-  const login = async (email: string, token: string) => {
+  const login = async (userData: User, token: string) => {
     setIsLoading(true);
     try {
-      // Mock login validation and user retrieval
-      const mockUser: User = {
-        id: "usr_1001",
-        name: "Thuruvan Dev",
-        email,
-        role: "admin",
-        walletBalance: 2895.0,
-      };
-
       localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(mockUser));
-      setUser(mockUser);
+      localStorage.setItem("user", JSON.stringify(userData));
+      setUser(userData);
     } catch (error) {
       console.error("Login failed:", error);
       throw error;
