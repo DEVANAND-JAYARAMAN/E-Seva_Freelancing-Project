@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { InputField, SubmitButton } from "../services/form/FormFields";
 import { validateField, PATTERNS } from "../services/form/validators";
+import { useAuth } from "../../store/context/AuthContext";
 
 type AuthMode = "login" | "register" | "forgot";
 
@@ -26,6 +27,7 @@ interface AuthPageProps {
 
 export function AuthPage({ initialMode = "login" }: AuthPageProps) {
   const router = useRouter();
+  const { login } = useAuth();
 
   // Navigation & transition state
   const [mode, setMode] = useState<AuthMode>(initialMode);
@@ -84,133 +86,83 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
     });
   };
 
-  const handleAuthSubmit = (e: React.FormEvent) => {
+  const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const newErrors: Record<string, string> = {};
 
     if (mode === "login") {
-      const emailErr = validateField(
-        "email",
-        formData.email,
-        {
-          required: true,
-          requiredMessage: "Email address is required",
-        },
-        formData,
-      );
+      const emailErr = validateField("email", formData.email, { required: true }, formData);
       if (emailErr) newErrors.email = emailErr;
-
-      const passErr = validateField(
-        "password",
-        formData.password,
-        {
-          required: true,
-          requiredMessage: "Password is required",
-        },
-        formData,
-      );
+      const passErr = validateField("password", formData.password, { required: true }, formData);
       if (passErr) newErrors.password = passErr;
     } else if (mode === "register") {
-      const nameErr = validateField(
-        "fullName",
-        formData.fullName,
-        {
-          required: true,
-          requiredMessage: "Full name is required",
-        },
-        formData,
-      );
+      const nameErr = validateField("fullName", formData.fullName, { required: true }, formData);
       if (nameErr) newErrors.fullName = nameErr;
-
-      const emailErr = validateField(
-        "email",
-        formData.email,
-        {
-          required: true,
-          requiredMessage: "Email address is required",
-          pattern: PATTERNS.EMAIL,
-          patternMessage: "Enter a valid email address",
-        },
-        formData,
-      );
+      const emailErr = validateField("email", formData.email, { required: true, pattern: PATTERNS.EMAIL }, formData);
       if (emailErr) newErrors.email = emailErr;
-
-      const phoneErr = validateField(
-        "mobile",
-        formData.mobile,
-        {
-          required: true,
-          requiredMessage: "Mobile number is required",
-          pattern: PATTERNS.PHONE,
-          patternMessage: "Enter a valid 10-digit phone number",
-        },
-        formData,
-      );
+      const phoneErr = validateField("mobile", formData.mobile, { required: true, pattern: PATTERNS.PHONE }, formData);
       if (phoneErr) newErrors.mobile = phoneErr;
-
-      const passErr = validateField(
-        "password",
-        formData.password,
-        {
-          required: true,
-          requiredMessage: "Password is required",
-          minLength: 6,
-          minLengthMessage: "Password must be at least 6 characters",
-        },
-        formData,
-      );
+      const passErr = validateField("password", formData.password, { required: true, minLength: 6 }, formData);
       if (passErr) newErrors.password = passErr;
-
-      const confErr = validateField(
-        "confirmPassword",
-        formData.confirmPassword,
-        {
-          required: true,
-          requiredMessage: "Confirm password is required",
-          custom: (val, all) =>
-            val === all.password ? null : "Passwords do not match",
-        },
-        formData,
-      );
+      const confErr = validateField("confirmPassword", formData.confirmPassword, { required: true, custom: (val, all) => val === all.password ? null : "Passwords do not match" }, formData);
       if (confErr) newErrors.confirmPassword = confErr;
-    } else if (mode === "forgot") {
-      const emailErr = validateField(
-        "email",
-        formData.email,
-        {
-          required: true,
-          requiredMessage: "Email address is required",
-          pattern: PATTERNS.EMAIL,
-          patternMessage: "Enter a valid email address",
-        },
-        formData,
-      );
-      if (emailErr) newErrors.email = emailErr;
     }
 
-    setErrors({});
-
-    // Temporarily disabled validation
-    /*
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-    */
 
+    setErrors({});
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+
+    try {
       if (mode === "login") {
-        router.push("/dashboard");
+        const response = await fetch("http://localhost:8080/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: formData.email, password: formData.password }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Login failed");
+
+        await login(data.user, data.token);
+        setSuccessMessage("Login successful! Redirecting...");
+        setTimeout(() => router.push(data.redirectUrl || "/dashboard"), 1000);
       } else if (mode === "register") {
-        setFormData({ role: "retailer" });
-        setMode("login");
+        const response = await fetch("http://localhost:8080/api/auth/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fullName: formData.fullName,
+            email: formData.email,
+            mobile: formData.mobile,
+            role: formData.role || "retailer",
+            password: formData.password,
+          }),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Registration failed");
+
+        setSuccessMessage("Account created successfully!");
+        setTimeout(() => {
+          setSuccessMessage(null);
+          setFormData({ role: "retailer" });
+          setMode("login");
+        }, 1500);
       } else {
-        setFormData({ role: "retailer" });
-        setMode("login");
+        setSuccessMessage("Reset instructions sent!");
+        setTimeout(() => {
+          setSuccessMessage(null);
+          setFormData({ role: "retailer" });
+          setMode("login");
+        }, 1500);
       }
-    }, 800);
+    } catch (err: any) {
+      setErrors({ form: err.message });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -293,6 +245,13 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
                     : "Enter your registered email address to receive reset details."}
               </p>
             </div>
+
+            {errors.form && (
+              <div className="p-3 rounded-lg bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 text-xs font-bold border border-red-100 dark:border-red-900/50 flex items-center gap-2">
+                <AlertCircle size={14} />
+                <span>{errors.form}</span>
+              </div>
+            )}
 
             {/* Action Form */}
             <form onSubmit={handleAuthSubmit} className="space-y-4">
@@ -469,7 +428,7 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
             <div className="border-t border-slate-100 dark:border-slate-900/60 pt-4 flex items-center justify-center text-xs font-bold text-slate-450 select-none">
               {mode === "login" ? (
                 <div className="flex items-center gap-1">
-                  <span>Don't have an agency account?</span>
+                  <span>Don&apos;t have an agency account?</span>
                   <span
                     onClick={() => {
                       setErrors({});
