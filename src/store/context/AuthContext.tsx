@@ -68,8 +68,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
 
       localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(mockUser));
-      setUser(mockUser);
+      localStorage.setItem("user", JSON.stringify(userData));
+      setUser(userData);
     } catch (error) {
       console.error("Login failed:", error);
       throw error;
