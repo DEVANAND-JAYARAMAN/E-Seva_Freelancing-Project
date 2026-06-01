@@ -14,7 +14,12 @@ type AuthContextType = {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, token: string) => Promise<void>;
+  login: (
+    email: string,
+    token: string,
+    role?: "admin" | "retailer" | "distributor" | "customer",
+    name?: string
+  ) => Promise<void>;
   logout: () => void;
   updateWallet: (newBalance: number) => void;
 };
@@ -45,15 +50,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth();
   }, []);
 
-  const login = async (email: string, token: string) => {
+  const login = async (
+    email: string,
+    token: string,
+    role?: "admin" | "retailer" | "distributor" | "customer",
+    name?: string
+  ) => {
     setIsLoading(true);
     try {
       // Mock login validation and user retrieval
       const mockUser: User = {
-        id: "usr_1001",
-        name: "Thuruvan Dev",
+        id: "usr_" + Math.floor(1000 + Math.random() * 9000),
+        name: name || "Thuruvan Dev",
         email,
-        role: "admin",
+        role: role || "admin",
         walletBalance: 2895.0,
       };
 
