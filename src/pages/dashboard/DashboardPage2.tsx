@@ -137,7 +137,7 @@ export function DashboardPage2() {
         </section>
 
         {/* Dynamic State Overview Cards */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" aria-label="Partner stats">
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-4" aria-label="Partner stats">
           {/* Main Wallet Card */}
           <article className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
             <div className="flex items-center gap-4">
@@ -159,20 +159,6 @@ export function DashboardPage2() {
               <PlusCircle size={14} />
               <span>Load Funds</span>
             </button>
-          </article>
-
-          {/* API Wallet Balance */}
-          <article className="flex items-center gap-4 bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm">
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400">
-              <CircleDollarSign size={22} className="stroke-[2.5]" />
-            </span>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">API Wallet Balance</p>
-              <strong className="block text-2xl font-extrabold text-slate-900 dark:text-white mt-0.5">
-                <span className="text-sm font-bold text-slate-450 mr-0.5">₹</span>
-                450.00
-              </strong>
-            </div>
           </article>
 
           {/* Dynamic Third Card: Sub-retailers count for Distributor or Commission tracker for Retailer */}
