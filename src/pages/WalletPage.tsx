@@ -28,6 +28,7 @@ import {
 
 export function WalletPage() {
   const { user, updateWallet } = useAuth();
+  const isRetailerOrDistributor = user?.role === "retailer" || user?.role === "distributor";
 
   // Balances
   const mainBalance = user?.walletBalance ?? 2895.0;
@@ -102,14 +103,16 @@ export function WalletPage() {
       .reduce((sum, t) => sum + t.amount, 0);
 
     return {
-      totalCredits: mainCredit + apiCredit,
+      totalCredits: isRetailerOrDistributor ? mainCredit : mainCredit + apiCredit,
       totalDebits: mainDebit,
     };
-  }, [transactions]);
+  }, [transactions, isRetailerOrDistributor]);
 
   // Handle transaction search and filters
   const filteredTransactions = useMemo(() => {
     return transactions.filter((t) => {
+      if (isRetailerOrDistributor && t.walletType === "API") return false;
+
       const matchesSearch =
         t.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         t.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -121,7 +124,7 @@ export function WalletPage() {
 
       return matchesSearch && matchesType && matchesWallet;
     });
-  }, [transactions, searchTerm, typeFilter, walletFilter]);
+  }, [transactions, searchTerm, typeFilter, walletFilter, isRetailerOrDistributor]);
 
   // Open Recharge Form Modal
   const openRechargeModal = (type: "Main" | "API") => {
@@ -321,9 +324,8 @@ export function WalletPage() {
             </button>
           </div>
         </div>
-
         {/* Balance Cards Display */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className={`grid grid-cols-1 md:grid-cols-2 ${isRetailerOrDistributor ? "lg:grid-cols-3" : "lg:grid-cols-4"} gap-5`}>
           {/* Main Wallet Card */}
           <article className="relative overflow-hidden bg-gradient-to-br from-[#005c3a] to-[#004229] dark:from-[#08291c] dark:to-[#02150e] text-white rounded-3xl p-6 shadow-md shadow-emerald-900/10 flex flex-col justify-between min-h-[175px] group">
             <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 h-32 w-32 rounded-full bg-white/5 pointer-events-none group-hover:scale-110 transition-transform duration-500" />
@@ -361,40 +363,42 @@ export function WalletPage() {
           </article>
 
           {/* API Wallet Card */}
-          <article className="relative overflow-hidden bg-gradient-to-br from-indigo-900 to-indigo-950 dark:from-[#0f1124] dark:to-[#070813] text-white rounded-3xl p-6 shadow-md shadow-indigo-950/20 flex flex-col justify-between min-h-[175px] group">
-            <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 h-32 w-32 rounded-full bg-white/5 pointer-events-none group-hover:scale-110 transition-transform duration-500" />
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-xs font-extrabold tracking-widest text-indigo-200/80 uppercase">
-                  API WALLET
-                </p>
-                <h3 className="text-3xl font-black mt-2 tracking-tight">
-                  <span className="text-xl font-bold text-indigo-300 mr-0.5">
-                    ₹
-                  </span>
-                  {apiBalance.toLocaleString("en-IN", {
-                    minimumFractionDigits: 2,
-                  })}
-                </h3>
+          {!isRetailerOrDistributor && (
+            <article className="relative overflow-hidden bg-gradient-to-br from-indigo-900 to-indigo-950 dark:from-[#0f1124] dark:to-[#070813] text-white rounded-3xl p-6 shadow-md shadow-indigo-950/20 flex flex-col justify-between min-h-[175px] group">
+              <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 h-32 w-32 rounded-full bg-white/5 pointer-events-none group-hover:scale-110 transition-transform duration-500" />
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-xs font-extrabold tracking-widest text-indigo-200/80 uppercase">
+                    API WALLET
+                  </p>
+                  <h3 className="text-3xl font-black mt-2 tracking-tight">
+                    <span className="text-xl font-bold text-indigo-300 mr-0.5">
+                      ₹
+                    </span>
+                    {apiBalance.toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                    })}
+                  </h3>
+                </div>
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white backdrop-blur-md">
+                  <CircleDollarSign size={18} />
+                </span>
               </div>
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white backdrop-blur-md">
-                <CircleDollarSign size={18} />
-              </span>
-            </div>
 
-            <div className="flex justify-between items-end mt-4">
-              <span className="text-[10px] font-bold text-indigo-300 bg-white/10 px-2.5 py-1 rounded-lg">
-                ⚡ API Linked
-              </span>
-              <button
-                onClick={() => openRechargeModal("API")}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-indigo-900 hover:bg-indigo-50 text-xs font-extrabold rounded-xl transition-all duration-200 active:scale-95 shadow-sm"
-              >
-                <Plus size={14} className="stroke-[3]" />
-                Recharge
-              </button>
-            </div>
-          </article>
+              <div className="flex justify-between items-end mt-4">
+                <span className="text-[10px] font-bold text-indigo-300 bg-white/10 px-2.5 py-1 rounded-lg">
+                  ⚡ API Linked
+                </span>
+                <button
+                  onClick={() => openRechargeModal("API")}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-indigo-900 hover:bg-indigo-50 text-xs font-extrabold rounded-xl transition-all duration-200 active:scale-95 shadow-sm"
+                >
+                  <Plus size={14} className="stroke-[3]" />
+                  Recharge
+                </button>
+              </div>
+            </article>
+          )}
 
           {/* Aggregate Total Credit Card */}
           <article className="flex items-center gap-4 bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
@@ -416,7 +420,7 @@ export function WalletPage() {
 
           {/* Aggregate Total Debit Card */}
           <article className="flex items-center gap-4 bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-450">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-50 dark:bg-rose-955/20 text-rose-600 dark:text-rose-450">
               <ArrowDownLeft size={22} className="stroke-[2.5]" />
             </span>
             <div className="min-w-0">
@@ -469,38 +473,40 @@ export function WalletPage() {
               </div>
 
               {/* Wallet Filter Toggle */}
-              <div className="flex bg-slate-100 dark:bg-slate-950/60 p-0.5 rounded-xl border border-slate-200/50 dark:border-slate-900/80">
-                <button
-                  onClick={() => setWalletFilter("all")}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition-all ${
-                    walletFilter === "all"
-                      ? "bg-white dark:bg-[#0f1524] text-slate-850 dark:text-white shadow-sm"
-                      : "text-slate-400 dark:text-slate-500 hover:text-slate-750 dark:hover:text-slate-300"
-                  }`}
-                >
-                  All
-                </button>
-                <button
-                  onClick={() => setWalletFilter("Main")}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition-all ${
-                    walletFilter === "Main"
-                      ? "bg-white dark:bg-[#0f1524] text-slate-850 dark:text-white shadow-sm"
-                      : "text-slate-400 dark:text-slate-500 hover:text-slate-750 dark:hover:text-slate-300"
-                  }`}
-                >
-                  Main
-                </button>
-                <button
-                  onClick={() => setWalletFilter("API")}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition-all ${
-                    walletFilter === "API"
-                      ? "bg-white dark:bg-[#0f1524] text-slate-850 dark:text-white shadow-sm"
-                      : "text-slate-400 dark:text-slate-500 hover:text-slate-750 dark:hover:text-slate-300"
-                  }`}
-                >
-                  API
-                </button>
-              </div>
+              {!isRetailerOrDistributor && (
+                <div className="flex bg-slate-100 dark:bg-slate-950/60 p-0.5 rounded-xl border border-slate-200/50 dark:border-slate-900/80">
+                  <button
+                    onClick={() => setWalletFilter("all")}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition-all ${
+                      walletFilter === "all"
+                        ? "bg-white dark:bg-[#0f1524] text-slate-850 dark:text-white shadow-sm"
+                        : "text-slate-400 dark:text-slate-500 hover:text-slate-750 dark:hover:text-slate-300"
+                    }`}
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => setWalletFilter("Main")}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition-all ${
+                      walletFilter === "Main"
+                        ? "bg-white dark:bg-[#0f1524] text-slate-850 dark:text-white shadow-sm"
+                        : "text-slate-400 dark:text-slate-500 hover:text-slate-750 dark:hover:text-slate-300"
+                    }`}
+                  >
+                    Main
+                  </button>
+                  <button
+                    onClick={() => setWalletFilter("API")}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition-all ${
+                      walletFilter === "API"
+                        ? "bg-white dark:bg-[#0f1524] text-slate-850 dark:text-white shadow-sm"
+                        : "text-slate-400 dark:text-slate-500 hover:text-slate-750 dark:hover:text-slate-300"
+                    }`}
+                  >
+                    API
+                  </button>
+                </div>
+              )}
 
               {/* Type Filter Tab */}
               <div className="flex bg-slate-100 dark:bg-slate-950/60 p-0.5 rounded-xl border border-slate-200/50 dark:border-slate-900/80">
