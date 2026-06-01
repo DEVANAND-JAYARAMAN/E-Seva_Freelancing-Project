@@ -4,8 +4,16 @@ import { ServiceQueue } from "./ServiceQueue";
 import { StatsGrid } from "./StatsGrid";
 import { WalletHealth } from "./WalletHealth";
 import { WalletSummary } from "./WalletSummary";
+import { useAuth } from "../../store/context/AuthContext";
+import { DashboardPage2 } from "./DashboardPage2";
 
 export function DashboardPage() {
+  const { user } = useAuth();
+
+  if (user?.role === "retailer" || user?.role === "distributor") {
+    return <DashboardPage2 />;
+  }
+
   return (
     <AppShell activePage="Dashboard">
       <section className="flex flex-col gap-6 w-full">
