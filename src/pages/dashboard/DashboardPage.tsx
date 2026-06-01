@@ -1,3 +1,5 @@
+"use client";
+
 import { AppShell } from "../../layouts/AppShell";
 import { DashboardOverview } from "./DashboardOverview";
 import { ServiceQueue } from "./ServiceQueue";
