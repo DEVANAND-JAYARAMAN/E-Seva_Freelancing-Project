@@ -233,6 +233,30 @@ export function DashboardPage2() {
             </div>
           </article>
 
+          {/* Card 1.5: Retailer (Distributor Exclusive) */}
+          {user?.role === "distributor" && (
+            <article className="relative overflow-hidden bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md hover:border-violet-500/30 dark:hover:border-violet-500/20 transition-all duration-300 group">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-violet-500/5 to-transparent rounded-bl-full pointer-events-none" />
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  Retailer
+                </p>
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-50 dark:bg-violet-950/20 text-violet-600 dark:text-violet-400">
+                  <Clock size={16} className="stroke-[2.5]" />
+                </span>
+              </div>
+              <div className="mt-4 flex items-baseline gap-1">
+                <strong className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white group-hover:scale-105 transition-transform duration-300">
+                  0
+                </strong>
+              </div>
+              <div className="mt-2 text-[9px] font-semibold text-slate-400 dark:text-slate-500 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse" />
+                <span>Awaiting Verification</span>
+              </div>
+            </article>
+          )}
+
           {/* Card 2: Inprocess */}
           <article className="relative overflow-hidden bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md hover:border-orange-500/30 dark:hover:border-orange-500/20 transition-all duration-300 group">
             <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-orange-500/5 to-transparent rounded-bl-full pointer-events-none" />
