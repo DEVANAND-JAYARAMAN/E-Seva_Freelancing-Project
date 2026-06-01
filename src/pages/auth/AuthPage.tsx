@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { InputField, SubmitButton } from "../services/form/FormFields";
 import { validateField, PATTERNS } from "../services/form/validators";
+import { useAuth } from "../../store/context/AuthContext";
 
 type AuthMode = "login" | "register" | "forgot";
 
@@ -26,6 +27,7 @@ interface AuthPageProps {
 
 export function AuthPage({ initialMode = "login" }: AuthPageProps) {
   const router = useRouter();
+  const { login } = useAuth();
 
   // Navigation & transition state
   const [mode, setMode] = useState<AuthMode>(initialMode);
@@ -202,8 +204,52 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
     setTimeout(() => {
       setIsSubmitting(false);
       if (mode === "login") {
-        router.push("/dashboard");
+        let loggedInRole: "admin" | "retailer" | "distributor" | "customer" = "retailer";
+        let loggedInName = "Thuruvan Dev";
+        try {
+          const registeredUsersStr = localStorage.getItem("e_seva_registered_users") || "[]";
+          const registeredUsers = JSON.parse(registeredUsersStr);
+          const matchedUser = registeredUsers.find(
+            (u: any) => u.email.toLowerCase() === formData.email?.toLowerCase()
+          );
+          if (matchedUser) {
+            loggedInRole = matchedUser.role;
+            loggedInName = matchedUser.name;
+          } else {
+            // Default rules based on email string
+            if (formData.email?.toLowerCase().includes("admin")) {
+              loggedInRole = "admin";
+            } else if (formData.email?.toLowerCase().includes("distributor")) {
+              loggedInRole = "distributor";
+            }
+          }
+        } catch (err) {
+          console.error("Failed to read user from localStorage mockup db", err);
+        }
+
+        login(formData.email || "", "mock_token", loggedInRole, loggedInName).then(() => {
+          router.push("/dashboard");
+        });
       } else if (mode === "register") {
+        // Save user to localStorage mock db
+        try {
+          const registeredUsersStr = localStorage.getItem("e_seva_registered_users") || "[]";
+          const registeredUsers = JSON.parse(registeredUsersStr);
+          const existingUser = registeredUsers.find((u: any) => u.email.toLowerCase() === formData.email?.toLowerCase());
+          if (!existingUser) {
+            registeredUsers.push({
+              email: formData.email,
+              role: formData.role || "retailer",
+              name: formData.fullName || "Thuruvan User",
+              mobile: formData.mobile || "",
+              password: formData.password || "password"
+            });
+            localStorage.setItem("e_seva_registered_users", JSON.stringify(registeredUsers));
+          }
+        } catch (err) {
+          console.error("Failed to write to mockup db", err);
+        }
+
         setFormData({ role: "retailer" });
         setMode("login");
       } else {
