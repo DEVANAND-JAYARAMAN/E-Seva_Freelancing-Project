@@ -1,0 +1,553 @@
+{
+  "title": "E-Seva Platform — DynamoDB Schema Design",
+  "description": "Multi-table design for E-Seva platform covering authentication, wallets, sub-services, billing, and CRM.",
+  "lastUpdated": "2026-05-27",
+  "tables": [
+    {
+      "name": "Users",
+      "purpose": "Authentication, user profiles, and system settings",
+      "primaryKey": {
+        "partitionKey": {
+          "name": "PK",
+          "type": "S",
+          "pattern": "USER#<userId>"
+        },
+        "sortKey": {
+          "name": "SK",
+          "type": "S",
+          "pattern": "PROFILE"
+        }
+      },
+      "attributes": {
+        "userId": "S (Unique user identifier)",
+        "name": "S (Full name)",
+        "email": "S (Email address)",
+        "mobile": "S (10-digit mobile number)",
+        "shopName": "S (Shop/Agency name)",
+        "address": "S (Physical location address)",
+        "passwordHash": "S (Hashed password)",
+        "role": "S (admin | retailer | distributor | customer)",
+        "walletBalance": "N (Current main wallet balance)",
+        "status": "S (Active | Suspended)",
+        "settings": {
+          "type": "M",
+          "description": "User notification & theme preferences",
+          "properties": {
+            "emailAlerts": "BOOL",
+            "smsAlerts": "BOOL",
+            "walletAlerts": "BOOL",
+            "theme": "S (light | dark)"
+          }
+        },
+        "createdAt": "S (ISO 8601 Timestamp)",
+        "updatedAt": "S (ISO 8601 Timestamp)"
+      },
+      "globalSecondaryIndexes": [
+        {
+          "name": "GSI-Email",
+          "partitionKey": "email",
+          "projectionType": "ALL",
+          "purpose": "Login lookup by email"
+        },
+        {
+          "name": "GSI-Role",
+          "partitionKey": "role",
+          "sortKey": "createdAt",
+          "projectionType": "ALL",
+          "purpose": "List users by role sorted by registration date"
+        }
+      ]
+    },
+    {
+      "name": "Retailers",
+      "purpose": "Retailer directory, contact details, and account statuses",
+      "primaryKey": {
+        "partitionKey": {
+          "name": "PK",
+          "type": "S",
+          "pattern": "RETAILER#<retailerId>"
+        },
+        "sortKey": {
+          "name": "SK",
+          "type": "S",
+          "pattern": "PROFILE"
+        }
+      },
+      "attributes": {
+        "id": "S (Unique retailer ID)",
+        "name": "S (Owner full name)",
+        "shopName": "S (Shop / store name)",
+        "email": "S (Email address)",
+        "phone": "S (10-digit phone number)",
+        "city": "S (City / town)",
+        "aadhaarNo": "S (12-digit Aadhaar number)",
+        "balance": "N (Wallet balance in ₹)",
+        "status": "S (Active | Suspended)",
+        "createdDate": "S (ISO 8601 Date)",
+        "updatedAt": "S (ISO 8601 Timestamp)"
+      },
+      "globalSecondaryIndexes": [
+        {
+          "name": "GSI-Status",
+          "partitionKey": "status",
+          "sortKey": "createdDate",
+          "projectionType": "ALL",
+          "purpose": "Filter retailers by Active/Suspended status"
+        },
+        {
+          "name": "GSI-City",
+          "partitionKey": "city",
+          "sortKey": "name",
+          "projectionType": "ALL",
+          "purpose": "Filter and sort retailers by city and name"
+        },
+        {
+          "name": "GSI-Phone",
+          "partitionKey": "phone",
+          "projectionType": "KEYS_ONLY",
+          "purpose": "Lookup retailer by phone number"
+        }
+      ]
+    },
+    {
+      "name": "Distributors",
+      "purpose": "Distributor profiles and account statuses",
+      "primaryKey": {
+        "partitionKey": {
+          "name": "PK",
+          "type": "S",
+          "pattern": "DISTRIBUTOR#<distributorId>"
+        },
+        "sortKey": {
+          "name": "SK",
+          "type": "S",
+          "pattern": "PROFILE"
+        }
+      },
+      "attributes": {
+        "id": "S (Unique distributor ID)",
+        "name": "S (Owner full name)",
+        "shopName": "S (Shop / store name)",
+        "email": "S (Email address)",
+        "phone": "S (10-digit phone number)",
+        "city": "S (City / town)",
+        "aadhaarNo": "S (12-digit Aadhaar number)",
+        "balance": "N (Wallet balance in ₹)",
+        "status": "S (Active | Suspended)",
+        "createdDate": "S (ISO 8601 Date)",
+        "updatedAt": "S (ISO 8601 Timestamp)"
+      },
+      "globalSecondaryIndexes": [
+        {
+          "name": "GSI-Status",
+          "partitionKey": "status",
+          "sortKey": "createdDate",
+          "projectionType": "ALL",
+          "purpose": "Filter distributors by Active/Suspended status"
+        },
+        {
+          "name": "GSI-City",
+          "partitionKey": "city",
+          "sortKey": "name",
+          "projectionType": "ALL",
+          "purpose": "Filter and sort distributors by city"
+        }
+      ]
+    },
+    {
+      "name": "Wallets",
+      "purpose": "Main & API wallet balance tracker",
+      "primaryKey": {
+        "partitionKey": {
+          "name": "PK",
+          "type": "S",
+          "pattern": "WALLET#<ownerId>"
+        },
+        "sortKey": {
+          "name": "SK",
+          "type": "S",
+          "pattern": "TYPE#<walletType>"
+        }
+      },
+      "attributes": {
+        "ownerId": "S (Owner user, retailer, or distributor ID)",
+        "ownerType": "S (user | retailer | distributor)",
+        "walletType": "S (Main | API)",
+        "balance": "N (Current balance in ₹)",
+        "totalCredits": "N (Lifetime credits total)",
+        "totalDebits": "N (Lifetime debits total)",
+        "status": "S (active | frozen)",
+        "createdAt": "S (ISO 8601 Timestamp)",
+        "updatedAt": "S (ISO 8601 Timestamp)"
+      }
+    },
+    {
+      "name": "WalletTransactions",
+      "purpose": "Detailed credit and debit transaction ledger",
+      "primaryKey": {
+        "partitionKey": {
+          "name": "PK",
+          "type": "S",
+          "pattern": "WALLET#<ownerId>"
+        },
+        "sortKey": {
+          "name": "SK",
+          "type": "S",
+          "pattern": "TX#<timestamp>#<txId>"
+        }
+      },
+      "attributes": {
+        "id": "S (Unique transaction ID)",
+        "date": "S (Human-readable date string)",
+        "type": "S (credit | debit)",
+        "description": "S (Transaction description details)",
+        "amount": "N (Transaction amount in ₹)",
+        "reference": "S (UTR or payment reference code)",
+        "status": "S (Success | Pending | Failed)",
+        "walletType": "S (Main | API)",
+        "createdAt": "S (ISO 8601 Timestamp)"
+      },
+      "globalSecondaryIndexes": [
+        {
+          "name": "GSI-WalletType",
+          "partitionKey": "walletType",
+          "sortKey": "createdAt",
+          "projectionType": "ALL",
+          "purpose": "Filter transactions by Main/API type"
+        },
+        {
+          "name": "GSI-Status",
+          "partitionKey": "status",
+          "sortKey": "createdAt",
+          "projectionType": "ALL",
+          "purpose": "Filter transactions by status"
+        },
+        {
+          "name": "GSI-Reference",
+          "partitionKey": "reference",
+          "projectionType": "ALL",
+          "purpose": "Lookup transaction details by UTR reference"
+        }
+      ]
+    },
+    {
+      "name": "PaymentRequests",
+      "purpose": "Retailer wallet recharge request forms",
+      "primaryKey": {
+        "partitionKey": {
+          "name": "PK",
+          "type": "S",
+          "pattern": "PAYREQ#<requestId>"
+        },
+        "sortKey": {
+          "name": "SK",
+          "type": "S",
+          "pattern": "RETAILER#<retailerId>"
+        }
+      },
+      "attributes": {
+        "id": "S (Unique request ID)",
+        "retailerId": "S (Retailer requester ID)",
+        "retailerName": "S (Retailer display name)",
+        "shopName": "S (Shop/Agency name)",
+        "amount": "N (Requested load amount in ₹)",
+        "paymentMode": "S (UPI | IMPS | NEFT | Bank Transfer)",
+        "utrNumber": "S (Payment reference UTR number)",
+        "status": "S (Pending | Approved | Resubmit | Rejected)",
+        "requestDate": "S (Submission timestamp)",
+        "walletType": "S (Main | API)",
+        "remarks": "S (Requester comments)",
+        "adminNotes": "S (Reviewer comments)",
+        "reviewedBy": "S (Admin user ID)",
+        "reviewedAt": "S (ISO 8601 Review timestamp)"
+      },
+      "globalSecondaryIndexes": [
+        {
+          "name": "GSI-RetailerRequests",
+          "partitionKey": "retailerId",
+          "sortKey": "requestDate",
+          "projectionType": "ALL",
+          "purpose": "Get all recharge requests submitted by a specific retailer"
+        },
+        {
+          "name": "GSI-Status",
+          "partitionKey": "status",
+          "sortKey": "requestDate",
+          "projectionType": "ALL",
+          "purpose": "Filter requests by workflow status"
+        },
+        {
+          "name": "GSI-UTR",
+          "partitionKey": "utrNumber",
+          "projectionType": "KEYS_ONLY",
+          "purpose": "Prevent duplicate payments by checking UTR history"
+        }
+      ]
+    },
+    {
+      "name": "ServiceApplications",
+      "purpose": "Stores all customer applications submitted by retailers for the 19 service catalog modules",
+      "primaryKey": {
+        "partitionKey": {
+          "name": "PK",
+          "type": "S",
+          "pattern": "APP#<applicationId>"
+        },
+        "sortKey": {
+          "name": "SK",
+          "type": "S",
+          "pattern": "SERVICE#<serviceId>"
+        }
+      },
+      "attributes": {
+        "applicationId": "S (Unique application ID)",
+        "serviceId": "S (Service type slug)",
+        "subServiceId": "S (Optional sub-service category)",
+        "serviceName": "S (Human-readable service title)",
+        "retailerId": "S (Retailer submitter ID)",
+        "retailerName": "S (Retailer display name)",
+        "status": "S (Pending | Resubmit | Processing | Rejected | Approved)",
+        "amount": "N (Service fee charged in ₹)",
+        "formData": {
+          "type": "M",
+          "description": "Dynamic mapping storing service-specific questionnaire responses",
+          "examples": {
+            "can-edit": {
+              "salutation": "Mr",
+              "applicantNameTamil": "செல்வம்",
+              "applicantNameEnglish": "Selvam",
+              "fatherNameEnglish": "Ramasamy",
+              "dob": "1995-04-12",
+              "religion": "Hindu",
+              "education": "Graduate",
+              "mobileNo": "9876543210",
+              "aadhaarNo": "123456789012",
+              "smartNumber": "3344556677",
+              "district": "Chennai",
+              "taluk": "Saidapet",
+              "pinCode": "600015"
+            },
+            "fssai": {
+              "fssaiCategory": "Food Service",
+              "shopName": "A1 Hot Bakes",
+              "shopAddress": "12, Station Road, Chennai",
+              "aadhaarNo": "987654321012",
+              "emailId": "bakery@eseva.com",
+              "applicantName": "Karthik R",
+              "mobileNo": "9988776655",
+              "documentType": "Rental Agreement",
+              "foodCategory": "Bakery",
+              "blockDivision": "Zone 5",
+              "pinCode": "600001"
+            },
+            "registration-dept": {
+              "district": "Chennai",
+              "sro": "South Chennai SRO",
+              "docNumber": "DOC-2026-998",
+              "year": "2026",
+              "aadhaarNo": "998877665544",
+              "cellNo": "9123456789"
+            },
+            "voter-id": {
+              "epicNo": "ABC1234567",
+              "nameAsPerAadhaar": "Rajesh Kumar",
+              "mobileNo": "9080706050",
+              "otp": "123456"
+            },
+            "rto-services": {
+              "chassisNo": "MC212345678901234",
+              "engineNo": "ENG1234567",
+              "dlNo": "TN0120260012345",
+              "cellNo": "9898989898"
+            }
+          }
+        },
+        "fileUploads": "L (List of S3 keys referencing uploaded documents)",
+        "remarks": "S (Admin review comment)",
+        "createdDate": "S (ISO 8601 Date)",
+        "lastUpdated": "S (ISO 8601 Timestamp)"
+      },
+      "globalSecondaryIndexes": [
+        {
+          "name": "GSI-Retailer",
+          "partitionKey": "retailerId",
+          "sortKey": "createdDate",
+          "projectionType": "ALL",
+          "purpose": "Retrieve all applications submitted by a retailer"
+        },
+        {
+          "name": "GSI-Service",
+          "partitionKey": "serviceId",
+          "sortKey": "createdDate",
+          "projectionType": "ALL",
+          "purpose": "Filter applications by service category"
+        },
+        {
+          "name": "GSI-Status",
+          "partitionKey": "status",
+          "sortKey": "lastUpdated",
+          "projectionType": "ALL",
+          "purpose": "Track workflow stages across all service requests"
+        }
+      ]
+    },
+    {
+      "name": "ServicePricing",
+      "purpose": "Admin pricing tiers per service catalog item",
+      "primaryKey": {
+        "partitionKey": {
+          "name": "PK",
+          "type": "S",
+          "pattern": "PRICING#<serviceId>"
+        },
+        "sortKey": {
+          "name": "SK",
+          "type": "S",
+          "pattern": "SUB#<subServiceId>"
+        }
+      },
+      "attributes": {
+        "subServiceId": "S (Unique sub-service category ID)",
+        "name": "S (Display label)",
+        "adminPrice": "N (Cost for Admin tier in ₹)",
+        "distributorPrice": "N (Cost for Distributor tier in ₹)",
+        "retailerPrice": "N (Cost for Retailer tier in ₹)",
+        "needCoordinator": "BOOL (Manual admin coordination required)",
+        "isActive": "BOOL (Service active switch)",
+        "updatedAt": "S (ISO 8601 Timestamp)",
+        "updatedBy": "S (Admin user ID)"
+      }
+    },
+    {
+      "name": "StatusTickets",
+      "purpose": "Workspace operations ticket tracker",
+      "primaryKey": {
+        "partitionKey": {
+          "name": "PK",
+          "type": "S",
+          "pattern": "TICKET#<ticketId>"
+        },
+        "sortKey": {
+          "name": "SK",
+          "type": "S",
+          "pattern": "STATUS#<status>"
+        }
+      },
+      "attributes": {
+        "id": "S (Unique ticket ID)",
+        "transactionId": "S (Transaction reference identifier)",
+        "serviceName": "S (Applied service title)",
+        "retailerName": "S (Retailer display name)",
+        "retailerId": "S (Retailer submitter ID)",
+        "amount": "N (Service charge in ₹)",
+        "status": "S (Pending | Resubmit | Processing | Rejected | Approved)",
+        "createdDate": "S (ISO 8601 Date)",
+        "lastUpdated": "S (ISO 8601 Timestamp)",
+        "remarks": "S (Operational logs / remarks)",
+        "applicationId": "S (Associated application record link)"
+      }
+    },
+    {
+      "name": "Invoices",
+      "purpose": "A/R Accounting department billing ledger",
+      "primaryKey": {
+        "partitionKey": {
+          "name": "PK",
+          "type": "S",
+          "pattern": "INV#<invoiceId>"
+        },
+        "sortKey": {
+          "name": "SK",
+          "type": "S",
+          "pattern": "METADATA"
+        }
+      },
+      "attributes": {
+        "id": "S (Unique invoice ID)",
+        "invoiceNumber": "S (Formatted invoice number)",
+        "retailerName": "S (Client/Retailer name)",
+        "amount": "N (Total invoice value in ₹)",
+        "date": "S (Invoice date, YYYY-MM-DD)",
+        "dueDate": "S (Payment due date, YYYY-MM-DD)",
+        "status": "S (Paid | Pending | Overdue)",
+        "utrNumber": "S (Transaction reference UTR code, optional)",
+        "category": "S (Service Charges | Wallet Topup | API Recharge | Late Penalty)",
+        "createdAt": "S (ISO 8601 Timestamp)",
+        "updatedAt": "S (ISO 8601 Timestamp)"
+      },
+      "globalSecondaryIndexes": [
+        {
+          "name": "GSI-BillingStatus",
+          "partitionKey": "status",
+          "sortKey": "date",
+          "projectionType": "ALL",
+          "purpose": "List invoices by status sorted by date"
+        },
+        {
+          "name": "GSI-BillingRetailer",
+          "partitionKey": "retailerName",
+          "sortKey": "date",
+          "projectionType": "ALL",
+          "purpose": "Retrieve invoice history for a retailer"
+        },
+        {
+          "name": "GSI-BillingUTR",
+          "partitionKey": "utrNumber",
+          "projectionType": "ALL",
+          "purpose": "Lookup invoice by transaction reference UTR code"
+        }
+      ]
+    },
+    {
+      "name": "CRMCustomers",
+      "purpose": "Distributor, Retailer, and Individual CRM directory",
+      "primaryKey": {
+        "partitionKey": {
+          "name": "PK",
+          "type": "S",
+          "pattern": "CUSTOMER#<customerId>"
+        },
+        "sortKey": {
+          "name": "SK",
+          "type": "S",
+          "pattern": "METADATA"
+        }
+      },
+      "attributes": {
+        "id": "S (Unique customer ID)",
+        "name": "S (Customer full name)",
+        "shopName": "S (Associated business shop name)",
+        "email": "S (Contact email address)",
+        "phone": "S (10-digit phone number)",
+        "city": "S (City/Location)",
+        "type": "S (Retailer | Distributor | Individual)",
+        "status": "S (Active | Inactive)",
+        "joinedDate": "S (Joined date, YYYY-MM-DD)",
+        "createdAt": "S (ISO 8601 Timestamp)",
+        "updatedAt": "S (ISO 8601 Timestamp)"
+      },
+      "globalSecondaryIndexes": [
+        {
+          "name": "GSI-CRMType",
+          "partitionKey": "type",
+          "sortKey": "joinedDate",
+          "projectionType": "ALL",
+          "purpose": "List contacts filtered by customer category"
+        },
+        {
+          "name": "GSI-CRMStatus",
+          "partitionKey": "status",
+          "sortKey": "joinedDate",
+          "projectionType": "ALL",
+          "purpose": "Filter active/inactive contacts"
+        },
+        {
+          "name": "GSI-CRMPhone",
+          "partitionKey": "phone",
+          "projectionType": "ALL",
+          "purpose": "Lookup customer directory records by phone number"
+        }
+      ]
+    }
+  ]
+}
