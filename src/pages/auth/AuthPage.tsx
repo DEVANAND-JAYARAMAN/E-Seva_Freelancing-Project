@@ -18,7 +18,6 @@ import {
 import { InputField, SubmitButton } from "../services/form/FormFields";
 import { validateField, PATTERNS } from "../services/form/validators";
 import { useAuth } from "../../store/context/AuthContext";
-import { useAuth } from "../../store/context/AuthContext";
 
 type AuthMode = "login" | "register" | "forgot";
 
@@ -28,7 +27,6 @@ interface AuthPageProps {
 
 export function AuthPage({ initialMode = "login" }: AuthPageProps) {
   const router = useRouter();
-  const { login } = useAuth();
   const { login } = useAuth();
 
   // Navigation & transition state
