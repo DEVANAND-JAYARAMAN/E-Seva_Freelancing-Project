@@ -1,5 +1,5 @@
-import React from "react";
-import { Upload, FileText } from "lucide-react";
+import React, { useState } from "react";
+import { Upload, FileText, Eye, EyeOff } from "lucide-react";
 import { FieldOption } from "./types";
 
 interface BaseFieldProps {
@@ -27,6 +27,8 @@ export const InputField: React.FC<InputFieldProps> = ({
   disabled,
   onChange,
 }) => {
+  const [showPassword, setShowPassword] = useState(false);
+
   if (type === "file") {
     return (
       <div className="flex flex-col gap-1.5 w-full">
@@ -60,24 +62,38 @@ export const InputField: React.FC<InputFieldProps> = ({
     );
   }
 
+  const isPassword = type === "password";
+  const inputType = isPassword ? (showPassword ? "text" : "password") : type;
+
   return (
     <div className="flex flex-col gap-1.5 w-full">
       <label className="text-[11px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider">
         {label}
       </label>
-      <input
-        type={type}
-        name={name}
-        placeholder={placeholder}
-        value={value}
-        disabled={disabled}
-        onChange={(e) => onChange(e.target.value)}
-        className={`w-full px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/20 dark:focus:ring-emerald-500/20 bg-white dark:bg-[#0a0f18]/30 ${
-          error
-            ? "border-red-500"
-            : "border-slate-250 dark:border-slate-800/80 focus:border-[#005c3a] dark:focus:border-emerald-500"
-        }`}
-      />
+      <div className="relative">
+        <input
+          type={inputType}
+          name={name}
+          placeholder={placeholder}
+          value={value}
+          disabled={disabled}
+          onChange={(e) => onChange(e.target.value)}
+          className={`w-full ${isPassword ? "pr-10" : ""} px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/20 dark:focus:ring-emerald-500/20 bg-white dark:bg-[#0a0f18]/30 ${
+            error
+              ? "border-red-500"
+              : "border-slate-250 dark:border-slate-800/80 focus:border-[#005c3a] dark:focus:border-emerald-500"
+          }`}
+        />
+        {isPassword && (
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 focus:outline-none"
+          >
+            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        )}
+      </div>
       {error && <span className="text-[10px] font-bold text-red-500">{error}</span>}
     </div>
   );
