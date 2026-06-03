@@ -1375,7 +1375,7 @@ export function ServicesPage() {
         .includes(searchTerm.toLowerCase());
       return matchName || matchSub;
     });
-  }, [searchTerm]);
+  }, [searchTerm, servicesList]);
 
   const topServices = useMemo(
     () => filteredServices.filter((s) => s.category === "Top"),
