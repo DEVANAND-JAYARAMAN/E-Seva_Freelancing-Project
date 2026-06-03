@@ -171,7 +171,7 @@ export function WalletPage() {
       try {
         const reqBody = {
           amount: amtNum,
-          customer_mobile: paymentMode === "UPI" ? upiId : (user?.phone || "9999999999"),
+          customer_mobile: paymentMode === "UPI" ? upiId : ((user as any)?.phone || "9999999999"),
           customer_email: user?.email || "user@example.com",
           redirect_url: window.location.origin
         };
