@@ -1,3 +1,5 @@
+﻿//go:build ignore
+
 package main
 
 import (
@@ -35,7 +37,7 @@ func createTableIfNotExists(ctx context.Context, tableName string, createTableIn
 	})
 
 	if err == nil {
-		fmt.Printf("✓ Table '%s' already exists, skipping creation\n", tableName)
+		fmt.Printf("âœ“ Table '%s' already exists, skipping creation\n", tableName)
 		return nil
 	}
 
@@ -46,7 +48,7 @@ func createTableIfNotExists(ctx context.Context, tableName string, createTableIn
 		return fmt.Errorf("failed to create table %s: %w", tableName, err)
 	}
 
-	fmt.Printf("✓ Table '%s' created successfully\n", tableName)
+	fmt.Printf("âœ“ Table '%s' created successfully\n", tableName)
 
 	// Wait for table to be active (max 2 minutes)
 	waiter := dynamodb.NewTableExistsWaiter(dynamoClient)
@@ -58,7 +60,7 @@ func createTableIfNotExists(ctx context.Context, tableName string, createTableIn
 		return fmt.Errorf("timeout waiting for table %s to become active: %w", tableName, err)
 	}
 
-	fmt.Printf("  └─ Table '%s' is now ACTIVE\n", tableName)
+	fmt.Printf("  â””â”€ Table '%s' is now ACTIVE\n", tableName)
 	return nil
 }
 
@@ -861,17 +863,17 @@ Output:
   - Existing tables are skipped (safe to run multiple times)
 
 Tables Created:
-  ✓ Users                 (with GSI-Email, GSI-Role)
-  ✓ Retailers             (with GSI-Status, GSI-City, GSI-Phone)
-  ✓ Distributors          (with GSI-Status, GSI-City)
-  ✓ Wallets               (no GSIs)
-  ✓ WalletTransactions    (with GSI-WalletType, GSI-Status, GSI-Reference)
-  ✓ PaymentRequests       (with GSI-RetailerRequests, GSI-Status, GSI-UTR)
-  ✓ ServiceApplications   (with GSI-Retailer, GSI-Service, GSI-Status)
-  ✓ ServicePricing        (no GSIs)
-  ✓ StatusTickets         (no GSIs)
-  ✓ Invoices              (with GSI-BillingStatus, GSI-BillingRetailer, GSI-BillingUTR)
-  ✓ CRMCustomers          (with GSI-CRMType, GSI-CRMStatus, GSI-CRMPhone)
+  âœ“ Users                 (with GSI-Email, GSI-Role)
+  âœ“ Retailers             (with GSI-Status, GSI-City, GSI-Phone)
+  âœ“ Distributors          (with GSI-Status, GSI-City)
+  âœ“ Wallets               (no GSIs)
+  âœ“ WalletTransactions    (with GSI-WalletType, GSI-Status, GSI-Reference)
+  âœ“ PaymentRequests       (with GSI-RetailerRequests, GSI-Status, GSI-UTR)
+  âœ“ ServiceApplications   (with GSI-Retailer, GSI-Service, GSI-Status)
+  âœ“ ServicePricing        (no GSIs)
+  âœ“ StatusTickets         (no GSIs)
+  âœ“ Invoices              (with GSI-BillingStatus, GSI-BillingRetailer, GSI-BillingUTR)
+  âœ“ CRMCustomers          (with GSI-CRMType, GSI-CRMStatus, GSI-CRMPhone)
 `)
 		return
 	}
@@ -902,16 +904,16 @@ Tables Created:
 	errors := 0
 	for _, table := range tables {
 		if err := table.fn(ctx); err != nil {
-			fmt.Printf("✗ Error creating table '%s': %v\n", table.name, err)
+			fmt.Printf("âœ— Error creating table '%s': %v\n", table.name, err)
 			errors++
 		}
 	}
 
 	fmt.Println("\n================================")
 	if errors == 0 {
-		fmt.Println("✓ All tables created successfully!")
+		fmt.Println("âœ“ All tables created successfully!")
 	} else {
-		fmt.Printf("✗ %d table(s) failed to create\n", errors)
+		fmt.Printf("âœ— %d table(s) failed to create\n", errors)
 		os.Exit(1)
 	}
 	fmt.Println("================================\n")
@@ -922,3 +924,5 @@ Tables Created:
 	fmt.Println("3. Start the backend server: go run main.go")
 	fmt.Println("\nFor more details, see DYNAMODB_ANALYSIS_REPORT.md")
 }
+
+
