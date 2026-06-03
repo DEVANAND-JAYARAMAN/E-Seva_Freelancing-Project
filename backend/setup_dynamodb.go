@@ -18,7 +18,7 @@ var dynamoClient *dynamodb.Client
 func init() {
 	region := os.Getenv("AWS_REGION")
 	if region == "" {
-		region = "us-east-1"
+		region = "ap-south-1"
 	}
 
 	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region))
