@@ -15,10 +15,7 @@ export function StatsGrid() {
   };
 
   return (
-    <section
-      className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"
-      aria-label="Dashboard metrics"
-    >
+    <>
       {stats.map((stat) => {
         const toneStyle =
           toneClasses[stat.tone] ||
@@ -53,6 +50,6 @@ export function StatsGrid() {
           </article>
         );
       })}
-    </section>
+    </>
   );
 }

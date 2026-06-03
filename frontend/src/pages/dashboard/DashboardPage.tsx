@@ -22,11 +22,14 @@ export function DashboardPage() {
         {/* Operations Overview and Today Collection */}
         <DashboardOverview />
 
-        {/* Wallets and Accounts Summary */}
-        <WalletSummary />
-
-        {/* Metrics Grid */}
-        <StatsGrid />
+        {/* Combined Stats & Wallets Grid (3 rows, 4 columns on large screens) */}
+        <section
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+          aria-label="Wallet and metrics summary"
+        >
+          <WalletSummary />
+          <StatsGrid />
+        </section>
 
         {/* Live Queues & Wallet Warnings */}
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
