@@ -16,7 +16,12 @@ import (
 var dynamoClient *dynamodb.Client
 
 func init() {
-	cfg, err := config.LoadDefaultConfig(context.TODO())
+	region := os.Getenv("AWS_REGION")
+	if region == "" {
+		region = "us-east-1"
+	}
+
+	cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region))
 	if err != nil {
 		log.Fatalf("unable to load AWS SDK config: %v", err)
 	}
@@ -123,9 +128,6 @@ func createUsersTable(ctx context.Context) error {
 				},
 			},
 		},
-		StreamSpecification: &types.StreamSpecification{
-			StreamViewType: types.StreamViewTypeNewAndOldImages,
-		},
 	})
 }
 
@@ -219,9 +221,6 @@ func createRetailersTable(ctx context.Context) error {
 				},
 			},
 		},
-		StreamSpecification: &types.StreamSpecification{
-			StreamViewType: types.StreamViewTypeNewAndOldImages,
-		},
 	})
 }
 
@@ -299,9 +298,6 @@ func createDistributorsTable(ctx context.Context) error {
 				},
 			},
 		},
-		StreamSpecification: &types.StreamSpecification{
-			StreamViewType: types.StreamViewTypeNewAndOldImages,
-		},
 	})
 }
 
@@ -329,9 +325,6 @@ func createWalletsTable(ctx context.Context) error {
 			},
 		},
 		BillingMode: types.BillingModePayPerRequest,
-		StreamSpecification: &types.StreamSpecification{
-			StreamViewType: types.StreamViewTypeNewAndOldImages,
-		},
 	})
 }
 
