@@ -555,7 +555,7 @@ export function PdfPage() {
 
   const activeServiceObj = useMemo(() => {
     return pdfServicesList.find((item) => item.id === activeForm) || null;
-  }, [activeForm]);
+  }, [activeForm, pdfServicesList]);
 
   // Filter transaction log ledger depending on list selection
   const filteredLogs = useMemo(() => {
@@ -694,7 +694,7 @@ export function PdfPage() {
                     <p className="text-sm text-slate-400 dark:text-slate-555 mt-2 max-w-md leading-relaxed">
                       Your search request for{" "}
                       <span className="text-[#005c3a] dark:text-emerald-400 font-extrabold lowercase">
-                        "{activeServiceObj.name}"
+                        &quot;{activeServiceObj.name}&quot;
                       </span>{" "}
                       has been registered. The generated document will appear in
                       your ledger shortly.
