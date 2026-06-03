@@ -1,5 +1,6 @@
-import { PdfPage } from "../../src/pages/pdf/PdfPage";
+import { PdfPage } from "../../src/features/pdf/PdfPage";
 
 export default function PdfRoute() {
   return <PdfPage />;
 }
+
