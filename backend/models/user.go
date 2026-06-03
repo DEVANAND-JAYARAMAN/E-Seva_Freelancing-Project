@@ -12,6 +12,7 @@ type User struct {
 	Status       string `dynamodbav:"status"`
 	CreatedAt    string `dynamodbav:"createdAt"`
 	UpdatedAt    string `dynamodbav:"updatedAt"`
+	
 }
 
 type Retailer struct {
