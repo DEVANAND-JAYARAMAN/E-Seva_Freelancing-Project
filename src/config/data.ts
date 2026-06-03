@@ -70,6 +70,8 @@ export const walletCards: WalletCard[] = [
   { label: "API Wallet", value: "4.00", icon: CircleDollarSign },
   { label: "Wallet Request", value: "0", icon: UserCheck },
   { label: "Customers", value: "0", icon: Users },
+  { label: "Retailers", value: "0", icon: Store },
+  { label: "Distributors", value: "0", icon: Building2 },
 ];
 
 export const services: ServiceItem[] = [

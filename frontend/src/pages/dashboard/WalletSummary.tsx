@@ -2,10 +2,7 @@ import { walletCards } from "../../config/data";
 
 export function WalletSummary() {
   return (
-    <section
-      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
-      aria-label="Wallet summary"
-    >
+    <>
       {walletCards.map((card) => {
         const Icon = card.icon;
         const isMoney = card.label.toLowerCase().includes("wallet");
@@ -34,6 +31,6 @@ export function WalletSummary() {
           </article>
         );
       })}
-    </section>
+    </>
   );
 }
