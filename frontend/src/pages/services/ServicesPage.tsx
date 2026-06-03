@@ -1602,7 +1602,7 @@ export function ServicesPage() {
                 <div className="py-2">
                   <ServicePaymentScreen
                     serviceName={selectedService.name}
-                    retailerCharge={selectedService.price?.retailer || 0}
+                    retailerCharge={Number(selectedService.price?.retailer) || 0}
                     onBack={() => setPaymentPhase("form")}
                     onSuccess={handlePaymentSuccess}
                   />
