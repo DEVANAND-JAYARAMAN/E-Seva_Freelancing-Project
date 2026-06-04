@@ -182,8 +182,8 @@ func Signup(c *gin.Context) {
 	})
 
 	if err != nil {
-		log.Printf("DynamoDB transaction failed: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create account. Make sure DynamoDB tables are set up correctly."})
+		log.Printf("DynamoDB TransactWriteItems failed: %T %v", err, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create account: " + err.Error()})
 		return
 	}
 
