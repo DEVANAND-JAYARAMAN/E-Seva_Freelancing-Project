@@ -49,6 +49,10 @@ jobs:
             cd /opt/eservice
             git pull origin main
             cd backend
+            cat > .env <<EOF
+            AWS_REGION=ap-south-1
+            PORT=${{ secrets.PORT }}
+            EOF
             go build -o eservice-backend .
             sudo systemctl restart eservice-backend
             sleep 3
