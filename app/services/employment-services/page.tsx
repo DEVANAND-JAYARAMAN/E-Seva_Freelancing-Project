@@ -1,5 +1,6 @@
-import { EmploymentServicesPage } from "../../../src/pages/services/employment-services/EmploymentServicesPage";
+import { EmploymentServicesPage } from "../../../src/features/services/employment-services/EmploymentServicesPage";
 
 export default function EmploymentServicesRoute() {
   return <EmploymentServicesPage />;
 }
+

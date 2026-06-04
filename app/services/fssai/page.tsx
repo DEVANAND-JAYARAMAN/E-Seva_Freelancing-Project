@@ -1,5 +1,6 @@
-import { FssaiPage } from "../../../src/pages/services/fssai/FssaiPage";
+import { FssaiPage } from "../../../src/features/services/fssai/FssaiPage";
 
 export default function FssaiRoute() {
   return <FssaiPage />;
 }
+

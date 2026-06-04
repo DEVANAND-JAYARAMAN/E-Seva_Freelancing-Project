@@ -83,33 +83,36 @@ export function PdfPage() {
   ]);
 
   // List of all 8 PDF services with matching name, fee amounts as requested
-  const pdfServicesList: PdfService[] = [
-    {
-      id: "adhaar-to-pan",
-      name: "adhaar to pan number",
-      amount: 12.0,
-    },
-    {
-      id: "pan-to-details",
-      name: "pan to pan details",
-      amount: 10.0,
-    },
-    {
-      id: "dl-pdf",
-      name: "driving license pdf",
-      amount: 10.0,
-    },
-    {
-      id: "rc-pdf",
-      name: "rc pdf",
-      amount: 12.0,
-    },
-    {
-      id: "adhaar-to-smartcard",
-      name: "adhaar to smart card number find",
-      amount: 12.0,
-    },
-  ];
+  const pdfServicesList = useMemo<PdfService[]>(
+    () => [
+      {
+        id: "adhaar-to-pan",
+        name: "adhaar to pan number",
+        amount: 12.0,
+      },
+      {
+        id: "pan-to-details",
+        name: "pan to pan details",
+        amount: 10.0,
+      },
+      {
+        id: "dl-pdf",
+        name: "driving license pdf",
+        amount: 10.0,
+      },
+      {
+        id: "rc-pdf",
+        name: "rc pdf",
+        amount: 12.0,
+      },
+      {
+        id: "adhaar-to-smartcard",
+        name: "adhaar to smart card number find",
+        amount: 12.0,
+      },
+    ],
+    [],
+  );
 
   // Helper render method for extremely crisp realistic graphic previews of the documents
   const renderDocumentPreview = (id: string) => {
@@ -555,7 +558,7 @@ export function PdfPage() {
 
   const activeServiceObj = useMemo(() => {
     return pdfServicesList.find((item) => item.id === activeForm) || null;
-  }, [activeForm]);
+  }, [activeForm, pdfServicesList]);
 
   // Filter transaction log ledger depending on list selection
   const filteredLogs = useMemo(() => {
@@ -694,7 +697,7 @@ export function PdfPage() {
                     <p className="text-sm text-slate-400 dark:text-slate-555 mt-2 max-w-md leading-relaxed">
                       Your search request for{" "}
                       <span className="text-[#005c3a] dark:text-emerald-400 font-extrabold lowercase">
-                        "{activeServiceObj.name}"
+                        &quot;{activeServiceObj.name}&quot;
                       </span>{" "}
                       has been registered. The generated document will appear in
                       your ledger shortly.

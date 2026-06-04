@@ -116,54 +116,33 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
     setErrors({});
     setIsSubmitting(true);
 
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://13.233.100.136:8080";
+
     try {
       if (mode === "login") {
-        let loggedInRole: "admin" | "retailer" | "distributor" | "customer" = "retailer";
-        let loggedInName = "Thuruvan Dev";
-        try {
-          const registeredUsersStr = localStorage.getItem("e_seva_registered_users") || "[]";
-          const registeredUsers = JSON.parse(registeredUsersStr);
-          const matchedUser = registeredUsers.find(
-            (u: any) => u.email.toLowerCase() === formData.email?.toLowerCase()
-          );
-          if (matchedUser) {
-            loggedInRole = matchedUser.role;
-            loggedInName = matchedUser.name;
-          } else {
-            // Default rules based on email string
-            if (formData.email?.toLowerCase().includes("admin")) {
-              loggedInRole = "admin";
-            } else if (formData.email?.toLowerCase().includes("distributor")) {
-              loggedInRole = "distributor";
-            }
-          }
-        } catch (err) {
-          console.error("Failed to read user from localStorage mockup db", err);
-        }
-
-        login(formData.email || "", "mock_token", loggedInRole, loggedInName).then(() => {
-          router.push("/dashboard");
+        const res = await fetch(`${API_URL}/api/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: formData.email, password: formData.password }),
         });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Login failed");
+        await login(data.user.email, data.token, data.role, data.user.fullName);
+        router.push("/dashboard");
       } else if (mode === "register") {
-        // Save user to localStorage mock db
-        try {
-          const registeredUsersStr = localStorage.getItem("e_seva_registered_users") || "[]";
-          const registeredUsers = JSON.parse(registeredUsersStr);
-          const existingUser = registeredUsers.find((u: any) => u.email.toLowerCase() === formData.email?.toLowerCase());
-          if (!existingUser) {
-            registeredUsers.push({
-              email: formData.email,
-              role: formData.role || "retailer",
-              name: formData.fullName || "Thuruvan User",
-              mobile: formData.mobile || "",
-              password: formData.password || "password"
-            });
-            localStorage.setItem("e_seva_registered_users", JSON.stringify(registeredUsers));
-          }
-        } catch (err) {
-          console.error("Failed to write to mockup db", err);
-        }
-
+        const res = await fetch(`${API_URL}/api/auth/signup`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fullName: formData.fullName,
+            email: formData.email,
+            mobile: formData.mobile,
+            role: formData.role || "retailer",
+            password: formData.password,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Registration failed");
         setFormData({ role: "retailer" });
         setMode("login");
       } else {

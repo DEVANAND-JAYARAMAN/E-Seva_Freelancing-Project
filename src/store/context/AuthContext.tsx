@@ -58,18 +58,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   ) => {
     setIsLoading(true);
     try {
-      // Mock login validation and user retrieval
-      const mockUser: User = {
-        id: "usr_" + Math.floor(1000 + Math.random() * 9000),
-        name: name || "Thuruvan Dev",
+      const userData: User = {
+        id: "",
+        name: name || email,
         email,
-        role: role || "admin",
-        walletBalance: 2895.0,
+        role: role || "retailer",
+        walletBalance: 0,
       };
-
       localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(mockUser));
-      setUser(mockUser);
+      localStorage.setItem("user", JSON.stringify(userData));
+      setUser(userData);
     } catch (error) {
       console.error("Login failed:", error);
       throw error;

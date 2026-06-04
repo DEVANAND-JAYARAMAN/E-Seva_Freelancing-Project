@@ -1,5 +1,6 @@
-import { ServicesPage } from "../../src/pages/services/ServicesPage";
+import { ServicesPage } from "../../src/features/services/ServicesPage";
 
 export default function ServicesRoute() {
   return <ServicesPage />;
 }
+

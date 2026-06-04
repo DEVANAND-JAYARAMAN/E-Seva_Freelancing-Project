@@ -1,5 +1,6 @@
-import { CrmPage } from "../../src/pages/crm/CrmPage";
+import { CrmPage } from "../../src/features/crm/CrmPage";
 
 export default function CrmRoute() {
   return <CrmPage />;
 }
+

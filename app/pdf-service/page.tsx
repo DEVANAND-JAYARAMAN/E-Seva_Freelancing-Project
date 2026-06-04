@@ -1,5 +1,6 @@
-import { PdfServicePage } from "../../src/pages/PdfServicePage";
+import { PdfServicePage } from "../../src/features/PdfServicePage";
 
 export default function PdfServiceRoute() {
   return <PdfServicePage />;
 }
+
