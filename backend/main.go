@@ -8,6 +8,7 @@ import (
 	"eservice-backend/billing"
 	"eservice-backend/crm"
 	"eservice-backend/db"
+	"eservice-backend/notification"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -51,6 +52,13 @@ func main() {
 		{
 			billingGroup.POST("/invoices", billing.CreateInvoice)
 			billingGroup.GET("/invoices", billing.GetInvoices)
+		}
+
+		notificationGroup := api.Group("/notifications")
+		{
+			notificationGroup.POST("/", notification.CreateNotification)
+			notificationGroup.GET("/", notification.GetNotifications)
+			notificationGroup.PATCH("/:id/read", notification.MarkAsRead)
 		}
 	}
 
