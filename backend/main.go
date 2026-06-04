@@ -5,6 +5,8 @@ import (
 	"os"
 
 	"eservice-backend/auth"
+	"eservice-backend/billing"
+	"eservice-backend/crm"
 	"eservice-backend/db"
 
 	"github.com/gin-contrib/cors"
@@ -37,6 +39,18 @@ func main() {
 		{
 			authGroup.POST("/signup", auth.Signup)
 			authGroup.POST("/login", auth.Login)
+		}
+
+		crmGroup := api.Group("/crm")
+		{
+			crmGroup.POST("/customers", crm.CreateCustomer)
+			crmGroup.GET("/customers", crm.GetCustomers)
+		}
+
+		billingGroup := api.Group("/billing")
+		{
+			billingGroup.POST("/invoices", billing.CreateInvoice)
+			billingGroup.GET("/invoices", billing.GetInvoices)
 		}
 	}
 
