@@ -1167,42 +1167,43 @@ export function ServicesPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // List of all 19 services as requested in the screenshot
-  const servicesList: EService[] = [
-    // Top Services Group
-    {
-      id: "pdf-services",
-      name: "PDF Services",
-      color: "text-rose-500 dark:text-rose-400",
-      bgColor: "bg-rose-500",
-      glowColor: "shadow-rose-500/10 dark:shadow-rose-950/20",
-      category: "Top",
-      formFields: ["pdfType", "fileUpload", "customerMobile", "remarks"],
-    },
-    {
-      id: "nsdl-pan",
-      name: "NSDL PAN",
-      color: "text-amber-500 dark:text-amber-400",
-      bgColor: "bg-amber-500",
-      glowColor: "shadow-amber-500/10 dark:shadow-amber-950/20",
-      category: "Top",
-      formFields: [
-        "panType",
-        "applicantName",
-        "dob",
-        "aadhaarNo",
-        "aadhaarUpload",
-      ],
-      price: { retailer: 0, distributor: 0 },
-    },
+  const servicesList = useMemo<EService[]>(
+    () => [
+      // Top Services Group
+      {
+        id: "pdf-services",
+        name: "PDF Services",
+        color: "text-rose-500 dark:text-rose-400",
+        bgColor: "bg-rose-500",
+        glowColor: "shadow-rose-500/10 dark:shadow-rose-950/20",
+        category: "Top",
+        formFields: ["pdfType", "fileUpload", "customerMobile", "remarks"],
+      },
+      {
+        id: "nsdl-pan",
+        name: "NSDL PAN",
+        color: "text-amber-500 dark:text-amber-400",
+        bgColor: "bg-amber-500",
+        glowColor: "shadow-amber-500/10 dark:shadow-amber-950/20",
+        category: "Top",
+        formFields: [
+          "panType",
+          "applicantName",
+          "dob",
+          "aadhaarNo",
+          "aadhaarUpload",
+        ],
+        price: { retailer: 0, distributor: 0 },
+      },
 
-    // All Services Group
-    {
-      id: "software-keys",
-      name: "Software Keys",
-      color: "text-sky-500 dark:text-sky-400",
-      bgColor: "bg-sky-500",
-      glowColor: "shadow-sky-500/10",
-      category: "All",
+      // All Services Group
+      {
+        id: "software-keys",
+        name: "Software Keys",
+        color: "text-sky-500 dark:text-sky-400",
+        bgColor: "bg-sky-500",
+        glowColor: "shadow-sky-500/10",
+        category: "All",
       formFields: ["softwareType", "quantity", "customerEmail"],
       price: { retailer: 0, distributor: 0 },
     },
@@ -1363,8 +1364,10 @@ export function ServicesPage() {
       glowColor: "shadow-purple-500/10",
       category: "All",
       formFields: ["studentName", "schoolName", "academicYear", "standard"],
-    },
-  ];
+      },
+    ],
+    [],
+  );
 
   // Live filter based on search inputs
   const filteredServices = useMemo(() => {
@@ -1375,7 +1378,7 @@ export function ServicesPage() {
         .includes(searchTerm.toLowerCase());
       return matchName || matchSub;
     });
-  }, [searchTerm]);
+  }, [searchTerm, servicesList]);
 
   const topServices = useMemo(
     () => filteredServices.filter((s) => s.category === "Top"),

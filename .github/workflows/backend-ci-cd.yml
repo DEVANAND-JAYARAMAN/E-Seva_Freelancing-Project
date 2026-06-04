@@ -1,0 +1,59 @@
+name: Backend CI/CD
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend-ci-cd.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: backend-cicd-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-build-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+
+      - name: Run tests
+        run: |
+          cd backend
+          go test ./...
+
+      - name: Build Linux binary
+        run: |
+          cd backend
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o eservice-backend .
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_SSH_PORT }}
+          script: |
+            set -e
+            export PATH=$PATH:/usr/local/go/bin
+            cd /opt/eservice
+            git pull origin main
+            cd backend
+            cat > .env <<EOF
+            AWS_REGION=ap-south-1
+            PORT=${{ secrets.PORT }}
+            EOF
+            go build -o eservice-backend .
+            sudo systemctl restart eservice-backend
+            sleep 3
+            sudo systemctl is-active --quiet eservice-backend && echo "Service is running"

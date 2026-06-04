@@ -146,6 +146,36 @@ export function BillingPage() {
     setUtrNumber("");
   };
 
+  const downloadInvoicePDF = (invoice: Invoice) => {
+    const doc = new jsPDF();
+    doc.setFontSize(20);
+    doc.text("INVOICE", 14, 22);
+    
+    doc.setFontSize(10);
+    doc.text(`Invoice Number: ${invoice.invoiceNumber}`, 14, 30);
+    doc.text(`Date: ${invoice.date}`, 14, 36);
+    doc.text(`Due Date: ${invoice.dueDate}`, 14, 42);
+    doc.text(`Status: ${invoice.status}`, 14, 48);
+    if (invoice.utrNumber) {
+      doc.text(`UTR Number: ${invoice.utrNumber}`, 14, 54);
+    }
+
+    doc.setFontSize(12);
+    doc.text(`Billed To: ${invoice.retailerName}`, 14, 65);
+
+    autoTable(doc, {
+      startY: 75,
+      head: [['Description', 'Amount (INR)']],
+      body: [
+        [invoice.category, invoice.amount.toFixed(2)],
+      ],
+      foot: [['Total', invoice.amount.toFixed(2)]],
+      theme: 'grid',
+    });
+
+    doc.save(`${invoice.invoiceNumber}.pdf`);
+  };
+
   const totalRevenue = invoices
     .filter((i) => i.status === "Paid")
     .reduce((sum, i) => sum + i.amount, 0);
@@ -309,6 +339,7 @@ export function BillingPage() {
                   <th className="py-4 px-4">Amount</th>
                   <th className="py-4 px-4">Due Date</th>
                   <th className="py-4 px-4">Status</th>
+                  <th className="py-4 px-4 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-900 text-sm">
@@ -373,12 +404,21 @@ export function BillingPage() {
                           {invoice.status}
                         </span>
                       </td>
+                      <td className="py-4 px-4 text-right">
+                        <button
+                          onClick={() => downloadInvoicePDF(invoice)}
+                          className="p-1.5 rounded-lg text-slate-400 hover:text-[#005c3a] dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                          title="Download PDF"
+                        >
+                          <Download size={16} />
+                        </button>
+                      </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={7}
                       className="py-12 text-center text-slate-400 dark:text-slate-600 font-semibold"
                     >
                       No matching invoices found.

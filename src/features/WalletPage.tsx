@@ -198,18 +198,16 @@ export function WalletPage() {
         };
 
         // Calling our backend API instead of exposing Mugavai credentials
-        const response = await fetch(
-          "http://localhost:8080/api/v1/wallet/recharge/gateway",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              // Include authorization token if your app uses one
-              Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-            },
-            body: JSON.stringify(reqBody),
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://13.233.100.136:8080";
+        const response = await fetch(`${baseUrl}/api/v1/wallet/recharge/gateway`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            // Include authorization token if your app uses one
+            "Authorization": `Bearer ${localStorage.getItem("token") || ""}`
           },
-        );
+          body: JSON.stringify(reqBody)
+        });
 
         const data = await response.json();
 

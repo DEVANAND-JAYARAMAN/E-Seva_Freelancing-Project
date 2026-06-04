@@ -1,5 +1,6 @@
-import { DistributorsPage } from "../../src/pages/distributors/DistributorsPage";
+import { DistributorsPage } from "../../src/features/distributors/DistributorsPage";
 
 export default function DistributorsRoute() {
   return <DistributorsPage />;
 }
+

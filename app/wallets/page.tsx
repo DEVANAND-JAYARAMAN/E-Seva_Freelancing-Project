@@ -1,5 +1,6 @@
-import { WalletPage } from "../../src/pages/WalletPage";
+import { WalletPage } from "../../src/features/WalletPage";
 
 export default function WalletsRoute() {
   return <WalletPage />;
 }
+

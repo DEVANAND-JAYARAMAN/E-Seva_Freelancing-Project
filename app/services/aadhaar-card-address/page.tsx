@@ -1,5 +1,6 @@
-import { AadhaarAddressPage } from "../../../src/pages/services/aadhaar-card-address/AadhaarAddressPage";
+import { AadhaarAddressPage } from "../../../src/features/services/aadhaar-card-address/AadhaarAddressPage";
 
 export default function AadhaarAddressRoute() {
   return <AadhaarAddressPage />;
 }
+
