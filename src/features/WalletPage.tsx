@@ -180,7 +180,7 @@ export function WalletPage() {
         };
 
         // Calling our backend API instead of exposing Mugavai credentials
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://13.233.100.136:8080";
         const response = await fetch(`${baseUrl}/api/v1/wallet/recharge/gateway`, {
           method: "POST",
           headers: {
