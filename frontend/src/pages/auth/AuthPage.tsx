@@ -137,6 +137,9 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
               loggedInRole = "distributor";
             }
           }
+          if (formData.fullName) {
+            loggedInName = formData.fullName;
+          }
         } catch (err) {
           console.error("Failed to read user from localStorage mockup db", err);
         }
@@ -340,12 +343,12 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
                 </div>
               )}
 
-              {mode === "register" && (
+              {mode !== "forgot" && (
                 <InputField
                   name="fullName"
-                  label="Full Name"
+                  label="User Name"
                   type="text"
-                  placeholder="Enter your full name"
+                  placeholder="Enter your user name"
                   value={formData.fullName || ""}
                   onChange={(val) => handleFieldChange("fullName", val)}
                   error={errors.fullName}
