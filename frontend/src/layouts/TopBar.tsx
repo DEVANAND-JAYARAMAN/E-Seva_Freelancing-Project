@@ -1,8 +1,17 @@
-import React, { useState } from "react";
-import { Bell, Menu, Moon, Sun, Leaf, Settings, User, LogOut } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Bell, Menu, Moon, Sun, Leaf, Settings, User, LogOut, Check } from "lucide-react";
 import { useTheme } from "../store/context/ThemeProvider";
 import { useAuth } from "../store/context/AuthContext";
 import { useRouter } from "next/navigation";
+
+type Notification = {
+  id: string;
+  title: string;
+  message: string;
+  type: string;
+  isRead: boolean;
+  createdAt: string;
+};
 
 type TopBarProps = {
   onMenuClick: () => void;
@@ -10,9 +19,42 @@ type TopBarProps = {
 
 export function TopBar({ onMenuClick }: TopBarProps) {
   const { theme, toggleTheme } = useTheme();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  const fetchNotifications = async () => {
+    if (!user) return;
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/notifications?userId=${user.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setNotifications(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch notifications:", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [user]);
+
+  const markAsRead = async (id: string, createdAt: string) => {
+    if (!user) return;
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/notifications/${id}/read?userId=${user.id}&createdAt=${createdAt}`, {
+        method: "PATCH",
+      });
+      fetchNotifications();
+    } catch (err) {
+      console.error("Failed to mark as read:", err);
+    }
+  };
+
+  const unreadCount = notifications.filter(n => !n.isRead).length;
 
   const handleLogout = () => {
     logout();
@@ -68,16 +110,47 @@ export function TopBar({ onMenuClick }: TopBarProps) {
         </button>
 
         {/* Notifications link */}
-        <a
-          href="#notifications"
-          className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200/80 dark:border-slate-800/60 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/60 hover:text-slate-800 dark:hover:text-slate-200 active:scale-95 transition-all duration-300"
-          aria-label="Notifications"
-        >
-          <Bell size={18} />
-          <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#005c3a] dark:bg-emerald-600 text-[10px] font-bold text-white shadow-sm ring-2 ring-white dark:ring-[#060913]">
-            3
-          </span>
-        </a>
+        <div className="relative">
+          <button
+            onClick={() => setIsNotifOpen(!isNotifOpen)}
+            className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200/80 dark:border-slate-800/60 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/60 hover:text-slate-800 dark:hover:text-slate-200 active:scale-95 transition-all duration-300"
+            aria-label="Notifications"
+          >
+            <Bell size={18} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#005c3a] dark:bg-emerald-600 text-[10px] font-bold text-white shadow-sm ring-2 ring-white dark:ring-[#060913]">
+                {unreadCount}
+              </span>
+            )}
+          </button>
+          
+          {isNotifOpen && (
+            <>
+              <div className="fixed inset-0 z-40 cursor-default" onClick={() => setIsNotifOpen(false)} />
+              <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#0c101d] p-3 shadow-2xl dark:shadow-black/50 z-50 animate-in fade-in slide-in-from-top-2 duration-150 flex flex-col gap-2">
+                <h3 className="text-sm font-extrabold px-2 pt-1 pb-2 border-b border-slate-100 dark:border-slate-800">Notifications</h3>
+                {notifications.length === 0 ? (
+                  <p className="text-xs text-center py-4 text-slate-500">No notifications.</p>
+                ) : (
+                  notifications.map(notif => (
+                    <div key={notif.id} className={`flex flex-col gap-1 p-3 rounded-xl border ${notif.isRead ? 'border-transparent opacity-70' : 'border-[#005c3a]/20 bg-[#005c3a]/5 dark:border-emerald-500/20 dark:bg-emerald-950/20'} transition-all`}>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{notif.title}</span>
+                        {!notif.isRead && (
+                          <button onClick={() => markAsRead(notif.id, notif.createdAt)} className="text-[#005c3a] dark:text-emerald-400 hover:opacity-70" title="Mark as read">
+                            <Check size={14} />
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">{notif.message}</p>
+                      <span className="text-[10px] text-slate-400 dark:text-slate-600 mt-1">{new Date(notif.createdAt).toLocaleString()}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </>
+          )}
+        </div>
 
 
         {/* User profile bubble */}
