@@ -5,7 +5,10 @@ import (
 	"os"
 
 	"eservice-backend/auth"
+	"eservice-backend/billing"
+	"eservice-backend/crm"
 	"eservice-backend/db"
+	"eservice-backend/notification"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -25,7 +28,7 @@ func main() {
 
 	// CORS configuration
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"http://localhost:3000", "http://localhost:3001"}
+	config.AllowOrigins = []string{"http://localhost:3000", "http://localhost:3001", "http://13.233.100.136:3000", "http://13.233.100.136", "https://main.dft1zhsxacjk.amplifyapp.com"}
 	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
 	config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
 	r.Use(cors.New(config))
@@ -37,6 +40,25 @@ func main() {
 		{
 			authGroup.POST("/signup", auth.Signup)
 			authGroup.POST("/login", auth.Login)
+		}
+
+		crmGroup := api.Group("/crm")
+		{
+			crmGroup.POST("/customers", crm.CreateCustomer)
+			crmGroup.GET("/customers", crm.GetCustomers)
+		}
+
+		billingGroup := api.Group("/billing")
+		{
+			billingGroup.POST("/invoices", billing.CreateInvoice)
+			billingGroup.GET("/invoices", billing.GetInvoices)
+		}
+
+		notificationGroup := api.Group("/notifications")
+		{
+			notificationGroup.POST("/", notification.CreateNotification)
+			notificationGroup.GET("/", notification.GetNotifications)
+			notificationGroup.PATCH("/:id/read", notification.MarkAsRead)
 		}
 	}
 
