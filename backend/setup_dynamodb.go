@@ -1,4 +1,4 @@
-﻿//go:build ignore
+//go:build ignore
 
 package main
 
@@ -837,6 +837,33 @@ func createCRMCustomersTable(ctx context.Context) error {
 	})
 }
 
+func createNotificationsTable(ctx context.Context) error {
+	return createTableIfNotExists(ctx, "Notifications", &dynamodb.CreateTableInput{
+		TableName: aws.String("Notifications"),
+		KeySchema: []types.KeySchemaElement{
+			{
+				AttributeName: aws.String("PK"),
+				KeyType:       types.KeyTypeHash,
+			},
+			{
+				AttributeName: aws.String("SK"),
+				KeyType:       types.KeyTypeRange,
+			},
+		},
+		AttributeDefinitions: []types.AttributeDefinition{
+			{
+				AttributeName: aws.String("PK"),
+				AttributeType: types.ScalarAttributeTypeS,
+			},
+			{
+				AttributeName: aws.String("SK"),
+				AttributeType: types.ScalarAttributeTypeS,
+			},
+		},
+		BillingMode: types.BillingModePayPerRequest,
+	})
+}
+
 func main() {
 	if len(os.Args) > 1 && os.Args[1] == "help" {
 		fmt.Println(`
@@ -899,6 +926,7 @@ Tables Created:
 		{"StatusTickets", createStatusTicketsTable},
 		{"Invoices", createInvoicesTable},
 		{"CRMCustomers", createCRMCustomersTable},
+		{"Notifications", createNotificationsTable},
 	}
 
 	errors := 0
