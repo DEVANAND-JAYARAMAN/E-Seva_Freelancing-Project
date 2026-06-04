@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Users, Search, Mail, Phone, MapPin, CheckCircle, Clock, AlertCircle } from "lucide-react";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
+import { Plus, Users, Search, Mail, Phone, MapPin, CheckCircle, Clock, AlertCircle, Download, FileText, FileSpreadsheet } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
 
@@ -130,6 +133,37 @@ export function CrmPage() {
     setStatus("Active");
   };
 
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    doc.text("CRM Customers List", 14, 20);
+    
+    const tableColumn = ["Name", "Shop Name", "Email", "Phone", "City", "Type", "Status"];
+    const tableRows = filteredCustomers.map(c => [
+      c.name,
+      c.shopName,
+      c.email,
+      c.phone,
+      c.city,
+      c.type,
+      c.status
+    ]);
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 30,
+    });
+    
+    doc.save("crm_customers.pdf");
+  };
+
+  const exportToExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(filteredCustomers);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Customers");
+    XLSX.writeFile(workbook, "crm_customers.xlsx");
+  };
+
   const activeCount = customers.filter((c) => c.status === "Active").length;
   const totalCount = customers.length;
   const retailerCount = customers.filter((c) => c.type === "Retailer").length;
@@ -150,7 +184,17 @@ export function CrmPage() {
             </p>
           </div>
 
-
+          <div className="flex items-center gap-3">
+            <button onClick={exportToPDF} className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-red-50 text-red-600 hover:bg-red-100 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-900/50 font-bold text-sm transition-all">
+              <FileText size={16} /> PDF
+            </button>
+            <button onClick={exportToExcel} className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-green-50 text-green-600 hover:bg-green-100 dark:bg-green-950/30 dark:text-green-400 dark:hover:bg-green-900/50 font-bold text-sm transition-all">
+              <FileSpreadsheet size={16} /> Excel
+            </button>
+            <button onClick={() => setIsFormOpen(true)} className="inline-flex items-center justify-center gap-2 px-5 py-2 rounded-xl bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] text-white font-extrabold text-sm shadow-sm transition-all">
+              <Plus size={16} /> Add Client
+            </button>
+          </div>
         </div>
 
         {/* Stats Grid */}
