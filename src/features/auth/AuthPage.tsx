@@ -116,7 +116,7 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
     setErrors({});
     setIsSubmitting(true);
 
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://13.233.100.136:8080";
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://13.233.100.136";
 
     try {
       if (mode === "login") {
