@@ -15,7 +15,10 @@ import {
 } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
 import { ServiceCard } from "./ServiceCard";
-import { ServicePaymentScreen, ServiceSuccessScreen } from "../../components/ServicePaymentScreen";
+import {
+  ServicePaymentScreen,
+  ServiceSuccessScreen,
+} from "../../components/ServicePaymentScreen";
 
 // Service item interface
 export interface EService {
@@ -1161,7 +1164,9 @@ export function ServicesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedService, setSelectedService] = useState<EService | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [paymentPhase, setPaymentPhase] = useState<"form" | "payment" | "success">("form");
+  const [paymentPhase, setPaymentPhase] = useState<
+    "form" | "payment" | "success"
+  >("form");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -1428,6 +1433,10 @@ export function ServicesPage() {
       router.push(PATHS.AADHAAR_ADDRESS);
       return;
     }
+    if (service.id === "software-keys") {
+      router.push(PATHS.SOFTWARE_KEYS);
+      return;
+    }
     if (service.id === "ration-card") {
       router.push(PATHS.RATION_CARD);
       return;
@@ -1602,7 +1611,9 @@ export function ServicesPage() {
                 <div className="py-2">
                   <ServicePaymentScreen
                     serviceName={selectedService.name}
-                    retailerCharge={Number(selectedService.price?.retailer) || 0}
+                    retailerCharge={
+                      Number(selectedService.price?.retailer) || 0
+                    }
                     onBack={() => setPaymentPhase("form")}
                     onSuccess={handlePaymentSuccess}
                   />

@@ -32,6 +32,8 @@ export const PATHS = {
   RETAILERS: "/retailers",
   CRM: "/crm",
   BILLING: "/billing",
+  AGRI_STACK: "/services/agri-stack-pdf",
+  SOFTWARE_KEYS: "/services/software-keys",
 
   // Fallbacks
   NOT_FOUND: "/404",

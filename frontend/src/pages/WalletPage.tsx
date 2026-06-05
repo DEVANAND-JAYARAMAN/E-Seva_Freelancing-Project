@@ -153,12 +153,20 @@ export function WalletPage() {
       return;
     }
 
-    if ((paymentMode === "NEFT" || paymentMode === "Bank Transfer") && !utrNumber.trim()) {
-      setFormError("Transaction Reference/UTR Number is required for this mode.");
+    if (
+      (paymentMode === "NEFT" || paymentMode === "Bank Transfer") &&
+      !utrNumber.trim()
+    ) {
+      setFormError(
+        "Transaction Reference/UTR Number is required for this mode.",
+      );
       return;
     }
 
-    if ((paymentMode === "NEFT" || paymentMode === "Bank Transfer") && utrNumber.trim().length < 8) {
+    if (
+      (paymentMode === "NEFT" || paymentMode === "Bank Transfer") &&
+      utrNumber.trim().length < 8
+    ) {
       setFormError(
         "UTR / Reference number must be at least 8 characters long.",
       );
@@ -167,26 +175,33 @@ export function WalletPage() {
 
     if (paymentMode === "UPI" || paymentMode === "IMPS") {
       setGatewayProcessing(true);
-      
+
       try {
         const reqBody = {
           amount: amtNum,
-          customer_mobile: paymentMode === "UPI" ? upiId : ((user as any)?.phone || "9999999999"),
+          customer_mobile:
+            paymentMode === "UPI"
+              ? upiId
+              : (user as any)?.phone || "9999999999",
           customer_email: user?.email || "user@example.com",
-          redirect_url: window.location.origin
+          redirect_url: window.location.origin,
         };
 
         // Calling our backend API instead of exposing Mugavai credentials
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-        const response = await fetch(`${baseUrl}/api/v1/wallet/recharge/gateway`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            // Include authorization token if your app uses one
-            "Authorization": `Bearer ${localStorage.getItem("token") || ""}`
+        const baseUrl =
+          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+        const response = await fetch(
+          `${baseUrl}/api/v1/wallet/recharge/gateway`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              // Include authorization token if your app uses one
+              Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+            },
+            body: JSON.stringify(reqBody),
           },
-          body: JSON.stringify(reqBody)
-        });
+        );
 
         const data = await response.json();
 
@@ -195,8 +210,12 @@ export function WalletPage() {
           const height = 700;
           const left = window.screenX + (window.outerWidth - width) / 2;
           const top = window.screenY + (window.outerHeight - height) / 2;
-          const popup = window.open(data.data.payment_url, "Mugavai Payment", `width=${width},height=${height},left=${left},top=${top}`);
-          
+          const popup = window.open(
+            data.data.payment_url,
+            "Mugavai Payment",
+            `width=${width},height=${height},left=${left},top=${top}`,
+          );
+
           const pollTimer = setInterval(() => {
             if (!popup || popup.closed) {
               clearInterval(pollTimer);
@@ -530,7 +549,7 @@ export function WalletPage() {
               </div>
 
               {/* Export button */}
-              <button className="inline-flex items-center gap-1.5 px-3 py-1.8 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900/40 text-xs font-bold transition-all">
+              <button className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900/40 text-xs font-bold transition-all">
                 <Download size={13} />
                 <span className="hidden sm:inline">Export CSV</span>
               </button>
@@ -756,11 +775,15 @@ export function WalletPage() {
                           type="text"
                           placeholder="e.g. user@okicici or 9876543210@ybl"
                           value={upiId}
-                          onChange={(e) => { setUpiId(e.target.value); setFormError(""); }}
+                          onChange={(e) => {
+                            setUpiId(e.target.value);
+                            setFormError("");
+                          }}
                           className="w-full px-4 py-2.8 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all font-mono"
                         />
                         <p className="text-[10px] text-slate-400 dark:text-slate-550 leading-normal">
-                          A payment request will be sent to this UPI ID via Mugavai Gateway.
+                          A payment request will be sent to this UPI ID via
+                          Mugavai Gateway.
                         </p>
                       </div>
                     )}
@@ -768,21 +791,34 @@ export function WalletPage() {
                     {paymentMode === "IMPS" && (
                       <div className="space-y-3 p-4 bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/40 rounded-xl animate-in fade-in zoom-in duration-200">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className="h-6 w-6 rounded bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">M</span>
-                          <span className="text-xs font-black text-indigo-900 dark:text-indigo-300 uppercase tracking-widest">Mugavai Payment Gateway</span>
+                          <span className="h-6 w-6 rounded bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">
+                            M
+                          </span>
+                          <span className="text-xs font-black text-indigo-900 dark:text-indigo-300 uppercase tracking-widest">
+                            Mugavai Payment Gateway
+                          </span>
                         </div>
                         <p className="text-[10px] font-medium text-indigo-700/80 dark:text-indigo-400/80 leading-relaxed">
-                          You will be redirected to the Mugavai secure payment gateway to complete this IMPS transfer instantly using available options.
+                          You will be redirected to the Mugavai secure payment
+                          gateway to complete this IMPS transfer instantly using
+                          available options.
                         </p>
                         <div className="flex flex-wrap gap-2 mt-2">
-                           <span className="px-2 py-1 bg-white dark:bg-[#0f1124] rounded border border-indigo-100 dark:border-indigo-800 text-[9px] font-bold text-indigo-800 dark:text-indigo-300">Net Banking</span>
-                           <span className="px-2 py-1 bg-white dark:bg-[#0f1124] rounded border border-indigo-100 dark:border-indigo-800 text-[9px] font-bold text-indigo-800 dark:text-indigo-300">Debit / Credit Card</span>
-                           <span className="px-2 py-1 bg-white dark:bg-[#0f1124] rounded border border-indigo-100 dark:border-indigo-800 text-[9px] font-bold text-indigo-800 dark:text-indigo-300">IMPS Portal</span>
+                          <span className="px-2 py-1 bg-white dark:bg-[#0f1124] rounded border border-indigo-100 dark:border-indigo-800 text-[9px] font-bold text-indigo-800 dark:text-indigo-300">
+                            Net Banking
+                          </span>
+                          <span className="px-2 py-1 bg-white dark:bg-[#0f1124] rounded border border-indigo-100 dark:border-indigo-800 text-[9px] font-bold text-indigo-800 dark:text-indigo-300">
+                            Debit / Credit Card
+                          </span>
+                          <span className="px-2 py-1 bg-white dark:bg-[#0f1124] rounded border border-indigo-100 dark:border-indigo-800 text-[9px] font-bold text-indigo-800 dark:text-indigo-300">
+                            IMPS Portal
+                          </span>
                         </div>
                       </div>
                     )}
 
-                    {(paymentMode === "NEFT" || paymentMode === "Bank Transfer") && (
+                    {(paymentMode === "NEFT" ||
+                      paymentMode === "Bank Transfer") && (
                       <div className="space-y-1.5 animate-in fade-in duration-200">
                         <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
                           UTR / Transaction Reference Number
@@ -791,7 +827,10 @@ export function WalletPage() {
                           type="text"
                           placeholder="Enter 12-digit UTR or Ref ID"
                           value={utrNumber}
-                          onChange={(e) => { setUtrNumber(e.target.value); setFormError(""); }}
+                          onChange={(e) => {
+                            setUtrNumber(e.target.value);
+                            setFormError("");
+                          }}
                           className="w-full px-4 py-2.8 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all font-mono"
                         />
                         <p className="text-[10px] text-slate-400 dark:text-slate-550 leading-normal">
