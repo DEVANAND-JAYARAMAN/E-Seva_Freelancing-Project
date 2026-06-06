@@ -113,9 +113,9 @@ export function TnegaCustomerTable({
                   {/* Name */}
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-3">
-                      {/* BSNL logo style icon */}
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/30 text-blue-600 font-black text-[10px] tracking-tighter uppercase shrink-0 select-none">
-                        BSNL
+                      {/* Dynamic initials style icon */}
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/30 text-blue-600 font-bold text-xs tracking-wide uppercase shrink-0 select-none">
+                        {customer.applicantName.substring(0, 2).toUpperCase()}
                       </div>
                       <span className="font-bold text-blue-600 dark:text-blue-400 text-sm hover:underline cursor-pointer">
                         {customer.applicantName}
