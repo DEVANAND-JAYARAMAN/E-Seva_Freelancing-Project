@@ -91,20 +91,59 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
     const newErrors: Record<string, string> = {};
 
     if (mode === "login") {
-      const emailErr = validateField("email", formData.email, { required: true }, formData);
+      const emailErr = validateField(
+        "email",
+        formData.email,
+        { required: true },
+        formData,
+      );
       if (emailErr) newErrors.email = emailErr;
-      const passErr = validateField("password", formData.password, { required: true }, formData);
+      const passErr = validateField(
+        "password",
+        formData.password,
+        { required: true },
+        formData,
+      );
       if (passErr) newErrors.password = passErr;
     } else if (mode === "register") {
-      const nameErr = validateField("fullName", formData.fullName, { required: true }, formData);
+      const nameErr = validateField(
+        "fullName",
+        formData.fullName,
+        { required: true },
+        formData,
+      );
       if (nameErr) newErrors.fullName = nameErr;
-      const emailErr = validateField("email", formData.email, { required: true, pattern: PATTERNS.EMAIL }, formData);
+      const emailErr = validateField(
+        "email",
+        formData.email,
+        { required: true, pattern: PATTERNS.EMAIL },
+        formData,
+      );
       if (emailErr) newErrors.email = emailErr;
-      const phoneErr = validateField("mobile", formData.mobile, { required: true, pattern: PATTERNS.PHONE }, formData);
+      const phoneErr = validateField(
+        "mobile",
+        formData.mobile,
+        { required: true, pattern: PATTERNS.PHONE },
+        formData,
+      );
       if (phoneErr) newErrors.mobile = phoneErr;
-      const passErr = validateField("password", formData.password, { required: true, minLength: 6 }, formData);
+      const passErr = validateField(
+        "password",
+        formData.password,
+        { required: true, minLength: 6 },
+        formData,
+      );
       if (passErr) newErrors.password = passErr;
-      const confErr = validateField("confirmPassword", formData.confirmPassword, { required: true, custom: (val, all) => val === all.password ? null : "Passwords do not match" }, formData);
+      const confErr = validateField(
+        "confirmPassword",
+        formData.confirmPassword,
+        {
+          required: true,
+          custom: (val, all) =>
+            val === all.password ? null : "Passwords do not match",
+        },
+        formData,
+      );
       if (confErr) newErrors.confirmPassword = confErr;
     }
 
@@ -118,13 +157,15 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
 
     try {
       if (mode === "login") {
-        let loggedInRole: "admin" | "retailer" | "distributor" | "customer" = "retailer";
+        let loggedInRole: "admin" | "retailer" | "distributor" | "customer" =
+          "retailer";
         let loggedInName = "Thuruvan Dev";
         try {
-          const registeredUsersStr = localStorage.getItem("e_seva_registered_users") || "[]";
+          const registeredUsersStr =
+            localStorage.getItem("e_seva_registered_users") || "[]";
           const registeredUsers = JSON.parse(registeredUsersStr);
           const matchedUser = registeredUsers.find(
-            (u: any) => u.email.toLowerCase() === formData.email?.toLowerCase()
+            (u: any) => u.email.toLowerCase() === formData.email?.toLowerCase(),
           );
           if (matchedUser) {
             loggedInRole = matchedUser.role;
@@ -144,31 +185,49 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
           console.error("Failed to read user from localStorage mockup db", err);
         }
 
-        login(formData.email || "", "mock_token", loggedInRole, loggedInName).then(() => {
+        login(
+          formData.email || "",
+          "mock_token",
+          loggedInRole,
+          loggedInName,
+        ).then(() => {
           router.push("/dashboard");
         });
       } else if (mode === "register") {
         // Save user to localStorage mock db
         try {
-          const registeredUsersStr = localStorage.getItem("e_seva_registered_users") || "[]";
+          const registeredUsersStr =
+            localStorage.getItem("e_seva_registered_users") || "[]";
           const registeredUsers = JSON.parse(registeredUsersStr);
-          const existingUser = registeredUsers.find((u: any) => u.email.toLowerCase() === formData.email?.toLowerCase());
+          const existingUser = registeredUsers.find(
+            (u: any) => u.email.toLowerCase() === formData.email?.toLowerCase(),
+          );
           if (!existingUser) {
             registeredUsers.push({
               email: formData.email,
               role: formData.role || "retailer",
               name: formData.fullName || "Thuruvan User",
               mobile: formData.mobile || "",
-              password: formData.password || "password"
+              password: formData.password || "password",
             });
-            localStorage.setItem("e_seva_registered_users", JSON.stringify(registeredUsers));
+            localStorage.setItem(
+              "e_seva_registered_users",
+              JSON.stringify(registeredUsers),
+            );
           }
         } catch (err) {
           console.error("Failed to write to mockup db", err);
         }
 
-        setFormData({ role: "retailer" });
-        setMode("login");
+        // Directly log in after registering
+        login(
+          formData.email || "",
+          "mock_token",
+          formData.role || "retailer",
+          formData.fullName || "Thuruvan User",
+        ).then(() => {
+          router.push("/dashboard");
+        });
       } else {
         setSuccessMessage("Reset instructions sent!");
         setTimeout(() => {
@@ -289,11 +348,13 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className={`p-1.5 rounded-lg transition-colors ${
-                          formData.role === "retailer"
-                            ? "bg-[#005c3a] dark:bg-emerald-600 text-white"
-                            : "bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400"
-                        }`}>
+                        <span
+                          className={`p-1.5 rounded-lg transition-colors ${
+                            formData.role === "retailer"
+                              ? "bg-[#005c3a] dark:bg-emerald-600 text-white"
+                              : "bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400"
+                          }`}
+                        >
                           <User size={16} />
                         </span>
                         {formData.role === "retailer" && (
@@ -319,11 +380,13 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className={`p-1.5 rounded-lg transition-colors ${
-                          formData.role === "distributor"
-                            ? "bg-[#005c3a] dark:bg-emerald-600 text-white"
-                            : "bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400"
-                        }`}>
+                        <span
+                          className={`p-1.5 rounded-lg transition-colors ${
+                            formData.role === "distributor"
+                              ? "bg-[#005c3a] dark:bg-emerald-600 text-white"
+                              : "bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400"
+                          }`}
+                        >
                           <Users size={16} />
                         </span>
                         {formData.role === "distributor" && (
@@ -343,12 +406,12 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
                 </div>
               )}
 
-              {mode !== "forgot" && (
+              {mode === "register" && (
                 <InputField
                   name="fullName"
-                  label="User Name"
+                  label="UserName"
                   type="text"
-                  placeholder="Enter your user name"
+                  placeholder="Enter your username"
                   value={formData.fullName || ""}
                   onChange={(val) => handleFieldChange("fullName", val)}
                   error={errors.fullName}

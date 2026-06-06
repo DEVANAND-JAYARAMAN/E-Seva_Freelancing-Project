@@ -15,7 +15,10 @@ import {
 } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
 import { ServiceCard } from "./ServiceCard";
-import { ServicePaymentScreen, ServiceSuccessScreen } from "../../components/ServicePaymentScreen";
+import {
+  ServicePaymentScreen,
+  ServiceSuccessScreen,
+} from "../../components/ServicePaymentScreen";
 
 // Service item interface
 export interface EService {
@@ -944,39 +947,83 @@ function renderServiceImage(id: string, className = "w-14 h-14") {
       return (
         <svg
           className={className}
-          viewBox="0 0 64 64"
+          viewBox="0 0 100 100"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
         >
+          {/* Soft yellow square card matching user uploaded design */}
           <rect
-            x="8"
-            y="10"
-            width="48"
-            height="44"
-            rx="4"
-            fill="#EFF6FF"
-            stroke="#1E3A8A"
-            strokeWidth="2"
+            width="100"
+            height="100"
+            rx="12"
+            fill="#FEFDF0"
+            stroke="#FEF3C7"
+            strokeWidth="1"
           />
-          {/* Police Badge / Star Emblem vector */}
-          <path
-            d="M32 16L35 23H43L37 27L39 34L32 30L25 34L27 27L21 23H29L32 16Z"
+
+          {/* Blue Circular Emblem frame */}
+          <circle
+            cx="50"
+            cy="45"
+            r="28"
             fill="#1E3A8A"
             stroke="#3B82F6"
             strokeWidth="1"
           />
-          <circle cx="32" cy="26" r="3" fill="#F59E0B" />
-          <rect x="18" y="42" width="28" height="5" rx="1" fill="#1E3A8A" />
+          <circle cx="50" cy="45" r="25" fill="#FEFDF0" />
+
+          {/* Srivilliputhur Temple Tower (Detailed Path Representation) */}
+          <path d="M50 24L46 30H54L50 24Z" fill="#D97706" />
+          <rect x="47" y="30" width="6" height="12" fill="#B45309" />
+          <rect x="44" y="36" width="12" height="1" fill="#92400E" />
+          <rect x="42" y="38" width="16" height="1" fill="#92400E" />
+          <rect x="40" y="42" width="20" height="8" fill="#D97706" />
+          <path d="M48 50C48 46 52 46 52 50H48Z" fill="#FEFDF0" />
+
+          {/* Flag Tricolor under Tower */}
+          <rect x="34" y="50" width="32" height="1.5" fill="#FF9933" />
+          <rect x="34" y="51.5" width="32" height="1.5" fill="#FFFFFF" />
+          <rect x="34" y="53" width="32" height="1.5" fill="#138808" />
+
+          {/* Outer text path representation (TAMIL NADU POLICE) */}
+          <path
+            id="servicesTextPath"
+            d="M26 45C26 31.7 36.7 21 50 21C63.3 21 74 31.7 74 45"
+            fill="none"
+          />
           <text
-            x="32"
-            y="46"
-            fill="white"
-            fontSize="3.5"
+            fontSize="5.5"
             fontWeight="bold"
+            fill="#1E3A8A"
+            letterSpacing="0.2"
+          >
+            <textPath
+              href="#servicesTextPath"
+              startOffset="50%"
+              textAnchor="middle"
+            >
+              TAMIL NADU POLICE
+            </textPath>
+          </text>
+
+          {/* Red Ribbon Banner reading "TRUTH ALONE TRIUMPHS" */}
+          <path
+            d="M22 68C32 75 68 75 78 68L74 58C64 64 36 64 26 58L22 68Z"
+            fill="#DC2626"
+          />
+          <path d="M22 68L26 58H18L22 68Z" fill="#991B1B" />
+          <path d="M78 68L74 58H82L78 68Z" fill="#991B1B" />
+
+          <text
+            x="50"
+            y="65"
+            fill="#FFFFFF"
+            fontSize="4.2"
+            fontWeight="black"
             textAnchor="middle"
             fontFamily="sans-serif"
           >
-            VERIFIED
+            TRUTH ALONE TRIUMPHS
           </text>
         </svg>
       );
@@ -1151,6 +1198,184 @@ function renderServiceImage(id: string, className = "w-14 h-14") {
           </text>
         </svg>
       );
+    case "agri-stack-pdf":
+      return (
+        <svg
+          className={className}
+          viewBox="0 0 64 64"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <linearGradient id="agriGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#10B981" />
+              <stop offset="100%" stopColor="#047857" />
+            </linearGradient>
+          </defs>
+          <rect
+            x="4"
+            y="12"
+            width="56"
+            height="40"
+            rx="4"
+            fill="#F0FDF4"
+            stroke="url(#agriGrad)"
+            strokeWidth="1.5"
+          />
+          <rect x="4" y="12" width="56" height="6" fill="url(#agriGrad)" />
+          <text
+            x="32"
+            y="16.5"
+            fill="white"
+            fontSize="4.5"
+            fontWeight="bold"
+            textAnchor="middle"
+            fontFamily="sans-serif"
+          >
+            Agri Stack
+          </text>
+          <rect
+            x="8"
+            y="22"
+            width="12"
+            height="15"
+            rx="1"
+            fill="#E8F5E9"
+            stroke="#81C784"
+            strokeWidth="0.5"
+          />
+          <circle cx="14" cy="27" r="2.5" fill="#2E7D32" />
+          <path
+            d="M9.5 35C9.5 32.5 12 32.5 14 33.5C16 32.5 18.5 32.5 18.5 35H9.5Z"
+            fill="#2E7D32"
+          />
+          <rect x="24" y="22" width="22" height="2" rx="0.5" fill="#C8E6C9" />
+          <rect x="24" y="26" width="18" height="2" rx="0.5" fill="#C8E6C9" />
+          <rect x="24" y="30" width="30" height="2" rx="0.5" fill="#C8E6C9" />
+          <rect x="24" y="34" width="26" height="2" rx="0.5" fill="#C8E6C9" />
+          <rect x="4" y="44" width="56" height="8" rx="1" fill="#2E7D32" />
+          <text
+            x="32"
+            y="50"
+            fill="white"
+            fontSize="4.5"
+            fontWeight="bold"
+            textAnchor="middle"
+            fontFamily="sans-serif"
+          >
+            FARMER ID
+          </text>
+        </svg>
+      );
+    case "pvc-card-print":
+      return (
+        <svg
+          className={className}
+          viewBox="0 0 64 64"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <linearGradient id="pvcGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#F59E0B" />
+              <stop offset="100%" stopColor="#D97706" />
+            </linearGradient>
+          </defs>
+          <rect
+            x="14"
+            y="18"
+            width="40"
+            height="26"
+            rx="3"
+            fill="#FEF3C7"
+            stroke="#B45309"
+            strokeWidth="1"
+            transform="rotate(-8 34 31)"
+          />
+          <rect
+            x="10"
+            y="22"
+            width="40"
+            height="26"
+            rx="3"
+            fill="white"
+            stroke="#D97706"
+            strokeWidth="1.2"
+          />
+          <rect x="11.2" y="23.2" width="37.6" height="3" fill="#F59E0B" />
+          <rect x="14" y="29" width="8" height="10" rx="0.5" fill="#FEF3C7" />
+          <rect x="25" y="29" width="20" height="1.5" rx="0.5" fill="#E5E7EB" />
+          <rect x="25" y="32" width="16" height="1.5" rx="0.5" fill="#E5E7EB" />
+          <rect x="25" y="35" width="22" height="1.5" rx="0.5" fill="#E5E7EB" />
+          <text
+            x="30"
+            y="44"
+            fill="#B45309"
+            fontSize="4.5"
+            fontWeight="black"
+            textAnchor="middle"
+            fontFamily="sans-serif"
+          >
+            PVC CARD
+          </text>
+        </svg>
+      );
+    case "cm-health-card":
+      return (
+        <svg
+          className={className}
+          viewBox="0 0 64 64"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <linearGradient id="healthGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#84CC16" />
+              <stop offset="100%" stopColor="#4D7C0F" />
+            </linearGradient>
+          </defs>
+          <circle
+            cx="32"
+            cy="32"
+            r="26"
+            fill="#F0FDF4"
+            stroke="url(#healthGrad)"
+            strokeWidth="2.5"
+          />
+          <circle
+            cx="32"
+            cy="32"
+            r="22"
+            fill="#FEF08A"
+            stroke="#CA8A04"
+            strokeWidth="1"
+            strokeDasharray="2 1"
+          />
+          <circle cx="27" cy="26" r="3.5" fill="#15803D" />
+          <circle cx="37" cy="26" r="3.5" fill="#15803D" />
+          <circle cx="32" cy="35" r="2.5" fill="#15803D" />
+          <path
+            d="M22 36C22 32 26 31 27 31C28 31 32 32 32 36H22Z"
+            fill="#15803D"
+          />
+          <path
+            d="M32 36C32 32 36 31 37 31C38 31 42 32 42 36H32Z"
+            fill="#15803D"
+          />
+          <path
+            d="M29 41C29 39 31 38.5 32 38.5C33 38.5 35 39 35 41H29Z"
+            fill="#15803D"
+          />
+          <path
+            d="M16 28C14 26 14 22 16 20C18 22 18 26 16 28Z"
+            fill="#4D7C0F"
+          />
+          <path
+            d="M48 28C50 26 50 22 48 20C46 22 46 26 48 28Z"
+            fill="#4D7C0F"
+          />
+        </svg>
+      );
     default:
       return null;
   }
@@ -1161,7 +1386,9 @@ export function ServicesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedService, setSelectedService] = useState<EService | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [paymentPhase, setPaymentPhase] = useState<"form" | "payment" | "success">("form");
+  const [paymentPhase, setPaymentPhase] = useState<
+    "form" | "payment" | "success"
+  >("form");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -1364,6 +1591,39 @@ export function ServicesPage() {
       category: "All",
       formFields: ["studentName", "schoolName", "academicYear", "standard"],
     },
+    {
+      id: "agri-stack-pdf",
+      name: "Agri Stack PDF",
+      color: "text-emerald-500 dark:text-emerald-400",
+      bgColor: "bg-emerald-500",
+      glowColor: "shadow-emerald-500/10",
+      category: "All",
+      formFields: ["farmerId", "aadhaarNo", "customerMobile", "aadhaarUpload"],
+    },
+    {
+      id: "pvc-card-print",
+      name: "PVC Card Print",
+      color: "text-amber-500 dark:text-amber-400",
+      bgColor: "bg-amber-500",
+      glowColor: "shadow-amber-500/10",
+      category: "All",
+      formFields: ["pvcCardType", "fileUpload", "customerMobile"],
+    },
+    {
+      id: "cm-health-card",
+      name: "CM Health Card",
+      color: "text-lime-600 dark:text-lime-500",
+      bgColor: "bg-lime-600",
+      glowColor: "shadow-lime-600/10",
+      category: "All",
+      formFields: [
+        "rationCardNo",
+        "applicantName",
+        "aadhaarNo",
+        "customerMobile",
+        "incomeCertificateUpload",
+      ],
+    },
   ];
 
   // Live filter based on search inputs
@@ -1428,8 +1688,24 @@ export function ServicesPage() {
       router.push(PATHS.AADHAAR_ADDRESS);
       return;
     }
+    if (service.id === "software-keys") {
+      router.push(PATHS.SOFTWARE_KEYS);
+      return;
+    }
     if (service.id === "ration-card") {
       router.push(PATHS.RATION_CARD);
+      return;
+    }
+    if (service.id === "gst") {
+      router.push(PATHS.GST);
+      return;
+    }
+    if (service.id === "police-verification") {
+      router.push(PATHS.POLICE_VERIFICATION);
+      return;
+    }
+    if (service.id === "certificate-courses") {
+      router.push(PATHS.CERTIFICATE_COURSES);
       return;
     }
     setSelectedService(service);
@@ -1602,7 +1878,9 @@ export function ServicesPage() {
                 <div className="py-2">
                   <ServicePaymentScreen
                     serviceName={selectedService.name}
-                    retailerCharge={Number(selectedService.price?.retailer) || 0}
+                    retailerCharge={
+                      Number(selectedService.price?.retailer) || 0
+                    }
                     onBack={() => setPaymentPhase("form")}
                     onSuccess={handlePaymentSuccess}
                   />
@@ -1646,7 +1924,8 @@ export function ServicesPage() {
                       if (
                         field === "fileUpload" ||
                         field === "aadhaarUpload" ||
-                        field === "addressProof"
+                        field === "addressProof" ||
+                        field === "incomeCertificateUpload"
                       ) {
                         return (
                           <div key={field} className="space-y-1.5">
@@ -1698,7 +1977,8 @@ export function ServicesPage() {
                         field === "voterType" ||
                         field === "schemeType" ||
                         field === "softwareType" ||
-                        field === "gstType"
+                        field === "gstType" ||
+                        field === "pvcCardType"
                       ) {
                         const options: Record<string, string[]> = {
                           pdfType: [
@@ -1736,6 +2016,13 @@ export function ServicesPage() {
                             "New GST Registration",
                             "GST Composition Scheme Opt-in",
                             "GST Return Audit Filing",
+                          ],
+                          pvcCardType: [
+                            "Aadhaar Smart Card PVC",
+                            "PAN Smart Card PVC",
+                            "Voter ID Smart Card PVC",
+                            "Health Smart Card PVC",
+                            "Driving License Smart Card PVC",
                           ],
                         };
 
