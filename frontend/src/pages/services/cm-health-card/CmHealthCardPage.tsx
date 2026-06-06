@@ -4,17 +4,17 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
-import { AgriStackPdfForm } from "./AgriStackPdfForm";
+import { CmHealthCardForm } from "./CmHealthCardForm";
 import { useLocalStorage } from "../../../hooks/useLocalStorage";
 import { ServiceCard } from "../ServiceCard";
 import { PATHS } from "../../../routes/paths";
 
-interface AgriService {
+interface HealthService {
   id: string;
   name: string;
 }
 
-export function AgriStackPdfPage() {
+export function CmHealthCardPage() {
   const router = useRouter();
   const [activeForm, setActiveForm] = useState<string | null>(null);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
@@ -26,23 +26,20 @@ export function AgriStackPdfPage() {
     {},
   );
 
-  const servicesList: AgriService[] = [
-    {
-      id: "agri-stack-pdf",
-      name: "Agri Stack PDF",
-    },
+  const servicesList: HealthService[] = [
+    { id: "cm-health-card", name: "CM Health Card" },
   ];
 
   // Helper to resolve dynamic price from admin pricing matrix
   const getServicePrice = () => {
-    const list = pricingConfig["agri-stack-pdf"];
+    const list = pricingConfig["cm-health-card"];
     if (list && Array.isArray(list)) {
-      const match = list.find((item) => item.id === "agri-main");
+      const match = list.find((item) => item.id === "cm-main");
       if (match && match.retailerPrice !== undefined) {
         return Number(match.retailerPrice);
       }
     }
-    return 35.0; // Default price
+    return 200.0; // Default price
   };
 
   const handleFormSubmit = (data: any) => {
@@ -67,64 +64,45 @@ export function AgriStackPdfPage() {
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
-          <linearGradient id="agriGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#10B981" />
-            <stop offset="100%" stopColor="#047857" />
+          <linearGradient id="healthGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#84CC16" />
+            <stop offset="100%" stopColor="#4D7C0F" />
           </linearGradient>
         </defs>
-        <rect
-          x="4"
-          y="12"
-          width="56"
-          height="40"
-          rx="4"
+        <circle
+          cx="32"
+          cy="32"
+          r="26"
           fill="#F0FDF4"
-          stroke="url(#agriGrad)"
-          strokeWidth="1.5"
+          stroke="url(#healthGrad)"
+          strokeWidth="2.5"
         />
-        <rect x="4" y="12" width="56" height="6" fill="url(#agriGrad)" />
-        <text
-          x="32"
-          y="16.5"
-          fill="white"
-          fontSize="4.5"
-          fontWeight="bold"
-          textAnchor="middle"
-          fontFamily="sans-serif"
-        >
-          Agri Stack
-        </text>
-        <rect
-          x="8"
-          y="22"
-          width="12"
-          height="15"
-          rx="1"
-          fill="#E8F5E9"
-          stroke="#81C784"
-          strokeWidth="0.5"
+        <circle
+          cx="32"
+          cy="32"
+          r="22"
+          fill="#FEF08A"
+          stroke="#CA8A04"
+          strokeWidth="1"
+          strokeDasharray="2 1"
         />
-        <circle cx="14" cy="27" r="2.5" fill="#2E7D32" />
+        <circle cx="27" cy="26" r="3.5" fill="#15803D" />
+        <circle cx="37" cy="26" r="3.5" fill="#15803D" />
+        <circle cx="32" cy="35" r="2.5" fill="#15803D" />
         <path
-          d="M9.5 35C9.5 32.5 12 32.5 14 33.5C16 32.5 18.5 32.5 18.5 35H9.5Z"
-          fill="#2E7D32"
+          d="M22 36C22 32 26 31 27 31C28 31 32 32 32 36H22Z"
+          fill="#15803D"
         />
-        <rect x="24" y="22" width="22" height="2" rx="0.5" fill="#C8E6C9" />
-        <rect x="24" y="26" width="18" height="2" rx="0.5" fill="#C8E6C9" />
-        <rect x="24" y="30" width="30" height="2" rx="0.5" fill="#C8E6C9" />
-        <rect x="24" y="34" width="26" height="2" rx="0.5" fill="#C8E6C9" />
-        <rect x="4" y="44" width="56" height="8" rx="1" fill="#2E7D32" />
-        <text
-          x="32"
-          y="50"
-          fill="white"
-          fontSize="4.5"
-          fontWeight="bold"
-          textAnchor="middle"
-          fontFamily="sans-serif"
-        >
-          FARMER ID
-        </text>
+        <path
+          d="M32 36C32 32 36 31 37 31C38 31 42 32 42 36H32Z"
+          fill="#15803D"
+        />
+        <path
+          d="M29 41C29 39 31 38.5 32 38.5C33 38.5 35 39 35 41H29Z"
+          fill="#15803D"
+        />
+        <path d="M16 28C14 26 14 22 16 20C18 22 18 26 16 28Z" fill="#4D7C0F" />
+        <path d="M48 28C50 26 50 22 48 20C46 22 46 26 48 28Z" fill="#4D7C0F" />
       </svg>
     );
   };
@@ -140,7 +118,7 @@ export function AgriStackPdfPage() {
                 setActiveForm(null);
                 router.push(PATHS.SERVICES);
               }}
-              className="text-slate-400 dark:text-slate-500 hover:text-[#005c3a] dark:hover:text-emerald-400 cursor-pointer font-bold uppercase text-xs tracking-wider transition-colors"
+              className="text-slate-400 dark:text-slate-555 hover:text-[#005c3a] dark:hover:text-emerald-400 cursor-pointer font-bold uppercase text-xs tracking-wider transition-colors"
             >
               Services Directory
             </span>
@@ -149,13 +127,13 @@ export function AgriStackPdfPage() {
               onClick={() => setActiveForm(null)}
               className="text-slate-400 dark:text-slate-555 hover:text-[#005c3a] dark:hover:text-emerald-400 cursor-pointer font-bold uppercase text-xs tracking-wider transition-colors"
             >
-              Agri Stack PDF
+              CM Health Card
             </span>
             {activeForm && (
               <>
                 <span className="text-slate-350 select-none">/</span>
                 <span className="text-[#005c3a] dark:text-emerald-400 font-bold uppercase text-xs tracking-wider">
-                  Agri Stack PDF
+                  CM Health Card
                 </span>
               </>
             )}
@@ -197,7 +175,7 @@ export function AgriStackPdfPage() {
                   id={service.id}
                   name={service.name}
                   icon={renderServiceIcon("w-16 h-16")}
-                  onClick={() => setActiveForm("agri-stack-pdf")}
+                  onClick={() => setActiveForm("cm-health-card")}
                 />
               ))}
             </div>
@@ -216,13 +194,13 @@ export function AgriStackPdfPage() {
                       Registration Submitted Successfully!
                     </h5>
                     <p className="text-sm text-slate-450 dark:text-slate-550 mt-2 max-w-md leading-relaxed">
-                      Your application for the **Agri Stack PDF / Farmer ID
-                      Card** has been registered successfully.
+                      Your application for the **CM Health Card** has been
+                      registered successfully.
                     </p>
                   </div>
                 </div>
               ) : (
-                <AgriStackPdfForm
+                <CmHealthCardForm
                   price={getServicePrice()}
                   onCancel={() => setActiveForm(null)}
                   onSubmit={handleFormSubmit}

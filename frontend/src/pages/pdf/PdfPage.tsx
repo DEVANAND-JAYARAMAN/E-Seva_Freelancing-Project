@@ -42,28 +42,43 @@ interface PdfRequestLog {
 const pdfServicesList: PdfService[] = [
   {
     id: "adhaar-to-pan",
-    name: "adhaar to pan number",
+    name: "Adhaar to Pan Number",
     amount: 12.0,
   },
   {
     id: "pan-to-details",
-    name: "pan to pan details",
-    amount: 10.0,
+    name: "Pan to Pan Details",
+    amount: 15.0,
   },
   {
     id: "dl-pdf",
-    name: "driving license pdf",
+    name: "Driving License PDF",
     amount: 10.0,
   },
   {
     id: "rc-pdf",
-    name: "rc pdf",
+    name: "RC PDF",
     amount: 12.0,
   },
   {
     id: "adhaar-to-smartcard",
-    name: "adhaar to smart card number find",
+    name: "Adhaar to Smart Card Number Find",
     amount: 12.0,
+  },
+  {
+    id: "adhaar-verification",
+    name: "Adhaar Verification",
+    amount: 20.0,
+  },
+  {
+    id: "pan-to-gst",
+    name: "Pan to GST Number Find",
+    amount: 40.0,
+  },
+  {
+    id: "eshram-pdf",
+    name: "E-Shram PDF",
+    amount: 40.0,
   },
 ];
 
@@ -83,7 +98,7 @@ export function PdfPage() {
     {
       id: "REQ-PDF-8902",
       serviceId: "adhaar-to-pan",
-      serviceName: "adhaar to pan number",
+      serviceName: "Adhaar to Pan Number",
       details: "Aadhaar: XXXXXXXX4012",
       amount: 12.0,
       date: "2026-05-26 12:45 PM",
@@ -93,7 +108,7 @@ export function PdfPage() {
     {
       id: "REQ-PDF-8903",
       serviceId: "dl-pdf",
-      serviceName: "driving license pdf",
+      serviceName: "Driving License PDF",
       details: "DL No: TN0520210087192",
       amount: 10.0,
       date: "2026-05-26 02:15 PM",
@@ -102,7 +117,7 @@ export function PdfPage() {
     {
       id: "REQ-PDF-8904",
       serviceId: "rc-pdf",
-      serviceName: "rc pdf",
+      serviceName: "RC PDF",
       details: "Vehicle: TN-02-BZ-8821",
       amount: 12.0,
       date: "2026-05-25 09:30 AM",
@@ -474,6 +489,17 @@ export function PdfPage() {
         formData,
       );
       if (aErr) newErrors.aadhaarNo = aErr;
+
+      const cErr = validateField(
+        "captcha",
+        formData.captcha,
+        {
+          required: true,
+          requiredMessage: "Captcha is required",
+        },
+        formData,
+      );
+      if (cErr) newErrors.captcha = cErr;
     } else if (service.id === "pan-to-gst") {
       const pErr = validateField(
         "panNo",
@@ -487,16 +513,18 @@ export function PdfPage() {
       );
       if (pErr) newErrors.panNo = pErr;
     } else if (service.id === "eshram-pdf") {
-      const uErr = validateField(
-        "uanNo",
-        formData.uanNo,
+      const aErr = validateField(
+        "aadhaarNo",
+        formData.aadhaarNo,
         {
           required: true,
-          requiredMessage: "UAN / E-Shram Card Number is required",
+          requiredMessage: "Aadhaar number is required",
+          pattern: PATTERNS.AADHAAR,
+          patternMessage: "Must be a valid 12-digit Aadhaar number",
         },
         formData,
       );
-      if (uErr) newErrors.uanNo = uErr;
+      if (aErr) newErrors.aadhaarNo = aErr;
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -644,7 +672,7 @@ export function PdfPage() {
                   {/* Card Title & Content */}
                   <div className="p-5 flex-1 flex flex-col gap-4">
                     <div className="space-y-1">
-                      <h4 className="text-sm font-black text-emerald-555 group-hover:text-emerald-650 transition-colors lowercase line-clamp-1 leading-snug">
+                      <h4 className="text-sm font-black text-emerald-555 group-hover:text-emerald-650 transition-colors capitalize line-clamp-1 leading-snug">
                         {service.name}
                       </h4>
                       <div className="flex items-center gap-1 text-[11px] font-bold text-rose-500">
@@ -693,7 +721,7 @@ export function PdfPage() {
                     </h5>
                     <p className="text-sm text-slate-400 dark:text-slate-555 mt-2 max-w-md leading-relaxed">
                       Your search request for{" "}
-                      <span className="text-[#005c3a] dark:text-emerald-400 font-extrabold lowercase">
+                      <span className="text-[#005c3a] dark:text-emerald-400 font-extrabold capitalize">
                         &quot;{activeServiceObj.name}&quot;
                       </span>{" "}
                       has been registered. The generated document will appear in
@@ -745,32 +773,6 @@ export function PdfPage() {
                               disabled={isSubmitting}
                             />
                           </div>
-                          <div>
-                            <InputField
-                              name="applicantName"
-                              label="Applicant Name"
-                              type="text"
-                              placeholder="Name exactly as printed on Aadhaar"
-                              value={formData.applicantName || ""}
-                              onChange={(val) =>
-                                handleFieldChange("applicantName", val)
-                              }
-                              error={errors.applicantName}
-                              disabled={isSubmitting}
-                            />
-                          </div>
-                          <div>
-                            <InputField
-                              name="dob"
-                              label="Date of Birth"
-                              type="text"
-                              placeholder="DD-MM-YYYY"
-                              value={formData.dob || ""}
-                              onChange={(val) => handleFieldChange("dob", val)}
-                              error={errors.dob}
-                              disabled={isSubmitting}
-                            />
-                          </div>
                         </>
                       )}
 
@@ -788,20 +790,6 @@ export function PdfPage() {
                                 handleFieldChange("panNo", val)
                               }
                               error={errors.panNo}
-                              disabled={isSubmitting}
-                            />
-                          </div>
-                          <div className="md:col-span-2">
-                            <InputField
-                              name="applicantName"
-                              label="Holder Full Name"
-                              type="text"
-                              placeholder="Enter holder full name"
-                              value={formData.applicantName || ""}
-                              onChange={(val) =>
-                                handleFieldChange("applicantName", val)
-                              }
-                              error={errors.applicantName}
                               disabled={isSubmitting}
                             />
                           </div>
@@ -841,7 +829,7 @@ export function PdfPage() {
                       {/* RC PDF Form */}
                       {activeServiceObj.id === "rc-pdf" && (
                         <>
-                          <div>
+                          <div className="md:col-span-2">
                             <InputField
                               name="regNo"
                               label="Vehicle Registration Number"
@@ -855,44 +843,16 @@ export function PdfPage() {
                               disabled={isSubmitting}
                             />
                           </div>
-                          <div>
-                            <InputField
-                              name="chassisNo"
-                              label="Chassis Number"
-                              type="text"
-                              placeholder="Enter last 5 digits of Chassis No"
-                              value={formData.chassisNo || ""}
-                              onChange={(val) =>
-                                handleFieldChange("chassisNo", val)
-                              }
-                              error={errors.chassisNo}
-                              disabled={isSubmitting}
-                            />
-                          </div>
-                          <div className="md:col-span-2">
-                            <InputField
-                              name="engineNo"
-                              label="Engine Number"
-                              type="text"
-                              placeholder="Enter last 5 digits of Engine No"
-                              value={formData.engineNo || ""}
-                              onChange={(val) =>
-                                handleFieldChange("engineNo", val)
-                              }
-                              error={errors.engineNo}
-                              disabled={isSubmitting}
-                            />
-                          </div>
                         </>
                       )}
 
                       {/* Aadhaar to Smart Card Find Form */}
                       {activeServiceObj.id === "adhaar-to-smartcard" && (
                         <>
-                          <div>
+                          <div className="md:col-span-2">
                             <InputField
                               name="aadhaarNo"
-                              label="Aadhaar Number (Head of Family)"
+                              label="Aadhaar Card Number"
                               type="text"
                               placeholder="Enter 12-digit Aadhaar number"
                               value={formData.aadhaarNo || ""}
@@ -900,20 +860,6 @@ export function PdfPage() {
                                 handleFieldChange("aadhaarNo", val)
                               }
                               error={errors.aadhaarNo}
-                              disabled={isSubmitting}
-                            />
-                          </div>
-                          <div>
-                            <InputField
-                              name="mobileNo"
-                              label="Registered Mobile Number"
-                              type="text"
-                              placeholder="Enter registered mobile number"
-                              value={formData.mobileNo || ""}
-                              onChange={(val) =>
-                                handleFieldChange("mobileNo", val)
-                              }
-                              error={errors.mobileNo}
                               disabled={isSubmitting}
                             />
                           </div>
@@ -937,13 +883,32 @@ export function PdfPage() {
                               disabled={isSubmitting}
                             />
                           </div>
+                          <div className="flex items-end gap-3 md:col-span-2">
+                            <div className="flex-1">
+                              <InputField
+                                name="captcha"
+                                label="Enter Captcha"
+                                type="text"
+                                placeholder="Enter captcha code"
+                                value={formData.captcha || ""}
+                                onChange={(val) =>
+                                  handleFieldChange("captcha", val)
+                                }
+                                error={errors.captcha}
+                                disabled={isSubmitting}
+                              />
+                            </div>
+                            <div className="flex items-center justify-center h-11 px-6 bg-slate-50 dark:bg-[#0c1322] border border-slate-200 dark:border-slate-800/80 rounded-xl font-black tracking-widest text-slate-600 dark:text-slate-400 select-none line-through decoration-double decoration-rose-500 text-base italic shadow-inner">
+                              7Yd8w
+                            </div>
+                          </div>
                         </>
                       )}
 
                       {/* PAN to GST Number Find Form */}
                       {activeServiceObj.id === "pan-to-gst" && (
                         <>
-                          <div>
+                          <div className="md:col-span-2">
                             <InputField
                               name="panNo"
                               label="Business PAN Card Number"
@@ -957,51 +922,23 @@ export function PdfPage() {
                               disabled={isSubmitting}
                             />
                           </div>
-                          <div>
-                            <InputField
-                              name="tradeName"
-                              label="Trade / Business Name (Optional)"
-                              type="text"
-                              placeholder="Enter trade name"
-                              value={formData.tradeName || ""}
-                              onChange={(val) =>
-                                handleFieldChange("tradeName", val)
-                              }
-                              error={errors.tradeName}
-                              disabled={isSubmitting}
-                            />
-                          </div>
                         </>
                       )}
 
                       {/* E-Shram PDF Form */}
                       {activeServiceObj.id === "eshram-pdf" && (
                         <>
-                          <div>
+                          <div className="md:col-span-2">
                             <InputField
-                              name="uanNo"
-                              label="Universal Account Number (UAN)"
+                              name="aadhaarNo"
+                              label="Aadhaar Card Number"
                               type="text"
-                              placeholder="Enter UAN / E-Shram No"
-                              value={formData.uanNo || ""}
+                              placeholder="Enter 12-digit Aadhaar number"
+                              value={formData.aadhaarNo || ""}
                               onChange={(val) =>
-                                handleFieldChange("uanNo", val)
+                                handleFieldChange("aadhaarNo", val)
                               }
-                              error={errors.uanNo}
-                              disabled={isSubmitting}
-                            />
-                          </div>
-                          <div>
-                            <InputField
-                              name="mobileNo"
-                              label="Linked Mobile Number"
-                              type="text"
-                              placeholder="Enter mobile number"
-                              value={formData.mobileNo || ""}
-                              onChange={(val) =>
-                                handleFieldChange("mobileNo", val)
-                              }
-                              error={errors.mobileNo}
+                              error={errors.aadhaarNo}
                               disabled={isSubmitting}
                             />
                           </div>
@@ -1021,7 +958,7 @@ export function PdfPage() {
                       Cancel
                     </button>
                     <SubmitButton
-                      text={`Pay & Find details`}
+                      text={`Search Details`}
                       loading={isSubmitting}
                       disabled={isSubmitting}
                     />
