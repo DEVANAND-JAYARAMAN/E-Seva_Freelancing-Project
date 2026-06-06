@@ -2,14 +2,14 @@ import React, { useState } from "react";
 import { CreditCard, Download } from "lucide-react";
 import { InputField } from "../form/FormFields";
 
-interface Epro13FormProps {
+interface PassportSizePhotoFormProps {
   price: number;
   onSubmit: (data: { mobileNumber: string; deviceName: string }) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }
 
-export const Epro13Form: React.FC<Epro13FormProps> = ({
+export const PassportSizePhotoForm: React.FC<PassportSizePhotoFormProps> = ({
   price,
   onSubmit,
   onCancel,
@@ -48,10 +48,10 @@ export const Epro13Form: React.FC<Epro13FormProps> = ({
         <div className="flex flex-col sm:flex-row sm:items-start justify-between border-b border-slate-100 dark:border-slate-900/50 pb-4 gap-2">
           <div>
             <h2 className="text-xl font-extrabold text-slate-900 dark:text-white capitalize">
-              EPRO - 13
+              Passport Size photo Maker
             </h2>
             <p className="text-xs text-slate-450 dark:text-slate-500 mt-0.5">
-              Register EPRO-13 software key.
+              Register Passport Size photo Maker software key.
             </p>
           </div>
           <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none flex items-center gap-1.5">
