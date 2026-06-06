@@ -34,6 +34,9 @@ export const PATHS = {
   BILLING: "/billing",
   AGRI_STACK: "/services/agri-stack-pdf",
   SOFTWARE_KEYS: "/services/software-keys",
+  GST: "/services/gst",
+  POLICE_VERIFICATION: "/services/police-verification",
+  CERTIFICATE_COURSES: "/services/certificate-courses",
 
   // Fallbacks
   NOT_FOUND: "/404",

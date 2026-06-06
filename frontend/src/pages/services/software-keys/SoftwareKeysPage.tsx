@@ -19,6 +19,23 @@ import {
   ServiceSuccessScreen,
 } from "../../../components/ServicePaymentScreen";
 import { Epro13Form } from "./Epro13Form";
+import { TnHealthCardForm } from "./TnHealthCardForm";
+import { LongAadhaarForm } from "./LongAadhaarForm";
+import { TnpdsSmartCardForm } from "./TnpdsSmartCardForm";
+import { PanManualMakerForm } from "./PanManualMakerForm";
+import { EshramIdForm } from "./EshramIdForm";
+import { EpicVoterIdForm } from "./EpicVoterIdForm";
+import { PahalAadhaarPdfForm } from "./PahalAadhaarPdfForm";
+import { PassportSizePhotoForm } from "./PassportSizePhotoForm";
+import { RcPvcForm } from "./RcPvcForm";
+import { DlPvcForm } from "./DlPvcForm";
+import { TamilAstrologyForm } from "./TamilAstrologyForm";
+import { FishermanCardForm } from "./FishermanCardForm";
+import { InstantPanCardForm } from "./InstantPanCardForm";
+import { PmjayForm } from "./PmjayForm";
+import { Epro13SecondForm } from "./Epro13SecondForm";
+import { Epro125Form } from "./Epro125Form";
+import { Epro14Form } from "./Epro14Form";
 
 interface SoftwareCardItem {
   id: string;
@@ -51,7 +68,7 @@ export function SoftwareKeysPage() {
       {
         id: "tn-health-qr",
         name: "TN - Health Card Maker With QR",
-        price: 400.0,
+        price: 149.0,
         iconBg: "bg-blue-50 dark:bg-blue-950/20",
       },
       {
@@ -165,11 +182,7 @@ export function SoftwareKeysPage() {
     setFormData({ quantity: "1" });
     setErrors({});
     setPaymentPhase("form");
-    if (software.id.startsWith("epro-13-")) {
-      setActiveForm("epro-13");
-    } else {
-      setIsModalOpen(true);
-    }
+    setActiveForm(software.id);
   };
 
   const handleFieldChange = (field: string, val: string) => {
@@ -1275,6 +1288,59 @@ export function SoftwareKeysPage() {
     }
   };
 
+  const renderActiveForm = () => {
+    if (!selectedSoftware) return null;
+    const props = {
+      price: selectedSoftware.price,
+      onSubmit: (data: any) => {
+        setFormData(data);
+        setPaymentPhase("payment");
+      },
+      onCancel: () => setActiveForm(null),
+    };
+
+    switch (activeForm) {
+      case "epro-13-1":
+        return <Epro13Form {...props} />;
+      case "tn-health-qr":
+        return <TnHealthCardForm {...props} />;
+      case "long-aadhaar":
+        return <LongAadhaarForm {...props} />;
+      case "tnpds-smart-pvc":
+        return <TnpdsSmartCardForm {...props} />;
+      case "pan-nsdl-uti-manual":
+        return <PanManualMakerForm {...props} />;
+      case "eshram-id":
+        return <EshramIdForm {...props} />;
+      case "epic-voter-id":
+        return <EpicVoterIdForm {...props} />;
+      case "pahal-aadhaar-pdf":
+        return <PahalAadhaarPdfForm {...props} />;
+      case "passport-photo":
+        return <PassportSizePhotoForm {...props} />;
+      case "rc-pvc":
+        return <RcPvcForm {...props} />;
+      case "dl-pvc":
+        return <DlPvcForm {...props} />;
+      case "tamil-astrology":
+        return <TamilAstrologyForm {...props} />;
+      case "fisherman-card":
+        return <FishermanCardForm {...props} />;
+      case "instant-pan":
+        return <InstantPanCardForm {...props} />;
+      case "pmjay":
+        return <PmjayForm {...props} />;
+      case "epro-13-2":
+        return <Epro13SecondForm {...props} />;
+      case "epro-125":
+        return <Epro125Form {...props} />;
+      case "epro-14":
+        return <Epro14Form {...props} />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <AppShell activePage="Our Service">
       <section className="flex flex-col gap-6 w-full pb-8">
@@ -1305,7 +1371,7 @@ export function SoftwareKeysPage() {
               <>
                 <span className="text-slate-350 select-none">/</span>
                 <span className="text-[#005c3a] dark:text-emerald-400 font-bold uppercase text-xs tracking-wider">
-                  EPRO - 13
+                  {selectedSoftware?.name}
                 </span>
               </>
             )}
@@ -1400,14 +1466,7 @@ export function SoftwareKeysPage() {
                 </div>
               </div>
             ) : selectedSoftware ? (
-              <Epro13Form
-                price={selectedSoftware.price}
-                onSubmit={(data) => {
-                  setFormData(data);
-                  setPaymentPhase("payment");
-                }}
-                onCancel={() => setActiveForm(null)}
-              />
+              renderActiveForm()
             ) : null}
           </div>
         )}
