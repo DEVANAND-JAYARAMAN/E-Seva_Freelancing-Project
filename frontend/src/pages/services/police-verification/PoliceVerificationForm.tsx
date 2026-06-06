@@ -307,11 +307,7 @@ export const PoliceVerificationForm: React.FC<PoliceVerificationFormProps> = ({
         >
           Cancel
         </button>
-        <SubmitButton
-          text="Submit For Verification"
-          loading={isLoading}
-          disabled={isLoading}
-        />
+        <SubmitButton text="Submit" loading={isLoading} disabled={isLoading} />
       </div>
     </form>
   );
