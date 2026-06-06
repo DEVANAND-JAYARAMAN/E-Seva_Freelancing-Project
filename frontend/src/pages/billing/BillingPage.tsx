@@ -1,7 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Receipt, Search, FileText, CheckCircle, Clock, AlertTriangle, ArrowUpRight, ArrowDownRight, DollarSign } from "lucide-react";
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import {
+  Plus,
+  Receipt,
+  Search,
+  FileText,
+  CheckCircle,
+  Clock,
+  AlertTriangle,
+  ArrowUpRight,
+  ArrowDownRight,
+  DollarSign,
+  Download,
+} from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
 
@@ -139,7 +153,7 @@ export function BillingPage() {
     const doc = new jsPDF();
     doc.setFontSize(20);
     doc.text("INVOICE", 14, 22);
-    
+
     doc.setFontSize(10);
     doc.text(`Invoice Number: ${invoice.invoiceNumber}`, 14, 30);
     doc.text(`Date: ${invoice.date}`, 14, 36);
@@ -154,12 +168,10 @@ export function BillingPage() {
 
     autoTable(doc, {
       startY: 75,
-      head: [['Description', 'Amount (INR)']],
-      body: [
-        [invoice.category, invoice.amount.toFixed(2)],
-      ],
-      foot: [['Total', invoice.amount.toFixed(2)]],
-      theme: 'grid',
+      head: [["Description", "Amount (INR)"]],
+      body: [[invoice.category, invoice.amount.toFixed(2)]],
+      foot: [["Total", invoice.amount.toFixed(2)]],
+      theme: "grid",
     });
 
     doc.save(`${invoice.invoiceNumber}.pdf`);
@@ -406,7 +418,10 @@ export function BillingPage() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={7} className="py-12 text-center text-slate-400 dark:text-slate-600 font-semibold">
+                    <td
+                      colSpan={7}
+                      className="py-12 text-center text-slate-400 dark:text-slate-600 font-semibold"
+                    >
                       No matching invoices found.
                     </td>
                   </tr>

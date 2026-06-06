@@ -40,8 +40,9 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
   }, [schema]);
 
   const handleFieldChange = (name: string, value: string | boolean) => {
-    const stringValue = typeof value === "boolean" ? (value ? "true" : "false") : value;
-    
+    const stringValue =
+      typeof value === "boolean" ? (value ? "true" : "false") : value;
+
     setFormData((prev) => {
       const updated = { ...prev, [name]: stringValue };
 
@@ -57,7 +58,12 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
           }
         }
 
-        const errorMsg = validateField(name, stringValue, fieldConfig?.validation, updated);
+        const errorMsg = validateField(
+          name,
+          stringValue,
+          fieldConfig?.validation,
+          updated,
+        );
         setErrors((prevErrors) => {
           const next = { ...prevErrors };
           if (errorMsg) {
@@ -75,12 +81,17 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const newErrors: Record<string, string> = {};
     schema.sections.forEach((section) => {
       section.fields.forEach((field) => {
         const val = formData[field.name] || "";
-        const errorMsg = validateField(field.name, val, field.validation, formData);
+        const errorMsg = validateField(
+          field.name,
+          val,
+          field.validation,
+          formData,
+        );
         if (errorMsg) {
           newErrors[field.name] = errorMsg;
         }
@@ -135,7 +146,8 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
           {/* Grid Layout for Section Fields */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {section.fields.map((field) => {
-              const colSpanClass = field.colSpan === 2 ? "md:col-span-2" : "col-span-1";
+              const colSpanClass =
+                field.colSpan === 2 ? "md:col-span-2" : "col-span-1";
               const error = errors[field.name];
               const value = formData[field.name] || "";
 
@@ -152,7 +164,9 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                             value={value}
                             error={error}
                             disabled={isLoading}
-                            onChange={(val) => handleFieldChange(field.name, val)}
+                            onChange={(val) =>
+                              handleFieldChange(field.name, val)
+                            }
                           />
                         );
                       case "select":
@@ -164,7 +178,9 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                             value={value}
                             error={error}
                             disabled={isLoading}
-                            onChange={(val) => handleFieldChange(field.name, val)}
+                            onChange={(val) =>
+                              handleFieldChange(field.name, val)
+                            }
                           />
                         );
                       case "phone":
@@ -176,7 +192,9 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                             value={value}
                             error={error}
                             disabled={isLoading}
-                            onChange={(val) => handleFieldChange(field.name, val)}
+                            onChange={(val) =>
+                              handleFieldChange(field.name, val)
+                            }
                           />
                         );
                       case "checkbox":
@@ -187,7 +205,9 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                             checked={value === "true"}
                             error={error}
                             disabled={isLoading}
-                            onChange={(checked) => handleFieldChange(field.name, checked)}
+                            onChange={(checked) =>
+                              handleFieldChange(field.name, checked)
+                            }
                           />
                         );
                       case "radio":
@@ -199,7 +219,9 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                             value={value}
                             error={error}
                             disabled={isLoading}
-                            onChange={(val) => handleFieldChange(field.name, val)}
+                            onChange={(val) =>
+                              handleFieldChange(field.name, val)
+                            }
                           />
                         );
                       case "text":
@@ -216,7 +238,9 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
                             value={value}
                             error={error}
                             disabled={isLoading}
-                            onChange={(val) => handleFieldChange(field.name, val)}
+                            onChange={(val) =>
+                              handleFieldChange(field.name, val)
+                            }
                           />
                         );
                       default:
@@ -241,7 +265,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
           Cancel
         </button>
         <SubmitButton
-          text={schema.submitButtonText || "Apply Service"}
+          text={schema.submitButtonText || "Apply"}
           loading={isLoading}
           disabled={isLoading}
         />

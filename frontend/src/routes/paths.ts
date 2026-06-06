@@ -33,10 +33,14 @@ export const PATHS = {
   CRM: "/crm",
   BILLING: "/billing",
   AGRI_STACK: "/services/agri-stack-pdf",
+  PVC_CARD: "/services/pvc-card-print",
+  HEALTH_CARD: "/services/cm-health-card",
   SOFTWARE_KEYS: "/services/software-keys",
   GST: "/services/gst",
   POLICE_VERIFICATION: "/services/police-verification",
   CERTIFICATE_COURSES: "/services/certificate-courses",
+  DHARSAN: "/services/dharsan",
+  TNEGA: "/services/tnega",
 
   // Fallbacks
   NOT_FOUND: "/404",
