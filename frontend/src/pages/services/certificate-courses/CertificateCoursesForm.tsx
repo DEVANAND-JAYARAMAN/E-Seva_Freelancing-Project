@@ -376,11 +376,7 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
         >
           Cancel
         </button>
-        <SubmitButton
-          text="Submit Registration"
-          loading={isLoading}
-          disabled={isLoading}
-        />
+        <SubmitButton text="Submit" loading={isLoading} disabled={isLoading} />
       </div>
     </form>
   );

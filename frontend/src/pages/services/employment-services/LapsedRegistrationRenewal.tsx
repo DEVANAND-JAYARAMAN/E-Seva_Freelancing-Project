@@ -7,7 +7,9 @@ interface LapsedRegistrationRenewalProps {
   onCancel: () => void;
 }
 
-export const LapsedRegistrationRenewal: React.FC<LapsedRegistrationRenewalProps> = ({ onCancel }) => {
+export const LapsedRegistrationRenewal: React.FC<
+  LapsedRegistrationRenewalProps
+> = ({ onCancel }) => {
   const [formData, setFormData] = useState<Record<string, string>>({
     username: "",
     aadhaarNo: "",
@@ -25,26 +27,46 @@ export const LapsedRegistrationRenewal: React.FC<LapsedRegistrationRenewalProps>
   const handleFieldChange = (name: string, value: string) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
-      
+
       // Live validation on edit
       if (errors[name]) {
         let rule = {};
         if (name === "username") {
           rule = { required: true, requiredMessage: "Username is required" };
         } else if (name === "aadhaarNo") {
-          rule = { required: true, requiredMessage: "Aadhaar Number is required", pattern: PATTERNS.AADHAAR, patternMessage: "Must be a valid 12-digit Aadhaar" };
+          rule = {
+            required: true,
+            requiredMessage: "Aadhaar Number is required",
+            pattern: PATTERNS.AADHAAR,
+            patternMessage: "Must be a valid 12-digit Aadhaar",
+          };
         } else if (name === "nameAsPerReg") {
-          rule = { required: true, requiredMessage: "Name as per Registration is required" };
+          rule = {
+            required: true,
+            requiredMessage: "Name as per Registration is required",
+          };
         } else if (name === "employmentDocs") {
-          rule = { required: true, requiredMessage: "Employment Documents upload is required" };
+          rule = {
+            required: true,
+            requiredMessage: "Employment Documents upload is required",
+          };
         } else if (name === "password") {
           rule = { required: true, requiredMessage: "Password is required" };
         } else if (name === "employmentRegNo") {
-          rule = { required: true, requiredMessage: "Registration Number is required" };
+          rule = {
+            required: true,
+            requiredMessage: "Registration Number is required",
+          };
         } else if (name === "dob") {
-          rule = { required: true, requiredMessage: "Date of Birth is required" };
+          rule = {
+            required: true,
+            requiredMessage: "Date of Birth is required",
+          };
         } else if (name === "oldCertificate") {
-          rule = { required: true, requiredMessage: "Old Certificate upload is required" };
+          rule = {
+            required: true,
+            requiredMessage: "Old Certificate upload is required",
+          };
         }
 
         const errorMsg = validateField(name, value, rule, updated);
@@ -66,11 +88,18 @@ export const LapsedRegistrationRenewal: React.FC<LapsedRegistrationRenewalProps>
     e.preventDefault();
 
     const newErrors: Record<string, string> = {};
-    
+
     // Validate each field
     const fieldsToValidate = [
       { name: "username", label: "Username" },
-      { name: "aadhaarNo", label: "Aadhaar Number", rule: { pattern: PATTERNS.AADHAAR, patternMessage: "Must be a valid 12-digit Aadhaar number" } },
+      {
+        name: "aadhaarNo",
+        label: "Aadhaar Number",
+        rule: {
+          pattern: PATTERNS.AADHAAR,
+          patternMessage: "Must be a valid 12-digit Aadhaar number",
+        },
+      },
       { name: "nameAsPerReg", label: "Name As Per Registration" },
       { name: "employmentDocs", label: "Employment Documents" },
       { name: "password", label: "Password" },
@@ -80,11 +109,16 @@ export const LapsedRegistrationRenewal: React.FC<LapsedRegistrationRenewalProps>
     ];
 
     fieldsToValidate.forEach((f) => {
-      const err = validateField(f.name, formData[f.name], {
-        required: true,
-        requiredMessage: `${f.label} is required`,
-        ...f.rule,
-      }, formData);
+      const err = validateField(
+        f.name,
+        formData[f.name],
+        {
+          required: true,
+          requiredMessage: `${f.label} is required`,
+          ...f.rule,
+        },
+        formData,
+      );
       if (err) newErrors[f.name] = err;
     });
 
@@ -115,7 +149,8 @@ export const LapsedRegistrationRenewal: React.FC<LapsedRegistrationRenewalProps>
             Application Placed Successfully!
           </h5>
           <p className="text-sm text-slate-400 dark:text-slate-555 mt-2 max-w-md leading-relaxed">
-            Your renewal request for **Lapsed Registration Renewal** has been registered. The status will update soon.
+            Your renewal request for **Lapsed Registration Renewal** has been
+            registered. The status will update soon.
           </p>
         </div>
       </div>
@@ -131,7 +166,8 @@ export const LapsedRegistrationRenewal: React.FC<LapsedRegistrationRenewalProps>
             Lapsed Registration Renewal
           </h2>
           <p className="text-xs text-slate-450 dark:text-slate-555 mt-0.5">
-            Please enter your registration and demographic details to initiate the renewal process
+            Please enter your registration and demographic details to initiate
+            the renewal process
           </p>
         </div>
         <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none">
@@ -164,7 +200,12 @@ export const LapsedRegistrationRenewal: React.FC<LapsedRegistrationRenewalProps>
               value={formData.aadhaarNo}
               error={errors.aadhaarNo}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("aadhaarNo", val.replace(/\D/g, "").slice(0, 12))}
+              onChange={(val) =>
+                handleFieldChange(
+                  "aadhaarNo",
+                  val.replace(/\D/g, "").slice(0, 12),
+                )
+              }
             />
           </div>
 
@@ -224,7 +265,11 @@ export const LapsedRegistrationRenewal: React.FC<LapsedRegistrationRenewalProps>
                   : "border-slate-250 dark:border-slate-800/80 focus:border-[#005c3a] dark:focus:border-emerald-500"
               }`}
             />
-            {errors.dob && <span className="text-[10px] font-bold text-red-500">{errors.dob}</span>}
+            {errors.dob && (
+              <span className="text-[10px] font-bold text-red-500">
+                {errors.dob}
+              </span>
+            )}
           </div>
 
           <div>
@@ -264,7 +309,7 @@ export const LapsedRegistrationRenewal: React.FC<LapsedRegistrationRenewalProps>
           Cancel
         </button>
         <SubmitButton
-          text="Renew Registration"
+          text="Renew"
           loading={isSubmitting}
           disabled={isSubmitting}
         />

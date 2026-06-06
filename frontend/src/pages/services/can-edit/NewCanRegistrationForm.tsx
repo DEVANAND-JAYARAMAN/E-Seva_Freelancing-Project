@@ -7,7 +7,9 @@ interface NewCanRegistrationFormProps {
   onCancel: () => void;
 }
 
-export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({ onCancel }) => {
+export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
+  onCancel,
+}) => {
   const [formData, setFormData] = useState<Record<string, string>>({
     salutation: "",
     relationship1: "",
@@ -20,7 +22,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({ 
     doorNo: "",
     district: "",
     taluk: "",
-    
+
     applicantNameTamil: "",
     fatherNameTamil: "",
     motherNameTamil: "",
@@ -32,7 +34,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({ 
     streetNameTamil: "",
     postNameTamil: "",
     villageTamil: "",
-    
+
     applicantNameEnglish: "",
     fatherNameEnglish: "",
     motherNameEnglish: "",
@@ -53,11 +55,34 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({ 
   const handleFieldChange = (name: string, value: string) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
-      
+
       // Live validation on edit
       if (errors[name]) {
         let rule = {};
-        if (["salutation", "dob", "religion", "education", "doorNo", "district", "taluk", "applicantNameTamil", "mobileNo", "community", "aadhaarNo", "smartNumber", "applicantNameEnglish", "maritalStatus", "caste", "aadhaarCard", "smartCard", "streetNameEnglish", "pinCode", "postalArea"].includes(name)) {
+        if (
+          [
+            "salutation",
+            "dob",
+            "religion",
+            "education",
+            "doorNo",
+            "district",
+            "taluk",
+            "applicantNameTamil",
+            "mobileNo",
+            "community",
+            "aadhaarNo",
+            "smartNumber",
+            "applicantNameEnglish",
+            "maritalStatus",
+            "caste",
+            "aadhaarCard",
+            "smartCard",
+            "streetNameEnglish",
+            "pinCode",
+            "postalArea",
+          ].includes(name)
+        ) {
           rule = { required: true, requiredMessage: "This field is required" };
         }
 
@@ -80,7 +105,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({ 
     e.preventDefault();
 
     const newErrors: Record<string, string> = {};
-    
+
     // Core Required Fields
     const requiredFields = [
       { name: "salutation", label: "Salutation" },
@@ -90,13 +115,13 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({ 
       { name: "doorNo", label: "Door No" },
       { name: "district", label: "District" },
       { name: "taluk", label: "Taluk" },
-      
+
       { name: "applicantNameTamil", label: "Applicant Name in Tamil" },
       { name: "mobileNo", label: "Mobile Number" },
       { name: "community", label: "Community" },
-      { name: "aadhaarNo", label: "Aadhaar Number" },
+      { name: "aadhaarNo", label: "Aadhaar Card Number" },
       { name: "smartNumber", label: "Smart Number" },
-      
+
       { name: "applicantNameEnglish", label: "Applicant Name in English" },
       { name: "maritalStatus", label: "Maritial Status" },
       { name: "caste", label: "Caste" },
@@ -108,7 +133,12 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({ 
     ];
 
     requiredFields.forEach((f) => {
-      const err = validateField(f.name, formData[f.name], { required: true, requiredMessage: `${f.label} is required` }, formData);
+      const err = validateField(
+        f.name,
+        formData[f.name],
+        { required: true, requiredMessage: `${f.label} is required` },
+        formData,
+      );
       if (err) newErrors[f.name] = err;
     });
 
@@ -139,7 +169,8 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({ 
             Registration Submitted Successfully!
           </h5>
           <p className="text-sm text-slate-400 dark:text-slate-555 mt-2 max-w-md leading-relaxed">
-            Your application for **New CAN Registration** has been successfully registered. Status will update shortly.
+            Your application for **New CAN Registration** has been successfully
+            registered. Status will update shortly.
           </p>
         </div>
       </div>
@@ -155,7 +186,8 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({ 
             New CAN Registration
           </h2>
           <p className="text-xs text-slate-450 dark:text-slate-500 mt-0.5">
-            Register new Citizen Access Number (CAN) to apply for e-Seva certificates
+            Register new Citizen Access Number (CAN) to apply for e-Seva
+            certificates
           </p>
         </div>
         <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none">
@@ -165,7 +197,6 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({ 
 
       {/* 3-Column Responsive Layout */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        
         {/* COLUMN 1 */}
         <div className="space-y-5">
           <div>
@@ -203,9 +234,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({ 
             <SelectField
               name="relationship2"
               label="உறவுமுறை (Mother)"
-              options={[
-                { label: "தாய் (Mother)", value: "Mother" },
-              ]}
+              options={[{ label: "தாய் (Mother)", value: "Mother" }]}
               value={formData.relationship2}
               error={errors.relationship2}
               disabled={isSubmitting}
@@ -217,9 +246,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({ 
             <SelectField
               name="relationship3"
               label="உறவுமுறை (Guardian)"
-              options={[
-                { label: "பாதுகாவலர் (Guardian)", value: "Guardian" },
-              ]}
+              options={[{ label: "பாதுகாவலர் (Guardian)", value: "Guardian" }]}
               value={formData.relationship3}
               error={errors.relationship3}
               disabled={isSubmitting}
@@ -243,7 +270,11 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({ 
                   : "border-slate-250 dark:border-slate-800/80 focus:border-[#005c3a] dark:focus:border-emerald-500"
               }`}
             />
-            {errors.dob && <span className="text-[10px] font-bold text-red-500">{errors.dob}</span>}
+            {errors.dob && (
+              <span className="text-[10px] font-bold text-red-500">
+                {errors.dob}
+              </span>
+            )}
           </div>
 
           <div>
@@ -392,7 +423,12 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({ 
               value={formData.mobileNo}
               error={errors.mobileNo}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("mobileNo", val.replace(/\D/g, "").substring(0, 10))}
+              onChange={(val) =>
+                handleFieldChange(
+                  "mobileNo",
+                  val.replace(/\D/g, "").substring(0, 10),
+                )
+              }
             />
           </div>
 
@@ -417,13 +453,18 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({ 
           <div>
             <InputField
               name="aadhaarNo"
-              label="Aadhaar Number"
+              label="Aadhaar Card Number"
               type="text"
-              placeholder="Aadhaar Number"
+              placeholder="Enter Aadhaar Number"
               value={formData.aadhaarNo}
               error={errors.aadhaarNo}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("aadhaarNo", val.replace(/\D/g, "").substring(0, 12))}
+              onChange={(val) =>
+                handleFieldChange(
+                  "aadhaarNo",
+                  val.replace(/\D/g, "").substring(0, 12),
+                )
+              }
             />
           </div>
 
@@ -610,7 +651,9 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({ 
               value={formData.pinCode}
               error={errors.pinCode}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("pinCode", val.replace(/\D/g, "").slice(0, 6))}
+              onChange={(val) =>
+                handleFieldChange("pinCode", val.replace(/\D/g, "").slice(0, 6))
+              }
             />
           </div>
 
@@ -640,7 +683,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({ 
           Cancel
         </button>
         <SubmitButton
-          text="Submit Request"
+          text="Apply"
           loading={isSubmitting}
           disabled={isSubmitting}
         />

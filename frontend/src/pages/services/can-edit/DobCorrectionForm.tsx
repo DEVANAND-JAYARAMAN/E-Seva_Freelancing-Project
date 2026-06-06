@@ -1,16 +1,20 @@
 import React, { useState } from "react";
 import { CheckCircle2 } from "lucide-react";
-import { InputField, SubmitButton } from "../form/FormFields";
-import { validateField, PATTERNS } from "../form/validators";
+import { InputField, SelectField, SubmitButton } from "../form/FormFields";
+import { validateField } from "../form/validators";
 
-interface AadhaarToPdfProps {
+interface DobCorrectionFormProps {
   onCancel: () => void;
 }
 
-export const AadhaarToPdf: React.FC<AadhaarToPdfProps> = ({ onCancel }) => {
+export const DobCorrectionForm: React.FC<DobCorrectionFormProps> = ({
+  onCancel,
+}) => {
   const [formData, setFormData] = useState<Record<string, string>>({
-    fullName: "",
-    aadhaarNo: "",
+    canNumber: "",
+    district: "",
+    dob: "",
+    aadhaarFront: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -19,26 +23,17 @@ export const AadhaarToPdf: React.FC<AadhaarToPdfProps> = ({ onCancel }) => {
   const handleFieldChange = (name: string, value: string) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
-
-      // Live validation on edit
       if (errors[name]) {
-        let rule = {};
-        if (name === "aadhaarNo") {
-          rule = {
-            required: true,
-            requiredMessage: "Aadhaar Number is required",
-            pattern: PATTERNS.AADHAAR,
-            patternMessage: "Must be a valid 12-digit Aadhaar number",
-          };
-        } else if (name === "fullName") {
-          rule = { required: true, requiredMessage: "Name is required" };
-        }
-
-        const errorMsg = validateField(name, value, rule, updated);
+        const err = validateField(
+          name,
+          value,
+          { required: true, requiredMessage: "This field is required" },
+          updated,
+        );
         setErrors((prevErrors) => {
           const next = { ...prevErrors };
-          if (errorMsg) {
-            next[name] = errorMsg;
+          if (err) {
+            next[name] = err;
           } else {
             delete next[name];
           }
@@ -51,29 +46,24 @@ export const AadhaarToPdf: React.FC<AadhaarToPdfProps> = ({ onCancel }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
     const newErrors: Record<string, string> = {};
 
-    const nameErr = validateField(
-      "fullName",
-      formData.fullName,
-      { required: true, requiredMessage: "Name is required" },
-      formData,
-    );
-    if (nameErr) newErrors.fullName = nameErr;
+    const requiredFields = [
+      { name: "canNumber", label: "Can Number" },
+      { name: "district", label: "District" },
+      { name: "dob", label: "DOB" },
+      { name: "aadhaarFront", label: "Aadhaar Card (Front)" },
+    ];
 
-    const aadhaarErr = validateField(
-      "aadhaarNo",
-      formData.aadhaarNo,
-      {
-        required: true,
-        requiredMessage: "Aadhaar Number is required",
-        pattern: PATTERNS.AADHAAR,
-        patternMessage: "Must be exactly 12 digits",
-      },
-      formData,
-    );
-    if (aadhaarErr) newErrors.aadhaarNo = aadhaarErr;
+    requiredFields.forEach((f) => {
+      const err = validateField(
+        f.name,
+        formData[f.name] || "",
+        { required: true, requiredMessage: `${f.label} is required` },
+        formData,
+      );
+      if (err) newErrors[f.name] = err;
+    });
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -99,11 +89,11 @@ export const AadhaarToPdf: React.FC<AadhaarToPdfProps> = ({ onCancel }) => {
         </span>
         <div>
           <h5 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-            Search Placed Successfully!
+            Request Placed Successfully!
           </h5>
           <p className="text-sm text-slate-400 dark:text-slate-555 mt-2 max-w-md leading-relaxed">
-            Your search request for **Adhaar Number to Adhaar PDF Apply** has
-            been registered. The results will be updated soon.
+            Your request for **DOB Correction** has been registered. The updates
+            will be processed shortly.
           </p>
         </div>
       </div>
@@ -115,11 +105,10 @@ export const AadhaarToPdf: React.FC<AadhaarToPdfProps> = ({ onCancel }) => {
       <div className="flex flex-col sm:flex-row sm:items-start justify-between border-b border-slate-100 dark:border-slate-900/50 pb-4 gap-2">
         <div>
           <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-            Adhaar Number to Adhaar PDF Apply
+            DOB Correction
           </h2>
-          <p className="text-xs text-slate-450 dark:text-slate-555 mt-0.5">
-            Locate and download your Aadhaar Card PDF using your 12-digit
-            Aadhaar Number
+          <p className="text-xs text-slate-450 dark:text-slate-500 mt-0.5">
+            Submit required details to apply for DOB Correction services
           </p>
         </div>
         <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none">
@@ -131,32 +120,56 @@ export const AadhaarToPdf: React.FC<AadhaarToPdfProps> = ({ onCancel }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
             <InputField
-              name="fullName"
-              label="ENTER NAME"
+              name="canNumber"
+              label="Can Number"
               type="text"
-              placeholder="Name As Per Aadhaar"
-              value={formData.fullName}
-              error={errors.fullName}
+              placeholder="Enter Can Number"
+              value={formData.canNumber}
+              error={errors.canNumber}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("fullName", val)}
+              onChange={(val) => handleFieldChange("canNumber", val)}
+            />
+          </div>
+
+          <div>
+            <SelectField
+              name="district"
+              label="District"
+              options={[
+                { label: "Chennai", value: "Chennai" },
+                { label: "Coimbatore", value: "Coimbatore" },
+                { label: "Madurai", value: "Madurai" },
+                { label: "Trichy", value: "Trichy" },
+              ]}
+              value={formData.district}
+              error={errors.district}
+              disabled={isSubmitting}
+              onChange={(val) => handleFieldChange("district", val)}
             />
           </div>
 
           <div>
             <InputField
-              name="aadhaarNo"
-              label="ENTER AADHAAR NUMBER"
+              name="dob"
+              label="DOB"
               type="text"
-              placeholder="Enter 12 Digit Aadhar"
-              value={formData.aadhaarNo}
-              error={errors.aadhaarNo}
+              placeholder="ddmmyyyy (e.g. 05041997)"
+              value={formData.dob}
+              error={errors.dob}
               disabled={isSubmitting}
-              onChange={(val) =>
-                handleFieldChange(
-                  "aadhaarNo",
-                  val.replace(/\D/g, "").slice(0, 12),
-                )
-              }
+              onChange={(val) => handleFieldChange("dob", val)}
+            />
+          </div>
+
+          <div>
+            <InputField
+              name="aadhaarFront"
+              label="Aadhaar Card (Front)"
+              type="file"
+              value={formData.aadhaarFront}
+              error={errors.aadhaarFront}
+              disabled={isSubmitting}
+              onChange={(val) => handleFieldChange("aadhaarFront", val)}
             />
           </div>
         </div>
@@ -167,7 +180,7 @@ export const AadhaarToPdf: React.FC<AadhaarToPdfProps> = ({ onCancel }) => {
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-850 bg-white dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
+          className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
         >
           Cancel
         </button>

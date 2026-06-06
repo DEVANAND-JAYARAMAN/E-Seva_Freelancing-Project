@@ -12,7 +12,7 @@ import {
   ServiceSuccessScreen,
 } from "../../../components/ServicePaymentScreen";
 
-interface AddressCorrectionAbove18Props {
+interface AddressCorrectionBelow18Props {
   onCancel: () => void;
 }
 
@@ -24,23 +24,23 @@ const DISTRICT_OPTIONS = [
   { label: "Salem", value: "Salem" },
 ];
 
-export const AddressCorrectionAbove18: React.FC<
-  AddressCorrectionAbove18Props
+export const AddressCorrectionBelow18: React.FC<
+  AddressCorrectionBelow18Props
 > = ({ onCancel }) => {
   const [formData, setFormData] = useState<Record<string, string>>({
     aadhaarNo: "",
     mobileNo: "",
     applicantName: "",
     doorNo: "",
-    addressEnglish: "",
-    addressTamil: "",
     district: "",
     taluk: "",
+    addressEnglish: "",
+    addressTamil: "",
     postalArea: "",
     pinCode: "",
-    photo: "",
     signature: "",
     aadhaarCard: "",
+    photo: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -74,20 +74,20 @@ export const AddressCorrectionAbove18: React.FC<
           };
         } else if (name === "doorNo") {
           rule = { required: true, requiredMessage: "Door Number is required" };
+        } else if (name === "district") {
+          rule = { required: true, requiredMessage: "District is required" };
+        } else if (name === "taluk") {
+          rule = { required: true, requiredMessage: "Taluk is required" };
         } else if (name === "addressEnglish") {
           rule = {
             required: true,
-            requiredMessage: "Address In English is required",
+            requiredMessage: "Address in English is required",
           };
         } else if (name === "addressTamil") {
           rule = {
             required: true,
             requiredMessage: "Address in Tamil is required",
           };
-        } else if (name === "district") {
-          rule = { required: true, requiredMessage: "District is required" };
-        } else if (name === "taluk") {
-          rule = { required: true, requiredMessage: "Taluk is required" };
         } else if (name === "postalArea") {
           rule = { required: true, requiredMessage: "Postal Area is required" };
         } else if (name === "pinCode") {
@@ -96,14 +96,20 @@ export const AddressCorrectionAbove18: React.FC<
             pattern: PATTERNS.PINCODE,
             patternMessage: "Must be a valid 6-digit Pin code",
           };
-        } else if (name === "photo") {
-          rule = { required: true, requiredMessage: "Photo is required" };
         } else if (name === "signature") {
-          rule = { required: true, requiredMessage: "Signature is required" };
+          rule = {
+            required: true,
+            requiredMessage: "Signature upload is required",
+          };
         } else if (name === "aadhaarCard") {
           rule = {
             required: true,
-            requiredMessage: "Aadhaar Card is required",
+            requiredMessage: "Aadhaar Card upload is required",
+          };
+        } else if (name === "photo") {
+          rule = {
+            required: true,
+            requiredMessage: "Photo upload is required",
           };
         }
 
@@ -157,11 +163,21 @@ export const AddressCorrectionAbove18: React.FC<
         rule: { required: true, requiredMessage: "Door Number is required" },
       },
       {
+        name: "district",
+        label: "District",
+        rule: { required: true, requiredMessage: "District is required" },
+      },
+      {
+        name: "taluk",
+        label: "Taluk",
+        rule: { required: true, requiredMessage: "Taluk is required" },
+      },
+      {
         name: "addressEnglish",
-        label: "Address In English",
+        label: "Address in English",
         rule: {
           required: true,
-          requiredMessage: "Address In English is required",
+          requiredMessage: "Address in English is required",
         },
       },
       {
@@ -171,16 +187,6 @@ export const AddressCorrectionAbove18: React.FC<
           required: true,
           requiredMessage: "Address in Tamil is required",
         },
-      },
-      {
-        name: "district",
-        label: "District",
-        rule: { required: true, requiredMessage: "District is required" },
-      },
-      {
-        name: "taluk",
-        label: "Taluk",
-        rule: { required: true, requiredMessage: "Taluk is required" },
       },
       {
         name: "postalArea",
@@ -197,19 +203,25 @@ export const AddressCorrectionAbove18: React.FC<
         },
       },
       {
-        name: "photo",
-        label: "Photo",
-        rule: { required: true, requiredMessage: "Photo is required" },
-      },
-      {
         name: "signature",
         label: "Signature",
-        rule: { required: true, requiredMessage: "Signature is required" },
+        rule: {
+          required: true,
+          requiredMessage: "Signature upload is required",
+        },
       },
       {
         name: "aadhaarCard",
         label: "Aadhaar Card",
-        rule: { required: true, requiredMessage: "Aadhaar Card is required" },
+        rule: {
+          required: true,
+          requiredMessage: "Aadhaar Card upload is required",
+        },
+      },
+      {
+        name: "photo",
+        label: "Photo",
+        rule: { required: true, requiredMessage: "Photo upload is required" },
       },
     ];
 
@@ -235,14 +247,16 @@ export const AddressCorrectionAbove18: React.FC<
   };
 
   if (paymentPhase === "success") {
-    return <ServiceSuccessScreen serviceName="Address Correction (above 18)" />;
+    return (
+      <ServiceSuccessScreen serviceName="Address Correction (Below 18-Minor)" />
+    );
   }
 
   if (paymentPhase === "payment") {
     return (
       <div className="py-6">
         <ServicePaymentScreen
-          serviceName="Address Correction (above 18)"
+          serviceName="Address Correction (Below 18-Minor)"
           retailerCharge={100} // Hardcoded or imported from config
           onBack={() => setPaymentPhase("form")}
           onSuccess={handlePaymentSuccess}
@@ -256,10 +270,10 @@ export const AddressCorrectionAbove18: React.FC<
       <div className="flex flex-col sm:flex-row sm:items-start justify-between border-b border-slate-100 dark:border-slate-900/50 pb-4 gap-2">
         <div>
           <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-            Adress Correction (above 18)
+            Adress Correction (Below 18-Minor)
           </h2>
           <p className="text-xs text-slate-450 dark:text-slate-555 mt-0.5">
-            Submit request to update the address on your Aadhaar card using
+            Submit request to update the address on a minor's Aadhaar card using
             valid address proofs
           </p>
         </div>
@@ -292,7 +306,7 @@ export const AddressCorrectionAbove18: React.FC<
           <div>
             <InputField
               name="mobileNo"
-              label="Mobile Number (Aadhaar link)"
+              label="Mobile Number(Aadhaar link)"
               type="text"
               placeholder="Mobile Number"
               value={formData.mobileNo}
@@ -334,32 +348,7 @@ export const AddressCorrectionAbove18: React.FC<
             />
           </div>
 
-          {/* Row 3 - Text Areas */}
-          <div>
-            <TextAreaField
-              name="addressEnglish"
-              label="Address In English"
-              placeholder="Address In English"
-              value={formData.addressEnglish}
-              error={errors.addressEnglish}
-              disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("addressEnglish", val)}
-            />
-          </div>
-
-          <div>
-            <TextAreaField
-              name="addressTamil"
-              label="முகவரி தமிழில்"
-              placeholder="முகவரி தமிழில்"
-              value={formData.addressTamil}
-              error={errors.addressTamil}
-              disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("addressTamil", val)}
-            />
-          </div>
-
-          {/* Row 4 */}
+          {/* Row 3 */}
           <div>
             <SelectField
               name="district"
@@ -385,6 +374,31 @@ export const AddressCorrectionAbove18: React.FC<
             />
           </div>
 
+          {/* Row 4 - Text Areas */}
+          <div>
+            <TextAreaField
+              name="addressEnglish"
+              label="Address in English"
+              placeholder="Address in English"
+              value={formData.addressEnglish}
+              error={errors.addressEnglish}
+              disabled={isSubmitting}
+              onChange={(val) => handleFieldChange("addressEnglish", val)}
+            />
+          </div>
+
+          <div>
+            <TextAreaField
+              name="addressTamil"
+              label="முகவரி தமிழில்"
+              placeholder="முகவரி தமிழில்"
+              value={formData.addressTamil}
+              error={errors.addressTamil}
+              disabled={isSubmitting}
+              onChange={(val) => handleFieldChange("addressTamil", val)}
+            />
+          </div>
+
           {/* Row 5 */}
           <div>
             <InputField
@@ -404,7 +418,7 @@ export const AddressCorrectionAbove18: React.FC<
               name="pinCode"
               label="Pin code"
               type="text"
-              placeholder="Pin Code"
+              placeholder="Pin code"
               value={formData.pinCode}
               error={errors.pinCode}
               disabled={isSubmitting}
@@ -417,18 +431,6 @@ export const AddressCorrectionAbove18: React.FC<
           {/* Row 6 - Files */}
           <div>
             <InputField
-              name="photo"
-              label="Photo"
-              type="file"
-              value={formData.photo}
-              error={errors.photo}
-              disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("photo", val)}
-            />
-          </div>
-
-          <div>
-            <InputField
               name="signature"
               label="Signature"
               type="file"
@@ -439,7 +441,6 @@ export const AddressCorrectionAbove18: React.FC<
             />
           </div>
 
-          {/* Row 7 */}
           <div>
             <InputField
               name="aadhaarCard"
@@ -451,6 +452,19 @@ export const AddressCorrectionAbove18: React.FC<
               onChange={(val) => handleFieldChange("aadhaarCard", val)}
             />
           </div>
+
+          {/* Row 7 */}
+          <div>
+            <InputField
+              name="photo"
+              label="Photo"
+              type="file"
+              value={formData.photo}
+              error={errors.photo}
+              disabled={isSubmitting}
+              onChange={(val) => handleFieldChange("photo", val)}
+            />
+          </div>
         </div>
       </div>
 
@@ -459,7 +473,7 @@ export const AddressCorrectionAbove18: React.FC<
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
+          className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-850 bg-white dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
         >
           Cancel
         </button>

@@ -1,13 +1,21 @@
 import React, { useState } from "react";
 import { CheckCircle2 } from "lucide-react";
-import { InputField, SelectField, TextAreaField, RadioField, SubmitButton } from "../form/FormFields";
+import {
+  InputField,
+  SelectField,
+  TextAreaField,
+  RadioField,
+  SubmitButton,
+} from "../form/FormFields";
 import { validateField, PATTERNS } from "../form/validators";
 
 interface NewFssaiRegistrationProps {
   onCancel: () => void;
 }
 
-export const NewFssaiRegistration: React.FC<NewFssaiRegistrationProps> = ({ onCancel }) => {
+export const NewFssaiRegistration: React.FC<NewFssaiRegistrationProps> = ({
+  onCancel,
+}) => {
   const [formData, setFormData] = useState<Record<string, string>>({
     fssaiCategory: "Food Service",
     shopName: "",
@@ -32,21 +40,54 @@ export const NewFssaiRegistration: React.FC<NewFssaiRegistrationProps> = ({ onCa
   const handleFieldChange = (name: string, value: string) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
-      
+
       // Live validation on edit
       if (errors[name]) {
         let rule = {};
-        if (["shopName", "shopAddress", "applicantName", "blockDivision", "documentType", "foodCategory"].includes(name)) {
+        if (
+          [
+            "shopName",
+            "shopAddress",
+            "applicantName",
+            "blockDivision",
+            "documentType",
+            "foodCategory",
+          ].includes(name)
+        ) {
           rule = { required: true, requiredMessage: "This field is required" };
         } else if (name === "aadhaarNo") {
-          rule = { required: true, requiredMessage: "Aadhaar Number is required", pattern: PATTERNS.AADHAAR, patternMessage: "Must be a valid 12-digit Aadhaar" };
+          rule = {
+            required: true,
+            requiredMessage: "Aadhaar Number is required",
+            pattern: PATTERNS.AADHAAR,
+            patternMessage: "Must be a valid 12-digit Aadhaar",
+          };
         } else if (name === "emailId") {
-          rule = { required: true, requiredMessage: "Email is required", pattern: PATTERNS.EMAIL, patternMessage: "Must be a valid email" };
+          rule = {
+            required: true,
+            requiredMessage: "Email is required",
+            pattern: PATTERNS.EMAIL,
+            patternMessage: "Must be a valid email",
+          };
         } else if (name === "mobileNo") {
-          rule = { required: true, requiredMessage: "Mobile Number is required", pattern: PATTERNS.PHONE, patternMessage: "Must be a valid 10-digit number" };
+          rule = {
+            required: true,
+            requiredMessage: "Mobile Number is required",
+            pattern: PATTERNS.PHONE,
+            patternMessage: "Must be a valid 10-digit number",
+          };
         } else if (name === "pinCode") {
-          rule = { required: true, requiredMessage: "Pin Code is required", pattern: PATTERNS.PINCODE, patternMessage: "Must be a 6-digit pin code" };
-        } else if (["shopPhoto", "panCard", "aadhaarCard", "applicantPhoto"].includes(name)) {
+          rule = {
+            required: true,
+            requiredMessage: "Pin Code is required",
+            pattern: PATTERNS.PINCODE,
+            patternMessage: "Must be a 6-digit pin code",
+          };
+        } else if (
+          ["shopPhoto", "panCard", "aadhaarCard", "applicantPhoto"].includes(
+            name,
+          )
+        ) {
           rule = { required: true, requiredMessage: "File upload is required" };
         }
 
@@ -69,30 +110,92 @@ export const NewFssaiRegistration: React.FC<NewFssaiRegistrationProps> = ({ onCa
     e.preventDefault();
 
     const newErrors: Record<string, string> = {};
-    
+
     // Validate each field
-    const textFields = ["shopName", "shopAddress", "applicantName", "blockDivision", "documentType", "foodCategory"];
+    const textFields = [
+      "shopName",
+      "shopAddress",
+      "applicantName",
+      "blockDivision",
+      "documentType",
+      "foodCategory",
+    ];
     textFields.forEach((field) => {
-      const err = validateField(field, formData[field], { required: true, requiredMessage: "This field is required" }, formData);
+      const err = validateField(
+        field,
+        formData[field],
+        { required: true, requiredMessage: "This field is required" },
+        formData,
+      );
       if (err) newErrors[field] = err;
     });
 
-    const fileFields = ["shopPhoto", "panCard", "aadhaarCard", "applicantPhoto"];
+    const fileFields = [
+      "shopPhoto",
+      "panCard",
+      "aadhaarCard",
+      "applicantPhoto",
+    ];
     fileFields.forEach((field) => {
-      const err = validateField(field, formData[field], { required: true, requiredMessage: "File upload is required" }, formData);
+      const err = validateField(
+        field,
+        formData[field],
+        { required: true, requiredMessage: "File upload is required" },
+        formData,
+      );
       if (err) newErrors[field] = err;
     });
 
-    const emailErr = validateField("emailId", formData.emailId, { required: true, requiredMessage: "Email is required", pattern: PATTERNS.EMAIL, patternMessage: "Must be a valid email format" }, formData);
+    const emailErr = validateField(
+      "emailId",
+      formData.emailId,
+      {
+        required: true,
+        requiredMessage: "Email is required",
+        pattern: PATTERNS.EMAIL,
+        patternMessage: "Must be a valid email format",
+      },
+      formData,
+    );
     if (emailErr) newErrors.emailId = emailErr;
 
-    const mobileErr = validateField("mobileNo", formData.mobileNo, { required: true, requiredMessage: "Mobile is required", pattern: PATTERNS.PHONE, patternMessage: "Must be a valid 10-digit number" }, formData);
+    const mobileErr = validateField(
+      "mobileNo",
+      formData.mobileNo,
+      {
+        required: true,
+        requiredMessage: "Mobile is required",
+        pattern: PATTERNS.PHONE,
+        patternMessage: "Must be a valid 10-digit number",
+      },
+      formData,
+    );
     if (mobileErr) newErrors.mobileNo = mobileErr;
 
-    const aadhaarErr = validateField("aadhaarNo", formData.aadhaarNo, { required: true, requiredMessage: "Aadhaar is required", pattern: PATTERNS.AADHAAR, patternMessage: "Must be a valid 12-digit Aadhaar number" }, formData);
+    const aadhaarErr = validateField(
+      "aadhaarNo",
+      formData.aadhaarNo,
+      {
+        required: true,
+        requiredMessage: "Aadhaar is required",
+        pattern: PATTERNS.AADHAAR,
+        patternMessage: "Must be a valid 12-digit Aadhaar number",
+      },
+      formData,
+    );
     if (aadhaarErr) newErrors.aadhaarNo = aadhaarErr;
 
-    const pinErr = validateField("pinCode", formData.pinCode, { required: true, requiredMessage: "Pin Code is required", pattern: PATTERNS.PINCODE, patternMessage: "Must be a valid 6-digit postal code" }, formData);
+    const pinErr = validateField(
+      "pinCode",
+      formData.pinCode,
+      {
+        required: true,
+        requiredMessage: "Pin Code is required",
+        pattern: PATTERNS.PINCODE,
+        patternMessage: "Must be a valid 6-digit postal code",
+      },
+      formData,
+    );
     if (pinErr) newErrors.pinCode = pinErr;
 
     if (Object.keys(newErrors).length > 0) {
@@ -122,7 +225,8 @@ export const NewFssaiRegistration: React.FC<NewFssaiRegistrationProps> = ({ onCa
             Registration Submitted Successfully!
           </h5>
           <p className="text-sm text-slate-400 dark:text-slate-555 mt-2 max-w-md leading-relaxed">
-            Your application for **New FSSAI Registration (Food service)** has been registered. You can monitor progress under the status tab.
+            Your application for **New FSSAI Registration (Food service)** has
+            been registered. You can monitor progress under the status tab.
           </p>
         </div>
       </div>
@@ -138,7 +242,8 @@ export const NewFssaiRegistration: React.FC<NewFssaiRegistrationProps> = ({ onCa
             New FSSAI Registration (Food service)
           </h2>
           <p className="text-xs text-slate-450 dark:text-slate-500 mt-0.5">
-            Apply online for new central / state / basic FSSAI registration certificate
+            Apply online for new central / state / basic FSSAI registration
+            certificate
           </p>
         </div>
         <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none">
@@ -165,7 +270,6 @@ export const NewFssaiRegistration: React.FC<NewFssaiRegistrationProps> = ({ onCa
 
       {/* 2-Column Responsive Form Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-6">
-        
         {/* LEFT COLUMN */}
         <div className="space-y-6">
           <div>
@@ -203,7 +307,12 @@ export const NewFssaiRegistration: React.FC<NewFssaiRegistrationProps> = ({ onCa
               value={formData.aadhaarNo}
               error={errors.aadhaarNo}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("aadhaarNo", val.replace(/\D/g, "").slice(0, 12))}
+              onChange={(val) =>
+                handleFieldChange(
+                  "aadhaarNo",
+                  val.replace(/\D/g, "").slice(0, 12),
+                )
+              }
             />
           </div>
 
@@ -242,7 +351,12 @@ export const NewFssaiRegistration: React.FC<NewFssaiRegistrationProps> = ({ onCa
               value={formData.mobileNo}
               error={errors.mobileNo}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("mobileNo", val.replace(/\D/g, "").slice(0, 10))}
+              onChange={(val) =>
+                handleFieldChange(
+                  "mobileNo",
+                  val.replace(/\D/g, "").slice(0, 10),
+                )
+              }
             />
           </div>
 
@@ -318,7 +432,9 @@ export const NewFssaiRegistration: React.FC<NewFssaiRegistrationProps> = ({ onCa
               value={formData.pinCode}
               error={errors.pinCode}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("pinCode", val.replace(/\D/g, "").slice(0, 6))}
+              onChange={(val) =>
+                handleFieldChange("pinCode", val.replace(/\D/g, "").slice(0, 6))
+              }
             />
           </div>
 
@@ -371,7 +487,7 @@ export const NewFssaiRegistration: React.FC<NewFssaiRegistrationProps> = ({ onCa
           Cancel
         </button>
         <SubmitButton
-          text="Apply FSSAI"
+          text="Apply"
           loading={isSubmitting}
           disabled={isSubmitting}
         />

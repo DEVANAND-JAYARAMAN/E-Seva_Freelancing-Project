@@ -1,17 +1,20 @@
 import React, { useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { InputField, SubmitButton } from "../form/FormFields";
-import { validateField, PATTERNS } from "../form/validators";
+import { validateField } from "../form/validators";
 
 interface EidToAadhaarPdfProps {
   onCancel: () => void;
 }
 
-export const EidToAadhaarPdf: React.FC<EidToAadhaarPdfProps> = ({ onCancel }) => {
+export const EidToAadhaarPdf: React.FC<EidToAadhaarPdfProps> = ({
+  onCancel,
+}) => {
   const [formData, setFormData] = useState<Record<string, string>>({
-    eidNo: "",
     fullName: "",
-    mobileNo: "",
+    eidNo: "",
+    date: "",
+    time: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,17 +23,13 @@ export const EidToAadhaarPdf: React.FC<EidToAadhaarPdfProps> = ({ onCancel }) =>
   const handleFieldChange = (name: string, value: string) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
-      
+
       // Live validation on edit
       if (errors[name]) {
-        let rule = {};
-        if (name === "eidNo") {
-          rule = { required: true, requiredMessage: "EID Number is required" };
-        } else if (name === "fullName") {
-          rule = { required: true, requiredMessage: "Full Name is required" };
-        } else if (name === "mobileNo") {
-          rule = { required: true, requiredMessage: "Mobile number is required", pattern: PATTERNS.PHONE, patternMessage: "Must be a valid 10-digit number" };
-        }
+        const rule = {
+          required: true,
+          requiredMessage: `${name === "eidNo" ? "EID NO" : name.toUpperCase()} is required`,
+        };
 
         const errorMsg = validateField(name, value, rule, updated);
         setErrors((prevErrors) => {
@@ -51,15 +50,23 @@ export const EidToAadhaarPdf: React.FC<EidToAadhaarPdfProps> = ({ onCancel }) =>
     e.preventDefault();
 
     const newErrors: Record<string, string> = {};
-    
-    const eidErr = validateField("eidNo", formData.eidNo, { required: true, requiredMessage: "EID Enrolment Number is required" }, formData);
-    if (eidErr) newErrors.eidNo = eidErr;
 
-    const nameErr = validateField("fullName", formData.fullName, { required: true, requiredMessage: "Full Name is required" }, formData);
-    if (nameErr) newErrors.fullName = nameErr;
+    const fields = [
+      { name: "fullName", label: "NAME" },
+      { name: "eidNo", label: "EID NO" },
+      { name: "date", label: "DATE" },
+      { name: "time", label: "TIME" },
+    ];
 
-    const mobileErr = validateField("mobileNo", formData.mobileNo, { required: true, requiredMessage: "Mobile number is required", pattern: PATTERNS.PHONE, patternMessage: "Must be exactly 10 digits" }, formData);
-    if (mobileErr) newErrors.mobileNo = mobileErr;
+    fields.forEach((f) => {
+      const err = validateField(
+        f.name,
+        formData[f.name],
+        { required: true, requiredMessage: `${f.label} is required` },
+        formData,
+      );
+      if (err) newErrors[f.name] = err;
+    });
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -88,7 +95,8 @@ export const EidToAadhaarPdf: React.FC<EidToAadhaarPdfProps> = ({ onCancel }) =>
             Search Placed Successfully!
           </h5>
           <p className="text-sm text-slate-400 dark:text-slate-555 mt-2 max-w-md leading-relaxed">
-            Your search request for **EID to Adhaar PDF Apply** has been registered. The results will be updated soon.
+            Your search request for **EID to Adhaar PDF Apply** has been
+            registered. The results will be updated soon.
           </p>
         </div>
       </div>
@@ -103,35 +111,23 @@ export const EidToAadhaarPdf: React.FC<EidToAadhaarPdfProps> = ({ onCancel }) =>
             EID to Adhaar PDF Apply
           </h2>
           <p className="text-xs text-slate-450 dark:text-slate-555 mt-0.5">
-            Locate and download your Aadhaar Card PDF using 14-digit Enrolment ID (EID)
+            Locate and download your Aadhaar Card PDF using 14-digit Enrolment
+            ID (EID)
           </p>
         </div>
         <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none">
-          Service Payment : ₹ 0
+          Service Payment : ₹ 1600.00
         </div>
       </div>
 
       <div className="space-y-5">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div>
-            <InputField
-              name="eidNo"
-              label="EID Enrolment Number"
-              type="text"
-              placeholder="Enter 14-digit Enrolment ID"
-              value={formData.eidNo}
-              error={errors.eidNo}
-              disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("eidNo", val.replace(/\D/g, "").slice(0, 14))}
-            />
-          </div>
-
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           <div>
             <InputField
               name="fullName"
-              label="Full Name"
+              label="NAME"
               type="text"
-              placeholder="Enter applicant full name"
+              placeholder="Name As Per EID"
               value={formData.fullName}
               error={errors.fullName}
               disabled={isSubmitting}
@@ -139,16 +135,44 @@ export const EidToAadhaarPdf: React.FC<EidToAadhaarPdfProps> = ({ onCancel }) =>
             />
           </div>
 
-          <div className="md:col-span-2">
+          <div>
             <InputField
-              name="mobileNo"
-              label="Mobile Number"
+              name="eidNo"
+              label="EID NO"
               type="text"
-              placeholder="Enter registered mobile number"
-              value={formData.mobileNo}
-              error={errors.mobileNo}
+              placeholder="Enter 14 Digit EID No"
+              value={formData.eidNo}
+              error={errors.eidNo}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("mobileNo", val.replace(/\D/g, "").substring(0, 10))}
+              onChange={(val) =>
+                handleFieldChange("eidNo", val.replace(/\D/g, "").slice(0, 14))
+              }
+            />
+          </div>
+
+          <div>
+            <InputField
+              name="date"
+              label="DATE"
+              type="text"
+              placeholder="DD/MM/YYYY"
+              value={formData.date}
+              error={errors.date}
+              disabled={isSubmitting}
+              onChange={(val) => handleFieldChange("date", val)}
+            />
+          </div>
+
+          <div>
+            <InputField
+              name="time"
+              label="TIME"
+              type="text"
+              placeholder="00:00:00"
+              value={formData.time}
+              error={errors.time}
+              disabled={isSubmitting}
+              onChange={(val) => handleFieldChange("time", val)}
             />
           </div>
         </div>
@@ -159,12 +183,12 @@ export const EidToAadhaarPdf: React.FC<EidToAadhaarPdfProps> = ({ onCancel }) =>
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
+          className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-850 bg-white dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
         >
           Cancel
         </button>
         <SubmitButton
-          text="Search Details"
+          text="Apply"
           loading={isSubmitting}
           disabled={isSubmitting}
         />
