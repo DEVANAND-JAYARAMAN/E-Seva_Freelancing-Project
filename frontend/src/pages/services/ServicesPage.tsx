@@ -89,101 +89,6 @@ function renderServiceImage(id: string, className = "w-14 h-14") {
           <rect x="27" y="41" width="10" height="1.5" fill="#FECACA" rx="0.5" />
         </svg>
       );
-    case "nsdl-pan":
-      return (
-        <svg
-          className={className}
-          viewBox="0 0 64 64"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <defs>
-            <linearGradient id="panGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#F59E0B" />
-              <stop offset="100%" stopColor="#D97706" />
-            </linearGradient>
-          </defs>
-          {/* PAN Card Body */}
-          <rect
-            x="4"
-            y="14"
-            width="56"
-            height="36"
-            rx="4"
-            fill="url(#panGrad)"
-            stroke="#B45309"
-            strokeWidth="1.5"
-          />
-          {/* Passport Photo Box */}
-          <rect
-            x="8"
-            y="20"
-            width="11"
-            height="13"
-            rx="1.5"
-            fill="#FEF3C7"
-            stroke="#92400E"
-            strokeWidth="0.75"
-          />
-          <circle cx="13.5" cy="25" r="2.5" fill="#D97706" />
-          <path
-            d="M9 31C9 28.5 12 28.5 13.5 29.5C15 28.5 18 28.5 18 31H9Z"
-            fill="#D97706"
-          />
-          {/* Gold Chip */}
-          <rect
-            x="23"
-            y="20"
-            width="8"
-            height="6"
-            rx="1"
-            fill="#FBBF24"
-            stroke="#92400E"
-            strokeWidth="0.5"
-          />
-          <line
-            x1="27"
-            y1="20"
-            x2="27"
-            y2="26"
-            stroke="#92400E"
-            strokeWidth="0.5"
-          />
-          <line
-            x1="23"
-            y1="23"
-            x2="31"
-            y2="23"
-            stroke="#92400E"
-            strokeWidth="0.5"
-          />
-          {/* Card Text lines */}
-          <rect x="35" y="20" width="20" height="2" rx="0.5" fill="#FEF3C7" />
-          <rect x="35" y="25" width="16" height="2" rx="0.5" fill="#FEF3C7" />
-          <rect x="23" y="29" width="28" height="2" rx="0.5" fill="#FEF3C7" />
-          {/* Signature Box */}
-          <rect x="23" y="34" width="22" height="4" rx="0.5" fill="white" />
-          <path
-            d="M25 36C28 35 29 37 32 35.5C35 34 38 37 41 36"
-            stroke="#1E3A8A"
-            strokeWidth="0.75"
-            strokeLinecap="round"
-          />
-          {/* NSDL Emblem logo */}
-          <circle cx="50" cy="38" r="4" fill="#92400E" opacity="0.6" />
-          <text
-            x="50"
-            y="40"
-            fill="white"
-            fontSize="4.5"
-            fontWeight="black"
-            textAnchor="middle"
-            fontFamily="sans-serif"
-          >
-            PAN
-          </text>
-        </svg>
-      );
     case "software-keys":
       return (
         <svg
@@ -1376,6 +1281,191 @@ function renderServiceImage(id: string, className = "w-14 h-14") {
           />
         </svg>
       );
+    case "tnega":
+      return (
+        <svg
+          className={className}
+          viewBox="0 0 64 64"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <linearGradient id="tnegaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#22C55E" />
+              <stop offset="100%" stopColor="#15803D" />
+            </linearGradient>
+          </defs>
+          <rect
+            x="4"
+            y="4"
+            width="56"
+            height="56"
+            rx="12"
+            fill="#F0FDF4"
+            stroke="url(#tnegaGrad)"
+            strokeWidth="2"
+          />
+          <path
+            d="M24 16H42C43.1046 16 44 16.8954 44 18V46C44 47.1046 43.1046 48 42 48H24C22.8954 48 22 47.1046 22 46V18C22 16.8954 22.8954 16 24 16Z"
+            fill="white"
+            stroke="#16A34A"
+            strokeWidth="1.5"
+          />
+          <path
+            d="M20 20V48C20 49.1046 20.8954 50 22 50H40"
+            stroke="#16A34A"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+          <line
+            x1="26"
+            y1="22"
+            x2="38"
+            y2="22"
+            stroke="#4ADE80"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+          <line
+            x1="26"
+            y1="26"
+            x2="38"
+            y2="26"
+            stroke="#4ADE80"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+          <line
+            x1="26"
+            y1="30"
+            x2="34"
+            y2="30"
+            stroke="#4ADE80"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+          <line
+            x1="26"
+            y1="34"
+            x2="34"
+            y2="34"
+            stroke="#4ADE80"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+          <line
+            x1="26"
+            y1="38"
+            x2="34"
+            y2="38"
+            stroke="#4ADE80"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+          <line
+            x1="26"
+            y1="42"
+            x2="34"
+            y2="42"
+            stroke="#4ADE80"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+          <circle
+            cx="38"
+            cy="36"
+            r="5"
+            fill="#DCFCE7"
+            stroke="#16A34A"
+            strokeWidth="1"
+          />
+          <path d="M36 39L38 33L40 39Z" fill="#16A34A" />
+        </svg>
+      );
+    case "dharsan":
+      return (
+        <svg
+          className={className}
+          viewBox="0 0 64 64"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <linearGradient
+              id="dharsanGrad"
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="100%"
+            >
+              <stop offset="0%" stopColor="#F59E0B" />
+              <stop offset="100%" stopColor="#EA580C" />
+            </linearGradient>
+            <linearGradient id="haloGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#FEF08A" />
+              <stop offset="100%" stopColor="#FCD34D" />
+            </linearGradient>
+          </defs>
+          <rect
+            x="4"
+            y="4"
+            width="56"
+            height="56"
+            rx="12"
+            fill="#FFFBEB"
+            stroke="url(#dharsanGrad)"
+            strokeWidth="2"
+          />
+          <circle cx="32" cy="30" r="16" fill="url(#haloGrad)" opacity="0.6" />
+          <path
+            d="M18 46V30C18 22.268 24.268 16 32 16C39.732 16 46 22.268 46 30V46"
+            stroke="#EA580C"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          <circle cx="18" cy="30" r="1.5" fill="#EA580C" />
+          <circle cx="46" cy="30" r="1.5" fill="#EA580C" />
+          <circle
+            cx="32"
+            cy="16"
+            r="2.5"
+            fill="#FBBF24"
+            stroke="#EA580C"
+            strokeWidth="1"
+          />
+          <path
+            d="M32 24C33.6569 24 35 22.6569 35 21C35 19.3431 33.6569 18 32 18C30.3431 18 29 19.3431 29 21C29 22.6569 30.3431 24 32 24Z"
+            fill="#9A3412"
+          />
+          <path
+            d="M26 46C26 38 29 34 32 34C35 34 38 38 38 46H26Z"
+            fill="#9A3412"
+          />
+          <line
+            x1="39"
+            y1="22"
+            x2="39"
+            y2="44"
+            stroke="#F59E0B"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+          <path
+            d="M37 22L39 17L41 22Z"
+            fill="#FBBF24"
+            stroke="#EA580C"
+            strokeWidth="0.75"
+          />
+          <path
+            d="M28 46C28 44.5 29.5 43.5 32 43.5C34.5 43.5 36 44.5 36 46H28Z"
+            fill="#EA580C"
+          />
+          <path
+            d="M32 43.5C32.5 42 32 41 32 41C32 41 31.5 42 32 43.5Z"
+            fill="#EF4444"
+          />
+        </svg>
+      );
     default:
       return null;
   }
@@ -1394,237 +1484,270 @@ export function ServicesPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // List of all 19 services as requested in the screenshot
-  const servicesList: EService[] = [
-    // Top Services Group
-    {
-      id: "pdf-services",
-      name: "PDF Services",
-      color: "text-rose-500 dark:text-rose-400",
-      bgColor: "bg-rose-500",
-      glowColor: "shadow-rose-500/10 dark:shadow-rose-950/20",
-      category: "Top",
-      formFields: ["pdfType", "fileUpload", "customerMobile", "remarks"],
-    },
-    {
-      id: "nsdl-pan",
-      name: "NSDL PAN",
-      color: "text-amber-500 dark:text-amber-400",
-      bgColor: "bg-amber-500",
-      glowColor: "shadow-amber-500/10 dark:shadow-amber-950/20",
-      category: "Top",
-      formFields: [
-        "panType",
-        "applicantName",
-        "dob",
-        "aadhaarNo",
-        "aadhaarUpload",
-      ],
-      price: { retailer: 0, distributor: 0 },
-    },
+  const servicesList = useMemo<EService[]>(
+    () => [
+      // Top Services Group
+      {
+        id: "pdf-services",
+        name: "PDF Services",
+        color: "text-rose-500 dark:text-rose-400",
+        bgColor: "bg-rose-500",
+        glowColor: "shadow-rose-500/10 dark:shadow-rose-950/20",
+        category: "Top",
+        formFields: ["pdfType", "fileUpload", "customerMobile", "remarks"],
+      },
 
-    // All Services Group
-    {
-      id: "software-keys",
-      name: "Software Keys",
-      color: "text-sky-500 dark:text-sky-400",
-      bgColor: "bg-sky-500",
-      glowColor: "shadow-sky-500/10",
-      category: "All",
-      formFields: ["softwareType", "quantity", "customerEmail"],
-      price: { retailer: 0, distributor: 0 },
-    },
-    {
-      id: "msme",
-      name: "MSME",
-      color: "text-blue-600 dark:text-blue-400",
-      bgColor: "bg-blue-600",
-      glowColor: "shadow-blue-600/10",
-      category: "All",
-      formFields: ["enterpriseName", "ownerName", "aadhaarNo", "businessType"],
-      price: { retailer: 100, distributor: 100 },
-    },
-    {
-      id: "ration-card",
-      name: "Ration Card",
-      color: "text-emerald-500 dark:text-emerald-400",
-      bgColor: "bg-emerald-500",
-      glowColor: "shadow-emerald-500/10",
-      category: "All",
-      formFields: ["rationType", "headOfFamily", "membersCount", "address"],
-      price: { retailer: 50, distributor: 50 },
-    },
-    {
-      id: "gst",
-      name: "GST",
-      color: "text-amber-600 dark:text-amber-500",
-      bgColor: "bg-amber-600",
-      glowColor: "shadow-amber-600/10",
-      category: "All",
-      formFields: ["gstType", "tradeName", "ownerName", "panNo", "state"],
-      price: { retailer: 1500, distributor: 1500 },
-    },
-    {
-      id: "aadhaar-card-address",
-      name: "Adhaar Card (Adress Correction)",
-      color: "text-rose-500 dark:text-rose-400",
-      bgColor: "bg-rose-500",
-      glowColor: "shadow-rose-500/10",
-      category: "All",
-      formFields: ["aadhaarNo", "fullName", "newAddress", "addressProof"],
-      price: { retailer: 200, distributor: 200 },
-    },
-    {
-      id: "can-edit",
-      name: "CAN EDIT",
-      color: "text-indigo-500 dark:text-indigo-400",
-      bgColor: "bg-indigo-500",
-      glowColor: "shadow-indigo-500/10",
-      category: "All",
-      formFields: ["canNo", "fullName", "dob", "fieldsToEdit"],
-      price: { retailer: 30, distributor: 30 },
-    },
-    {
-      id: "rto-services",
-      name: "RTO Services",
-      color: "text-orange-500 dark:text-orange-400",
-      bgColor: "bg-orange-500",
-      glowColor: "shadow-orange-500/10",
-      category: "All",
-      formFields: ["rtoType", "vehicleNumber", "ownerName", "licenseNo"],
-      price: { retailer: 60, distributor: 60 },
-    },
-    {
-      id: "registration-dept",
-      name: "பதிவு துறை",
-      subName: "Registration Dept",
-      color: "text-pink-500 dark:text-pink-400",
-      bgColor: "bg-pink-500",
-      glowColor: "shadow-pink-500/10",
-      category: "All",
-      formFields: ["documentType", "partiesNames", "stampValue", "district"],
-      price: { retailer: 400, distributor: 400 },
-    },
-    {
-      id: "voter-id",
-      name: "Voter ID",
-      color: "text-cyan-500 dark:text-cyan-400",
-      bgColor: "bg-cyan-500",
-      glowColor: "shadow-cyan-500/10",
-      category: "All",
-      formFields: ["voterType", "epicNo", "fullName", "constituency"],
-      price: { retailer: 60, distributor: 60 },
-    },
-    {
-      id: "fssai",
-      name: "FSSAI",
-      color: "text-lime-500 dark:text-lime-400",
-      bgColor: "bg-lime-500",
-      glowColor: "shadow-lime-500/10",
-      category: "All",
-      formFields: ["fssaiType", "foodBusinessName", "ownerName", "address"],
-      price: { retailer: 300, distributor: 300 },
-    },
-    {
-      id: "certificate-courses",
-      name: "Certificate Courses",
-      color: "text-teal-500 dark:text-teal-400",
-      bgColor: "bg-teal-500",
-      glowColor: "shadow-teal-500/10",
-      category: "All",
-      formFields: ["courseName", "studentName", "qualification", "mobile"],
-    },
-    {
-      id: "employment-services",
-      name: "EMPLOYMENT SERVICES",
-      color: "text-slate-500 dark:text-slate-400",
-      bgColor: "bg-slate-500",
-      glowColor: "shadow-slate-500/10",
-      category: "All",
-      formFields: ["registrationNo", "candidateName", "dob", "qualification"],
-    },
-    {
-      id: "insurance-scheme",
-      name: "காப்பீடு திட்டம்",
-      subName: "Insurance Scheme",
-      color: "text-emerald-500 dark:text-emerald-400",
-      bgColor: "bg-emerald-500",
-      glowColor: "shadow-emerald-500/10",
-      category: "All",
-      formFields: ["schemeType", "primaryApplicant", "dob", "nomineeName"],
-    },
-    {
-      id: "police-verification",
-      name: "Police Verification",
-      color: "text-violet-500 dark:text-violet-400",
-      bgColor: "bg-violet-500",
-      glowColor: "shadow-violet-500/10",
-      category: "All",
-      formFields: ["applicantName", "purpose", "aadhaarNo", "district"],
-    },
-    {
-      id: "patta-service",
-      name: "பட்டா சேவை",
-      subName: "Patta Service",
-      color: "text-green-600 dark:text-green-400",
-      bgColor: "bg-green-600",
-      glowColor: "shadow-green-600/10",
-      category: "All",
-      formFields: ["district", "taluk", "village", "surveyNo", "subdivisionNo"],
-      price: { retailer: 20, distributor: 20 },
-    },
-    {
-      id: "utisl-pan",
-      name: "Utisl Pan",
-      color: "text-sky-500 dark:text-sky-400",
-      bgColor: "bg-sky-500",
-      glowColor: "shadow-sky-500/10",
-      category: "All",
-      formFields: ["applicantName", "dob", "aadhaarNo", "couponNumber"],
-      price: { retailer: 0, distributor: 0 },
-    },
-    {
-      id: "pstm-certificate",
-      name: "PSTM Certificate",
-      color: "text-purple-500 dark:text-purple-400",
-      bgColor: "bg-purple-500",
-      glowColor: "shadow-purple-500/10",
-      category: "All",
-      formFields: ["studentName", "schoolName", "academicYear", "standard"],
-    },
-    {
-      id: "agri-stack-pdf",
-      name: "Agri Stack PDF",
-      color: "text-emerald-500 dark:text-emerald-400",
-      bgColor: "bg-emerald-500",
-      glowColor: "shadow-emerald-500/10",
-      category: "All",
-      formFields: ["farmerId", "aadhaarNo", "customerMobile", "aadhaarUpload"],
-    },
-    {
-      id: "pvc-card-print",
-      name: "PVC Card Print",
-      color: "text-amber-500 dark:text-amber-400",
-      bgColor: "bg-amber-500",
-      glowColor: "shadow-amber-500/10",
-      category: "All",
-      formFields: ["pvcCardType", "fileUpload", "customerMobile"],
-    },
-    {
-      id: "cm-health-card",
-      name: "CM Health Card",
-      color: "text-lime-600 dark:text-lime-500",
-      bgColor: "bg-lime-600",
-      glowColor: "shadow-lime-600/10",
-      category: "All",
-      formFields: [
-        "rationCardNo",
-        "applicantName",
-        "aadhaarNo",
-        "customerMobile",
-        "incomeCertificateUpload",
-      ],
-    },
-  ];
+      // All Services Group
+      {
+        id: "software-keys",
+        name: "Software Keys",
+        color: "text-sky-500 dark:text-sky-400",
+        bgColor: "bg-sky-500",
+        glowColor: "shadow-sky-500/10",
+        category: "All",
+        formFields: ["softwareType", "quantity", "customerEmail"],
+        price: { retailer: 0, distributor: 0 },
+      },
+      {
+        id: "msme",
+        name: "MSME",
+        color: "text-blue-600 dark:text-blue-400",
+        bgColor: "bg-blue-600",
+        glowColor: "shadow-blue-600/10",
+        category: "All",
+        formFields: [
+          "enterpriseName",
+          "ownerName",
+          "aadhaarNo",
+          "businessType",
+        ],
+        price: { retailer: 100, distributor: 100 },
+      },
+      {
+        id: "ration-card",
+        name: "Ration Card",
+        color: "text-emerald-500 dark:text-emerald-400",
+        bgColor: "bg-emerald-500",
+        glowColor: "shadow-emerald-500/10",
+        category: "All",
+        formFields: ["rationType", "headOfFamily", "membersCount", "address"],
+        price: { retailer: 50, distributor: 50 },
+      },
+      {
+        id: "gst",
+        name: "GST",
+        color: "text-amber-600 dark:text-amber-500",
+        bgColor: "bg-amber-600",
+        glowColor: "shadow-amber-600/10",
+        category: "All",
+        formFields: ["gstType", "tradeName", "ownerName", "panNo", "state"],
+        price: { retailer: 1500, distributor: 1500 },
+      },
+      {
+        id: "aadhaar-card-address",
+        name: "Adhaar Card (Adress Correction)",
+        color: "text-rose-500 dark:text-rose-400",
+        bgColor: "bg-rose-500",
+        glowColor: "shadow-rose-500/10",
+        category: "All",
+        formFields: ["aadhaarNo", "fullName", "newAddress", "addressProof"],
+        price: { retailer: 200, distributor: 200 },
+      },
+      {
+        id: "can-edit",
+        name: "CAN EDIT",
+        color: "text-indigo-500 dark:text-indigo-400",
+        bgColor: "bg-indigo-500",
+        glowColor: "shadow-indigo-500/10",
+        category: "All",
+        formFields: ["canNo", "fullName", "dob", "fieldsToEdit"],
+        price: { retailer: 30, distributor: 30 },
+      },
+      {
+        id: "rto-services",
+        name: "RTO Services",
+        color: "text-orange-500 dark:text-orange-400",
+        bgColor: "bg-orange-500",
+        glowColor: "shadow-orange-500/10",
+        category: "All",
+        formFields: ["rtoType", "vehicleNumber", "ownerName", "licenseNo"],
+        price: { retailer: 60, distributor: 60 },
+      },
+      {
+        id: "registration-dept",
+        name: "பதிவு துறை",
+        subName: "Registration Dept",
+        color: "text-pink-500 dark:text-pink-400",
+        bgColor: "bg-pink-500",
+        glowColor: "shadow-pink-500/10",
+        category: "All",
+        formFields: ["documentType", "partiesNames", "stampValue", "district"],
+        price: { retailer: 400, distributor: 400 },
+      },
+      {
+        id: "voter-id",
+        name: "Voter ID",
+        color: "text-cyan-500 dark:text-cyan-400",
+        bgColor: "bg-cyan-500",
+        glowColor: "shadow-cyan-500/10",
+        category: "All",
+        formFields: ["voterType", "epicNo", "fullName", "constituency"],
+        price: { retailer: 60, distributor: 60 },
+      },
+      {
+        id: "fssai",
+        name: "FSSAI",
+        color: "text-lime-500 dark:text-lime-400",
+        bgColor: "bg-lime-500",
+        glowColor: "shadow-lime-500/10",
+        category: "All",
+        formFields: ["fssaiType", "foodBusinessName", "ownerName", "address"],
+        price: { retailer: 300, distributor: 300 },
+      },
+      {
+        id: "certificate-courses",
+        name: "Certificate Courses",
+        color: "text-teal-500 dark:text-teal-400",
+        bgColor: "bg-teal-500",
+        glowColor: "shadow-teal-500/10",
+        category: "All",
+        formFields: ["courseName", "studentName", "qualification", "mobile"],
+      },
+      {
+        id: "employment-services",
+        name: "EMPLOYMENT SERVICES",
+        color: "text-slate-500 dark:text-slate-400",
+        bgColor: "bg-slate-500",
+        glowColor: "shadow-slate-500/10",
+        category: "All",
+        formFields: ["registrationNo", "candidateName", "dob", "qualification"],
+      },
+      {
+        id: "insurance-scheme",
+        name: "காப்பீடு திட்டம்",
+        subName: "Insurance Scheme",
+        color: "text-emerald-500 dark:text-emerald-400",
+        bgColor: "bg-emerald-500",
+        glowColor: "shadow-emerald-500/10",
+        category: "All",
+        formFields: ["schemeType", "primaryApplicant", "dob", "nomineeName"],
+      },
+      {
+        id: "police-verification",
+        name: "Police Verification",
+        color: "text-violet-500 dark:text-violet-400",
+        bgColor: "bg-violet-500",
+        glowColor: "shadow-violet-500/10",
+        category: "All",
+        formFields: ["applicantName", "purpose", "aadhaarNo", "district"],
+      },
+      {
+        id: "patta-service",
+        name: "பட்டா சேவை",
+        subName: "Patta Service",
+        color: "text-green-600 dark:text-green-400",
+        bgColor: "bg-green-600",
+        glowColor: "shadow-green-600/10",
+        category: "All",
+        formFields: [
+          "district",
+          "taluk",
+          "village",
+          "surveyNo",
+          "subdivisionNo",
+        ],
+        price: { retailer: 20, distributor: 20 },
+      },
+      {
+        id: "utisl-pan",
+        name: "Utisl Pan",
+        color: "text-sky-500 dark:text-sky-400",
+        bgColor: "bg-sky-500",
+        glowColor: "shadow-sky-500/10",
+        category: "All",
+        formFields: ["applicantName", "dob", "aadhaarNo", "couponNumber"],
+        price: { retailer: 0, distributor: 0 },
+      },
+      {
+        id: "pstm-certificate",
+        name: "PSTM Certificate",
+        color: "text-purple-500 dark:text-purple-400",
+        bgColor: "bg-purple-500",
+        glowColor: "shadow-purple-500/10",
+        category: "All",
+        formFields: ["studentName", "schoolName", "academicYear", "standard"],
+      },
+      {
+        id: "agri-stack-pdf",
+        name: "Agri Stack PDF",
+        color: "text-emerald-500 dark:text-emerald-400",
+        bgColor: "bg-emerald-500",
+        glowColor: "shadow-emerald-500/10",
+        category: "All",
+        formFields: [
+          "farmerId",
+          "aadhaarNo",
+          "customerMobile",
+          "aadhaarUpload",
+        ],
+      },
+      {
+        id: "pvc-card-print",
+        name: "PVC CARD PRINT(ALL TYPE)",
+        color: "text-amber-500 dark:text-amber-400",
+        bgColor: "bg-amber-500",
+        glowColor: "shadow-amber-500/10",
+        category: "All",
+        formFields: ["pvcCardType", "fileUpload", "customerMobile"],
+      },
+      {
+        id: "cm-health-card",
+        name: "CM Health Card",
+        color: "text-lime-600 dark:text-lime-500",
+        bgColor: "bg-lime-600",
+        glowColor: "shadow-lime-600/10",
+        category: "All",
+        formFields: [
+          "rationCardNo",
+          "applicantName",
+          "aadhaarNo",
+          "customerMobile",
+          "incomeCertificateUpload",
+        ],
+      },
+      {
+        id: "tnega",
+        name: "TNEGA",
+        color: "text-emerald-600 dark:text-emerald-500",
+        bgColor: "bg-emerald-600",
+        glowColor: "shadow-emerald-600/10",
+        category: "Top",
+        formFields: [
+          "applicantName",
+          "serviceType",
+          "aadhaarNo",
+          "customerMobile",
+        ],
+        price: { retailer: 60, distributor: 60 },
+      },
+      {
+        id: "dharsan",
+        name: "Dharsan",
+        color: "text-sky-500 dark:text-sky-400",
+        bgColor: "bg-sky-500",
+        glowColor: "shadow-sky-500/10",
+        category: "All",
+        formFields: [
+          "devoteeName",
+          "ticketsCount",
+          "bookingDate",
+          "customerMobile",
+        ],
+        price: { retailer: 150, distributor: 150 },
+      },
+    ],
+    [],
+  );
 
   // Live filter based on search inputs
   const filteredServices = useMemo(() => {
@@ -1635,7 +1758,7 @@ export function ServicesPage() {
         .includes(searchTerm.toLowerCase());
       return matchName || matchSub;
     });
-  }, [searchTerm]);
+  }, [searchTerm, servicesList]);
 
   const topServices = useMemo(
     () => filteredServices.filter((s) => s.category === "Top"),
@@ -1706,6 +1829,22 @@ export function ServicesPage() {
     }
     if (service.id === "certificate-courses") {
       router.push(PATHS.CERTIFICATE_COURSES);
+      return;
+    }
+    if (service.id === "agri-stack-pdf") {
+      router.push(PATHS.AGRI_STACK);
+      return;
+    }
+    if (service.id === "pvc-card-print") {
+      router.push(PATHS.PVC_CARD);
+      return;
+    }
+    if (service.id === "cm-health-card") {
+      router.push(PATHS.HEALTH_CARD);
+      return;
+    }
+    if (service.id === "dharsan") {
+      router.push(PATHS.DHARSAN);
       return;
     }
     setSelectedService(service);

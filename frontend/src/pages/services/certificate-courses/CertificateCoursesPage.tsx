@@ -370,7 +370,7 @@ export function CertificateCoursesPage() {
             textAnchor="middle"
             fontFamily="sans-serif"
           >
-            Recipient's Name
+            Recipient&apos;s Name
           </text>
 
           {/* Bottom texts */}
@@ -512,7 +512,7 @@ export function CertificateCoursesPage() {
             textAnchor="middle"
             fontFamily="serif"
           >
-            Recipient's Name
+            Recipient&apos;s Name
           </text>
           <line
             x1="30"
