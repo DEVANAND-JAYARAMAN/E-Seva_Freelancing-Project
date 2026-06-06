@@ -10,9 +10,9 @@ interface BaseFieldProps {
   disabled?: boolean;
 }
 
-// 1. InputField (Text, Number, Email, Password, File)
+// 1. InputField (Text, Number, Email, Password, File, Date)
 interface InputFieldProps extends BaseFieldProps {
-  type: "text" | "number" | "email" | "password" | "file";
+  type: "text" | "number" | "email" | "password" | "file" | "date";
   value: string;
   onChange: (val: string) => void;
 }
@@ -35,11 +35,20 @@ export const InputField: React.FC<InputFieldProps> = ({
         </label>
         <div
           className={`relative flex items-center justify-between border rounded-xl px-4 py-2 bg-white dark:bg-[#0a0f18]/30 transition-all ${
-            error ? "border-red-500" : "border-slate-250 dark:border-slate-800/80"
+            error
+              ? "border-red-500"
+              : "border-slate-250 dark:border-slate-800/80"
           }`}
         >
           <span className="text-xs text-slate-450 truncate flex items-center gap-1.5">
-            {value ? <FileText size={14} className="text-[#005c3a] dark:text-emerald-400" /> : <Upload size={14} />}
+            {value ? (
+              <FileText
+                size={14}
+                className="text-[#005c3a] dark:text-emerald-400"
+              />
+            ) : (
+              <Upload size={14} />
+            )}
             {value || "No file chosen"}
           </span>
           <label className="bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/60 text-slate-700 dark:text-slate-350 text-xs font-bold px-3 py-1.5 rounded-lg cursor-pointer transition-colors border border-slate-200 dark:border-slate-700 select-none">
@@ -55,7 +64,9 @@ export const InputField: React.FC<InputFieldProps> = ({
             />
           </label>
         </div>
-        {error && <span className="text-[10px] font-bold text-red-500">{error}</span>}
+        {error && (
+          <span className="text-[10px] font-bold text-red-500">{error}</span>
+        )}
       </div>
     );
   }
@@ -78,7 +89,9 @@ export const InputField: React.FC<InputFieldProps> = ({
             : "border-slate-250 dark:border-slate-800/80 focus:border-[#005c3a] dark:focus:border-emerald-500"
         }`}
       />
-      {error && <span className="text-[10px] font-bold text-red-500">{error}</span>}
+      {error && (
+        <span className="text-[10px] font-bold text-red-500">{error}</span>
+      )}
     </div>
   );
 };
@@ -118,7 +131,9 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
             : "border-slate-250 dark:border-slate-800/80 focus:border-[#005c3a] dark:focus:border-emerald-500"
         }`}
       />
-      {error && <span className="text-[10px] font-bold text-red-500">{error}</span>}
+      {error && (
+        <span className="text-[10px] font-bold text-red-500">{error}</span>
+      )}
     </div>
   );
 };
@@ -162,7 +177,9 @@ export const SelectField: React.FC<SelectFieldProps> = ({
           </option>
         ))}
       </select>
-      {error && <span className="text-[10px] font-bold text-red-500">{error}</span>}
+      {error && (
+        <span className="text-[10px] font-bold text-red-500">{error}</span>
+      )}
     </div>
   );
 };
@@ -197,7 +214,9 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
           placeholder={placeholder}
           value={value}
           disabled={disabled}
-          onChange={(e) => onChange(e.target.value.replace(/\D/g, "").substring(0, 10))}
+          onChange={(e) =>
+            onChange(e.target.value.replace(/\D/g, "").substring(0, 10))
+          }
           className={`w-full pl-12 pr-4 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/20 dark:focus:ring-emerald-500/20 bg-white dark:bg-[#0a0f18]/30 ${
             error
               ? "border-red-500"
@@ -205,7 +224,9 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
           }`}
         />
       </div>
-      {error && <span className="text-[10px] font-bold text-red-500">{error}</span>}
+      {error && (
+        <span className="text-[10px] font-bold text-red-500">{error}</span>
+      )}
     </div>
   );
 };
@@ -239,7 +260,9 @@ export const CheckboxField: React.FC<CheckboxFieldProps> = ({
           {label}
         </span>
       </label>
-      {error && <span className="text-[10px] font-bold text-red-500">{error}</span>}
+      {error && (
+        <span className="text-[10px] font-bold text-red-500">{error}</span>
+      )}
     </div>
   );
 };
@@ -267,7 +290,10 @@ export const RadioField: React.FC<RadioFieldProps> = ({
       </label>
       <div className="flex flex-wrap gap-4">
         {options.map((opt) => (
-          <label key={opt.value} className="inline-flex items-center gap-2 cursor-pointer select-none">
+          <label
+            key={opt.value}
+            className="inline-flex items-center gap-2 cursor-pointer select-none"
+          >
             <input
               type="radio"
               name={name}
@@ -283,7 +309,9 @@ export const RadioField: React.FC<RadioFieldProps> = ({
           </label>
         ))}
       </div>
-      {error && <span className="text-[10px] font-bold text-red-500">{error}</span>}
+      {error && (
+        <span className="text-[10px] font-bold text-red-500">{error}</span>
+      )}
     </div>
   );
 };
