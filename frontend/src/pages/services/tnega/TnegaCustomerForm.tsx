@@ -136,18 +136,18 @@ export function TnegaCustomerForm({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-50 dark:border-slate-900/40">
           <div>
-            <h3 className="text-lg font-extrabold text-[#007bff] dark:text-blue-500">
-              {customer ? "Edit Customer" : "Add Customer"}
+            <h3 className="text-xl font-extrabold text-slate-900 dark:text-white">
+              {customer ? "Edit Customer Details" : "Register New Customer"}
             </h3>
             <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 mt-0.5">
               {customer
                 ? "Modify selected customer TNEGA details"
-                : "Register a customer for TNEGA services"}
+                : "Create a new customer profile for TNEGA services"}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/40 dark:hover:bg-slate-900 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/40 dark:hover:bg-slate-900 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
           >
             <X size={16} />
           </button>
@@ -297,13 +297,13 @@ export function TnegaCustomerForm({
               onClick={onClose}
               className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-850 bg-white dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all"
             >
-              Cancel
+              CANCEL
             </button>
             <button
               type="submit"
-              className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#007bff] hover:bg-[#0056b3] text-white font-extrabold text-xs uppercase tracking-wider shadow-sm active:scale-[0.98] transition-all"
+              className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#005c3a] hover:bg-[#004d30] text-white font-extrabold text-xs uppercase tracking-wider shadow-sm active:scale-[0.98] transition-all"
             >
-              <span>{customer ? "Update" : "Add"}</span>
+              <span>{customer ? "UPDATE CUSTOMER" : "ADD CUSTOMER"}</span>
             </button>
           </div>
         </form>
