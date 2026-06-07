@@ -1,10 +1,9 @@
 "use client";
 
+import { ServiceNavigation } from "../../../components/ServiceNavigation/ServiceNavigation";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
-import { PATHS } from "../../../routes/paths";
 import { AddressCorrectionAbove18 } from "./AddressCorrectionAbove18";
 import { AddressCorrectionBelow18 } from "./AddressCorrectionBelow18";
 import { EidToAadhaarPdf } from "./EidToAadhaarPdf";
@@ -17,7 +16,6 @@ interface AadhaarService {
 }
 
 export function AadhaarAddressPage() {
-  const router = useRouter();
   const [activeForm, setActiveForm] = useState<string | null>(null); // "address-correction-above-18" | "address-correction-below-18" | "eid-to-aadhaar-pdf" | "aadhaar-to-pdf" | null
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -332,52 +330,12 @@ export function AadhaarAddressPage() {
     <AppShell activePage="Our Service">
       <section className="flex flex-col gap-6 w-full pb-8">
         {/* Navigation Breadcrumb Bar */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-2xl p-4 shadow-sm">
-          <div className="flex items-center gap-2 text-sm text-slate-500 font-semibold w-full md:w-auto">
-            <span
-              onClick={() => {
-                setActiveForm(null);
-                router.push(PATHS.SERVICES);
-              }}
-              className="text-slate-400 dark:text-slate-555 hover:text-[#005c3a] dark:hover:text-emerald-400 cursor-pointer font-bold uppercase text-xs tracking-wider transition-colors"
-            >
-              Services Directory
-            </span>
-            <span className="text-slate-350 select-none">/</span>
-            <span
-              onClick={() => setActiveForm(null)}
-              className="text-slate-400 dark:text-slate-555 hover:text-[#005c3a] dark:hover:text-emerald-400 cursor-pointer font-bold uppercase text-xs tracking-wider transition-colors"
-            >
-              Aadhaar Card Address
-            </span>
-            {activeForm && (
-              <>
-                <span className="text-slate-350 select-none">/</span>
-                <span className="text-[#005c3a] dark:text-emerald-400 font-bold uppercase text-xs tracking-wider">
-                  {getBreadcrumbLabel()}
-                </span>
-              </>
-            )}
-          </div>
-
-          <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto">
-            <button
-              onClick={() => {
-                if (activeForm) {
-                  setActiveForm(null);
-                } else {
-                  router.push(PATHS.SERVICES);
-                }
-              }}
-              className="flex items-center justify-center gap-1.5 h-9 px-4 rounded-xl border border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-900 text-xs font-bold text-slate-500 hover:text-slate-700 transition-colors"
-            >
-              <ArrowLeft size={13} />
-              <span>
-                {activeForm ? "Back to Sub-Services" : "Back to Services"}
-              </span>
-            </button>
-          </div>
-        </div>
+        <ServiceNavigation
+          pageName="Aadhaar Card Address"
+          activeForm={activeForm}
+          setActiveForm={setActiveForm}
+          activeFormLabel={getBreadcrumbLabel()}
+        />
 
         {/* CONDITIONALLY RENDER CARDS DIRECTORY OR THE DETAILED DYNAMIC INLINE FORM */}
         {!activeForm ? (
