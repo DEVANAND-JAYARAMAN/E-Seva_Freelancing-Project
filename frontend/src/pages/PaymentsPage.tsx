@@ -176,7 +176,7 @@ const DEFAULT_SUB_SERVICES: Record<string, SubService[]> = {
   "aadhaar-card-address": [
     {
       id: "aadhaar-main",
-      name: "Adhaar Card (Adress Correction)",
+      name: "Adhaar Card (Address Correction)",
       adminPrice: 100.0,
       distributorPrice: 80.0,
       retailerPrice: 80.0,
@@ -381,32 +381,7 @@ const DEFAULT_SUB_SERVICES: Record<string, SubService[]> = {
       needCoordinator: false,
     },
   ],
-  "insurance-scheme": [
-    {
-      id: "ins-main",
-      name: "காப்பீடு திட்டம் (Insurance Scheme)",
-      adminPrice: 120.0,
-      distributorPrice: 100.0,
-      retailerPrice: 100.0,
-      needCoordinator: false,
-    },
-    {
-      id: "ins-cm",
-      name: "Chief Minister Insurance",
-      adminPrice: 120.0,
-      distributorPrice: 100.0,
-      retailerPrice: 100.0,
-      needCoordinator: false,
-    },
-    {
-      id: "ins-life",
-      name: "Life Insurance Scheme",
-      adminPrice: 200.0,
-      distributorPrice: 180.0,
-      retailerPrice: 180.0,
-      needCoordinator: false,
-    },
-  ],
+
   "police-verification": [
     {
       id: "police-main",
@@ -433,32 +408,7 @@ const DEFAULT_SUB_SERVICES: Record<string, SubService[]> = {
       needCoordinator: false,
     },
   ],
-  "patta-service": [
-    {
-      id: "patta-main",
-      name: "பட்டா சேவை (Patta Service)",
-      adminPrice: 60.0,
-      distributorPrice: 50.0,
-      retailerPrice: 50.0,
-      needCoordinator: false,
-    },
-    {
-      id: "patta-transfer",
-      name: "Patta Chitta Transfer",
-      adminPrice: 100.0,
-      distributorPrice: 80.0,
-      retailerPrice: 80.0,
-      needCoordinator: false,
-    },
-    {
-      id: "patta-fmb",
-      name: "FMB Sketch",
-      adminPrice: 80.0,
-      distributorPrice: 70.0,
-      retailerPrice: 70.0,
-      needCoordinator: false,
-    },
-  ],
+
   "utisl-pan": [
     {
       id: "pan-main",
@@ -485,32 +435,7 @@ const DEFAULT_SUB_SERVICES: Record<string, SubService[]> = {
       needCoordinator: false,
     },
   ],
-  "pstm-certificate": [
-    {
-      id: "pstm-main",
-      name: "PSTM Certificate",
-      adminPrice: 50.0,
-      distributorPrice: 40.0,
-      retailerPrice: 40.0,
-      needCoordinator: false,
-    },
-    {
-      id: "pstm-1to10",
-      name: "PSTM 1st to 10th",
-      adminPrice: 50.0,
-      distributorPrice: 40.0,
-      retailerPrice: 40.0,
-      needCoordinator: false,
-    },
-    {
-      id: "pstm-11to12",
-      name: "PSTM 11th & 12th",
-      adminPrice: 60.0,
-      distributorPrice: 50.0,
-      retailerPrice: 50.0,
-      needCoordinator: false,
-    },
-  ],
+
   "agri-stack-pdf": [
     {
       id: "agri-main",
@@ -1273,43 +1198,7 @@ function renderServiceImage(id: string, className = "w-14 h-14") {
           <circle cx="40" cy="25" r="3" fill="#F59E0B" />
         </svg>
       );
-    case "insurance-scheme":
-      return (
-        <svg
-          className={className}
-          viewBox="0 0 64 64"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <defs>
-            <linearGradient id="insGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#10B981" />
-              <stop offset="100%" stopColor="#059669" />
-            </linearGradient>
-          </defs>
-          <rect
-            x="8"
-            y="10"
-            width="48"
-            height="44"
-            rx="4"
-            fill="#ECFDF5"
-            stroke="url(#insGrad)"
-            strokeWidth="2"
-          />
-          <path
-            d="M32 18L44 23V32C44 38 38 43 32 46C26 43 20 38 20 32V23L32 18Z"
-            fill="url(#insGrad)"
-          />
-          <path
-            d="M27 32L31 35L37 29"
-            stroke="white"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
-      );
+
     case "police-verification":
       return (
         <svg
@@ -1349,72 +1238,7 @@ function renderServiceImage(id: string, className = "w-14 h-14") {
           </text>
         </svg>
       );
-    case "patta-service":
-      return (
-        <svg
-          className={className}
-          viewBox="0 0 64 64"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <defs>
-            <linearGradient id="pattaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#15803D" />
-              <stop offset="100%" stopColor="#166534" />
-            </linearGradient>
-          </defs>
-          <rect
-            x="8"
-            y="8"
-            width="48"
-            height="48"
-            rx="6"
-            fill="#F0FDF4"
-            stroke="url(#pattaGrad)"
-            strokeWidth="2.5"
-          />
-          <path
-            d="M14 24H50M24 14V42M38 14V42M14 34H50"
-            stroke="#86EFAC"
-            strokeWidth="1"
-          />
-          <circle
-            cx="24"
-            cy="24"
-            r="3.5"
-            fill="#EF4444"
-            stroke="white"
-            strokeWidth="1"
-          />
-          <circle
-            cx="38"
-            cy="34"
-            r="3.5"
-            fill="#EF4444"
-            stroke="white"
-            strokeWidth="1"
-          />
-          <rect
-            x="14"
-            y="45"
-            width="36"
-            height="6"
-            rx="1"
-            fill="url(#pattaGrad)"
-          />
-          <text
-            x="32"
-            y="49.5"
-            fill="white"
-            fontSize="4.5"
-            fontWeight="bold"
-            textAnchor="middle"
-            fontFamily="sans-serif"
-          >
-            PATTA SERVICE
-          </text>
-        </svg>
-      );
+
     case "utisl-pan":
       return (
         <svg
@@ -1463,60 +1287,7 @@ function renderServiceImage(id: string, className = "w-14 h-14") {
           <rect x="23" y="35" width="20" height="4" rx="0.5" fill="white" />
         </svg>
       );
-    case "pstm-certificate":
-      return (
-        <svg
-          className={className}
-          viewBox="0 0 64 64"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          <defs>
-            <linearGradient id="pstmGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#A855F7" />
-              <stop offset="100%" stopColor="#7E22CE" />
-            </linearGradient>
-          </defs>
-          <rect
-            x="8"
-            y="8"
-            width="48"
-            height="48"
-            rx="6"
-            fill="#FAF5FF"
-            stroke="url(#pstmGrad)"
-            strokeWidth="2.5"
-          />
-          <path d="M22 18H42V38L32 32L22 38V18Z" fill="#E9D5FF" />
-          <circle
-            cx="32"
-            cy="26"
-            r="6"
-            fill="url(#pstmGrad)"
-            stroke="#C084FC"
-            strokeWidth="1"
-          />
-          <rect
-            x="16"
-            y="44"
-            width="32"
-            height="6"
-            rx="1.5"
-            fill="url(#pstmGrad)"
-          />
-          <text
-            x="32"
-            y="48.5"
-            fill="white"
-            fontSize="4.5"
-            fontWeight="bold"
-            textAnchor="middle"
-            fontFamily="sans-serif"
-          >
-            PSTM CERT
-          </text>
-        </svg>
-      );
+
     case "agri-stack-pdf":
       return (
         <svg
@@ -1713,7 +1484,7 @@ const servicesCatalog: ServiceCatalogItem[] = [
   { id: "gst", name: "GST Filing & Reg", color: "text-amber-600" },
   {
     id: "aadhaar-card-address",
-    name: "Adhaar Card (Adress Correction)",
+    name: "Adhaar Card (Address Correction)",
     color: "text-rose-500",
   },
   { id: "can-edit", name: "CAN EDIT", color: "text-indigo-500" },
@@ -1737,28 +1508,11 @@ const servicesCatalog: ServiceCatalogItem[] = [
     color: "text-slate-500",
   },
   {
-    id: "insurance-scheme",
-    name: "காப்பீடு திட்டம்",
-    subName: "Insurance Scheme",
-    color: "text-emerald-500",
-  },
-  {
     id: "police-verification",
     name: "Police Verification",
     color: "text-violet-500",
   },
-  {
-    id: "patta-service",
-    name: "பட்டா சேவை",
-    subName: "Patta Service",
-    color: "text-green-600",
-  },
   { id: "utisl-pan", name: "Utisl Pan", color: "text-sky-500" },
-  {
-    id: "pstm-certificate",
-    name: "PSTM Certificate",
-    color: "text-purple-500",
-  },
   { id: "agri-stack-pdf", name: "Agri Stack PDF", color: "text-emerald-550" },
   { id: "pvc-card-print", name: "PVC Card Print", color: "text-amber-550" },
   { id: "cm-health-card", name: "CM Health Card", color: "text-lime-600" },
