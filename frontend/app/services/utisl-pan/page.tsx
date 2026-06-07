@@ -1,4 +1,4 @@
-import { UtislPanPage } from "../../../src/pages/services/utisl-pan/UtislPanPage";
+import { UtislPanPage } from "../../../src/screens/services/utisl-pan/UtislPanPage";
 
 export default function UtislPanRoute() {
   return <UtislPanPage />;
