@@ -18,7 +18,6 @@ import {
   ServicePaymentScreen,
   ServiceSuccessScreen,
 } from "../../../components/ServicePaymentScreen";
-import { Epro13Form } from "./Epro13Form";
 import { TnHealthCardForm } from "./TnHealthCardForm";
 import { LongAadhaarForm } from "./LongAadhaarForm";
 import { TnpdsSmartCardForm } from "./TnpdsSmartCardForm";
@@ -32,10 +31,6 @@ import { DlPvcForm } from "./DlPvcForm";
 import { TamilAstrologyForm } from "./TamilAstrologyForm";
 import { FishermanCardForm } from "./FishermanCardForm";
 import { InstantPanCardForm } from "./InstantPanCardForm";
-import { PmjayForm } from "./PmjayForm";
-import { Epro13SecondForm } from "./Epro13SecondForm";
-import { Epro125Form } from "./Epro125Form";
-import { Epro14Form } from "./Epro14Form";
 
 interface SoftwareCardItem {
   id: string;
@@ -59,12 +54,6 @@ export function SoftwareKeysPage() {
 
   const softwareList: SoftwareCardItem[] = useMemo(
     () => [
-      {
-        id: "epro-13-1",
-        name: "EPRO - 13",
-        price: 150.0,
-        iconBg: "bg-pink-100 dark:bg-pink-950/20",
-      },
       {
         id: "tn-health-qr",
         name: "TN - Health Card Maker With QR",
@@ -142,30 +131,6 @@ export function SoftwareKeysPage() {
         name: "INSTANT PAN CARD",
         price: 400.0,
         iconBg: "bg-sky-100 dark:bg-sky-950/30",
-      },
-      {
-        id: "pmjay",
-        name: "PMJAY",
-        price: 400.0,
-        iconBg: "bg-yellow-100 dark:bg-yellow-950/30",
-      },
-      {
-        id: "epro-13-2",
-        name: "EPRO 13",
-        price: 150.0,
-        iconBg: "bg-amber-50 dark:bg-amber-950/20",
-      },
-      {
-        id: "epro-125",
-        name: "EPRO 125",
-        price: 400.0,
-        iconBg: "bg-sky-50 dark:bg-sky-950/20",
-      },
-      {
-        id: "epro-14",
-        name: "EPRO 14",
-        price: 400.0,
-        iconBg: "bg-indigo-100 dark:bg-indigo-950/30",
       },
     ],
     [],
@@ -1065,224 +1030,6 @@ export function SoftwareKeysPage() {
           </svg>
         );
 
-      case "pmjay":
-        return (
-          <svg
-            className={className}
-            viewBox="0 0 80 80"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <circle
-              cx="40"
-              cy="40"
-              r="38"
-              fill="white"
-              stroke="#ca8a04"
-              strokeWidth="1.5"
-            />
-            <rect
-              x="18"
-              y="22"
-              width="44"
-              height="26"
-              rx="3"
-              fill="#fef9c3"
-              stroke="#ca8a04"
-              strokeWidth="1.2"
-            />
-            <circle
-              cx="40"
-              cy="35"
-              r="9"
-              fill="none"
-              stroke="#eab308"
-              strokeWidth="1"
-            />
-            <path
-              d="M40 29C36.5 29 35 31.5 35 34.5C35 37.5 40 40 40 40C40 40 45 37.5 45 34.5C45 31.5 43.5 29 40 29Z"
-              fill="#eab308"
-              opacity="0.4"
-            />
-            <text
-              x="40"
-              y="60"
-              fill="#854d0e"
-              fontSize="6"
-              fontWeight="black"
-              textAnchor="middle"
-              fontFamily="sans-serif"
-            >
-              PMJAY CARD
-            </text>
-          </svg>
-        );
-
-      case "epro-13-2":
-        return (
-          <svg
-            className={className}
-            viewBox="0 0 80 80"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <circle
-              cx="40"
-              cy="40"
-              r="38"
-              fill="white"
-              stroke="#d97706"
-              strokeWidth="1.5"
-            />
-            <rect
-              x="16"
-              y="24"
-              width="48"
-              height="20"
-              rx="3"
-              fill="#fef3c7"
-              stroke="#d97706"
-              strokeWidth="1.2"
-            />
-            <text
-              x="40"
-              y="37"
-              fill="#b45309"
-              fontSize="10"
-              fontWeight="black"
-              textAnchor="middle"
-              fontFamily="Impact"
-            >
-              ePRO 13
-            </text>
-            <text
-              x="40"
-              y="58"
-              fill="#b45309"
-              fontSize="5.5"
-              fontWeight="bold"
-              textAnchor="middle"
-              fontFamily="sans-serif"
-            >
-              EPRO 13
-            </text>
-          </svg>
-        );
-
-      case "epro-125":
-        return (
-          <svg
-            className={className}
-            viewBox="0 0 80 80"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <circle
-              cx="40"
-              cy="40"
-              r="38"
-              fill="white"
-              stroke="#0284c7"
-              strokeWidth="1.5"
-            />
-            <rect x="18" y="20" width="44" height="26" rx="2" fill="#0284c7" />
-            <rect x="22" y="24" width="36" height="14" rx="1" fill="#e0f2fe" />
-            <text
-              x="40"
-              y="32"
-              fill="#0369a1"
-              fontSize="5.5"
-              fontWeight="black"
-              textAnchor="middle"
-              fontFamily="Impact"
-            >
-              E pro 12.5
-            </text>
-            <text
-              x="40"
-              y="37"
-              fill="#0369a1"
-              fontSize="3"
-              fontWeight="bold"
-              textAnchor="middle"
-              fontFamily="sans-serif"
-            >
-              PVC CARD SOFTWARE
-            </text>
-            <text
-              x="40"
-              y="60"
-              fill="#0369a1"
-              fontSize="5.5"
-              fontWeight="bold"
-              textAnchor="middle"
-              fontFamily="sans-serif"
-            >
-              EPRO 125
-            </text>
-          </svg>
-        );
-
-      case "epro-14":
-        return (
-          <svg
-            className={className}
-            viewBox="0 0 80 80"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <circle
-              cx="40"
-              cy="40"
-              r="38"
-              fill="#0f172a"
-              stroke="#4f46e5"
-              strokeWidth="2"
-            />
-            <text
-              x="40"
-              y="35"
-              fill="white"
-              fontSize="9"
-              fontWeight="black"
-              textAnchor="middle"
-              fontFamily="Impact"
-            >
-              ePro
-            </text>
-            <circle
-              cx="40"
-              cy="50"
-              r="11"
-              fill="#3b82f6"
-              stroke="white"
-              strokeWidth="1"
-            />
-            <text
-              x="40"
-              y="55"
-              fill="white"
-              fontSize="8"
-              fontWeight="black"
-              textAnchor="middle"
-              fontFamily="Arial Black"
-            >
-              (14)
-            </text>
-            <text
-              x="40"
-              y="70"
-              fill="#94a3b8"
-              fontSize="5"
-              fontWeight="bold"
-              textAnchor="middle"
-              fontFamily="sans-serif"
-            >
-              EPRO 14
-            </text>
-          </svg>
-        );
-
       default:
         return null;
     }
@@ -1300,8 +1047,6 @@ export function SoftwareKeysPage() {
     };
 
     switch (activeForm) {
-      case "epro-13-1":
-        return <Epro13Form {...props} />;
       case "tn-health-qr":
         return <TnHealthCardForm {...props} />;
       case "long-aadhaar":
@@ -1328,14 +1073,6 @@ export function SoftwareKeysPage() {
         return <FishermanCardForm {...props} />;
       case "instant-pan":
         return <InstantPanCardForm {...props} />;
-      case "pmjay":
-        return <PmjayForm {...props} />;
-      case "epro-13-2":
-        return <Epro13SecondForm {...props} />;
-      case "epro-125":
-        return <Epro125Form {...props} />;
-      case "epro-14":
-        return <Epro14Form {...props} />;
       default:
         return null;
     }
@@ -1423,7 +1160,7 @@ export function SoftwareKeysPage() {
               </h3>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
               {filteredSoftware.map((software) => (
                 <div
                   key={software.id}
