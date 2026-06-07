@@ -1,4 +1,4 @@
-import { TnegaPage } from "../../../src/pages/services/tnega/TnegaPage";
+import { TnegaPage } from "../../../src/screens/services/tnega/TnegaPage";
 
 export default function TnegaRoute() {
   return <TnegaPage />;

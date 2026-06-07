@@ -1,4 +1,4 @@
-import { WalletPage } from "../../src/pages/WalletPage";
+import { WalletPage } from "../../src/screens/WalletPage";
 
 export default function WalletsRoute() {
   return <WalletPage />;

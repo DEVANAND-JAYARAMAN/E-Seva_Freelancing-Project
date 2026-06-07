@@ -1,4 +1,4 @@
-import { RetailersPage } from "../../src/pages/retailers/RetailersPage";
+import { RetailersPage } from "../../src/screens/retailers/RetailersPage";
 
 export default function RetailersRoute() {
   return <RetailersPage />;
