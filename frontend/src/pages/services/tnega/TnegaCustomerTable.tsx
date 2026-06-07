@@ -60,13 +60,13 @@ export function TnegaCustomerTable({
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by customer name, ID, phone, district or taluk..."
-            className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-100 dark:border-slate-900/80 bg-slate-50/50 dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#007bff]/25 dark:focus:ring-blue-500/20 text-sm font-semibold transition-all duration-200 focus:border-[#007bff] dark:focus:border-blue-500 text-slate-800 dark:text-slate-200"
+            placeholder="Search by customer name, ID, phone or location..."
+            className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-100 dark:border-slate-900/80 bg-slate-50/50 dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 dark:focus:ring-emerald-500/20 text-sm font-semibold transition-all duration-200 focus:border-[#005c3a] dark:focus:border-emerald-500 text-slate-800 dark:text-slate-200"
           />
         </div>
 
         <div className="flex items-center gap-3">
-          <label className="text-xs font-bold text-slate-400 dark:text-slate-555 uppercase tracking-widest hidden sm:inline">
+          <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest hidden sm:inline">
             Status:
           </label>
           <div className="flex bg-slate-50 dark:bg-slate-900/50 p-1 rounded-2xl border border-slate-100 dark:border-slate-850">
@@ -77,7 +77,7 @@ export function TnegaCustomerTable({
                 onClick={() => setStatusFilter(filter)}
                 className={`px-4 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 ${
                   statusFilter === filter
-                    ? "bg-white dark:bg-[#090d16] text-[#007bff] dark:text-blue-400 shadow-sm border border-slate-100 dark:border-slate-850/50"
+                    ? "bg-white dark:bg-[#090d16] text-[#005c3a] dark:text-emerald-400 shadow-sm border border-slate-100 dark:border-slate-850/50"
                     : "text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
                 }`}
               >
@@ -123,7 +123,7 @@ export function TnegaCustomerTable({
                   {/* Customer Name & ID */}
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-950/20 text-[#007bff] dark:text-blue-400 font-extrabold text-sm border border-blue-100/30 dark:border-blue-900/30">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#005c3a]/5 dark:bg-emerald-500/5 text-[#005c3a] dark:text-emerald-400 font-extrabold text-sm border border-[#005c3a]/10 dark:border-emerald-500/10">
                         {customer.applicantName.substring(0, 2).toUpperCase()}
                       </div>
                       <div>
@@ -133,7 +133,7 @@ export function TnegaCustomerTable({
                         >
                           {customer.applicantName}
                         </div>
-                        <div className="text-xs font-semibold text-[#007bff] dark:text-blue-400/80">
+                        <div className="text-xs font-semibold text-[#005c3a] dark:text-emerald-400/80">
                           ID: {customer.id}
                         </div>
                       </div>
@@ -166,7 +166,7 @@ export function TnegaCustomerTable({
                       <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400">
                         <Fingerprint
                           size={12}
-                          className="text-[#007bff] dark:text-blue-450 shrink-0"
+                          className="text-[#005c3a] dark:text-emerald-400 shrink-0"
                         />
                         <span className="font-mono">{customer.aadhaarNo}</span>
                       </div>
@@ -268,9 +268,9 @@ export function TnegaCustomerTable({
       </div>
 
       {/* Pagination / Item Counter */}
-      <div className="flex items-center justify-between text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest pt-2">
+      <div className="flex items-center justify-between text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest pt-2">
         <span>
-          Showing {filteredCustomers.length} of {customers.length} customers
+          SHOWING {filteredCustomers.length} OF {customers.length} CUSTOMERS
         </span>
       </div>
     </div>
