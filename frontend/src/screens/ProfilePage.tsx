@@ -3,7 +3,15 @@
 import React, { useState } from "react";
 import { AppShell } from "../layouts/AppShell";
 import { useAuth } from "../store/context/AuthContext";
-import { User, Mail, Shield, Wallet, Smartphone, Building, CheckCircle2 } from "lucide-react";
+import {
+  User,
+  Mail,
+  Shield,
+  Wallet,
+  Smartphone,
+  Building,
+  CheckCircle2,
+} from "lucide-react";
 
 export function ProfilePage() {
   const { user } = useAuth();
@@ -30,7 +38,6 @@ export function ProfilePage() {
   return (
     <AppShell activePage="Profile">
       <div className="space-y-6 max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-300">
-        
         {/* Sleek Header Jumbotron Card */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-tr from-emerald-950 via-[#005c3a] to-emerald-900 dark:from-[#091510] dark:via-[#004229] dark:to-emerald-950 p-6 sm:p-8 text-white shadow-xl">
           {/* Decorative backdrop glows */}
@@ -49,13 +56,16 @@ export function ProfilePage() {
             {/* Profile Summary info */}
             <div className="text-center sm:text-left space-y-2 flex-1">
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                <h2 className="text-2xl sm:text-3xl font-black tracking-tight">{formData.name}</h2>
+                <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
+                  {formData.name}
+                </h2>
                 <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-white/10 border border-white/10 text-[10px] font-black uppercase tracking-wider">
                   <span>{user?.role || "Administrator"}</span>
                 </span>
               </div>
               <p className="text-emerald-100/70 text-sm font-semibold max-w-md">
-                Manage operational credentials, shop configurations, and wallets from your secure profile dashboard.
+                Manage operational credentials, shop configurations, and wallets
+                from your secure profile dashboard.
               </p>
             </div>
           </div>
@@ -63,19 +73,24 @@ export function ProfilePage() {
 
         {/* Form and Details Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          
           {/* Quick Metrics Column */}
           <div className="md:col-span-1 space-y-6">
             <div className="bg-white dark:bg-[#0c101d] border border-slate-200/60 dark:border-slate-800/40 rounded-2xl p-5 space-y-5 shadow-sm">
-              <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Wallet Balance</h3>
-              
+              <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                Wallet Balance
+              </h3>
+
               <div className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/20">
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#005c3a]/10 text-[#005c3a] dark:bg-emerald-600/10 dark:text-emerald-400">
                   <Wallet size={20} />
                 </span>
                 <div>
-                  <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Main Wallet</p>
-                  <p className="text-lg font-black text-slate-800 dark:text-white">₹{user?.walletBalance.toFixed(2) || "2895.00"}</p>
+                  <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">
+                    Main Wallet
+                  </p>
+                  <p className="text-lg font-black text-slate-800 dark:text-white">
+                    ₹{user?.walletBalance.toFixed(2) || "2895.00"}
+                  </p>
                 </div>
               </div>
 
@@ -84,8 +99,12 @@ export function ProfilePage() {
                   <Shield size={20} />
                 </span>
                 <div>
-                  <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">Security Level</p>
-                  <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">Level 3 (High-Security)</p>
+                  <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase">
+                    Security Level
+                  </p>
+                  <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                    Level 3 (High-Security)
+                  </p>
                 </div>
               </div>
             </div>
@@ -93,9 +112,14 @@ export function ProfilePage() {
 
           {/* Edit Profile Form */}
           <div className="md:col-span-2">
-            <form onSubmit={handleSubmit} className="bg-white dark:bg-[#0c101d] border border-slate-200/60 dark:border-slate-800/40 rounded-2xl p-6 space-y-6 shadow-sm">
+            <form
+              onSubmit={handleSubmit}
+              className="bg-white dark:bg-[#0c101d] border border-slate-200/60 dark:border-slate-800/40 rounded-2xl p-6 space-y-6 shadow-sm"
+            >
               <div className="border-b border-slate-100 dark:border-slate-800/60 pb-3 flex justify-between items-center">
-                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">Account Credentials</h3>
+                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                  Account Credentials
+                </h3>
                 {success && (
                   <span className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-bold animate-in fade-in slide-in-from-right-2">
                     <CheckCircle2 size={14} className="stroke-[2.5]" />
@@ -114,7 +138,9 @@ export function ProfilePage() {
                     type="text"
                     required
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
                     className="w-full h-11 px-4 text-xs font-bold bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 rounded-xl focus:border-[#005c3a] focus:ring-1 focus:ring-[#005c3a] dark:text-white transition-all outline-none"
                   />
                 </div>
@@ -128,7 +154,9 @@ export function ProfilePage() {
                     type="email"
                     required
                     value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
                     className="w-full h-11 px-4 text-xs font-bold bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 rounded-xl focus:border-[#005c3a] focus:ring-1 focus:ring-[#005c3a] dark:text-white transition-all outline-none"
                   />
                 </div>
@@ -142,7 +170,9 @@ export function ProfilePage() {
                     type="text"
                     required
                     value={formData.mobile}
-                    onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, mobile: e.target.value })
+                    }
                     className="w-full h-11 px-4 text-xs font-bold bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 rounded-xl focus:border-[#005c3a] focus:ring-1 focus:ring-[#005c3a] dark:text-white transition-all outline-none"
                   />
                 </div>
@@ -156,19 +186,25 @@ export function ProfilePage() {
                     type="text"
                     required
                     value={formData.shopName}
-                    onChange={(e) => setFormData({ ...formData, shopName: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, shopName: e.target.value })
+                    }
                     className="w-full h-11 px-4 text-xs font-bold bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 rounded-xl focus:border-[#005c3a] focus:ring-1 focus:ring-[#005c3a] dark:text-white transition-all outline-none"
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">Agency Location Address</label>
+                <label className="text-[11px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">
+                  Agency Location Address
+                </label>
                 <textarea
                   rows={2}
                   required
                   value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, address: e.target.value })
+                  }
                   className="w-full p-4 text-xs font-bold bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 rounded-xl focus:border-[#005c3a] focus:ring-1 focus:ring-[#005c3a] dark:text-white transition-all outline-none resize-none"
                 />
               </div>
@@ -184,9 +220,7 @@ export function ProfilePage() {
               </div>
             </form>
           </div>
-
         </div>
-
       </div>
     </AppShell>
   );

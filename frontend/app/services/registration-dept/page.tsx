@@ -1,4 +1,4 @@
-import { RegistrationDeptPage } from "../../../src/pages/services/registration-dept/RegistrationDeptPage";
+import { RegistrationDeptPage } from "../../../src/screens/services/registration-dept/RegistrationDeptPage";
 
 export default function RegistrationDeptRoute() {
   return <RegistrationDeptPage />;

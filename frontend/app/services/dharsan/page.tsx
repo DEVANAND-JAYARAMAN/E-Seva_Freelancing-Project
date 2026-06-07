@@ -1,4 +1,4 @@
-import { DharsanPage } from "../../../src/pages/services/dharsan/DharsanPage";
+import { DharsanPage } from "../../../src/screens/services/dharsan/DharsanPage";
 
 export default function DharsanRoute() {
   return <DharsanPage />;

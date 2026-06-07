@@ -223,7 +223,11 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
         login(
           formData.email || "",
           "mock_token",
-          (formData.role || "retailer") as "admin" | "retailer" | "distributor" | "customer",
+          (formData.role || "retailer") as
+            | "admin"
+            | "retailer"
+            | "distributor"
+            | "customer",
           formData.fullName || "Thuruvan User",
         ).then(() => {
           router.push("/dashboard");

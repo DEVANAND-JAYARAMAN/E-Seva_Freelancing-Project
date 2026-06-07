@@ -1,4 +1,4 @@
-import { SettingsPage } from "../../../src/pages/SettingsPage";
+import { SettingsPage } from "../../../src/screens/SettingsPage";
 
 export default function SettingsRoute() {
   return <SettingsPage />;

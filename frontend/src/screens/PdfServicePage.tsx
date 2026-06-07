@@ -18,31 +18,121 @@ interface ServicePriceRow {
 export function PdfServicePage() {
   const router = useRouter();
   const [prices, setPrices] = useState<ServicePriceRow[]>([
-    { slNo: 1, serviceName: "Adhaar to Pan Number", admin: "12.00", othersiteAdmin: "0.00", distributor: "30.00", retailer: "30.00", customer: "25.00" },
-    { slNo: 2, serviceName: "Pan To Pan Details", admin: "10.00", othersiteAdmin: "0.00", distributor: "30.00", retailer: "30.00", customer: "25.00" },
-    { slNo: 3, serviceName: "Driving License PDF", admin: "10.00", othersiteAdmin: "", distributor: "30.00", retailer: "30.00", customer: "25.00" },
-    { slNo: 4, serviceName: "RC Pdf", admin: "12.00", othersiteAdmin: "", distributor: "30.00", retailer: "30.00", customer: "25.00" },
-    { slNo: 5, serviceName: "Adhaar to Smart card Number FIND", admin: "12.00", othersiteAdmin: "", distributor: "20.00", retailer: "20.00", customer: "25.00" },
-    { slNo: 6, serviceName: "Cell Number Link In Voter ID", admin: "20.00", othersiteAdmin: "", distributor: "60.00", retailer: "60.00", customer: "60.00" },
-    { slNo: 7, serviceName: "EPIC INSTANT PDF", admin: "10.00", othersiteAdmin: "", distributor: "40.00", retailer: "40.00", customer: "40.00" },
-    { slNo: 8, serviceName: "Adhaar verification", admin: "10.00", othersiteAdmin: "", distributor: "20.00", retailer: "20.00", customer: "20.00" },
-    { slNo: 9, serviceName: "PAN TO GST Number Find", admin: "15.00", othersiteAdmin: "", distributor: "70.00", retailer: "70.00", customer: "70.00" },
-    { slNo: 10, serviceName: "E-Shram PDF", admin: "30.00", othersiteAdmin: "", distributor: "130.00", retailer: "130.00", customer: "130.00" },
-    { slNo: 11, serviceName: "Rc To Mobile Number Find", admin: "11.00", othersiteAdmin: "", distributor: "", retailer: "", customer: "" },
+    {
+      slNo: 1,
+      serviceName: "Adhaar to Pan Number",
+      admin: "12.00",
+      othersiteAdmin: "0.00",
+      distributor: "30.00",
+      retailer: "30.00",
+      customer: "25.00",
+    },
+    {
+      slNo: 2,
+      serviceName: "Pan To Pan Details",
+      admin: "10.00",
+      othersiteAdmin: "0.00",
+      distributor: "30.00",
+      retailer: "30.00",
+      customer: "25.00",
+    },
+    {
+      slNo: 3,
+      serviceName: "Driving License PDF",
+      admin: "10.00",
+      othersiteAdmin: "",
+      distributor: "30.00",
+      retailer: "30.00",
+      customer: "25.00",
+    },
+    {
+      slNo: 4,
+      serviceName: "RC Pdf",
+      admin: "12.00",
+      othersiteAdmin: "",
+      distributor: "30.00",
+      retailer: "30.00",
+      customer: "25.00",
+    },
+    {
+      slNo: 5,
+      serviceName: "Adhaar to Smart card Number FIND",
+      admin: "12.00",
+      othersiteAdmin: "",
+      distributor: "20.00",
+      retailer: "20.00",
+      customer: "25.00",
+    },
+    {
+      slNo: 6,
+      serviceName: "Cell Number Link In Voter ID",
+      admin: "20.00",
+      othersiteAdmin: "",
+      distributor: "60.00",
+      retailer: "60.00",
+      customer: "60.00",
+    },
+    {
+      slNo: 7,
+      serviceName: "EPIC INSTANT PDF",
+      admin: "10.00",
+      othersiteAdmin: "",
+      distributor: "40.00",
+      retailer: "40.00",
+      customer: "40.00",
+    },
+    {
+      slNo: 8,
+      serviceName: "Adhaar verification",
+      admin: "10.00",
+      othersiteAdmin: "",
+      distributor: "20.00",
+      retailer: "20.00",
+      customer: "20.00",
+    },
+    {
+      slNo: 9,
+      serviceName: "PAN TO GST Number Find",
+      admin: "15.00",
+      othersiteAdmin: "",
+      distributor: "70.00",
+      retailer: "70.00",
+      customer: "70.00",
+    },
+    {
+      slNo: 10,
+      serviceName: "E-Shram PDF",
+      admin: "30.00",
+      othersiteAdmin: "",
+      distributor: "130.00",
+      retailer: "130.00",
+      customer: "130.00",
+    },
+    {
+      slNo: 11,
+      serviceName: "Rc To Mobile Number Find",
+      admin: "11.00",
+      othersiteAdmin: "",
+      distributor: "",
+      retailer: "",
+      customer: "",
+    },
   ]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const handleInputChange = (index: number, field: "admin" | "othersiteAdmin" | "distributor" | "retailer" | "customer", value: string) => {
+  const handleInputChange = (
+    index: number,
+    field: "admin" | "othersiteAdmin" | "distributor" | "retailer" | "customer",
+    value: string,
+  ) => {
     setPrices((prev) => {
       const next = [...prev];
       next[index] = { ...next[index], [field]: value };
       return next;
     });
   };
-
-
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +147,6 @@ export function PdfServicePage() {
   return (
     <AppShell activePage="PDF Service">
       <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 bg-white dark:bg-[#030712] rounded-3xl border border-slate-200/80 dark:border-emerald-950/60 shadow-xl dark:shadow-2xl relative overflow-hidden space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
-        
         {/* Glow Effects */}
         <div className="absolute top-[-20%] left-[-10%] w-[35vw] h-[35vw] rounded-full bg-emerald-500/[0.03] dark:bg-emerald-500/5 blur-[120px] pointer-events-none" />
         <div className="absolute bottom-[-20%] right-[-10%] w-[35vw] h-[35vw] rounded-full bg-emerald-500/[0.03] dark:bg-emerald-500/5 blur-[120px] pointer-events-none" />
@@ -80,7 +169,6 @@ export function PdfServicePage() {
                 Saved Successfully
               </span>
             )}
-
           </div>
         </div>
 
@@ -91,31 +179,54 @@ export function PdfServicePage() {
               <table className="w-full text-left border-collapse min-w-[750px]">
                 <thead>
                   <tr className="border-b border-slate-200/60 dark:border-slate-900 bg-slate-100/40 dark:bg-transparent">
-                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest w-[80px]">Sl No</th>
-                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest">Service Name</th>
-                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest text-center w-[120px]">Admin</th>
-                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest text-center w-[130px]">Othersite Admin</th>
-                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest text-center w-[120px]">Distributor</th>
-                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest text-center w-[120px]">Retailer</th>
-                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest text-center w-[120px]">Customer</th>
+                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest w-[80px]">
+                      Sl No
+                    </th>
+                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest">
+                      Service Name
+                    </th>
+                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest text-center w-[120px]">
+                      Admin
+                    </th>
+                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest text-center w-[130px]">
+                      Othersite Admin
+                    </th>
+                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest text-center w-[120px]">
+                      Distributor
+                    </th>
+                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest text-center w-[120px]">
+                      Retailer
+                    </th>
+                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest text-center w-[120px]">
+                      Customer
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200/60 dark:divide-slate-900/60">
                   {prices.map((row, idx) => (
-                    <tr key={row.slNo} className="hover:bg-slate-100/30 dark:hover:bg-slate-950/20 transition-colors">
+                    <tr
+                      key={row.slNo}
+                      className="hover:bg-slate-100/30 dark:hover:bg-slate-950/20 transition-colors"
+                    >
                       {/* Sl No */}
-                      <td className="py-4 px-5 text-xs font-extrabold text-slate-500 dark:text-slate-600">{row.slNo}</td>
-                      
+                      <td className="py-4 px-5 text-xs font-extrabold text-slate-500 dark:text-slate-600">
+                        {row.slNo}
+                      </td>
+
                       {/* Service Name */}
-                      <td className="py-4 px-5 text-xs font-extrabold text-slate-700 dark:text-slate-300">{row.serviceName}</td>
-                      
+                      <td className="py-4 px-5 text-xs font-extrabold text-slate-700 dark:text-slate-300">
+                        {row.serviceName}
+                      </td>
+
                       {/* Admin input capsule */}
                       <td className="py-3 px-2">
                         <div className="relative flex items-center justify-center">
                           <input
                             type="text"
                             value={row.admin}
-                            onChange={(e) => handleInputChange(idx, "admin", e.target.value)}
+                            onChange={(e) =>
+                              handleInputChange(idx, "admin", e.target.value)
+                            }
                             className="w-24 h-9 px-3 text-xs font-black text-center bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-800/80 rounded-lg focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-white transition-all outline-none"
                           />
                         </div>
@@ -127,7 +238,13 @@ export function PdfServicePage() {
                           <input
                             type="text"
                             value={row.othersiteAdmin}
-                            onChange={(e) => handleInputChange(idx, "othersiteAdmin", e.target.value)}
+                            onChange={(e) =>
+                              handleInputChange(
+                                idx,
+                                "othersiteAdmin",
+                                e.target.value,
+                              )
+                            }
                             className="w-24 h-9 px-3 text-xs font-black text-center bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-800/80 rounded-lg focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-white transition-all outline-none"
                           />
                         </div>
@@ -139,7 +256,13 @@ export function PdfServicePage() {
                           <input
                             type="text"
                             value={row.distributor}
-                            onChange={(e) => handleInputChange(idx, "distributor", e.target.value)}
+                            onChange={(e) =>
+                              handleInputChange(
+                                idx,
+                                "distributor",
+                                e.target.value,
+                              )
+                            }
                             className="w-24 h-9 px-3 text-xs font-black text-center bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-800/80 rounded-lg focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-white transition-all outline-none"
                           />
                         </div>
@@ -151,7 +274,9 @@ export function PdfServicePage() {
                           <input
                             type="text"
                             value={row.retailer}
-                            onChange={(e) => handleInputChange(idx, "retailer", e.target.value)}
+                            onChange={(e) =>
+                              handleInputChange(idx, "retailer", e.target.value)
+                            }
                             className="w-24 h-9 px-3 text-xs font-black text-center bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-800/80 rounded-lg focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-white transition-all outline-none"
                           />
                         </div>
@@ -163,7 +288,9 @@ export function PdfServicePage() {
                           <input
                             type="text"
                             value={row.customer}
-                            onChange={(e) => handleInputChange(idx, "customer", e.target.value)}
+                            onChange={(e) =>
+                              handleInputChange(idx, "customer", e.target.value)
+                            }
                             className="w-24 h-9 px-3 text-xs font-black text-center bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-800/80 rounded-lg focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-white transition-all outline-none"
                           />
                         </div>
@@ -186,7 +313,6 @@ export function PdfServicePage() {
             </button>
           </div>
         </form>
-
       </div>
     </AppShell>
   );

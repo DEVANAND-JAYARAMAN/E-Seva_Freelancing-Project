@@ -4,7 +4,11 @@ type PlaceholderPageProps = {
   description: string;
 };
 
-export function PlaceholderPage({ eyebrow, title, description }: PlaceholderPageProps) {
+export function PlaceholderPage({
+  eyebrow,
+  title,
+  description,
+}: PlaceholderPageProps) {
   return (
     <section className="bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-8 sm:p-12 shadow-sm hover:shadow-md transition-all duration-300 max-w-2xl">
       <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-[#005c3a] dark:text-emerald-400 block mb-2">
