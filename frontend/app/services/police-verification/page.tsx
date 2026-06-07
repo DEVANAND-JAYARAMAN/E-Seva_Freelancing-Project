@@ -1,4 +1,4 @@
-import { PoliceVerificationPage } from "../../../src/pages/services/police-verification/PoliceVerificationPage";
+import { PoliceVerificationPage } from "../../../src/screens/services/police-verification/PoliceVerificationPage";
 
 export default function PoliceVerificationRoute() {
   return <PoliceVerificationPage />;

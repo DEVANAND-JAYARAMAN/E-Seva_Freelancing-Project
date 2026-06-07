@@ -1,4 +1,4 @@
-import { PdfPage } from "../../src/pages/pdf/PdfPage";
+import { PdfPage } from "../../src/screens/pdf/PdfPage";
 
 export default function PdfRoute() {
   return <PdfPage />;

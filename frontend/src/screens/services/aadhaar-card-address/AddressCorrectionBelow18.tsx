@@ -273,7 +273,7 @@ export const AddressCorrectionBelow18: React.FC<
             Adress Correction (Below 18-Minor)
           </h2>
           <p className="text-xs text-slate-450 dark:text-slate-555 mt-0.5">
-            Submit request to update the address on a minor's Aadhaar card using
+            Submit request to update the address on a minor&apos;s Aadhaar card using
             valid address proofs
           </p>
         </div>

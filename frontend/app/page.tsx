@@ -1,4 +1,4 @@
-import { AuthPage } from "../src/pages/auth/AuthPage";
+import { AuthPage } from "../src/screens/auth/AuthPage";
 
 export default function Home() {
   return <AuthPage initialMode="login" />;
