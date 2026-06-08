@@ -157,7 +157,6 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
 
     try {
       if (mode === "login") {
-      if (mode === "login") {
         // Use actual password for backend login
         login(formData.email || "", formData.password || "").then(() => {
           router.push("/dashboard");
