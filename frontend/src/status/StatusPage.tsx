@@ -9,9 +9,9 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { AppShell } from "../layouts/AppShell";
-import { useLocalStorage } from "../hooks/useLocalStorage";
-import { StatusStats } from "./StatusStats";
 import { StatusTable } from "./StatusTable";
+import { StatusStats } from "./StatusStats";
+import { useEffect } from "react";
 import { StatusDetailModal } from "./StatusDetailModal";
 import type { StatusTicket, TicketStatus } from "./types";
 
@@ -76,34 +76,64 @@ const seedTickets: StatusTicket[] = [
 ];
 
 export function StatusPage() {
-  const [tickets, setTickets] = useLocalStorage<StatusTicket[]>(
-    "thuruvan_status_tickets_list",
-    seedTickets,
-  );
+  const [tickets, setTickets] = useState<StatusTicket[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<TicketStatus | "All">("All");
-  const [selectedTicket, setSelectedTicket] = useState<StatusTicket | null>(
-    null,
-  );
+  const [selectedTicket, setSelectedTicket] = useState<StatusTicket | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
-  // Update status and remarks inside LocalStorage
-  const handleUpdateStatus = (
+  // Fetch real data from backend
+  const fetchTickets = async () => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/requests`);
+      if (res.ok) {
+        const data = await res.json();
+        // map backend model to StatusTicket
+        const mapped: StatusTicket[] = (data || []).map((app: any) => ({
+          id: app.id,
+          transactionId: app.id,
+          serviceName: app.serviceName,
+          retailerName: app.retailerId, // maybe map retailer name later
+          amount: app.cost,
+          status: app.status as TicketStatus,
+          createdDate: app.createdAt.split("T")[0],
+          lastUpdated: app.lastUpdated.split("T")[0],
+          remarks: app.adminRemarks || "No remarks.",
+        }));
+        setTickets(mapped);
+      }
+    } catch (e) {
+      console.error("Failed to fetch tickets:", e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTickets();
+  }, []);
+
+  // Update status and remarks via API
+  const handleUpdateStatus = async (
     id: string,
     newStatus: TicketStatus,
     remarks: string,
   ) => {
-    setTickets((prev) =>
-      prev.map((ticket) =>
-        ticket.id === id
-          ? {
-            ...ticket,
-            status: newStatus,
-            remarks,
-            lastUpdated: new Date().toISOString().split("T")[0],
-          }
-          : ticket,
-      ),
-    );
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/${id}/status`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus, adminRemarks: remarks }),
+      });
+      if (res.ok) {
+        fetchTickets(); // Refresh data
+        setIsDetailOpen(false);
+      } else {
+        console.error("Failed to update status");
+      }
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleSelectTicket = (ticket: StatusTicket) => {

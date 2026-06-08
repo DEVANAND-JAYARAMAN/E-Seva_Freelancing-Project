@@ -5,7 +5,7 @@ interface ServicePaymentScreenProps {
   serviceName: string;
   retailerCharge: number;
   onBack: () => void;
-  onSuccess: () => void;
+  onSuccess: (customerWhatsApp?: string) => void;
 }
 
 export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
@@ -17,6 +17,7 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"wallet" | "gateway">("wallet");
   const [upiId, setUpiId] = useState("");
+  const [customerWhatsApp, setCustomerWhatsApp] = useState("");
   const [error, setError] = useState("");
 
   const handlePaymentSubmit = () => {
@@ -29,7 +30,7 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
     // Simulate payment processing
     setTimeout(() => {
       setIsSubmitting(false);
-      onSuccess();
+      onSuccess(customerWhatsApp.trim() || undefined);
     }, 1500);
   };
 
@@ -92,6 +93,22 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
                 Online Gateway
               </span>
             </label>
+          </div>
+
+          <div className="mt-2 p-3 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-900/30">
+             <label className="block text-[10px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-2">
+               Customer WhatsApp Number (Optional)
+             </label>
+             <input
+                type="text"
+                placeholder="e.g. 9876543210"
+                value={customerWhatsApp}
+                onChange={(e) => setCustomerWhatsApp(e.target.value)}
+                className="w-full px-4 py-2 rounded-lg border border-blue-200 dark:border-blue-800 focus:border-blue-500 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white dark:bg-[#0a0f18]/30 transition-all"
+              />
+              <p className="text-[9px] text-blue-500 dark:text-blue-400 mt-1.5 font-medium">
+                Customer will receive an automated WhatsApp message when the service is marked as completed by Admin.
+              </p>
           </div>
 
           {paymentMethod === "gateway" && (
