@@ -226,7 +226,34 @@ export const AddressCorrectionAbove18: React.FC<
     setPaymentPhase("payment");
   };
 
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = async (customerWhatsApp?: string) => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+      const userStr = localStorage.getItem("user");
+      const user = userStr ? JSON.parse(userStr) : null;
+      
+      const reqBody = {
+        retailerId: user?.id || "unknown_retailer",
+        serviceId: "aadhaar_address_update",
+        serviceName: "Address Correction (above 18)",
+        cost: 100, // Hardcoded or imported from config
+        customerWhatsApp: customerWhatsApp || "",
+        walletType: "Main"
+      };
+
+      const res = await fetch(`${apiUrl}/services/request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(reqBody)
+      });
+
+      if (!res.ok) {
+        console.error("Failed to create service request");
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
     setPaymentPhase("success");
     setTimeout(() => {
       setPaymentPhase("form");
