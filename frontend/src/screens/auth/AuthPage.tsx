@@ -4,14 +4,10 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ShieldCheck,
-  Mail,
-  Lock,
   User,
-  Phone,
   CheckCircle2,
   AlertCircle,
   ArrowLeft,
-  ArrowRight,
   Leaf,
   Users,
 } from "lucide-react";
