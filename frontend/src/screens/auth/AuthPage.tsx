@@ -189,8 +189,9 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
           setMode("login");
         }, 1500);
       }
-    } catch (err: any) {
-      setErrors({ form: err.message });
+    } catch (err) {
+      const error = err as Error;
+      setErrors({ form: error.message || "An unexpected error occurred" });
     } finally {
       setIsSubmitting(false);
     }
