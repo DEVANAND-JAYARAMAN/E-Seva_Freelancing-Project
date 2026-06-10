@@ -211,7 +211,7 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
           setErrors({ email: err.message || "Login failed" });
         });
       } else if (mode === "register") {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://13.233.100.136:8080/api";
+        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || ""}/api`;
         const res = await fetch(`${apiUrl}/auth/signup`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
