@@ -1,0 +1,10 @@
+[build]
+  publish = "out"
+  command = "npm run build"
+
+[[redirects]]
+  from = "/api/*"
+  to = "http://13.233.100.136:8080/api/:splat"
+  status = 200
+  force = true
+
