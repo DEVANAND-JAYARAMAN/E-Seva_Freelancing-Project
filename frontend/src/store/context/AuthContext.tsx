@@ -58,18 +58,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   ) => {
     setIsLoading(true);
     try {
-      // Mock login validation and user retrieval
-      const mockUser: User = {
-        id: "usr_" + Math.floor(1000 + Math.random() * 9000),
-        name: name || "Thuruvan Dev",
-        email,
-        role: role || "admin",
-        walletBalance: 2895.0,
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://13.233.100.136:8080/api";
+      const res = await fetch(`${apiUrl}/auth/login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password: token }), // Frontend uses 'token' param as password in mock, so we pass it as password
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Login failed");
+      }
+
+      const data = await res.json();
+      
+      const realUser: User = {
+        id: data.user.id,
+        name: data.user.fullName,
+        email: data.user.email,
+        role: data.role,
+        walletBalance: 0, // We can update this later by fetching the wallet
       };
 
-      localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(mockUser));
-      setUser(mockUser);
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(realUser));
+      setUser(realUser);
     } catch (error) {
       console.error("Login failed:", error);
       throw error;

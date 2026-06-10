@@ -300,6 +300,50 @@ func createDistributorsTable(ctx context.Context) error {
 				},
 			},
 		},
+}
+
+func createAdminsTable(ctx context.Context) error {
+	return createTableIfNotExists(ctx, "Admins", &dynamodb.CreateTableInput{
+		TableName: aws.String("Admins"),
+		KeySchema: []types.KeySchemaElement{
+			{
+				AttributeName: aws.String("PK"),
+				KeyType:       types.KeyTypeHash,
+			},
+			{
+				AttributeName: aws.String("SK"),
+				KeyType:       types.KeyTypeRange,
+			},
+		},
+		AttributeDefinitions: []types.AttributeDefinition{
+			{
+				AttributeName: aws.String("PK"),
+				AttributeType: types.ScalarAttributeTypeS,
+			},
+			{
+				AttributeName: aws.String("SK"),
+				AttributeType: types.ScalarAttributeTypeS,
+			},
+			{
+				AttributeName: aws.String("email"),
+				AttributeType: types.ScalarAttributeTypeS,
+			},
+		},
+		BillingMode: types.BillingModePayPerRequest,
+		GlobalSecondaryIndexes: []types.GlobalSecondaryIndex{
+			{
+				IndexName: aws.String("GSI-Email"),
+				KeySchema: []types.KeySchemaElement{
+					{
+						AttributeName: aws.String("email"),
+						KeyType:       types.KeyTypeHash,
+					},
+				},
+				Projection: &types.Projection{
+					ProjectionType: types.ProjectionTypeAll,
+				},
+			},
+		},
 	})
 }
 
@@ -927,6 +971,7 @@ Tables Created:
 		{"Invoices", createInvoicesTable},
 		{"CRMCustomers", createCRMCustomersTable},
 		{"Notifications", createNotificationsTable},
+		{"Admins", createAdminsTable},
 	}
 
 	errors := 0

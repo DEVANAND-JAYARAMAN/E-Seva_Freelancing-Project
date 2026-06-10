@@ -9,9 +9,9 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { AppShell } from "../layouts/AppShell";
-import { useLocalStorage } from "../hooks/useLocalStorage";
-import { StatusStats } from "./StatusStats";
 import { StatusTable } from "./StatusTable";
+import { StatusStats } from "./StatusStats";
+import { useEffect } from "react";
 import { StatusDetailModal } from "./StatusDetailModal";
 import type { StatusTicket, TicketStatus } from "./types";
 
@@ -81,14 +81,10 @@ const seedTickets: StatusTicket[] = [
 ];
 
 export function StatusPage() {
-  const [tickets, setTickets] = useLocalStorage<StatusTicket[]>(
-    "thuruvan_status_tickets_list",
-    seedTickets,
-  );
+  const [tickets, setTickets] = useState<StatusTicket[]>([]);
+  const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<TicketStatus | "All">("All");
-  const [selectedTicket, setSelectedTicket] = useState<StatusTicket | null>(
-    null,
-  );
+  const [selectedTicket, setSelectedTicket] = useState<StatusTicket | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isModalEditMode, setIsModalEditMode] = useState(false);
 

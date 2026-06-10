@@ -1760,7 +1760,37 @@ export function ServicesPage() {
     setPaymentPhase("payment");
   };
 
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = async (customerWhatsApp?: string) => {
+    if (!selectedService) return;
+    
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api";
+      const userStr = localStorage.getItem("user");
+      const user = userStr ? JSON.parse(userStr) : null;
+      
+      const reqBody = {
+        retailerId: user?.id || "unknown_retailer",
+        serviceId: selectedService.id,
+        serviceName: selectedService.name,
+        cost: Number(selectedService.price?.retailer) || 0,
+        customerWhatsApp: customerWhatsApp || "",
+        walletType: "Main"
+      };
+
+      const res = await fetch(`${apiUrl}/services/request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(reqBody)
+      });
+
+      if (!res.ok) {
+        console.error("Failed to create service request");
+        // We'll proceed to success anyway for demo purposes if it fails, or you could show an error.
+      }
+    } catch (e) {
+      console.error(e);
+    }
+
     setPaymentPhase("success");
     setTimeout(() => {
       setIsModalOpen(false);

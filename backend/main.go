@@ -9,6 +9,7 @@ import (
 	"eservice-backend/crm"
 	"eservice-backend/db"
 	"eservice-backend/notification"
+	"eservice-backend/service"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -59,6 +60,18 @@ func main() {
 			notificationGroup.POST("/", notification.CreateNotification)
 			notificationGroup.GET("/", notification.GetNotifications)
 			notificationGroup.PATCH("/:id/read", notification.MarkAsRead)
+		}
+
+		serviceGroup := api.Group("/services")
+		{
+			serviceGroup.POST("/request", service.CreateServiceRequest)
+			serviceGroup.POST("/:id/status", service.UpdateServiceRequestStatus)
+			serviceGroup.GET("/requests", service.GetServiceRequests)
+		}
+
+		walletGroup := api.Group("/wallets")
+		{
+			walletGroup.GET("/transactions", service.GetWalletTransactions)
 		}
 	}
 
