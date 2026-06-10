@@ -14,6 +14,7 @@ import {
 import { InputField, SubmitButton } from "../services/form/FormFields";
 import { validateField, PATTERNS } from "../services/form/validators";
 import { useAuth } from "../../store/context/AuthContext";
+import { tempLogins } from "../../config/tempLogins";
 
 type AuthMode = "login" | "register" | "forgot";
 
@@ -153,8 +154,57 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
 
     try {
       if (mode === "login") {
-        // Use actual password for backend login
-        login(formData.email || "", formData.password || "").then(() => {
+        const emailKey = (formData.email || "").toLowerCase().trim();
+        const passVal = formData.password;
+
+        // Intercept mapped temporary credentials
+        if (tempLogins[emailKey]) {
+          const match = tempLogins[emailKey];
+          if (match.pass === passVal) {
+            await login(emailKey, "mock_token", match.role, match.name);
+            router.push("/dashboard");
+            return;
+          } else {
+            setErrors({ password: "Incorrect password for temporary account" });
+            setIsSubmitting(false);
+            return;
+          }
+        }
+
+        let loggedInRole: "admin" | "retailer" | "distributor" | "customer" =
+          "retailer";
+        let loggedInName = "Thuruvan Dev";
+        try {
+          const registeredUsersStr =
+            localStorage.getItem("e_seva_registered_users") || "[]";
+          const registeredUsers = JSON.parse(registeredUsersStr);
+          const matchedUser = registeredUsers.find(
+            (u: any) => u.email.toLowerCase() === formData.email?.toLowerCase(),
+          );
+          if (matchedUser) {
+            loggedInRole = matchedUser.role;
+            loggedInName = matchedUser.name;
+          } else {
+            // Default rules based on email string
+            if (formData.email?.toLowerCase().includes("admin")) {
+              loggedInRole = "admin";
+            } else if (formData.email?.toLowerCase().includes("distributor")) {
+              loggedInRole = "distributor";
+            }
+          }
+          if (formData.fullName) {
+            loggedInName = formData.fullName;
+          }
+        } catch (err) {
+          console.error("Failed to read user from localStorage mockup db", err);
+        }
+
+        login(
+          formData.email || "",
+          "mock_token",
+          loggedInRole,
+          loggedInName,
+        ).then(() => {
           router.push("/dashboard");
         }).catch(err => {
           console.error(err);
