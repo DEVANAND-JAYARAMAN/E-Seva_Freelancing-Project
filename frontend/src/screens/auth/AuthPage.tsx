@@ -4,14 +4,10 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ShieldCheck,
-  Mail,
-  Lock,
   User,
-  Phone,
   CheckCircle2,
   AlertCircle,
   ArrowLeft,
-  ArrowRight,
   Leaf,
   Users,
 } from "lucide-react";
@@ -210,46 +206,31 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
           loggedInName,
         ).then(() => {
           router.push("/dashboard");
+        }).catch(err => {
+          console.error(err);
+          setErrors({ email: err.message || "Login failed" });
         });
       } else if (mode === "register") {
-        // Save user to localStorage mock db
-        try {
-          const registeredUsersStr =
-            localStorage.getItem("e_seva_registered_users") || "[]";
-          const registeredUsers = JSON.parse(registeredUsersStr);
-          const existingUser = registeredUsers.find(
-            (u: any) => u.email.toLowerCase() === formData.email?.toLowerCase(),
-          );
-          if (!existingUser) {
-            registeredUsers.push({
-              email: formData.email,
-              role: formData.role || "retailer",
-              name: formData.fullName || "Thuruvan User",
-              mobile: formData.mobile || "",
-              password: formData.password || "password",
-            });
-            localStorage.setItem(
-              "e_seva_registered_users",
-              JSON.stringify(registeredUsers),
-            );
-          }
-        } catch (err) {
-          console.error("Failed to write to mockup db", err);
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://13.233.100.136:8080/api";
+        const res = await fetch(`${apiUrl}/auth/signup`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+            fullName: formData.fullName || "User",
+            mobile: formData.mobile || "0000000000",
+            role: formData.role || "retailer"
+          }),
+        });
+        
+        if (!res.ok) {
+           const errorData = await res.json();
+           throw new Error(errorData.error || "Signup failed");
         }
 
-        // Directly log in after registering
-        login(
-          formData.email || "",
-          "mock_token",
-          (formData.role || "retailer") as
-            | "admin"
-            | "retailer"
-            | "distributor"
-            | "customer",
-          formData.fullName || "Thuruvan User",
-        ).then(() => {
-          router.push("/dashboard");
-        });
+        setFormData({ role: "retailer" });
+        setMode("login");
       } else {
         setSuccessMessage("Reset instructions sent!");
         setTimeout(() => {
@@ -258,8 +239,9 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
           setMode("login");
         }, 1500);
       }
-    } catch (err: any) {
-      setErrors({ form: err.message });
+    } catch (err) {
+      const error = err as Error;
+      setErrors({ form: error.message || "An unexpected error occurred" });
     } finally {
       setIsSubmitting(false);
     }
