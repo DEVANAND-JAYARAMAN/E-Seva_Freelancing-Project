@@ -1,14 +1,29 @@
 import { useState } from "react";
-import { Search, Eye, AlertCircle, Phone, ArrowUpRight, HelpCircle } from "lucide-react";
+import {
+  Search,
+  Eye,
+  Edit2,
+  AlertCircle,
+  Phone,
+  ArrowUpRight,
+  HelpCircle,
+} from "lucide-react";
 import type { StatusTicket, TicketStatus } from "./types";
+import { useAuth } from "../store/context/AuthContext";
 
 type StatusTableProps = {
   tickets: StatusTicket[];
   activeFilter: TicketStatus | "All";
-  onSelectTicket: (ticket: StatusTicket) => void;
+  onSelectTicket: (ticket: StatusTicket, editMode?: boolean) => void;
 };
 
-export function StatusTable({ tickets, activeFilter, onSelectTicket }: StatusTableProps) {
+export function StatusTable({
+  tickets,
+  activeFilter,
+  onSelectTicket,
+}: StatusTableProps) {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [searchTerm, setSearchTerm] = useState("");
 
   const getStatusColor = (status: TicketStatus) => {
@@ -33,7 +48,8 @@ export function StatusTable({ tickets, activeFilter, onSelectTicket }: StatusTab
       ticket.transactionId.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ticket.retailerName.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus = activeFilter === "All" ? true : ticket.status === activeFilter;
+    const matchesStatus =
+      activeFilter === "All" ? true : ticket.status === activeFilter;
 
     return matchesSearch && matchesStatus;
   });
@@ -60,10 +76,13 @@ export function StatusTable({ tickets, activeFilter, onSelectTicket }: StatusTab
           <thead>
             <tr className="bg-slate-50/40 dark:bg-[#090d16]/30 border-b border-slate-50 dark:border-slate-900/30">
               <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                Service & Txn ID
+                Service
               </th>
               <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                Retailer / Merchant
+                Retailer / Distributor
+              </th>
+              <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                Role
               </th>
               <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-right">
                 Charge (INR)
@@ -74,9 +93,7 @@ export function StatusTable({ tickets, activeFilter, onSelectTicket }: StatusTab
               <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">
                 Status
               </th>
-              <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                Remarks / Info
-              </th>
+
               <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">
                 Action
               </th>
@@ -91,13 +108,8 @@ export function StatusTable({ tickets, activeFilter, onSelectTicket }: StatusTab
                 >
                   {/* Service & Txn ID */}
                   <td className="py-4 px-6">
-                    <div>
-                      <div className="font-bold text-slate-800 dark:text-slate-100 text-sm">
-                        {ticket.serviceName}
-                      </div>
-                      <div className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider font-mono">
-                        {ticket.transactionId}
-                      </div>
+                    <div className="font-bold text-slate-800 dark:text-slate-100 text-sm">
+                      {ticket.serviceName}
                     </div>
                   </td>
 
@@ -106,6 +118,19 @@ export function StatusTable({ tickets, activeFilter, onSelectTicket }: StatusTab
                     <div className="font-semibold text-slate-700 dark:text-slate-300 text-sm">
                       {ticket.retailerName}
                     </div>
+                  </td>
+
+                  {/* Role */}
+                  <td className="py-4 px-6">
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-[10px] font-extrabold tracking-wider uppercase ${
+                        ticket.userRole === "Distributor"
+                          ? "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300"
+                          : "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300"
+                      }`}
+                    >
+                      {ticket.userRole || "Retailer"}
+                    </span>
                   </td>
 
                   {/* Charge (INR) */}
@@ -124,27 +149,33 @@ export function StatusTable({ tickets, activeFilter, onSelectTicket }: StatusTab
                   <td className="py-4 px-6 text-center">
                     <span
                       className={`inline-flex items-center px-2.5 py-1 rounded-lg text-[10px] font-extrabold tracking-wider uppercase ${getStatusColor(
-                        ticket.status
+                        ticket.status,
                       )}`}
                     >
                       {ticket.status}
                     </span>
                   </td>
 
-                  {/* Remarks / Info */}
-                  <td className="py-4 px-6 text-xs font-semibold text-slate-500 dark:text-slate-400 max-w-[200px] truncate">
-                    {ticket.remarks || <span className="text-slate-300 dark:text-slate-700 font-mono">—</span>}
-                  </td>
-
                   {/* Action Button */}
                   <td className="py-4 px-6 text-center">
-                    <button
-                      onClick={() => onSelectTicket(ticket)}
-                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200/60 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-[#005c3a] dark:text-emerald-400 transition-colors"
-                      title="View & manage details"
-                    >
-                      <Eye size={13} />
-                    </button>
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => onSelectTicket(ticket, false)}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200/60 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-[#005c3a] dark:text-emerald-400 transition-colors"
+                        title="View ticket details"
+                      >
+                        <Eye size={13} />
+                      </button>
+                      {isAdmin && (
+                        <button
+                          onClick={() => onSelectTicket(ticket, true)}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200/60 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-[#005c3a] dark:text-emerald-400 transition-colors"
+                          title="Edit status ticket details"
+                        >
+                          <Edit2 size={13} />
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))
@@ -152,12 +183,16 @@ export function StatusTable({ tickets, activeFilter, onSelectTicket }: StatusTab
               <tr>
                 <td colSpan={7} className="py-12 text-center">
                   <div className="flex flex-col items-center justify-center space-y-2 text-slate-400">
-                    <AlertCircle size={24} className="text-slate-300 dark:text-slate-700" />
+                    <AlertCircle
+                      size={24}
+                      className="text-slate-300 dark:text-slate-700"
+                    />
                     <span className="text-xs font-bold uppercase tracking-wider">
                       No status tickets found
                     </span>
                     <span className="text-xs text-slate-400 dark:text-slate-500">
-                      Try selecting another status tab or check your query search.
+                      Try selecting another status tab or check your query
+                      search.
                     </span>
                   </div>
                 </td>

@@ -15,6 +15,7 @@ export interface StatusTicket {
   createdDate: string;
   lastUpdated: string;
   remarks?: string;
+  userRole?: "Retailer" | "Distributor";
 }
 
 export interface StatusStatsData {

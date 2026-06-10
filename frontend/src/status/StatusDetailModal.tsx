@@ -1,13 +1,7 @@
 import { useState, useEffect } from "react";
-import {
-  X,
-  Check,
-  AlertOctagon,
-  RefreshCw,
-  Loader,
-  MessageSquare,
-} from "lucide-react";
+import { X, Check, AlertOctagon, RefreshCw, Loader } from "lucide-react";
 import type { StatusTicket, TicketStatus } from "./types";
+import { useAuth } from "../store/context/AuthContext";
 
 type StatusDetailModalProps = {
   isOpen: boolean;
@@ -18,6 +12,7 @@ type StatusDetailModalProps = {
     newStatus: TicketStatus,
     remarks: string,
   ) => void;
+  isEditMode: boolean;
 };
 
 export function StatusDetailModal({
@@ -25,7 +20,11 @@ export function StatusDetailModal({
   onClose,
   ticket,
   onUpdateStatus,
+  isEditMode,
 }: StatusDetailModalProps) {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+  const showEditControls = isAdmin;
   const [remarks, setRemarks] = useState("");
   const [isCustomRemarks, setIsCustomRemarks] = useState(false);
 
@@ -130,75 +129,55 @@ export function StatusDetailModal({
             </div>
           </div>
 
-          {/* Current Remarks & Input */}
-          <div className="flex flex-col gap-2">
-            <label className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-              <MessageSquare size={13} />
-              <span>Internal Comments / Remarks</span>
-            </label>
-            <textarea
-              value={remarks}
-              onChange={(e) => {
-                setRemarks(e.target.value);
-                setIsCustomRemarks(true);
-              }}
-              placeholder="e.g. Approved after physical validation. / Resubmit with voter ID copy..."
-              rows={3}
-              className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/20 dark:focus:ring-emerald-500/20 text-xs font-semibold focus:border-[#005c3a] dark:focus:border-emerald-500 text-slate-800 dark:text-slate-200"
-            />
-          </div>
-
           {/* Workflow Status Actions */}
-          <div className="space-y-3 pt-2">
-            <span className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
-              Workflow Status Actions
-            </span>
-            <div className="grid grid-cols-2 gap-3">
-              {/* Approve */}
-              <button
-                type="button"
-                onClick={() => handleStatusClick("Approved")}
-                disabled={ticket.status === "Approved"}
-                className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800/10 disabled:text-emerald-500/40 text-white shadow-sm active:scale-[0.98]`}
-              >
-                <Check size={13} />
-                <span>Approve</span>
-              </button>
+          {showEditControls && (
+            <div className="space-y-3 pt-2">
+              <span className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
+                Workflow Status Actions
+              </span>
+              <div className="grid grid-cols-2 gap-3">
+                {/* Approve */}
+                <button
+                  type="button"
+                  onClick={() => handleStatusClick("Approved")}
+                  className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm active:scale-[0.98]`}
+                >
+                  <Check size={13} />
+                  <span>Approve</span>
+                </button>
 
-              {/* Reject */}
-              <button
-                type="button"
-                onClick={() => handleStatusClick("Rejected")}
-                disabled={ticket.status === "Rejected"}
-                className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-rose-600 hover:bg-rose-500 disabled:bg-rose-800/10 disabled:text-rose-500/40 text-white shadow-sm active:scale-[0.98]`}
-              >
-                <AlertOctagon size={13} />
-                <span>Reject</span>
-              </button>
+                {/* Reject */}
+                <button
+                  type="button"
+                  onClick={() => handleStatusClick("Rejected")}
+                  className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-rose-600 hover:bg-rose-500 text-white shadow-sm active:scale-[0.98]`}
+                >
+                  <AlertOctagon size={13} />
+                  <span>Reject</span>
+                </button>
 
-              {/* Resubmit */}
-              <button
-                type="button"
-                onClick={() => handleStatusClick("Resubmit")}
-                disabled={ticket.status === "Resubmit"}
-                className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-violet-600 hover:bg-violet-500 disabled:bg-violet-800/10 disabled:text-violet-500/40 text-white shadow-sm active:scale-[0.98]`}
-              >
-                <RefreshCw size={13} />
-                <span>Resubmit</span>
-              </button>
+                {/* Resubmit */}
+                <button
+                  type="button"
+                  onClick={() => handleStatusClick("Resubmit")}
+                  className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-violet-600 hover:bg-violet-500 text-white shadow-sm active:scale-[0.98]`}
+                >
+                  <RefreshCw size={13} />
+                  <span>Resubmit</span>
+                </button>
 
-              {/* Process */}
-              <button
-                type="button"
-                onClick={() => handleStatusClick("Processing")}
-                disabled={ticket.status === "Processing"}
-                className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-sky-600 hover:bg-sky-500 disabled:bg-sky-800/10 disabled:text-sky-500/40 text-white shadow-sm active:scale-[0.98]`}
-              >
-                <Loader size={13} />
-                <span>Process</span>
-              </button>
+                {/* Process */}
+                <button
+                  type="button"
+                  onClick={() => handleStatusClick("Processing")}
+                  className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-sky-600 hover:bg-sky-500 text-white shadow-sm active:scale-[0.98]`}
+                >
+                  <Loader size={13} />
+                  <span>Process</span>
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

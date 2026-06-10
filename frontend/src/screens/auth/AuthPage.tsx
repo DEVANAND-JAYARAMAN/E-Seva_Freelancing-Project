@@ -18,6 +18,7 @@ import {
 import { InputField, SubmitButton } from "../services/form/FormFields";
 import { validateField, PATTERNS } from "../services/form/validators";
 import { useAuth } from "../../store/context/AuthContext";
+import { tempLogins } from "../../config/tempLogins";
 
 type AuthMode = "login" | "register" | "forgot";
 
@@ -157,6 +158,23 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
 
     try {
       if (mode === "login") {
+        const emailKey = (formData.email || "").toLowerCase().trim();
+        const passVal = formData.password;
+
+        // Intercept mapped temporary credentials
+        if (tempLogins[emailKey]) {
+          const match = tempLogins[emailKey];
+          if (match.pass === passVal) {
+            await login(emailKey, "mock_token", match.role, match.name);
+            router.push("/dashboard");
+            return;
+          } else {
+            setErrors({ password: "Incorrect password for temporary account" });
+            setIsSubmitting(false);
+            return;
+          }
+        }
+
         let loggedInRole: "admin" | "retailer" | "distributor" | "customer" =
           "retailer";
         let loggedInName = "Thuruvan Dev";
