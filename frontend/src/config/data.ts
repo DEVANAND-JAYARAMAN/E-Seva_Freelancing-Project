@@ -44,7 +44,7 @@ export type ServiceItem = {
 
 export const navItems: NavItem[] = [
   { label: "Dashboard", href: "/dashboard", icon: Home },
-  { label: "Status", href: "/status", icon: Activity },
+  { label: "Services Status", href: "/status", icon: Activity },
   { label: "Service Payment", href: "/payments", icon: CreditCard },
   { label: "PDF Services", href: "/pdf-service", icon: FileText },
   { label: "Our Service", href: "/services", icon: Cpu },
