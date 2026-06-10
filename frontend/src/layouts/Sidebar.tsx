@@ -4,6 +4,9 @@ import { X, Leaf } from "lucide-react";
 import Link from "next/link";
 import { navItems } from "../config/data";
 
+import { usePathname } from "next/navigation";
+import { useAuth } from "../store/context/AuthContext";
+
 type SidebarProps = {
   activePage: string;
   isOpen: boolean;
@@ -11,6 +14,26 @@ type SidebarProps = {
 };
 
 export function Sidebar({ activePage, isOpen, onClose }: SidebarProps) {
+  const pathname = usePathname();
+  const { user } = useAuth();
+
+  const isRetailerOrDistributor =
+    pathname.includes("dashboard2") ||
+    pathname.includes("dashboard3") ||
+    pathname.includes("retailer") ||
+    pathname.includes("distributor") ||
+    user?.role === "retailer" ||
+    user?.role === "distributor";
+
+  const allowedLabels = [
+    "Dashboard",
+    "Services Status",
+    "Our Service",
+    "Wallet",
+  ];
+  const displayItems = isRetailerOrDistributor
+    ? navItems.filter((item) => allowedLabels.includes(item.label))
+    : navItems;
   return (
     <>
       {/* Mobile Backdrop Overlay */}
@@ -46,11 +69,13 @@ export function Sidebar({ activePage, isOpen, onClose }: SidebarProps) {
           </button>
         </div>
 
-        {/* Navigation Section */}
         <nav className="flex-1 space-y-1.5 px-4 py-6 overflow-y-auto no-scrollbar">
-          {navItems.map((item) => {
+          {displayItems.map((item) => {
             const Icon = item.icon;
-            const isActive = item.label === activePage;
+            const isActive =
+              item.label === activePage ||
+              (item.label === "Services Status" && activePage === "Status") ||
+              (item.label === "PDF Services" && activePage === "PDF Service");
 
             return (
               <Link
@@ -70,7 +95,13 @@ export function Sidebar({ activePage, isOpen, onClose }: SidebarProps) {
                       : "text-slate-400 dark:text-slate-500 group-hover:text-slate-600 dark:group-hover:text-slate-300"
                   }`}
                 />
-                <span className="transition-colors">{item.label}</span>
+                <span className="transition-colors">
+                  {isRetailerOrDistributor
+                    ? item.label === "Our Service"
+                      ? "Our Services"
+                      : item.label
+                    : item.label}
+                </span>
               </Link>
             );
           })}
@@ -79,4 +110,3 @@ export function Sidebar({ activePage, isOpen, onClose }: SidebarProps) {
     </>
   );
 }
-

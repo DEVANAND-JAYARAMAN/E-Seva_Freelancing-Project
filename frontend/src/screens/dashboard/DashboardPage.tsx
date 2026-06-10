@@ -9,11 +9,16 @@ import { WalletSummary } from "./WalletSummary";
 import { useAuth } from "../../store/context/AuthContext";
 import { DashboardPage2 } from "./DashboardPage2";
 
-export function DashboardPage() {
+export function DashboardPage({
+  forceRole,
+}: {
+  forceRole?: "admin" | "retailer" | "distributor";
+}) {
   const { user } = useAuth();
+  const role = forceRole || user?.role;
 
-  if (user?.role === "retailer" || user?.role === "distributor") {
-    return <DashboardPage2 />;
+  if (role === "retailer" || role === "distributor") {
+    return <DashboardPage2 forceRole={role} />;
   }
 
   return (

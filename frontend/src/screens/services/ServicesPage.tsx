@@ -14,6 +14,8 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
+import { useAuth } from "../../store/context/AuthContext";
+import { useLocalStorage } from "../../hooks/useLocalStorage";
 import { ServiceCard } from "./ServiceCard";
 import {
   ServicePaymentScreen,
@@ -34,6 +36,7 @@ export interface EService {
     retailer: string | number;
     distributor: string | number;
   };
+  customImage?: string;
 }
 
 // Reusable custom vectors designed to look like "real images related to the heading"
@@ -1315,6 +1318,13 @@ function renderServiceImage(id: string, className = "w-14 h-14") {
 
 export function ServicesPage() {
   const router = useRouter();
+  const { user } = useAuth();
+  const [permissions, setPermissions] = useLocalStorage<
+    Record<string, string[]>
+  >("thuruvan_service_permissions_matrix", {});
+  const [editingService, setEditingService] = useState<EService | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [isManageMode, setIsManageMode] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedService, setSelectedService] = useState<EService | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -1325,9 +1335,46 @@ export function ServicesPage() {
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // List of all 19 services as requested in the screenshot
-  const servicesList = useMemo<EService[]>(
-    () => [
+  const handleSaveService = (
+    updatedName: string,
+    customImage: string | null,
+  ) => {
+    if (!editingService) return;
+    setServicesList((prev) =>
+      prev.map((s) =>
+        s.id === editingService.id
+          ? {
+              ...s,
+              name: updatedName,
+              customImage: customImage || s.customImage,
+            }
+          : s,
+      ),
+    );
+    setEditModalOpen(false);
+    setEditingService(null);
+  };
+
+  const togglePermission = (
+    serviceId: string,
+    role: "retailer" | "distributor",
+  ) => {
+    setPermissions((prev) => {
+      const current = prev[serviceId] || ["retailer", "distributor"];
+      const updated = current.includes(role)
+        ? current.filter((r) => r !== role)
+        : [...current, role];
+      return {
+        ...prev,
+        [serviceId]: updated,
+      };
+    });
+  };
+
+  // List of all 19 services customizer from localStorage
+  const [servicesList, setServicesList] = useLocalStorage<EService[]>(
+    "thuruvan_services_custom_list_v5",
+    [
       // Top Services Group
       {
         id: "pdf-services",
@@ -1549,22 +1596,31 @@ export function ServicesPage() {
           "bookingDate",
           "customerMobile",
         ],
-        price: { retailer: 150, distributor: 150 },
       },
     ],
-    [],
   );
+
+  // Filter list based on role permissions from localStorage matrix
+  const allowedServicesList = useMemo(() => {
+    if (!user || user.role === "admin") return servicesList;
+    return servicesList.filter((s) => {
+      const allowedRoles = permissions[s.id];
+      // Default to allowed if no permissions entry exists yet
+      if (!allowedRoles) return true;
+      return allowedRoles.includes(user.role);
+    });
+  }, [servicesList, user, permissions]);
 
   // Live filter based on search inputs
   const filteredServices = useMemo(() => {
-    return servicesList.filter((s) => {
+    return allowedServicesList.filter((s) => {
       const matchName = s.name.toLowerCase().includes(searchTerm.toLowerCase());
       const matchSub = s.subName
         ?.toLowerCase()
         .includes(searchTerm.toLowerCase());
       return matchName || matchSub;
     });
-  }, [searchTerm, servicesList]);
+  }, [searchTerm, allowedServicesList]);
 
   const topServices = useMemo(
     () => filteredServices.filter((s) => s.category === "Top"),
@@ -1725,6 +1781,23 @@ export function ServicesPage() {
           </div>
 
           <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto">
+            {/* Show/Hide Toggle Button for Admin */}
+            {user?.role === "admin" && (
+              <button
+                type="button"
+                onClick={() => setIsManageMode(!isManageMode)}
+                className={`inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all select-none border border-slate-200 dark:border-slate-800 whitespace-nowrap ${
+                  isManageMode
+                    ? "bg-amber-500 hover:bg-amber-600 text-white border-transparent"
+                    : "bg-white dark:bg-transparent text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-900"
+                }`}
+              >
+                <span>
+                  {isManageMode ? "Exit Manage Mode" : "Show/Hide Services"}
+                </span>
+              </button>
+            )}
+
             {/* Search Bar inside Breadcrumb */}
             <div className="relative max-w-xs w-full">
               <Search
@@ -1759,10 +1832,28 @@ export function ServicesPage() {
                   id={service.id}
                   name={service.name}
                   subName={service.subName}
-                  icon={renderServiceImage(service.id, "w-12 h-12")}
+                  icon={
+                    service.customImage ? (
+                      <img
+                        src={service.customImage}
+                        className="w-14 h-14 object-contain rounded-xl"
+                      />
+                    ) : (
+                      renderServiceImage(service.id, "w-14 h-14")
+                    )
+                  }
                   onClick={() => handleServiceClick(service)}
-                  layout="horizontal"
                   price={service.price}
+                  isManageMode={isManageMode}
+                  allowedRoles={
+                    permissions[service.id] || ["retailer", "distributor"]
+                  }
+                  onToggleRole={(role) => togglePermission(service.id, role)}
+                  isAdmin={user?.role === "admin"}
+                  onEditClick={() => {
+                    setEditingService(service);
+                    setEditModalOpen(true);
+                  }}
                 />
               ))}
             </div>
@@ -1786,9 +1877,28 @@ export function ServicesPage() {
                   id={service.id}
                   name={service.name}
                   subName={service.subName}
-                  icon={renderServiceImage(service.id, "w-14 h-14")}
+                  icon={
+                    service.customImage ? (
+                      <img
+                        src={service.customImage}
+                        className="w-14 h-14 object-contain rounded-xl"
+                      />
+                    ) : (
+                      renderServiceImage(service.id, "w-14 h-14")
+                    )
+                  }
                   onClick={() => handleServiceClick(service)}
                   price={service.price}
+                  isManageMode={isManageMode}
+                  allowedRoles={
+                    permissions[service.id] || ["retailer", "distributor"]
+                  }
+                  onToggleRole={(role) => togglePermission(service.id, role)}
+                  isAdmin={user?.role === "admin"}
+                  onEditClick={() => {
+                    setEditingService(service);
+                    setEditModalOpen(true);
+                  }}
                 />
               ))}
             </div>
@@ -2071,7 +2181,135 @@ export function ServicesPage() {
             </div>
           </div>
         )}
+
+        {/* EDIT SERVICE DETAILS MODAL */}
+        {editModalOpen && editingService && (
+          <EditServiceModal
+            isOpen={editModalOpen}
+            onClose={() => {
+              setEditModalOpen(false);
+              setEditingService(null);
+            }}
+            service={editingService}
+            onSave={handleSaveService}
+          />
+        )}
       </section>
     </AppShell>
+  );
+}
+
+type EditServiceModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  service: EService;
+  onSave: (name: string, customImage: string | null) => void;
+};
+
+function EditServiceModal({
+  isOpen,
+  onClose,
+  service,
+  onSave,
+}: EditServiceModalProps) {
+  const [name, setName] = useState(service.name);
+  const [customImage, setCustomImage] = useState<string | null>(
+    service.customImage || null,
+  );
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCustomImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div className="relative w-full max-w-md bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl shadow-xl overflow-hidden p-6 flex flex-col gap-5 z-10 animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between border-b border-slate-50 dark:border-slate-900/50 pb-4">
+          <h4 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wide">
+            Edit Card Details
+          </h4>
+          <button
+            onClick={onClose}
+            className="p-1 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+          >
+            <Plus size={14} className="rotate-45" />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider">
+              Service Name
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider">
+              Service Image / Icon
+            </label>
+            <div className="flex items-center gap-4">
+              <div className="h-16 w-16 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center overflow-hidden shrink-0">
+                {customImage ? (
+                  <img
+                    src={customImage}
+                    className="h-full w-full object-contain"
+                  />
+                ) : (
+                  <div className="text-[10px] font-bold text-slate-350">
+                    Default
+                  </div>
+                )}
+              </div>
+              <label className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-4 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all">
+                <Upload size={16} className="text-slate-400" />
+                <span className="text-[10px] font-bold text-slate-400 mt-1">
+                  Upload Image
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 border-t border-slate-50 dark:border-slate-900/50 pt-4 mt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 px-4 py-2.5 border border-slate-200 dark:border-slate-855 rounded-xl text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900/40 text-xs font-bold uppercase tracking-wider transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => onSave(name, customImage)}
+            className="flex-1 px-4 py-2.5 rounded-xl bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] dark:hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider shadow-sm transition-all"
+          >
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

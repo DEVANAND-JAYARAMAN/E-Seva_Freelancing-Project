@@ -27,6 +27,7 @@ const seedTickets: StatusTicket[] = [
     createdDate: "2026-05-22",
     lastUpdated: "2026-05-22",
     remarks: "Request approved and processed successfully.",
+    userRole: "Retailer",
   },
   {
     id: "t-2",
@@ -38,6 +39,7 @@ const seedTickets: StatusTicket[] = [
     createdDate: "2026-05-22",
     lastUpdated: "2026-05-22",
     remarks: "Awaiting physical scan validation of PAN application form.",
+    userRole: "Distributor",
   },
   {
     id: "t-3",
@@ -50,6 +52,7 @@ const seedTickets: StatusTicket[] = [
     lastUpdated: "2026-05-22",
     remarks:
       "Incomplete profile. Please upload a clear photo copy of address proof.",
+    userRole: "Retailer",
   },
   {
     id: "t-4",
@@ -61,6 +64,7 @@ const seedTickets: StatusTicket[] = [
     createdDate: "2026-05-22",
     lastUpdated: "2026-05-22",
     remarks: "Sent to local Tahsildar department for verifying signatures.",
+    userRole: "Retailer",
   },
   {
     id: "t-5",
@@ -72,6 +76,7 @@ const seedTickets: StatusTicket[] = [
     createdDate: "2026-05-20",
     lastUpdated: "2026-05-21",
     remarks: "Rejected due to mismatch in bank details and transaction log.",
+    userRole: "Distributor",
   },
 ];
 
@@ -85,6 +90,7 @@ export function StatusPage() {
     null,
   );
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isModalEditMode, setIsModalEditMode] = useState(false);
 
   // Update status and remarks inside LocalStorage
   const handleUpdateStatus = (
@@ -96,28 +102,28 @@ export function StatusPage() {
       prev.map((ticket) =>
         ticket.id === id
           ? {
-            ...ticket,
-            status: newStatus,
-            remarks,
-            lastUpdated: new Date().toISOString().split("T")[0],
-          }
+              ...ticket,
+              status: newStatus,
+              remarks,
+              lastUpdated: new Date().toISOString().split("T")[0],
+            }
           : ticket,
       ),
     );
   };
 
-  const handleSelectTicket = (ticket: StatusTicket) => {
+  const handleSelectTicket = (ticket: StatusTicket, editMode = false) => {
     setSelectedTicket(ticket);
+    setIsModalEditMode(editMode);
     setIsDetailOpen(true);
   };
 
   return (
-    <AppShell activePage="Status">
+    <AppShell activePage="Services Status">
       <section className="flex flex-col gap-8 w-full">
         {/* Header Block */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-50 dark:border-slate-900/30 pb-6">
           <div className="space-y-1.5">
-
             <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
               Service Status Operations
             </h2>
@@ -168,6 +174,7 @@ export function StatusPage() {
           onClose={() => setIsDetailOpen(false)}
           ticket={selectedTicket}
           onUpdateStatus={handleUpdateStatus}
+          isEditMode={isModalEditMode}
         />
       </section>
     </AppShell>
