@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   ) => {
     setIsLoading(true);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://13.233.100.136:8080/api";
+      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || ""}/api`;
       const res = await fetch(`${apiUrl}/auth/login`, {
         method: "POST",
         headers: {
