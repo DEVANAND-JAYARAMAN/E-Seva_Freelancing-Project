@@ -39,7 +39,7 @@ export function TopBar({ onMenuClick }: TopBarProps) {
     if (!user) return;
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || ""}/api/notifications?userId=${user.id}`,
+        `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/\/api$/, "")}/api/notifications?userId=${user.id}`,
       );
       if (res.ok) {
         const data = await res.json();
@@ -58,7 +58,7 @@ export function TopBar({ onMenuClick }: TopBarProps) {
     if (!user) return;
     try {
       await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || ""}/api/notifications/${id}/read?userId=${user.id}&createdAt=${createdAt}`,
+        `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/\/api$/, "")}/api/notifications/${id}/read?userId=${user.id}&createdAt=${createdAt}`,
         {
           method: "PATCH",
         },
