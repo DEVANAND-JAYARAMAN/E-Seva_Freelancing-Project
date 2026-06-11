@@ -91,7 +91,7 @@ export function StatusPage() {
   // Fetch real data from backend
   const fetchTickets = async () => {
     try {
-      const res = await fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/\/api$/, "")}/api/services/requests`);
+      const res = await fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/requests`);
       if (res.ok) {
         const data = await res.json();
         // map backend model to StatusTicket
@@ -126,7 +126,7 @@ export function StatusPage() {
     remarks: string,
   ) => {
     try {
-      const res = await fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/\/api$/, "")}/api/services/${id}/status`, {
+      const res = await fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/${id}/status`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus, adminRemarks: remarks }),

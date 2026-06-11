@@ -228,7 +228,7 @@ export const AddressCorrectionAbove18: React.FC<
 
   const handlePaymentSuccess = async (customerWhatsApp?: string) => {
     try {
-      const apiUrl = `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/\/api$/, "")}/api`;
+      const apiUrl = `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api`;
       const userStr = localStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : null;
       
