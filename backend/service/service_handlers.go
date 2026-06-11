@@ -521,7 +521,8 @@ func RechargeGateway(c *gin.Context) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		c.JSON(http.StatusBadGateway, gin.H{"error": fmt.Sprintf("Payment gateway returned status %d", resp.StatusCode)})
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("Payment gateway error (%d): %s", resp.StatusCode, string(bodyBytes))})
 		return
 	}
 
