@@ -58,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   ) => {
     setIsLoading(true);
     try {
-      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || ""}/api`;
+      const apiUrl = `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/\/api$/, "")}/api`;
       const res = await fetch(`${apiUrl}/auth/login`, {
         method: "POST",
         headers: {

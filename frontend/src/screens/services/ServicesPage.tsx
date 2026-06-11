@@ -1764,7 +1764,7 @@ export function ServicesPage() {
     if (!selectedService) return;
     
     try {
-      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || ""}/api`;
+      const apiUrl = `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/\/api$/, "")}/api`;
       const userStr = localStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : null;
       
