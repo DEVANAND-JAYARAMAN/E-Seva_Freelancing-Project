@@ -79,6 +79,7 @@ func main() {
 			walletV1 := v1Group.Group("/wallet")
 			{
 				walletV1.POST("/recharge/gateway", service.RechargeGateway)
+				walletV1.POST("/recharge/webhook", service.RechargeWebhook)
 			}
 		}
 	}

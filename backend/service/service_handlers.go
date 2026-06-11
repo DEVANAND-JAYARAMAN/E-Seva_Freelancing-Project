@@ -443,7 +443,28 @@ type RechargeGatewayReq struct {
 	RedirectURL    string  `json:"redirect_url"`
 }
 
-// RechargeGateway creates a mock payment gateway session for Mugavai
+type MugavaiCreateOrderReq struct {
+	Amount         float64 `json:"amount"`
+	CustomerMobile string  `json:"customer_mobile"`
+	CustomerEmail  string  `json:"customer_email"`
+	OrderID        string  `json:"order_id"`
+	RedirectURL    string  `json:"redirect_url"`
+}
+
+type MugavaiCreateOrderRes struct {
+	Status  string `json:"status"`
+	Message string `json:"message"`
+	Data    struct {
+		Amount         interface{} `json:"amount"`
+		CustomerMobile string      `json:"customer_mobile"`
+		CustomerEmail  string      `json:"customer_email"`
+		OrderID        string      `json:"order_id"`
+		PaymentURL     string      `json:"payment_url"`
+		QRImage        string      `json:"qr_image"`
+	} `json:"data"`
+}
+
+// RechargeGateway creates a payment gateway session using Mugavai API
 func RechargeGateway(c *gin.Context) {
 	var req RechargeGatewayReq
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -451,19 +472,103 @@ func RechargeGateway(c *gin.Context) {
 		return
 	}
 
-	// Generate a mock order ID
-	orderId := generateId("MUG")
+	// Generate an order ID
+	orderId := generateId("ORD")
 
-	// Create a dummy payment URL (just redirecting back to the site with a mock query param)
-	// When this URL opens in a popup, the user can just close it to simulate payment completion.
-	paymentUrl := req.RedirectURL + "?mock_payment_session=" + orderId
+	// Prepare request body for Mugavai API
+	mugavaiReqBody := MugavaiCreateOrderReq{
+		Amount:         req.Amount,
+		CustomerMobile: req.CustomerMobile,
+		CustomerEmail:  req.CustomerEmail,
+		OrderID:        orderId,
+		RedirectURL:    req.RedirectURL,
+	}
+
+	jsonValue, err := json.Marshal(mugavaiReqBody)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to marshal request"})
+		return
+	}
+
+	// Read credentials from env or fallback to provided ones
+	username := os.Getenv("MUGAVAI_USERNAME")
+	if username == "" {
+		username = "6380616163"
+	}
+	apiKey := os.Getenv("MUGAVAI_API_KEY")
+	if apiKey == "" {
+		apiKey = "enCJ5EKHzcSRqBP8"
+	}
+
+	apiURL := "https://mugavaipaymentgetway.in/api/v1/create_order.php"
+	
+	httpReq, err := http.NewRequest("POST", apiURL, bytes.NewBuffer(jsonValue))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create request"})
+		return
+	}
+
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("x-client-username", username)
+	httpReq.Header.Set("x-client-apikey", apiKey)
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(httpReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Payment gateway timeout or unreachable"})
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		c.JSON(http.StatusBadGateway, gin.H{"error": fmt.Sprintf("Payment gateway returned status %d", resp.StatusCode)})
+		return
+	}
+
+	var mugavaiRes MugavaiCreateOrderRes
+	if err := json.NewDecoder(resp.Body).Decode(&mugavaiRes); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode payment gateway response"})
+		return
+	}
+
+	if mugavaiRes.Status != "success" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": mugavaiRes.Message})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Payment gateway initialized successfully",
 		"data": map[string]interface{}{
-			"payment_url": paymentUrl,
-			"order_id":    orderId,
+			"payment_url": mugavaiRes.Data.PaymentURL,
+			"order_id":    mugavaiRes.Data.OrderID,
 		},
 	})
 }
 
+type RechargeWebhookReq struct {
+	OrderID string  `form:"order_id" json:"order_id"`
+	Status  string  `form:"status" json:"status"`
+	Amount  float64 `form:"amount" json:"amount"`
+	UTR     string  `form:"utr" json:"utr"`
+}
+
+// RechargeWebhook handles the callback from Mugavai payment gateway
+func RechargeWebhook(c *gin.Context) {
+	var req RechargeWebhookReq
+	if err := c.ShouldBind(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// For a real app, you'd look up the user/wallet associated with the order_id,
+	// verify the amount, and then update their balance in the "Wallets" DynamoDB table.
+	log.Printf("Received payment webhook: Order=%s Status=%s Amount=%.2f UTR=%s\n", req.OrderID, req.Status, req.Amount, req.UTR)
+
+	if req.Status == "SUCCESS" {
+		// Example: Mark wallet transaction as successful
+		log.Println("Payment was successful. You should update the wallet balance here.")
+	}
+
+	// Just return success so the gateway knows we received it
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Webhook processed"})
+}
