@@ -189,7 +189,7 @@ export function WalletPage() {
 
         // Calling our backend API instead of exposing Mugavai credentials
         const baseUrl =
-          (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/api$/, "");
+          (process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "");
         const response = await fetch(
           `${baseUrl}/api/v1/wallet/recharge/gateway`,
           {
