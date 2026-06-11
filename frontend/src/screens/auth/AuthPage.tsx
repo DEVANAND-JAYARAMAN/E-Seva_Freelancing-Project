@@ -201,7 +201,7 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
 
         login(
           formData.email || "",
-          "mock_token",
+          formData.password || "",
           loggedInRole,
           loggedInName,
         ).then(() => {
