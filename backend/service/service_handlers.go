@@ -435,3 +435,35 @@ func GetWalletTransactions(c *gin.Context) {
 
 	c.JSON(http.StatusOK, transactions)
 }
+
+type RechargeGatewayReq struct {
+	Amount         float64 `json:"amount"`
+	CustomerMobile string  `json:"customer_mobile"`
+	CustomerEmail  string  `json:"customer_email"`
+	RedirectURL    string  `json:"redirect_url"`
+}
+
+// RechargeGateway creates a mock payment gateway session for Mugavai
+func RechargeGateway(c *gin.Context) {
+	var req RechargeGatewayReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Generate a mock order ID
+	orderId := generateId("MUG")
+
+	// Create a dummy payment URL (just redirecting back to the site with a mock query param)
+	// When this URL opens in a popup, the user can just close it to simulate payment completion.
+	paymentUrl := req.RedirectURL + "?mock_payment_session=" + orderId
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Payment gateway initialized successfully",
+		"data": map[string]interface{}{
+			"payment_url": paymentUrl,
+			"order_id":    orderId,
+		},
+	})
+}
+
