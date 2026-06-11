@@ -148,9 +148,16 @@ export function WalletPage() {
       return;
     }
 
-    if (paymentMode === "UPI" && !upiId.trim()) {
-      setFormError("Please enter a valid UPI ID.");
-      return;
+    if (paymentMode === "UPI") {
+      if (!upiId.trim()) {
+        setFormError("Please enter a UPI ID.");
+        return;
+      }
+      const upiRegex = /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/;
+      if (!upiRegex.test(upiId.trim())) {
+        setFormError("Please enter a valid UPI ID (e.g. yourname@bank).");
+        return;
+      }
     }
 
     if (
