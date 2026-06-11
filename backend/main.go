@@ -73,6 +73,14 @@ func main() {
 		{
 			walletGroup.GET("/transactions", service.GetWalletTransactions)
 		}
+
+		v1Group := api.Group("/v1")
+		{
+			walletV1 := v1Group.Group("/wallet")
+			{
+				walletV1.POST("/recharge/gateway", service.RechargeGateway)
+			}
+		}
 	}
 
 	port := os.Getenv("PORT")
