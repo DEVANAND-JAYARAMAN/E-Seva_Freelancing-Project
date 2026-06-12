@@ -52,6 +52,7 @@ jobs:
             cat > .env <<EOF
             AWS_REGION=ap-south-1
             PORT=${{ secrets.PORT }}
+            MUGAVAI_API_KEY=${{ secrets.MUGAVAI_API_KEY }}
             EOF
             go build -o eservice-backend .
             sudo systemctl restart eservice-backend
