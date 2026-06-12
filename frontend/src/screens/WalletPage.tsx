@@ -198,7 +198,7 @@ export function WalletPage() {
         const baseUrl =
           (process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "");
         const response = await fetch(
-          `${baseUrl}/api/v1/wallet/recharge/gateway`,
+          `${baseUrl}/api/wallet/recharge/gateway`,
           {
             method: "POST",
             headers: {

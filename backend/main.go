@@ -10,6 +10,7 @@ import (
 	"eservice-backend/db"
 	"eservice-backend/notification"
 	"eservice-backend/service"
+	"eservice-backend/wallet"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -69,9 +70,11 @@ func main() {
 			serviceGroup.GET("/requests", service.GetServiceRequests)
 		}
 
-		walletGroup := api.Group("/wallets")
+		walletGroup := api.Group("/wallet")
 		{
 			walletGroup.GET("/transactions", service.GetWalletTransactions)
+			walletGroup.POST("/recharge/gateway", wallet.InitiateGatewayRecharge)
+			walletGroup.POST("/payment/callback", wallet.HandlePaymentCallback)
 		}
 
 		v1Group := api.Group("/v1")

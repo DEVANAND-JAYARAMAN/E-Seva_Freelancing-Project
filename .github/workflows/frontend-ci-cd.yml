@@ -4,13 +4,13 @@ on:
   push:
     branches: [main]
     paths:
-      - 'app/**'
-      - 'src/**'
-      - 'public/**'
-      - 'package*.json'
-      - 'next.config.mjs'
-      - 'tailwind.config.js'
-      - 'tsconfig.json'
+      - 'frontend/app/**'
+      - 'frontend/src/**'
+      - 'frontend/public/**'
+      - 'frontend/package*.json'
+      - 'frontend/next.config.mjs'
+      - 'frontend/tailwind.config.js'
+      - 'frontend/tsconfig.json'
       - '.github/workflows/frontend-ci-cd.yml'
   workflow_dispatch:
 
