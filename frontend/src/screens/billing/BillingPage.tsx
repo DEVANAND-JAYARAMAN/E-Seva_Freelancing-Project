@@ -203,14 +203,6 @@ export function BillingPage() {
               outstanding subscription dues, and track bank UTR allocations.
             </p>
           </div>
-
-          <button
-            onClick={() => setIsFormOpen(true)}
-            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] dark:hover:bg-emerald-500 text-white font-extrabold text-sm shadow-sm active:scale-[0.98] transition-all duration-200"
-          >
-            <Plus size={16} />
-            <span>Create Invoice</span>
-          </button>
         </div>
 
         {/* Financial Metrics */}
