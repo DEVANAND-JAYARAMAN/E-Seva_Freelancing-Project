@@ -15,6 +15,7 @@ import {
   Filter,
   Download,
   RefreshCw,
+  ChevronDown,
 } from "lucide-react";
 import { AppShell } from "../layouts/AppShell";
 import { useLocalStorage } from "../hooks/useLocalStorage";
@@ -67,6 +68,8 @@ export function WalletPage() {
   >("UPI");
   const [utrNumber, setUtrNumber] = useState("");
   const [upiId, setUpiId] = useState("");
+  const [mobileNumber, setMobileNumber] = useState("");
+  const [upiOption, setUpiOption] = useState<"id" | "qr">("id");
   const [gatewayProcessing, setGatewayProcessing] = useState(false);
   const [remarks, setRemarks] = useState("");
   const [formError, setFormError] = useState("");
@@ -129,6 +132,8 @@ export function WalletPage() {
     setAmount("");
     setUtrNumber("");
     setUpiId("");
+    setMobileNumber("");
+    setUpiOption("id");
     setGatewayProcessing(false);
     setRemarks("");
     setFormError("");
@@ -149,14 +154,32 @@ export function WalletPage() {
     }
 
     if (paymentMode === "UPI") {
-      if (!upiId.trim()) {
-        setFormError("Please enter a UPI ID.");
+      if (!mobileNumber.trim() || mobileNumber.trim().length !== 10) {
+        setFormError("Please enter a valid 10-digit mobile number.");
         return;
       }
-      const upiRegex = /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/;
-      if (!upiRegex.test(upiId.trim())) {
-        setFormError("Please enter a valid UPI ID (e.g. yourname@bank).");
-        return;
+
+      if (upiOption === "id") {
+        if (!upiId.trim()) {
+          setFormError("Please enter a UPI ID.");
+          return;
+        }
+        const upiRegex = /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/;
+        if (!upiRegex.test(upiId.trim())) {
+          setFormError("Please enter a valid UPI ID (e.g. yourname@bank).");
+          return;
+        }
+      } else {
+        if (!utrNumber.trim()) {
+          setFormError("Transaction Reference/UTR Number is required.");
+          return;
+        }
+        if (utrNumber.trim().length < 8) {
+          setFormError(
+            "UTR / Reference number must be at least 8 characters long.",
+          );
+          return;
+        }
       }
     }
 
@@ -181,6 +204,11 @@ export function WalletPage() {
     }
 
     if (paymentMode === "UPI" || paymentMode === "IMPS") {
+      if (paymentMode === "UPI" && upiOption === "qr") {
+        completeRequest(utrNumber.trim());
+        return;
+      }
+
       setGatewayProcessing(true);
 
       try {
@@ -188,27 +216,26 @@ export function WalletPage() {
           amount: amtNum,
           customer_mobile:
             paymentMode === "UPI"
-              ? upiId
+              ? mobileNumber.trim()
               : (user as any)?.phone || "9999999999",
           customer_email: user?.email || "user@example.com",
           redirect_url: window.location.origin,
         };
 
         // Calling our backend API instead of exposing Mugavai credentials
-        const baseUrl =
-          (process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "");
-        const response = await fetch(
-          `${baseUrl}/api/wallet/recharge/gateway`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              // Include authorization token if your app uses one
-              Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-            },
-            body: JSON.stringify(reqBody),
-          },
+        const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(
+          /(?:\/api|\/)+$/,
+          "",
         );
+        const response = await fetch(`${baseUrl}/api/wallet/recharge/gateway`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            // Include authorization token if your app uses one
+            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          },
+          body: JSON.stringify(reqBody),
+        });
 
         const data = await response.json();
 
@@ -687,7 +714,7 @@ export function WalletPage() {
             />
 
             {/* Modal Dialog */}
-            <div className="relative w-full max-w-md bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-250 z-10 p-6 flex flex-col gap-5">
+            <div className="relative w-full max-w-2xl bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-250 z-10 p-6 flex flex-col gap-5">
               {/* Form Success State Screen */}
               {formSuccess ? (
                 <div className="py-10 flex flex-col items-center justify-center text-center gap-4">
@@ -711,7 +738,7 @@ export function WalletPage() {
                   <div className="flex items-center justify-between border-b border-slate-50 dark:border-slate-900/50 pb-4">
                     <div className="flex items-center gap-2">
                       <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-450">
-                        <Plus size={16} />
+                        <Wallet size={16} />
                       </span>
                       <h4 className="text-base font-extrabold text-slate-900 dark:text-white">
                         Recharge Request ({selectedWalletType})
@@ -719,7 +746,7 @@ export function WalletPage() {
                     </div>
                     <button
                       onClick={() => setIsModalOpen(false)}
-                      className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                      className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-750 dark:hover:text-slate-200 transition-colors"
                     >
                       <X size={14} />
                     </button>
@@ -728,141 +755,282 @@ export function WalletPage() {
                   {/* Form fields */}
                   <form
                     onSubmit={handleRechargeSubmit}
-                    className="flex flex-col gap-4"
+                    className="grid grid-cols-1 md:grid-cols-2 gap-6"
                   >
                     {formError && (
-                      <div className="flex items-center gap-2 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 p-3 rounded-xl text-xs font-bold">
+                      <div className="col-span-1 md:col-span-2 flex items-center gap-2 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 p-3 rounded-xl text-xs font-bold animate-in fade-in duration-200">
                         <AlertCircle size={14} className="shrink-0" />
                         <span>{formError}</span>
                       </div>
                     )}
 
-                    {/* Amount field */}
-                    <div className="space-y-1.5">
-                      <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
-                        Amount to Recharge (₹)
-                      </label>
-                      <input
-                        type="number"
-                        placeholder="e.g. 1500"
-                        value={amount}
-                        onChange={(e) => setAmount(e.target.value)}
-                        className="w-full px-4 py-2.8 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
-                        required
-                        min="1"
-                      />
-                    </div>
-
-                    {/* Payment Mode */}
-                    <div className="space-y-1.5">
-                      <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
-                        Payment Mode / channel
-                      </label>
-                      <select
-                        value={paymentMode}
-                        onChange={(e) => setPaymentMode(e.target.value as any)}
-                        className="w-full px-4 py-2.8 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
-                      >
-                        <option value="UPI">UPI / GPay / PhonePe</option>
-                        <option value="IMPS">IMPS Instant Transfer</option>
-                        <option value="NEFT">NEFT / RTGS Transfer</option>
-                        <option value="Bank Transfer">
-                          Direct Bank Cash Deposit
-                        </option>
-                      </select>
-                    </div>
-
-                    {/* Dynamic Gateway / Payment Mode Options */}
-                    {paymentMode === "UPI" && (
-                      <div className="space-y-1.5 animate-in fade-in zoom-in duration-200">
+                    {/* Left Column: Form Controls */}
+                    <div className="space-y-4">
+                      {/* Amount field */}
+                      <div className="space-y-1.5">
                         <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
-                          Enter UPI ID
+                          Amount to Recharge (₹)
                         </label>
                         <input
-                          type="text"
-                          placeholder="e.g. user@okicici or 9876543210@ybl"
-                          value={upiId}
-                          onChange={(e) => {
-                            setUpiId(e.target.value);
-                            setFormError("");
-                          }}
-                          className="w-full px-4 py-2.8 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all font-mono"
+                          type="number"
+                          placeholder="e.g. 1500"
+                          value={amount}
+                          onChange={(e) => setAmount(e.target.value)}
+                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
+                          required
+                          min="1"
                         />
-                        <p className="text-[10px] text-slate-400 dark:text-slate-550 leading-normal">
-                          A payment request will be sent to this UPI ID via
-                          Mugavai Gateway.
-                        </p>
                       </div>
-                    )}
 
-                    {paymentMode === "IMPS" && (
-                      <div className="space-y-3 p-4 bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/40 rounded-xl animate-in fade-in zoom-in duration-200">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span className="h-6 w-6 rounded bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-xs">
-                            M
-                          </span>
-                          <span className="text-xs font-black text-indigo-900 dark:text-indigo-300 uppercase tracking-widest">
-                            Mugavai Payment Gateway
-                          </span>
-                        </div>
-                        <p className="text-[10px] font-medium text-indigo-700/80 dark:text-indigo-400/80 leading-relaxed">
-                          You will be redirected to the Mugavai secure payment
-                          gateway to complete this IMPS transfer instantly using
-                          available options.
-                        </p>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          <span className="px-2 py-1 bg-white dark:bg-[#0f1124] rounded border border-indigo-100 dark:border-indigo-800 text-[9px] font-bold text-indigo-800 dark:text-indigo-300">
-                            Net Banking
-                          </span>
-                          <span className="px-2 py-1 bg-white dark:bg-[#0f1124] rounded border border-indigo-100 dark:border-indigo-800 text-[9px] font-bold text-indigo-800 dark:text-indigo-300">
-                            Debit / Credit Card
-                          </span>
-                          <span className="px-2 py-1 bg-white dark:bg-[#0f1124] rounded border border-indigo-100 dark:border-indigo-800 text-[9px] font-bold text-indigo-800 dark:text-indigo-300">
-                            IMPS Portal
-                          </span>
-                        </div>
-                      </div>
-                    )}
-
-                    {(paymentMode === "NEFT" ||
-                      paymentMode === "Bank Transfer") && (
-                      <div className="space-y-1.5 animate-in fade-in duration-200">
+                      {/* Payment Mode */}
+                      <div className="space-y-1.5">
                         <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
-                          UTR / Transaction Reference Number
+                          Payment Mode / channel
                         </label>
-                        <input
-                          type="text"
-                          placeholder="Enter 12-digit UTR or Ref ID"
-                          value={utrNumber}
-                          onChange={(e) => {
-                            setUtrNumber(e.target.value);
-                            setFormError("");
-                          }}
-                          className="w-full px-4 py-2.8 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all font-mono"
-                        />
-                        <p className="text-[10px] text-slate-400 dark:text-slate-550 leading-normal">
-                          Make sure to double-check this reference number. Wrong
-                          UTR numbers will lead to immediate rejection.
-                        </p>
+                        <div className="relative">
+                          <select
+                            value={
+                              paymentMode === "UPI"
+                                ? `UPI_${upiOption}`
+                                : paymentMode
+                            }
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val === "UPI_id") {
+                                setPaymentMode("UPI");
+                                setUpiOption("id");
+                              } else if (val === "UPI_qr") {
+                                setPaymentMode("UPI");
+                                setUpiOption("qr");
+                              } else {
+                                setPaymentMode(val as any);
+                              }
+                              setFormError("");
+                            }}
+                            className="w-full pl-4 pr-10 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none appearance-none transition-all"
+                          >
+                            <option
+                              value="UPI_id"
+                              className="dark:bg-[#090d16]"
+                            >
+                              UPI ID Request
+                            </option>
+                            <option
+                              value="UPI_qr"
+                              className="dark:bg-[#090d16]"
+                            >
+                              UPI QR Code (Scan & Pay)
+                            </option>
+                            <option value="IMPS" className="dark:bg-[#090d16]">
+                              IMPS Instant Transfer
+                            </option>
+                            <option value="NEFT" className="dark:bg-[#090d16]">
+                              NEFT / RTGS Transfer
+                            </option>
+                            <option
+                              value="Bank Transfer"
+                              className="dark:bg-[#090d16]"
+                            >
+                              Direct Bank Cash Deposit
+                            </option>
+                          </select>
+                          <ChevronDown
+                            size={14}
+                            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-550 pointer-events-none"
+                          />
+                        </div>
                       </div>
-                    )}
 
-                    {/* Remarks */}
-                    <div className="space-y-1.5">
-                      <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
-                        Add Remarks (Optional)
-                      </label>
-                      <textarea
-                        placeholder="e.g. Urgent add, UPI paid from retail counter GPay"
-                        value={remarks}
-                        onChange={(e) => setRemarks(e.target.value)}
-                        rows={2}
-                        className="w-full px-4 py-2.5 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all resize-none"
-                      />
+                      {/* Mobile Number (shown for UPI modes) */}
+                      {paymentMode === "UPI" && (
+                        <div className="space-y-1.5 animate-in fade-in duration-200">
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+                            Mobile Number
+                          </label>
+                          <input
+                            type="tel"
+                            placeholder="Enter 10-digit mobile number"
+                            value={mobileNumber}
+                            onChange={(e) => {
+                              setMobileNumber(
+                                e.target.value.replace(/\D/g, ""),
+                              );
+                              setFormError("");
+                            }}
+                            maxLength={10}
+                            className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
+                            required
+                          />
+                        </div>
+                      )}
+
+                      {/* UPI ID Field */}
+                      {paymentMode === "UPI" && upiOption === "id" && (
+                        <div className="space-y-1.5 animate-in fade-in duration-200">
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+                            Enter UPI ID
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g. user@okicici or 9876543210@ybl"
+                            value={upiId}
+                            onChange={(e) => {
+                              setUpiId(e.target.value);
+                              setFormError("");
+                            }}
+                            className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
+                          />
+                        </div>
+                      )}
+
+                      {/* UTR reference (shown for NEFT, Bank Transfer, or QR scans) */}
+                      {((paymentMode === "UPI" && upiOption === "qr") ||
+                        paymentMode === "NEFT" ||
+                        paymentMode === "Bank Transfer") && (
+                        <div className="space-y-1.5 animate-in fade-in duration-200">
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+                            Transaction UTR / Ref ID
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Enter 12-digit UTR/Ref No."
+                            value={utrNumber}
+                            onChange={(e) => {
+                              setUtrNumber(e.target.value);
+                              setFormError("");
+                            }}
+                            className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
+                          />
+                        </div>
+                      )}
+
+                      {/* Remarks */}
+                      <div className="space-y-1.5">
+                        <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+                          Add Remarks (Optional)
+                        </label>
+                        <textarea
+                          placeholder="e.g. Urgent add, UPI paid from retail counter GPay"
+                          value={remarks}
+                          onChange={(e) => setRemarks(e.target.value)}
+                          rows={2}
+                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all resize-none"
+                        />
+                      </div>
                     </div>
 
-                    {/* Buttons */}
-                    <div className="flex items-center gap-3 border-t border-slate-50 dark:border-slate-900/50 pt-4 mt-2">
+                    {/* Right Column: Dynamic Info / QR details / Bank Details Card */}
+                    <div className="flex flex-col justify-center h-full">
+                      <div className="bg-slate-50/50 dark:bg-slate-950/25 border border-slate-100 dark:border-slate-900/60 rounded-2xl p-4 flex flex-col items-center justify-center min-h-[280px] text-center">
+                        {paymentMode === "UPI" && upiOption === "qr" && (
+                          <div className="flex flex-col items-center gap-3.5 animate-in fade-in duration-200">
+                            <div className="p-2.5 bg-white rounded-xl shadow-sm border border-slate-100">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(
+                                  `upi://pay?pa=thuruvan@ybl&pn=Thuruvan&am=${amount || 0}&cu=INR`,
+                                )}`}
+                                alt="Payment QR Code"
+                                className="w-28 h-28 object-contain"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <p className="text-xs font-black text-slate-800 dark:text-slate-200">
+                                Scan & Pay ₹{amount || "0.00"}
+                              </p>
+                              <p className="text-[10px] text-slate-450 dark:text-slate-500 max-w-[210px] leading-relaxed">
+                                Scan using GPay, PhonePe, Paytm or any UPI App.
+                                Enter the UTR transaction number on the left.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {paymentMode === "UPI" && upiOption === "id" && (
+                          <div className="flex flex-col items-center gap-3 text-slate-500 dark:text-slate-400 p-2 animate-in fade-in duration-200">
+                            <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-450 shadow-sm">
+                              <Wallet size={20} />
+                            </span>
+                            <div className="space-y-1">
+                              <h5 className="text-xs font-black text-slate-855 dark:text-slate-200 uppercase tracking-wider">
+                                UPI Request Mode
+                              </h5>
+                              <p className="text-[10px] text-slate-450 dark:text-slate-500 max-w-[200px] leading-relaxed">
+                                A secure payment request will be sent to the
+                                entered UPI ID. Open your UPI app to complete
+                                the transaction.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {paymentMode === "IMPS" && (
+                          <div className="space-y-3 p-2 text-indigo-900 dark:text-indigo-300 flex flex-col items-center animate-in fade-in duration-200">
+                            <span className="h-8 w-8 rounded bg-indigo-100 dark:bg-indigo-900/40 text-indigo-650 dark:text-indigo-400 flex items-center justify-center font-bold text-sm">
+                              M
+                            </span>
+                            <div className="space-y-1">
+                              <h5 className="text-xs font-black uppercase tracking-wider">
+                                Mugavai Instant IMPS
+                              </h5>
+                              <p className="text-[10px] text-slate-450 dark:text-slate-500 max-w-[200px] leading-relaxed">
+                                You will be securely redirected to Mugavai
+                                Payment Gateway to transfer funds instantly
+                                using Net Banking or Card options.
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {(paymentMode === "NEFT" ||
+                          paymentMode === "Bank Transfer") && (
+                          <div className="w-full text-left space-y-3 animate-in fade-in duration-200">
+                            <h5 className="text-xs font-black text-slate-855 dark:text-slate-200 uppercase tracking-wider text-center">
+                              Our Bank Accounts
+                            </h5>
+                            <div className="p-3 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-850 rounded-xl space-y-1.5 text-[10px] leading-normal font-semibold text-slate-650 dark:text-slate-350">
+                              <div className="flex justify-between">
+                                <span className="text-slate-400">Bank:</span>
+                                <span className="text-slate-855 dark:text-slate-100">
+                                  HDFC Bank Ltd.
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-slate-400">
+                                  Account Name:
+                                </span>
+                                <span className="text-slate-855 dark:text-slate-100">
+                                  Thuruvan Enterprise
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-slate-400">
+                                  Account No:
+                                </span>
+                                <span className="text-slate-855 dark:text-slate-100 font-mono">
+                                  50200081294812
+                                </span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-slate-400">
+                                  IFSC Code:
+                                </span>
+                                <span className="text-slate-855 dark:text-slate-100 font-mono">
+                                  HDFC0001202
+                                </span>
+                              </div>
+                            </div>
+                            <p className="text-[9px] text-slate-450 dark:text-slate-500 text-center leading-normal">
+                              Transfer amount via NEFT/RTGS or Bank Deposit,
+                              then enter the UTR/Ref ID on the left.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Bottom Row: Action Buttons */}
+                    <div className="col-span-1 md:col-span-2 flex items-center gap-3 border-t border-slate-50 dark:border-slate-900/50 pt-4 mt-2">
                       <button
                         type="button"
                         onClick={() => setIsModalOpen(false)}
@@ -881,7 +1049,7 @@ export function WalletPage() {
                             Connecting to Gateway...
                           </>
                         ) : paymentMode === "UPI" || paymentMode === "IMPS" ? (
-                          "Initiate Payment"
+                          "Pay Now"
                         ) : (
                           "Submit Request"
                         )}

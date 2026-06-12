@@ -1,4 +1,3 @@
-import { ArrowUpRight, Download } from "lucide-react";
 import { ActivityChart } from "../../components/charts/ActivityChart";
 
 export function DashboardOverview() {
@@ -19,19 +18,6 @@ export function DashboardOverview() {
           payment requests, and oversee transactional workflow performance from
           a single unified operational command center.
         </p>
-        <div className="flex flex-wrap items-center gap-3 pt-2">
-          <button className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] dark:hover:bg-emerald-500 text-white font-bold text-sm shadow-sm active:scale-[0.98] transition-all duration-200">
-            <span>Create Request</span>
-            <ArrowUpRight size={16} />
-          </button>
-          <button className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-white dark:bg-[#0c1222]/30 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 font-bold text-sm border border-slate-200 dark:border-slate-800/80 active:scale-[0.98] transition-all duration-200">
-            <Download
-              size={15}
-              className="text-slate-500 dark:text-slate-400"
-            />
-            <span>Export Report</span>
-          </button>
-        </div>
       </div>
 
       {/* Today collection card */}
