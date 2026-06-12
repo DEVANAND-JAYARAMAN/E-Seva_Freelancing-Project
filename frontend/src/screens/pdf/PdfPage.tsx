@@ -12,17 +12,22 @@ import {
   FileCheck2,
   ShieldCheck,
   CreditCard,
+  Pencil,
+  Upload,
 } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
 import { InputField, SubmitButton } from "../services/form/FormFields";
 import { validateField, PATTERNS } from "../services/form/validators";
 import { ServiceNavigation } from "../../components/ServiceNavigation/ServiceNavigation";
+import { useAuth } from "../../store/context/AuthContext";
+import { useLocalStorage } from "../../hooks/useLocalStorage";
 
 // Interface for PDF services definition
 interface PdfService {
   id: string;
   name: string;
   amount: number;
+  customImage?: string | null;
 }
 
 // Interface for previous PDF lookup requests
@@ -82,6 +87,27 @@ const pdfServicesList: PdfService[] = [
 ];
 
 export function PdfPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+
+  const [servicesList, setServicesList] = useLocalStorage<PdfService[]>(
+    "thuruvan_pdf_services_list_v2",
+    pdfServicesList,
+  );
+
+  const [editingService, setEditingService] = useState<PdfService | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+
+  const handleSaveService = (name: string, customImage: string | null) => {
+    setServicesList((prev) =>
+      prev.map((s) =>
+        s.id === editingService?.id ? { ...s, name, customImage } : s,
+      ),
+    );
+    setEditModalOpen(false);
+    setEditingService(null);
+  };
+
   // Tab/Screen navigation states
   const [activeForm, setActiveForm] = useState<string | null>(null);
   const [activeListView, setActiveListView] = useState<string | null>(null); // To view the list for a specific service
@@ -568,19 +594,19 @@ export function PdfPage() {
 
   const getBreadcrumbLabel = () => {
     if (activeForm) {
-      const s = pdfServicesList.find((item) => item.id === activeForm);
+      const s = servicesList.find((item) => item.id === activeForm);
       return s ? s.name : "";
     }
     if (activeListView) {
-      const s = pdfServicesList.find((item) => item.id === activeListView);
+      const s = servicesList.find((item) => item.id === activeListView);
       return s ? `${s.name} (History)` : "";
     }
     return "";
   };
 
   const activeServiceObj = useMemo(() => {
-    return pdfServicesList.find((item) => item.id === activeForm) || null;
-  }, [activeForm]);
+    return servicesList.find((item) => item.id === activeForm) || null;
+  }, [activeForm, servicesList]);
 
   // Filter transaction log ledger depending on list selection
   const filteredLogs = useMemo(() => {
@@ -600,11 +626,7 @@ export function PdfPage() {
             setActiveListView(val);
           }}
           activeFormLabel={getBreadcrumbLabel() || undefined}
-          backButtonText={
-            activeForm || activeListView
-              ? "Back to Directory"
-              : "Back to Services"
-          }
+          backButtonText="Back"
         />
 
         {/* CONDITIONALLY RENDER: CARDS GRID, FORM SUBMISSION, OR HISTORY LIST LEDGER */}
@@ -619,13 +641,41 @@ export function PdfPage() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {pdfServicesList.map((service) => (
+              {servicesList.map((service) => (
                 <div
                   key={service.id}
-                  className="bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl overflow-hidden shadow-sm hover:shadow-md hover:border-slate-200 dark:hover:border-slate-800/80 transition-all flex flex-col group"
+                  className="bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl overflow-hidden shadow-sm hover:shadow-md hover:border-slate-200 dark:hover:border-slate-800/80 transition-all flex flex-col group relative"
                 >
+                  {isAdmin && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingService(service);
+                        setEditModalOpen(true);
+                      }}
+                      style={{
+                        position: "absolute",
+                        top: "12px",
+                        right: "12px",
+                      }}
+                      className="z-10 p-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-150 dark:border-slate-800 text-slate-400 hover:text-[#005c3a] dark:hover:text-emerald-400 transition-all active:scale-[0.95]"
+                      title="Edit card details"
+                    >
+                      <Pencil size={11} />
+                    </button>
+                  )}
+
                   {/* Card realistic image preview */}
-                  {renderDocumentPreview(service.id)}
+                  {service.customImage ? (
+                    <div className="relative w-full h-36 bg-slate-50 dark:bg-slate-900 flex items-center justify-center overflow-hidden">
+                      <img
+                        src={service.customImage}
+                        className="h-full w-full object-contain"
+                      />
+                    </div>
+                  ) : (
+                    renderDocumentPreview(service.id)
+                  )}
 
                   {/* Card Title & Content */}
                   <div className="p-5 flex-1 flex flex-col gap-4">
@@ -932,7 +982,7 @@ export function PdfPage() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 shadow-sm">
               <div>
                 <h3 className="text-base font-extrabold text-slate-900 dark:text-white capitalize">
-                  {pdfServicesList.find((x) => x.id === activeListView)?.name}{" "}
+                  {servicesList.find((x) => x.id === activeListView)?.name}{" "}
                   Search Logs
                 </h3>
                 <p className="text-xs text-slate-450 dark:text-slate-500 mt-0.5">
@@ -1063,6 +1113,138 @@ export function PdfPage() {
           </div>
         )}
       </section>
+
+      {/* EDIT SERVICE DETAILS MODAL */}
+      {editModalOpen && editingService && (
+        <EditServiceModal
+          isOpen={editModalOpen}
+          onClose={() => {
+            setEditModalOpen(false);
+            setEditingService(null);
+          }}
+          service={editingService}
+          onSave={handleSaveService}
+        />
+      )}
     </AppShell>
+  );
+}
+
+type EditServiceModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  service: PdfService;
+  onSave: (name: string, customImage: string | null) => void;
+};
+
+function EditServiceModal({
+  isOpen,
+  onClose,
+  service,
+  onSave,
+}: EditServiceModalProps) {
+  const [name, setName] = useState(service.name);
+  const [customImage, setCustomImage] = useState<string | null>(
+    service.customImage || null,
+  );
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCustomImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSaveClick = () => {
+    onSave(name, customImage);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div className="relative w-full max-w-md bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl shadow-xl overflow-hidden p-6 flex flex-col gap-5 z-10 animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between border-b border-slate-50 dark:border-slate-900/50 pb-4">
+          <h4 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wide">
+            Edit Card Details
+          </h4>
+          <button
+            onClick={onClose}
+            className="p-1 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+          >
+            <Plus size={14} className="rotate-45" />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider">
+              Service Name
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-555 uppercase tracking-wider">
+              Service Image / Icon
+            </label>
+            <div className="flex items-center gap-4">
+              <div className="h-16 w-16 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center overflow-hidden shrink-0">
+                {customImage ? (
+                  <img
+                    src={customImage}
+                    className="h-full w-full object-contain"
+                  />
+                ) : (
+                  <div className="text-[10px] font-bold text-slate-350">
+                    Default
+                  </div>
+                )}
+              </div>
+              <label className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-4 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all">
+                <Upload size={16} className="text-slate-400" />
+                <span className="text-[10px] font-bold text-slate-400 mt-1">
+                  Upload Image
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 border-t border-slate-50 dark:border-slate-900/50 pt-4 mt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 px-4 py-2.5 border border-slate-200 dark:border-slate-855 rounded-xl text-slate-550 hover:bg-slate-50 dark:hover:bg-slate-900/40 text-xs font-bold uppercase tracking-wider transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleSaveClick}
+            className="flex-1 px-4 py-2.5 rounded-xl bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] dark:hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider shadow-sm transition-all"
+          >
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

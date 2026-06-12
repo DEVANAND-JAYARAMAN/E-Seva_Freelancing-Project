@@ -223,12 +223,6 @@ export function CrmPage() {
             >
               <FileSpreadsheet size={16} /> Excel
             </button>
-            <button
-              onClick={() => setIsFormOpen(true)}
-              className="inline-flex items-center justify-center gap-2 px-5 py-2 rounded-xl bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] text-white font-extrabold text-sm shadow-sm transition-all"
-            >
-              <Plus size={16} /> Add Client
-            </button>
           </div>
         </div>
 

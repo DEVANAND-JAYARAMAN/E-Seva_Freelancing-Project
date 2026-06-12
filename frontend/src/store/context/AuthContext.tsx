@@ -1,6 +1,14 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, type ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  type ReactNode,
+} from "react";
 
 export type User = {
   id: string;
@@ -18,7 +26,7 @@ type AuthContextType = {
     email: string,
     token: string,
     role?: "admin" | "retailer" | "distributor" | "customer",
-    name?: string
+    name?: string,
   ) => Promise<void>;
   logout: () => void;
   updateWallet: (newBalance: number) => void;
@@ -50,75 +58,84 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth();
   }, []);
 
-  const login = async (
-    email: string,
-    token: string,
-    role?: "admin" | "retailer" | "distributor" | "customer",
-    name?: string
-  ) => {
-    setIsLoading(true);
-    // Cache buster: v2
-    try {
-      const apiUrl = `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api`;
-      const res = await fetch(`${apiUrl}/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password: token }), // Frontend uses 'token' param as password in mock, so we pass it as password
-      });
+  const login = useCallback(
+    async (
+      email: string,
+      token: string,
+      role?: "admin" | "retailer" | "distributor" | "customer",
+      name?: string,
+    ) => {
+      setIsLoading(true);
+      // Cache buster: v2
+      try {
+        const apiUrl = `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api`;
+        const res = await fetch(`${apiUrl}/auth/login`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password: token }), // Frontend uses 'token' param as password in mock, so we pass it as password
+        });
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Login failed");
+        if (!res.ok) {
+          const errorData = await res.json();
+          throw new Error(errorData.error || "Login failed");
+        }
+
+        const data = await res.json();
+
+        const realUser: User = {
+          id: data.user.id,
+          name: data.user.fullName,
+          email: data.user.email,
+          role: data.role,
+          walletBalance: 0, // We can update this later by fetching the wallet
+        };
+
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(realUser));
+        setUser(realUser);
+      } catch (error) {
+        console.error("Login failed:", error);
+        throw error;
+      } finally {
+        setIsLoading(false);
       }
+    },
+    [],
+  );
 
-      const data = await res.json();
-      
-      const realUser: User = {
-        id: data.user.id,
-        name: data.user.fullName,
-        email: data.user.email,
-        role: data.role,
-        walletBalance: 0, // We can update this later by fetching the wallet
-      };
-
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(realUser));
-      setUser(realUser);
-    } catch (error) {
-      console.error("Login failed:", error);
-      throw error;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     setUser(null);
-  };
+  }, []);
 
-  const updateWallet = (newBalance: number) => {
-    if (user) {
-      const updatedUser = { ...user, walletBalance: newBalance };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
-      setUser(updatedUser);
-    }
-  };
+  const updateWallet = useCallback((newBalance: number) => {
+    setUser((prevUser) => {
+      if (prevUser) {
+        const updatedUser = { ...prevUser, walletBalance: newBalance };
+        localStorage.setItem("user", JSON.stringify(updatedUser));
+        return updatedUser;
+      }
+      return null;
+    });
+  }, []);
+
+  const authContextValue = useMemo(
+    () => ({
+      user,
+      isAuthenticated: !!user,
+      isLoading,
+      login,
+      logout,
+      updateWallet,
+    }),
+    [user, isLoading, login, logout, updateWallet],
+  );
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated: !!user,
-        isLoading,
-        login,
-        logout,
-        updateWallet,
-      }}
-    >
+    <AuthContext.Provider value={authContextValue}>
       {children}
     </AuthContext.Provider>
   );

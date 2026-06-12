@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { ThemeProvider } from "../src/store/context/ThemeProvider";
 import { AuthProvider } from "../src/store/context/AuthContext";
+import { FormEditProvider } from "../src/store/context/FormEditContext";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -24,7 +25,9 @@ export default function RootLayout({
     <html lang="en" className={`${jakarta.variable} font-sans`}>
       <body className="min-h-screen transition-colors duration-300">
         <AuthProvider>
-          <ThemeProvider>{children}</ThemeProvider>
+          <FormEditProvider>
+            <ThemeProvider>{children}</ThemeProvider>
+          </FormEditProvider>
         </AuthProvider>
       </body>
     </html>

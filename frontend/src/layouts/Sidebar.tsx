@@ -18,12 +18,13 @@ export function Sidebar({ activePage, isOpen, onClose }: SidebarProps) {
   const { user } = useAuth();
 
   const isRetailerOrDistributor =
-    pathname.includes("dashboard2") ||
-    pathname.includes("dashboard3") ||
-    pathname.includes("retailer") ||
-    pathname.includes("distributor") ||
-    user?.role === "retailer" ||
-    user?.role === "distributor";
+    user?.role !== "admin" &&
+    (pathname.includes("dashboard2") ||
+      pathname.includes("dashboard3") ||
+      pathname.includes("retailer") ||
+      pathname.includes("distributor") ||
+      user?.role === "retailer" ||
+      user?.role === "distributor");
 
   const allowedLabels = [
     "Dashboard",
