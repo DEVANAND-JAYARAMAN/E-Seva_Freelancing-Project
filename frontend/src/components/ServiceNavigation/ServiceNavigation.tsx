@@ -67,9 +67,7 @@ export function ServiceNavigation({
           className="flex items-center justify-center gap-1.5 h-9 px-4 rounded-xl border border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-900 text-xs font-bold text-slate-500 hover:text-slate-700 transition-colors"
         >
           <ArrowLeft size={13} />
-          <span>
-            {backButtonText || (activeForm ? "Back to Sub-Services" : "Back to Services")}
-          </span>
+          <span>{backButtonText || "Back"}</span>
         </button>
       </div>
     </div>
