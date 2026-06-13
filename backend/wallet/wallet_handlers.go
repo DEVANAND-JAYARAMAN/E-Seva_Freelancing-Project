@@ -152,7 +152,7 @@ func InitiateGatewayRecharge(c *gin.Context) {
 
 	body, _ := json.Marshal(payload)
 
-	httpReq, err := http.NewRequest("POST", mugavaiBaseURL+"/create_order", bytes.NewBuffer(body))
+	httpReq, err := http.NewRequest("POST", mugavaiBaseURL+"/create_order.php", bytes.NewBuffer(body))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to build payment request"})
 		return
