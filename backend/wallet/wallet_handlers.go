@@ -31,24 +31,18 @@ type GatewayRechargeRequest struct {
 }
 
 type mugavaiOrderRequest struct {
-	Amount         float64 `json:"amount"`
-	CustomerMobile string  `json:"customer_mobile"`
-	CustomerEmail  string  `json:"customer_email"`
-	RedirectURL    string  `json:"redirect_url"`
-	OrderID        string  `json:"order_id"`
+	Amount      string `json:"amount"`
+	Mobile      string `json:"mobile"`
+	Email       string `json:"email"`
+	RedirectURL string `json:"redirect_url"`
+	OrderID     string `json:"order_id"`
 }
 
 type mugavaiOrderResponse struct {
-	Status  string `json:"status"`
-	Message string `json:"message"`
-	Data    struct {
-		Amount         interface{} `json:"amount"`
-		CustomerMobile string      `json:"customer_mobile"`
-		CustomerEmail  string      `json:"customer_email"`
-		OrderID        string      `json:"order_id"`
-		PaymentURL     string      `json:"payment_url"`
-		QRImage        string      `json:"qr_image"`
-	} `json:"data"`
+	Status     bool   `json:"status"`
+	Message    string `json:"message"`
+	OrderID    string `json:"order_id"`
+	PaymentURL string `json:"payment_url"`
 }
 
 type MugavaiCallbackPayload struct {
@@ -141,36 +135,31 @@ func InitiateGatewayRecharge(c *gin.Context) {
 		return
 	}
 
-	username := os.Getenv("MUGAVAI_USERNAME")
-	if username == "" {
-		username = "6380616163"
-	}
 	apiKey := os.Getenv("MUGAVAI_API_KEY")
 	if apiKey == "" {
-		apiKey = "enCJ5EKHzcSRqBP8"
+		apiKey = "debd2880dc42f49b79248d72d90ca7d0262d4c125ed91a4d"
 	}
 
 	orderID := fmt.Sprintf("ORD-%d", time.Now().UnixMilli())
 
 	payload := mugavaiOrderRequest{
-		Amount:         req.Amount,
-		CustomerMobile: req.CustomerMobile,
-		CustomerEmail:  req.CustomerEmail,
-		RedirectURL:    req.RedirectURL,
-		OrderID:        orderID,
+		Amount:      fmt.Sprintf("%.2f", req.Amount),
+		Mobile:      req.CustomerMobile,
+		Email:       req.CustomerEmail,
+		RedirectURL: req.RedirectURL,
+		OrderID:     orderID,
 	}
 
 	body, _ := json.Marshal(payload)
 
-	apiURL := "https://mugavaipaymentgetway.in/api/v1/create_order.php"
+	apiURL := "https://mugavaipaymentgetway.in/api/v1/create_order"
 	httpReq, err := http.NewRequest("POST", apiURL, bytes.NewBuffer(body))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to build payment request"})
 		return
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("x-client-username", username)
-	httpReq.Header.Set("x-client-apikey", apiKey)
+	httpReq.Header.Set("key", apiKey)
 
 	client := &http.Client{Timeout: 15 * time.Second}
 	resp, err := client.Do(httpReq)
@@ -192,15 +181,15 @@ func InitiateGatewayRecharge(c *gin.Context) {
 		return
 	}
 
-	if pgResp.Status != "success" {
+	if !pgResp.Status {
 		c.JSON(http.StatusBadGateway, gin.H{"message": pgResp.Message})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"data": gin.H{
-			"order_id":    pgResp.Data.OrderID,
-			"payment_url": pgResp.Data.PaymentURL,
+			"order_id":    pgResp.OrderID,
+			"payment_url": pgResp.PaymentURL,
 		},
 	})
 }
