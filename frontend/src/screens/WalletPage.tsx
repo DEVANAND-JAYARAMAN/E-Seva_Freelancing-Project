@@ -220,6 +220,8 @@ export function WalletPage() {
               : (user as any)?.phone || "9999999999",
           customer_email: user?.email || "user@example.com",
           redirect_url: window.location.origin,
+          vpa: paymentMode === "UPI" && upiOption === "id" ? upiId : undefined,
+          upi_id: paymentMode === "UPI" && upiOption === "id" ? upiId : undefined,
         };
 
         // Calling our backend API instead of exposing Mugavai credentials
