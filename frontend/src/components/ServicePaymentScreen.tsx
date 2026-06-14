@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import { Wallet, CheckCircle2 } from "lucide-react";
+import { Wallet, CheckCircle2, AlertCircle } from "lucide-react";
+import { useAuth } from "../store/context/AuthContext";
+import Link from "next/link";
 
 interface ServicePaymentScreenProps {
   serviceName: string;
@@ -19,8 +21,15 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
   const [upiId, setUpiId] = useState("");
   const [customerWhatsApp, setCustomerWhatsApp] = useState("");
   const [error, setError] = useState("");
+  const { user } = useAuth();
+  const walletBalance = user?.walletBalance || 0;
 
   const handlePaymentSubmit = () => {
+    if (paymentMethod === "wallet" && walletBalance < retailerCharge) {
+      setError(`Insufficient wallet balance (₹${walletBalance.toFixed(2)}). Please add funds to your wallet to proceed.`);
+      return;
+    }
+
     if (paymentMethod === "gateway" && !upiId.trim()) {
       setError("Please enter a valid UPI ID");
       return;
@@ -122,13 +131,26 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
                 value={upiId}
                 onChange={(e) => { setUpiId(e.target.value); setError(""); }}
                 className={`w-full px-4 py-2.5 rounded-lg border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#005c3a]/15 bg-white dark:bg-[#0a0f18]/30 transition-all ${
-                  error ? "border-rose-400 dark:border-rose-500/50" : "border-slate-200 dark:border-slate-800 focus:border-[#005c3a]"
+                  error && paymentMethod === 'gateway' ? "border-rose-400 dark:border-rose-500/50" : "border-slate-200 dark:border-slate-800 focus:border-[#005c3a]"
                 }`}
               />
-              {error && <span className="text-[10px] font-semibold text-rose-500 mt-1.5 block">{error}</span>}
               <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-2 font-medium">
                 You will receive a payment request on your UPI app. Approve it to proceed.
               </p>
+            </div>
+          )}
+
+          {error && (
+            <div className="mt-4 p-3 bg-rose-50 dark:bg-rose-950/20 rounded-xl border border-rose-200 dark:border-rose-900/30 flex items-start gap-2 text-rose-600 dark:text-rose-400">
+              <AlertCircle size={16} className="shrink-0 mt-0.5" />
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs font-semibold">{error}</span>
+                {paymentMethod === "wallet" && walletBalance < retailerCharge && (
+                  <Link href="/wallets" className="text-[10px] font-extrabold uppercase tracking-wider underline underline-offset-2 hover:text-rose-700 dark:hover:text-rose-300 w-fit">
+                    Go to Wallet to Add Funds
+                  </Link>
+                )}
+              </div>
             </div>
           )}
         </div>
