@@ -28,8 +28,6 @@ type GatewayRechargeRequest struct {
 	CustomerMobile string  `json:"customer_mobile" binding:"required"`
 	CustomerEmail  string  `json:"customer_email" binding:"required"`
 	RedirectURL    string  `json:"redirect_url"`
-	VPA            string  `json:"vpa"`
-	UpiId          string  `json:"upi_id"`
 }
 
 type mugavaiOrderRequest struct {
