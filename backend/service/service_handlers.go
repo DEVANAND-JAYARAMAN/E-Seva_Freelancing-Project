@@ -452,8 +452,6 @@ type MugavaiCreateOrderReq struct {
 	CustomerEmail  string  `json:"customer_email"`
 	OrderID        string  `json:"order_id"`
 	RedirectURL    string  `json:"redirect_url"`
-	VPA            string  `json:"vpa,omitempty"`
-	UpiId          string  `json:"upi_id,omitempty"`
 }
 
 type MugavaiCreateOrderRes struct {
@@ -487,8 +485,6 @@ func RechargeGateway(c *gin.Context) {
 		CustomerEmail:  req.CustomerEmail,
 		OrderID:        orderId,
 		RedirectURL:    req.RedirectURL,
-		VPA:            req.VPA,
-		UpiId:          req.UpiId,
 	}
 
 	jsonValue, err := json.Marshal(mugavaiReqBody)

@@ -38,8 +38,6 @@ type mugavaiOrderRequest struct {
 	CustomerEmail  string  `json:"customer_email"`
 	RedirectURL    string  `json:"redirect_url"`
 	OrderID        string  `json:"order_id"`
-	VPA            string  `json:"vpa,omitempty"`
-	UpiId          string  `json:"upi_id,omitempty"`
 }
 
 type mugavaiOrderResponse struct {
@@ -162,8 +160,6 @@ func InitiateGatewayRecharge(c *gin.Context) {
 		CustomerEmail:  req.CustomerEmail,
 		RedirectURL:    req.RedirectURL,
 		OrderID:        orderID,
-		VPA:            req.VPA,
-		UpiId:          req.UpiId,
 	}
 
 	body, _ := json.Marshal(payload)
