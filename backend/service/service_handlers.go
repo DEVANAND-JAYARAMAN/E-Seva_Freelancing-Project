@@ -496,10 +496,8 @@ func RechargeGateway(c *gin.Context) {
 	if username == "" {
 		username = "6380616163"
 	}
-	apiKey := os.Getenv("MUGAVAI_API_KEY")
-	if apiKey == "" {
-		apiKey = "cbd12b7fc321b7b02d629461d4f6e9bd89e5879b2f6caa5a"
-	}
+	// Hardcoding API key because GitHub Secrets is overriding it with an old value
+	apiKey := "cbd12b7fc321b7b02d629461d4f6e9bd89e5879b2f6caa5a"
 
 	apiURL := "https://mugavaipaymentgetway.in/api/v1/create_order.php"
 	
