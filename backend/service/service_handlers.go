@@ -442,8 +442,6 @@ type RechargeGatewayReq struct {
 	CustomerMobile string  `json:"customer_mobile"`
 	CustomerEmail  string  `json:"customer_email"`
 	RedirectURL    string  `json:"redirect_url"`
-	VPA            string  `json:"vpa"`
-	UpiId          string  `json:"upi_id"`
 }
 
 type MugavaiCreateOrderReq struct {
