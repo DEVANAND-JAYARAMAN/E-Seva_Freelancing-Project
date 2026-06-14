@@ -147,7 +147,7 @@ func InitiateGatewayRecharge(c *gin.Context) {
 	}
 	apiKey := os.Getenv("MUGAVAI_API_KEY")
 	if apiKey == "" {
-		apiKey = "debd2880dc42f49b79248d72d90ca7d0262d4c125ed91a4d"
+		apiKey = "cbd12b7fc321b7b02d629461d4f6e9bd89e5879b2f6caa5a"
 	}
 
 	orderID := fmt.Sprintf("ORD-%d", time.Now().UnixMilli())
