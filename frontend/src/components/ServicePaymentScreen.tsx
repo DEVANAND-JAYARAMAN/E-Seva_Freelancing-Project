@@ -4,6 +4,7 @@ import { useAuth } from "../store/context/AuthContext";
 import Link from "next/link";
 
 interface ServicePaymentScreenProps {
+  serviceId?: string;
   serviceName: string;
   retailerCharge: number;
   onBack: () => void;
@@ -11,6 +12,7 @@ interface ServicePaymentScreenProps {
 }
 
 export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
+  serviceId,
   serviceName,
   retailerCharge,
   onBack,
@@ -24,7 +26,7 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
   const { user } = useAuth();
   const walletBalance = user?.walletBalance || 0;
 
-  const handlePaymentSubmit = () => {
+  const handlePaymentSubmit = async () => {
     if (paymentMethod === "wallet" && walletBalance < retailerCharge) {
       setError(`Insufficient wallet balance (₹${walletBalance.toFixed(2)}). Please add funds to your wallet to proceed.`);
       return;
@@ -36,11 +38,37 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
     }
     setError("");
     setIsSubmitting(true);
-    // Simulate payment processing
-    setTimeout(() => {
+
+    try {
+      const apiUrl = `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api`;
+      const reqBody = {
+        retailerId: user?.id || "unknown_retailer",
+        serviceId: serviceId || serviceName.toLowerCase().replace(/\s+/g, "_"),
+        serviceName: serviceName,
+        cost: retailerCharge,
+        customerWhatsApp: customerWhatsApp.trim(),
+        walletType: "Main"
+      };
+
+      const res = await fetch(`${apiUrl}/services/request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(reqBody)
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        setError(errData.error || "Failed to create service request");
+        setIsSubmitting(false);
+        return;
+      }
+
       setIsSubmitting(false);
       onSuccess(customerWhatsApp.trim() || undefined);
-    }, 1500);
+    } catch (e) {
+      setError("Network error occurred");
+      setIsSubmitting(false);
+    }
   };
 
   return (
