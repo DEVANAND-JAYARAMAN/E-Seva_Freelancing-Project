@@ -49,12 +49,26 @@ export const handler = async (event) => {
     return { statusCode: 200, headers, body: "" };
   }
 
+  const path = event.requestContext?.http?.path || "";
+
+  // /ip is public - no auth needed
+  if (path.endsWith("/ip")) {
+    try {
+      const res = await dynamo.send(new GetItemCommand({
+        TableName: TABLE,
+        Key: { PK: { S: "CONFIG" }, SK: { S: "EC2_IP" } },
+      }));
+      const ip = res.Item?.value?.S || "";
+      return { statusCode: 200, headers, body: JSON.stringify({ public_ip: ip }) };
+    } catch (e) {
+      return { statusCode: 500, headers, body: JSON.stringify({ error: e.message }) };
+    }
+  }
+
   const adminKey = event.headers?.["x-admin-key"] || event.headers?.["X-Admin-Key"];
   if (adminKey !== ADMIN_KEY) {
     return { statusCode: 401, headers, body: JSON.stringify({ error: "unauthorized" }) };
   }
-
-  const path = event.requestContext?.http?.path || "";
 
   try {
     if (path.endsWith("/start")) {
