@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import { Sidebar } from "./Sidebar";
 import { CommandBar } from "../components/CommandBar";
 import { TopBar } from "./TopBar";
+import { BackendHealthChecker } from "../components/BackendHealthChecker";
 
 type AppShellProps = {
   activePage?: string;
@@ -36,7 +37,9 @@ export function AppShell({
           {activePage === "Dashboard" && <CommandBar />}
 
           {/* Page content */}
-          <div className="pt-2">{children}</div>
+          <div className="pt-2">
+            <BackendHealthChecker>{children}</BackendHealthChecker>
+          </div>
         </main>
 
       </div>
