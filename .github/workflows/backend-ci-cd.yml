@@ -47,6 +47,7 @@ jobs:
             set -e
             export PATH=$PATH:/usr/local/go/bin
             cd /opt/eservice
+            git reset --hard HEAD
             git pull origin main
             cd backend
             cat > .env <<EOF
