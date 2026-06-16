@@ -78,8 +78,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.error || "Login failed");
+          let errorMsg = "Login failed";
+          if (res.status === 502 || res.status === 504 || res.status === 503) {
+            errorMsg = "Server is currently offline. Please navigate to /admin to start the server.";
+          } else {
+            try {
+              const errorData = await res.json();
+              errorMsg = errorData.error || errorMsg;
+            } catch (e) {
+              errorMsg = `Server error: ${res.status} ${res.statusText}`;
+            }
+          }
+          throw new Error(errorMsg);
         }
 
         const data = await res.json();
