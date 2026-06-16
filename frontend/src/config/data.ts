@@ -12,6 +12,7 @@ import {
   Building2,
   Store,
   Receipt,
+  Server,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -54,6 +55,7 @@ export const navItems: NavItem[] = [
   { label: "Wallet", href: "/wallets", icon: Wallet },
   { label: "CRM", href: "/crm", icon: Users },
   { label: "Billing", href: "/billing", icon: Receipt },
+  { label: "Server Control", href: "/admin", icon: Server },
 ];
 
 export const stats: StatCard[] = [
