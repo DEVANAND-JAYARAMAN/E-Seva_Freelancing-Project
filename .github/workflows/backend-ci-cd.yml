@@ -53,6 +53,9 @@ jobs:
             AWS_REGION=ap-south-1
             PORT=${{ secrets.PORT }}
             MUGAVAI_API_KEY=${{ secrets.MUGAVAI_API_KEY }}
+            EC2_INSTANCE_ID=${{ secrets.EC2_INSTANCE_ID }}
+            ADMIN_SECRET_KEY=${{ secrets.ADMIN_SECRET_KEY }}
+            EC2_PUBLIC_IP=${{ secrets.EC2_HOST }}
             EOF
             go build -o eservice-backend .
             sudo systemctl restart eservice-backend
