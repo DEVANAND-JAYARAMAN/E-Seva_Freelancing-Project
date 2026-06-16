@@ -225,8 +225,18 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
         });
         
         if (!res.ok) {
-           const errorData = await res.json();
-           throw new Error(errorData.error || "Signup failed");
+           let errorMsg = "Signup failed";
+           if (res.status === 502 || res.status === 504 || res.status === 503) {
+             errorMsg = "Server is currently offline. Please navigate to /admin to start the server.";
+           } else {
+             try {
+               const errorData = await res.json();
+               errorMsg = errorData.error || errorMsg;
+             } catch (e) {
+               errorMsg = `Server error: ${res.status} ${res.statusText}`;
+             }
+           }
+           throw new Error(errorMsg);
         }
 
         setFormData({ role: "retailer" });
