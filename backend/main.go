@@ -4,7 +4,6 @@ import (
 	"log"
 	"os"
 
-	"eservice-backend/admin"
 	"eservice-backend/auth"
 	"eservice-backend/billing"
 	"eservice-backend/crm"
@@ -47,8 +46,6 @@ func main() {
 		api.GET("/health", func(c *gin.Context) {
 			c.JSON(200, gin.H{"status": "ok"})
 		})
-
-		admin.RegisterRoutes(api)
 
 		authGroup := api.Group("/auth")
 		{
