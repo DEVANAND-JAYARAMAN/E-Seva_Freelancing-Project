@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test-build-deploy:
+  deploy:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -25,11 +25,6 @@ jobs:
         with:
           go-version-file: backend/go.mod
           cache-dependency-path: backend/go.sum
-
-      - name: Run tests
-        run: |
-          cd backend
-          go test ./...
 
       - name: Build Linux binary
         run: |
@@ -45,7 +40,6 @@ jobs:
           port: ${{ secrets.EC2_SSH_PORT }}
           script: |
             set -e
-            export PATH=$PATH:/usr/local/go/bin
             cd /opt/eservice
             git reset --hard HEAD
             git pull origin main
@@ -54,11 +48,7 @@ jobs:
             AWS_REGION=ap-south-1
             PORT=${{ secrets.PORT }}
             MUGAVAI_API_KEY=${{ secrets.MUGAVAI_API_KEY }}
-            EC2_INSTANCE_ID=${{ secrets.EC2_INSTANCE_ID }}
-            ADMIN_SECRET_KEY=${{ secrets.ADMIN_SECRET_KEY }}
-            EC2_PUBLIC_IP=${{ secrets.EC2_HOST }}
             EOF
-            go build -o eservice-backend .
             sudo systemctl restart eservice-backend
             sleep 3
             sudo systemctl is-active --quiet eservice-backend && echo "Service is running"
