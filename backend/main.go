@@ -84,6 +84,7 @@ func main() {
 			walletGroup.GET("/transactions", service.GetWalletTransactions)
 			walletGroup.POST("/recharge/gateway", wallet.InitiateGatewayRecharge)
 			walletGroup.POST("/payment/callback", wallet.HandlePaymentCallback)
+			walletGroup.GET("/recharge/status/:order_id", wallet.CheckGatewayRechargeStatus)
 		}
 
 		v1Group := api.Group("/v1")
