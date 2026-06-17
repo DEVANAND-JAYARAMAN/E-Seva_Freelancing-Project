@@ -38,6 +38,52 @@ async function saveIPToDynamo(ip) {
   }));
 }
 
+async function updateGithubIP(ip) {
+  const token = process.env.GITHUB_TOKEN;
+  if (!token) {
+    console.log("No GITHUB_TOKEN provided, skipping GitHub update.");
+    return;
+  }
+  const repo = "DEVANAND-JAYARAMAN/E-Seva_Freelancing-Project";
+  const filesToUpdate = ["netlify.toml", "frontend/public/_redirects"];
+
+  for (const filePath of filesToUpdate) {
+    const url = `https://api.github.com/repos/${repo}/contents/${filePath}`;
+    const headers = {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/vnd.github.v3+json",
+      "User-Agent": "Lambda-EC2-Updater",
+    };
+
+    try {
+      const res = await fetch(url, { headers });
+      if (!res.ok) continue;
+      const data = await res.json();
+      const contentStr = Buffer.from(data.content, "base64").toString("utf8");
+      
+      const newContentStr = contentStr.replace(/http:\/\/[0-9\.]+:\d+/g, `http://${ip}:8080`);
+      if (contentStr === newContentStr) continue;
+
+      const body = {
+        message: `chore: auto-update EC2 IP to ${ip} in ${filePath}`,
+        content: Buffer.from(newContentStr).toString("base64"),
+        sha: data.sha,
+        branch: "main"
+      };
+
+      await fetch(url, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify(body),
+      });
+      console.log(`Updated ${filePath} successfully.`);
+    } catch (e) {
+      console.error("Github update error for " + filePath + ":", e);
+    }
+  }
+}
+
+
 export const handler = async (event) => {
   const headers = {
     "Content-Type": "application/json",
@@ -85,7 +131,10 @@ export const handler = async (event) => {
         }
       }
 
-      if (publicIP) await saveIPToDynamo(publicIP);
+      if (publicIP) {
+        await saveIPToDynamo(publicIP);
+        await updateGithubIP(publicIP);
+      }
 
       return { statusCode: 200, headers, body: JSON.stringify({ status: "started", public_ip: publicIP }) };
     }
