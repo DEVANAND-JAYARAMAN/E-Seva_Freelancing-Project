@@ -209,6 +209,8 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
         }).catch(err => {
           console.error(err);
           setErrors({ email: err.message || "Login failed" });
+        }).finally(() => {
+          setIsSubmitting(false);
         });
       } else if (mode === "register") {
         const apiUrl = `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api`;
