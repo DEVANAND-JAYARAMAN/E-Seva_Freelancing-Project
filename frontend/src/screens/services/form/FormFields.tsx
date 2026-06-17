@@ -8,6 +8,7 @@ interface FieldWrapperProps {
   name: string;
   defaultLabel: string;
   defaultPlaceholder?: string;
+  disableEdit?: boolean;
   children: (
     resolvedLabel: string,
     resolvedPlaceholder?: string,
@@ -18,6 +19,7 @@ export const FieldWrapper: React.FC<FieldWrapperProps> = ({
   name,
   defaultLabel,
   defaultPlaceholder,
+  disableEdit,
   children,
 }) => {
   const { overrides, isEditMode, deleteField, editField } = useFormEdit();
@@ -25,10 +27,10 @@ export const FieldWrapper: React.FC<FieldWrapperProps> = ({
   const [tempLabel, setTempLabel] = useState("");
   const [tempPlaceholder, setTempPlaceholder] = useState("");
 
-  const isDeleted = overrides.deletedFields.includes(name);
-  const label = overrides.fieldOverrides[name]?.label || defaultLabel;
+  const isDeleted = !disableEdit && overrides.deletedFields.includes(name);
+  const label = (!disableEdit && overrides.fieldOverrides[name]?.label) || defaultLabel;
   const placeholder =
-    overrides.fieldOverrides[name]?.placeholder || defaultPlaceholder;
+    (!disableEdit && overrides.fieldOverrides[name]?.placeholder) || defaultPlaceholder;
 
   useEffect(() => {
     setTempLabel(label);
@@ -40,12 +42,12 @@ export const FieldWrapper: React.FC<FieldWrapperProps> = ({
   return (
     <div
       className={`flex flex-col gap-1.5 w-full transition-all ${
-        isEditMode
+        (isEditMode && !disableEdit)
           ? "p-2.5 rounded-2xl border border-amber-400/50 dark:border-amber-500/30 bg-amber-500/[0.02] dark:bg-amber-500/[0.01]"
           : "p-0 border border-transparent"
       }`}
     >
-      {isEditMode && (
+      {(isEditMode && !disableEdit) && (
         <div className="flex items-center justify-between mb-1 pb-1 border-b border-dashed border-amber-400/20">
           <span className="text-[9px] font-extrabold text-amber-500 dark:text-amber-400 uppercase tracking-widest select-none">
             Field: {name}
@@ -135,6 +137,7 @@ interface BaseFieldProps {
   placeholder?: string;
   error?: string;
   disabled?: boolean;
+  disableEdit?: boolean;
 }
 
 // 1. InputField (Text, Number, Email, Password, File, Date)
@@ -153,12 +156,14 @@ export const InputField: React.FC<InputFieldProps> = ({
   error,
   disabled,
   onChange,
+  disableEdit,
 }) => {
   return (
     <FieldWrapper
       name={name}
       defaultLabel={defaultLabel}
       defaultPlaceholder={defaultPlaceholder}
+      disableEdit={disableEdit}
     >
       {(label, placeholder) => {
         if (type === "file") {
@@ -253,12 +258,14 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
   rows = 3,
   disabled,
   onChange,
+  disableEdit,
 }) => {
   return (
     <FieldWrapper
       name={name}
       defaultLabel={defaultLabel}
       defaultPlaceholder={defaultPlaceholder}
+      disableEdit={disableEdit}
     >
       {(label, placeholder) => (
         <div className="flex flex-col gap-1.5 w-full">
@@ -302,9 +309,10 @@ export const SelectField: React.FC<SelectFieldProps> = ({
   error,
   disabled,
   onChange,
+  disableEdit,
 }) => {
   return (
-    <FieldWrapper name={name} defaultLabel={defaultLabel}>
+    <FieldWrapper name={name} defaultLabel={defaultLabel} disableEdit={disableEdit}>
       {(label) => (
         <div className="flex flex-col gap-1.5 w-full">
           <label className="text-[11px] font-extrabold text-slate-400 dark:text-slate-555 uppercase tracking-wider">
@@ -351,12 +359,14 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
   error,
   disabled,
   onChange,
+  disableEdit,
 }) => {
   return (
     <FieldWrapper
       name={name}
       defaultLabel={defaultLabel}
       defaultPlaceholder={defaultPlaceholder}
+      disableEdit={disableEdit}
     >
       {(label, placeholder) => (
         <div className="flex flex-col gap-1.5 w-full">
@@ -405,9 +415,10 @@ export const CheckboxField: React.FC<CheckboxFieldProps> = ({
   error,
   disabled,
   onChange,
+  disableEdit,
 }) => {
   return (
-    <FieldWrapper name={name} defaultLabel={defaultLabel}>
+    <FieldWrapper name={name} defaultLabel={defaultLabel} disableEdit={disableEdit}>
       {(label) => (
         <div className="flex flex-col gap-1.5 w-full">
           <label className="inline-flex items-center gap-2 cursor-pointer select-none">
@@ -490,6 +501,7 @@ interface SubmitButtonProps {
   text: string;
   loading?: boolean;
   disabled?: boolean;
+  hideEditButton?: boolean;
   onClick?: () => void;
 }
 
@@ -497,6 +509,7 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
   text,
   loading,
   disabled,
+  hideEditButton,
   onClick,
 }) => {
   const { isAdmin, isEditMode, setIsEditMode, resetFormConfig } = useFormEdit();
@@ -586,7 +599,7 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
 
   return (
     <React.Fragment>
-      {isAdmin && (
+      {(isAdmin && !hideEditButton) && (
         <button
           type="button"
           onClick={() => setIsEditMode(!isEditMode)}

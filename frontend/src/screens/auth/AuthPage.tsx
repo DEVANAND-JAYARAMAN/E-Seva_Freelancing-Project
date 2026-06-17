@@ -430,6 +430,7 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
                   onChange={(val) => handleFieldChange("fullName", val)}
                   error={errors.fullName}
                   disabled={isSubmitting}
+                  disableEdit={true}
                 />
               )}
 
@@ -442,6 +443,7 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
                 onChange={(val) => handleFieldChange("email", val)}
                 error={errors.email}
                 disabled={isSubmitting}
+                disableEdit={true}
               />
 
               {mode === "register" && (
@@ -454,6 +456,7 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
                   onChange={(val) => handleFieldChange("mobile", val)}
                   error={errors.mobile}
                   disabled={isSubmitting}
+                  disableEdit={true}
                 />
               )}
 
@@ -467,6 +470,7 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
                   onChange={(val) => handleFieldChange("password", val)}
                   error={errors.password}
                   disabled={isSubmitting}
+                  disableEdit={true}
                 />
               )}
 
@@ -480,6 +484,7 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
                   onChange={(val) => handleFieldChange("confirmPassword", val)}
                   error={errors.confirmPassword}
                   disabled={isSubmitting}
+                  disableEdit={true}
                 />
               )}
 
@@ -516,6 +521,7 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
                   }
                   loading={isSubmitting}
                   disabled={isSubmitting}
+                  hideEditButton={true}
                 />
               </div>
             </form>
