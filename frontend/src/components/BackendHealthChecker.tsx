@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { getBackendURL } from "../utils/backendUrl";
+
 
 export function BackendHealthChecker({ children }: { children: React.ReactNode }) {
   const [isBackendUp, setIsBackendUp] = useState(true);
@@ -11,10 +11,10 @@ export function BackendHealthChecker({ children }: { children: React.ReactNode }
 
     const checkHealth = async () => {
       try {
-        const base = await getBackendURL();
+        const apiUrl = `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api`;
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
-        const res = await fetch(`${base}/api/health`, {
+        const res = await fetch(`${apiUrl}/health`, {
           signal: controller.signal,
         });
         clearTimeout(timeoutId);
