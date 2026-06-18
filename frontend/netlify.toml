@@ -1,6 +1,9 @@
 [build]
   publish = "out"
-  command = "CI=false npm run build"
+  command = "npm run build"
+
+[build.environment]
+  CI = "false"
 
 [[redirects]]
   from = "/api/*"
