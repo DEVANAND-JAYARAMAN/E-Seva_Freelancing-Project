@@ -45,7 +45,7 @@ async function updateGithubIP(ip) {
     return;
   }
   const repo = "DEVANAND-JAYARAMAN/E-Seva_Freelancing-Project";
-  const filesToUpdate = ["netlify.toml", "frontend/public/_redirects"];
+  const filesToUpdate = ["frontend/netlify.toml", "frontend/public/_redirects"];
 
   for (const filePath of filesToUpdate) {
     const url = `https://api.github.com/repos/${repo}/contents/${filePath}`;
