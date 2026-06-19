@@ -43,9 +43,15 @@ export function BackendHealthChecker({ children }: { children: React.ReactNode }
           <p className="text-slate-300 mb-6">
             We are temporarily unable to connect to the server. You cannot use the site at this moment. It will be active tomorrow morning.
           </p>
-          <div className="flex justify-center items-center space-x-2">
+          <div className="flex justify-center items-center space-x-2 mb-6">
             <div className="w-3 h-3 bg-indigo-500 rounded-full animate-ping"></div>
             <span className="text-indigo-400 text-sm font-medium">Waiting for server...</span>
+          </div>
+
+          <div className="pt-4 border-t border-slate-700">
+             <a href="/admin" className="text-xs text-slate-400 hover:text-white transition underline">
+               Go to Server Admin Panel
+             </a>
           </div>
         </div>
       </div>
