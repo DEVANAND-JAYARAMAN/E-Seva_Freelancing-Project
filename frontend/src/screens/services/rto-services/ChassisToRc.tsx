@@ -18,10 +18,13 @@ export const ChassisToRc: React.FC<ChassisToRcProps> = ({ onCancel }) => {
   const handleFieldChange = (name: string, value: string) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
-      
+
       // Live validation on edit
       if (errors[name]) {
-        let rule = { required: true, requiredMessage: "Chassis Number is required" };
+        let rule = {
+          required: true,
+          requiredMessage: "Chassis Number is required",
+        };
         const errorMsg = validateField(name, value, rule, updated);
         setErrors((prevErrors) => {
           const next = { ...prevErrors };
@@ -41,7 +44,12 @@ export const ChassisToRc: React.FC<ChassisToRcProps> = ({ onCancel }) => {
     e.preventDefault();
 
     const newErrors: Record<string, string> = {};
-    const err = validateField("chassisNo", formData.chassisNo, { required: true, requiredMessage: "Chassis Number is required" }, formData);
+    const err = validateField(
+      "chassisNo",
+      formData.chassisNo,
+      { required: true, requiredMessage: "Chassis Number is required" },
+      formData,
+    );
     if (err) newErrors.chassisNo = err;
 
     if (Object.keys(newErrors).length > 0) {
@@ -71,7 +79,8 @@ export const ChassisToRc: React.FC<ChassisToRcProps> = ({ onCancel }) => {
             Search Placed Successfully!
           </h5>
           <p className="text-sm text-slate-400 dark:text-slate-555 mt-2 max-w-md leading-relaxed">
-            Your search request for **Chassis Number To Rc Find** has been registered. The results will update soon.
+            Your search request for **Chassis Number To Rc Find** has been
+            registered. The results will update soon.
           </p>
         </div>
       </div>
@@ -86,7 +95,8 @@ export const ChassisToRc: React.FC<ChassisToRcProps> = ({ onCancel }) => {
             Chassis Number To Rc Find
           </h2>
           <p className="text-xs text-slate-450 dark:text-slate-555 mt-0.5">
-            Locate registration certificate (RC) details using chassis number verification
+            Locate registration certificate (RC) details using chassis number
+            verification
           </p>
         </div>
         <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none">
@@ -105,7 +115,9 @@ export const ChassisToRc: React.FC<ChassisToRcProps> = ({ onCancel }) => {
               value={formData.chassisNo}
               error={errors.chassisNo}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("chassisNo", val.toUpperCase())}
+              onChange={(val) =>
+                handleFieldChange("chassisNo", val.toUpperCase())
+              }
             />
           </div>
         </div>
@@ -121,7 +133,7 @@ export const ChassisToRc: React.FC<ChassisToRcProps> = ({ onCancel }) => {
           Cancel
         </button>
         <SubmitButton
-          text="Search Details"
+          text="Submit"
           loading={isSubmitting}
           disabled={isSubmitting}
         />

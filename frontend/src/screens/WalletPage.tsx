@@ -3,13 +3,11 @@
 import { useState, useMemo } from "react";
 import {
   Wallet,
-  CircleDollarSign,
   Plus,
   Search,
   ArrowUpRight,
   ArrowDownLeft,
   History,
-  X,
   CheckCircle2,
   AlertCircle,
   Filter,
@@ -32,10 +30,6 @@ export function WalletPage() {
 
   // Balances
   const mainBalance = user?.walletBalance ?? 2895.0;
-  const [apiBalance, setApiBalance] = useLocalStorage<number>(
-    "thuruvan_api_balance",
-    4.0,
-  );
 
   // Transactions list via local storage
   const [transactions, setTransactions] = useLocalStorage<WalletTransaction[]>(
@@ -53,15 +47,10 @@ export function WalletPage() {
   const [typeFilter, setTypeFilter] = useState<"all" | "credit" | "debit">(
     "all",
   );
-  const [walletFilter, setWalletFilter] = useState<"all" | "Main" | "API">(
-    "all",
-  );
 
   // Modal Form State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedWalletType, setSelectedWalletType] = useState<"Main" | "API">(
-    "Main",
-  );
+  const selectedWalletType = "Main";
   const [amount, setAmount] = useState("");
   const [paymentMode, setPaymentMode] = useState<
     "UPI" | "IMPS" | "NEFT" | "Bank Transfer"
@@ -95,17 +84,8 @@ export function WalletPage() {
       )
       .reduce((sum, t) => sum + t.amount, 0);
 
-    const apiCredit = transactions
-      .filter(
-        (t) =>
-          t.walletType === "API" &&
-          t.type === "credit" &&
-          t.status === "Success",
-      )
-      .reduce((sum, t) => sum + t.amount, 0);
-
     return {
-      totalCredits: mainCredit + apiCredit,
+      totalCredits: mainCredit,
       totalDebits: mainDebit,
     };
   }, [transactions]);
@@ -119,16 +99,14 @@ export function WalletPage() {
         t.amount.toString().includes(searchTerm);
 
       const matchesType = typeFilter === "all" ? true : t.type === typeFilter;
-      const matchesWallet =
-        walletFilter === "all" ? true : t.walletType === walletFilter;
+      const matchesWallet = t.walletType === "Main";
 
       return matchesSearch && matchesType && matchesWallet;
     });
-  }, [transactions, searchTerm, typeFilter, walletFilter]);
+  }, [transactions, searchTerm, typeFilter]);
 
   // Open Recharge Form Modal
-  const openRechargeModal = (type: "Main" | "API") => {
-    setSelectedWalletType(type);
+  const openRechargeModal = () => {
     setAmount("");
     setUtrNumber("");
     setUpiId("");
@@ -336,7 +314,6 @@ export function WalletPage() {
     ) {
       setTransactions(initialTransactions);
       setPaymentRequests(initialPaymentRequests);
-      setApiBalance(4.0);
       updateWallet(2895.0);
     }
   };
@@ -369,7 +346,7 @@ export function WalletPage() {
         </div>
 
         {/* Balance Cards Display */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* Main Wallet Card */}
           <article className="relative overflow-hidden bg-gradient-to-br from-[#005c3a] to-[#004229] dark:from-[#08291c] dark:to-[#02150e] text-white rounded-3xl p-6 shadow-md shadow-emerald-900/10 flex flex-col justify-between min-h-[175px] group">
             <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 h-32 w-32 rounded-full bg-white/5 pointer-events-none group-hover:scale-110 transition-transform duration-500" />
@@ -397,44 +374,8 @@ export function WalletPage() {
                 🟢 Active Account
               </span>
               <button
-                onClick={() => openRechargeModal("Main")}
+                onClick={() => openRechargeModal()}
                 className="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-[#005c3a] hover:bg-emerald-50 text-xs font-extrabold rounded-xl transition-all duration-200 active:scale-95 shadow-sm"
-              >
-                <Plus size={14} className="stroke-[3]" />
-                Recharge
-              </button>
-            </div>
-          </article>
-
-          {/* API Wallet Card */}
-          <article className="relative overflow-hidden bg-gradient-to-br from-indigo-900 to-indigo-950 dark:from-[#0f1124] dark:to-[#070813] text-white rounded-3xl p-6 shadow-md shadow-indigo-950/20 flex flex-col justify-between min-h-[175px] group">
-            <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 h-32 w-32 rounded-full bg-white/5 pointer-events-none group-hover:scale-110 transition-transform duration-500" />
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-xs font-extrabold tracking-widest text-indigo-200/80 uppercase">
-                  API WALLET
-                </p>
-                <h3 className="text-3xl font-black mt-2 tracking-tight">
-                  <span className="text-xl font-bold text-indigo-300 mr-0.5">
-                    ₹
-                  </span>
-                  {apiBalance.toLocaleString("en-IN", {
-                    minimumFractionDigits: 2,
-                  })}
-                </h3>
-              </div>
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white backdrop-blur-md">
-                <CircleDollarSign size={18} />
-              </span>
-            </div>
-
-            <div className="flex justify-between items-end mt-4">
-              <span className="text-[10px] font-bold text-indigo-300 bg-white/10 px-2.5 py-1 rounded-lg">
-                ⚡ API Linked
-              </span>
-              <button
-                onClick={() => openRechargeModal("API")}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-indigo-900 hover:bg-indigo-50 text-xs font-extrabold rounded-xl transition-all duration-200 active:scale-95 shadow-sm"
               >
                 <Plus size={14} className="stroke-[3]" />
                 Recharge
@@ -512,40 +453,6 @@ export function WalletPage() {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
                 />
-              </div>
-
-              {/* Wallet Filter Toggle */}
-              <div className="flex bg-slate-100 dark:bg-slate-950/60 p-0.5 rounded-xl border border-slate-200/50 dark:border-slate-900/80">
-                <button
-                  onClick={() => setWalletFilter("all")}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition-all ${
-                    walletFilter === "all"
-                      ? "bg-white dark:bg-[#0f1524] text-slate-850 dark:text-white shadow-sm"
-                      : "text-slate-400 dark:text-slate-500 hover:text-slate-750 dark:hover:text-slate-300"
-                  }`}
-                >
-                  All
-                </button>
-                <button
-                  onClick={() => setWalletFilter("Main")}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition-all ${
-                    walletFilter === "Main"
-                      ? "bg-white dark:bg-[#0f1524] text-slate-850 dark:text-white shadow-sm"
-                      : "text-slate-400 dark:text-slate-500 hover:text-slate-750 dark:hover:text-slate-300"
-                  }`}
-                >
-                  Main
-                </button>
-                <button
-                  onClick={() => setWalletFilter("API")}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition-all ${
-                    walletFilter === "API"
-                      ? "bg-white dark:bg-[#0f1524] text-slate-850 dark:text-white shadow-sm"
-                      : "text-slate-400 dark:text-slate-500 hover:text-slate-750 dark:hover:text-slate-300"
-                  }`}
-                >
-                  API
-                </button>
               </div>
 
               {/* Type Filter Tab */}

@@ -18,8 +18,7 @@ export function WalletHealth() {
             2895.00
           </div>
           <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed max-w-[240px]">
-            Main wallet has enough balance for current service flow. API wallet
-            needs a refill.
+            Main wallet has enough balance for current service flow.
           </p>
         </div>
 
@@ -39,7 +38,7 @@ export function WalletHealth() {
           onClick={() => router.push("/wallets")}
           className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] dark:hover:bg-emerald-500 text-white font-bold text-sm shadow-sm active:scale-[0.98] transition-all duration-200"
         >
-          Recharge API wallet
+          Recharge Main wallet
         </button>
       </div>
     </article>
