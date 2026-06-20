@@ -4,7 +4,6 @@ import { X, Leaf } from "lucide-react";
 import Link from "next/link";
 import { navItems } from "../config/data";
 
-import { usePathname } from "next/navigation";
 import { useAuth } from "../store/context/AuthContext";
 
 type SidebarProps = {
@@ -14,17 +13,10 @@ type SidebarProps = {
 };
 
 export function Sidebar({ activePage, isOpen, onClose }: SidebarProps) {
-  const pathname = usePathname();
   const { user } = useAuth();
 
   const isRetailerOrDistributor =
-    user?.role !== "admin" &&
-    (pathname.includes("dashboard2") ||
-      pathname.includes("dashboard3") ||
-      pathname.includes("retailer") ||
-      pathname.includes("distributor") ||
-      user?.role === "retailer" ||
-      user?.role === "distributor");
+    user?.role === "retailer" || user?.role === "distributor";
 
   const allowedLabels = [
     "Dashboard",
