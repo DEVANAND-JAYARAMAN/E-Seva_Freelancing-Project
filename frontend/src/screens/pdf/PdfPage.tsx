@@ -966,7 +966,7 @@ export function PdfPage() {
                       Cancel
                     </button>
                     <SubmitButton
-                      text={`Search Details`}
+                      text="Submit"
                       loading={isSubmitting}
                       disabled={isSubmitting}
                     />

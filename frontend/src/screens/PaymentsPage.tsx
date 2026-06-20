@@ -1702,7 +1702,7 @@ export function PaymentsPage() {
                 className="flex items-center justify-center gap-1.5 h-9 px-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-750 dark:hover:text-slate-200 transition-colors self-start sm:self-auto"
               >
                 <ArrowLeft size={13} />
-                <span>Back to Catalog</span>
+                <span>Back</span>
               </button>
             </div>
 

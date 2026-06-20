@@ -359,7 +359,7 @@ export function GstPage() {
                     onClick={() => setActiveForm(null)}
                     className="mt-4 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold text-xs"
                   >
-                    Back to Sub-Services
+                    Back
                   </button>
                 </div>
               )}

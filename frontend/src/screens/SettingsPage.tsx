@@ -10,6 +10,7 @@ import {
   Sun,
   Lock,
   Eye,
+  EyeOff,
   CheckCircle2,
 } from "lucide-react";
 import { useTheme } from "../store/context/ThemeProvider";
@@ -20,6 +21,9 @@ export function SettingsPage() {
     "security" | "notifications" | "appearance"
   >("security");
   const [success, setSuccess] = useState(false);
+  const [showCurrent, setShowCurrent] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [notifications, setNotifications] = useState({
     emailAlerts: true,
     smsAlerts: false,
@@ -111,39 +115,81 @@ export function SettingsPage() {
 
                 <div className="space-y-4">
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">
+                    <label className="text-[11px] font-bold text-slate-450 dark:text-slate-550 uppercase tracking-wider">
                       Current Password
                     </label>
-                    <input
-                      type="password"
-                      required
-                      placeholder="••••••••"
-                      className="w-full h-11 px-4 text-xs font-bold bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 rounded-xl focus:border-[#005c3a] focus:ring-1 focus:ring-[#005c3a] dark:text-white transition-all outline-none"
-                    />
+                    <div className="relative w-full">
+                      <input
+                        type={showCurrent ? "text" : "password"}
+                        required
+                        placeholder="••••••••"
+                        className="w-full h-11 pl-4 pr-11 text-xs font-bold bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 rounded-xl focus:border-[#005c3a] focus:ring-1 focus:ring-[#005c3a] dark:text-white transition-all outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowCurrent(!showCurrent)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-655 dark:hover:text-slate-300 focus:outline-none transition-colors"
+                        tabIndex={-1}
+                      >
+                        {showCurrent ? (
+                          <EyeOff size={16} className="stroke-[2]" />
+                        ) : (
+                          <Eye size={16} className="stroke-[2]" />
+                        )}
+                      </button>
+                    </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">
+                    <label className="text-[11px] font-bold text-slate-450 dark:text-slate-555 uppercase tracking-wider">
                       New Password
                     </label>
-                    <input
-                      type="password"
-                      required
-                      placeholder="Enter a new strong password"
-                      className="w-full h-11 px-4 text-xs font-bold bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 rounded-xl focus:border-[#005c3a] focus:ring-1 focus:ring-[#005c3a] dark:text-white transition-all outline-none"
-                    />
+                    <div className="relative w-full">
+                      <input
+                        type={showNew ? "text" : "password"}
+                        required
+                        placeholder="Enter a new strong password"
+                        className="w-full h-11 pl-4 pr-11 text-xs font-bold bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 rounded-xl focus:border-[#005c3a] focus:ring-1 focus:ring-[#005c3a] dark:text-white transition-all outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNew(!showNew)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-655 dark:hover:text-slate-300 focus:outline-none transition-colors"
+                        tabIndex={-1}
+                      >
+                        {showNew ? (
+                          <EyeOff size={16} className="stroke-[2]" />
+                        ) : (
+                          <Eye size={16} className="stroke-[2]" />
+                        )}
+                      </button>
+                    </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">
+                    <label className="text-[11px] font-bold text-slate-450 dark:text-slate-555 uppercase tracking-wider">
                       Confirm New Password
                     </label>
-                    <input
-                      type="password"
-                      required
-                      placeholder="Re-enter to confirm password"
-                      className="w-full h-11 px-4 text-xs font-bold bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 rounded-xl focus:border-[#005c3a] focus:ring-1 focus:ring-[#005c3a] dark:text-white transition-all outline-none"
-                    />
+                    <div className="relative w-full">
+                      <input
+                        type={showConfirm ? "text" : "password"}
+                        required
+                        placeholder="Re-enter to confirm password"
+                        className="w-full h-11 pl-4 pr-11 text-xs font-bold bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 rounded-xl focus:border-[#005c3a] focus:ring-1 focus:ring-[#005c3a] dark:text-white transition-all outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirm(!showConfirm)}
+                        className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-655 dark:hover:text-slate-300 focus:outline-none transition-colors"
+                        tabIndex={-1}
+                      >
+                        {showConfirm ? (
+                          <EyeOff size={16} className="stroke-[2]" />
+                        ) : (
+                          <Eye size={16} className="stroke-[2]" />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -221,8 +267,7 @@ export function SettingsPage() {
                         Low Wallet Warning Triggers
                       </p>
                       <p className="text-[10px] text-slate-450 dark:text-slate-500 font-semibold mt-0.5">
-                        Notify instantly when API or Main balance falls below
-                        ₹500.
+                        Notify instantly when Main balance falls below ₹500.
                       </p>
                     </div>
                     <input
