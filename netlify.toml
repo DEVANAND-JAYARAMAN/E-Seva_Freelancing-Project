@@ -1,0 +1,7 @@
+[build]
+  base = "frontend"
+  publish = "out"
+  command = "npm run build"
+
+[build.environment]
+  CI = "false"

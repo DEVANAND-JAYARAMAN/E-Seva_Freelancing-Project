@@ -5,6 +5,11 @@ export type TempCredential = {
 };
 
 export const tempLogins: Record<string, TempCredential> = {
+  "admin@eseva.com": {
+    role: "admin",
+    name: "System Admin",
+    pass: "password123",
+  },
   "admin@gmail.com": {
     role: "admin",
     name: "Admin User",

@@ -228,11 +228,37 @@ export function WalletPage() {
             `width=${width},height=${height},left=${left},top=${top}`,
           );
 
-          const pollTimer = setInterval(() => {
+          const pollTimer = setInterval(async () => {
+            try {
+              if (popup && !popup.closed && popup.location.href.includes(window.location.origin)) {
+                popup.close();
+              }
+            } catch (e) {
+              // Ignore cross-origin error
+            }
+
             if (!popup || popup.closed) {
               clearInterval(pollTimer);
-              setGatewayProcessing(false);
-              completeRequest(data.data.order_id);
+              setGatewayProcessing(true);
+              
+              // Poll backend for final status
+              try {
+                const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "");
+                const statusRes = await fetch(`${baseUrl}/api/wallet/recharge/status/${data.data.order_id}`);
+                const statusData = await statusRes.json();
+                
+                setGatewayProcessing(false);
+                if (statusData.status === "Success" || statusData.status === "SUCCESS" || statusData.status === "success") {
+                  handleGatewaySuccess(data.data.order_id);
+                } else if (statusData.status === "Pending") {
+                   setFormError("Payment is pending or canceled. If deducted, it will be credited soon.");
+                } else {
+                   setFormError(`Payment failed or canceled (Status: ${statusData.status})`);
+                }
+              } catch (err) {
+                setGatewayProcessing(false);
+                setFormError("Could not verify payment status. Please check transaction history.");
+              }
             }
           }, 1000);
         } else {
@@ -247,6 +273,39 @@ export function WalletPage() {
     }
 
     completeRequest(utrNumber.trim());
+  };
+
+  const handleGatewaySuccess = (orderId: string) => {
+    const amtNum = parseFloat(amount);
+    
+    // Add transaction to ledger as Success
+    const newTransaction: WalletTransaction = {
+      id: `tx-gw-${Date.now()}`,
+      date: new Date().toLocaleString("en-US", {
+        year: "numeric", month: "2-digit", day: "2-digit",
+        hour: "2-digit", minute: "2-digit", hour12: true,
+      }),
+      type: "credit",
+      description: `Wallet Recharge via Mugavai Gateway`,
+      amount: amtNum,
+      reference: orderId,
+      status: "Success",
+      walletType: selectedWalletType,
+    };
+    setTransactions((prev) => [newTransaction, ...prev]);
+
+    // Update wallet balance locally
+    if (selectedWalletType === "Main") {
+      updateWallet(mainBalance + amtNum);
+    } else {
+      setApiBalance((prev) => prev + amtNum);
+    }
+
+    setFormSuccess(true);
+    setTimeout(() => {
+      setIsModalOpen(false);
+      setFormSuccess(false);
+    }, 2000);
   };
 
   const completeRequest = (finalUtr: string) => {

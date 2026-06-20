@@ -31,18 +31,24 @@ type GatewayRechargeRequest struct {
 }
 
 type mugavaiOrderRequest struct {
-	Amount      string `json:"amount"`
-	Mobile      string `json:"mobile"`
-	Email       string `json:"email"`
-	RedirectURL string `json:"redirect_url"`
-	OrderID     string `json:"order_id"`
+	Amount         float64 `json:"amount"`
+	CustomerMobile string  `json:"customer_mobile"`
+	CustomerEmail  string  `json:"customer_email"`
+	RedirectURL    string  `json:"redirect_url"`
+	OrderID        string  `json:"order_id"`
 }
 
 type mugavaiOrderResponse struct {
-	Status     bool   `json:"status"`
-	Message    string `json:"message"`
-	OrderID    string `json:"order_id"`
-	PaymentURL string `json:"payment_url"`
+	Status  string `json:"status"`
+	Message string `json:"message"`
+	Data    struct {
+		Amount         interface{} `json:"amount"`
+		CustomerMobile string      `json:"customer_mobile"`
+		CustomerEmail  string      `json:"customer_email"`
+		OrderID        string      `json:"order_id"`
+		PaymentURL     string      `json:"payment_url"`
+		QRImage        string      `json:"qr_image"`
+	} `json:"data"`
 }
 
 type MugavaiCallbackPayload struct {
@@ -65,7 +71,7 @@ func HandlePaymentCallback(c *gin.Context) {
 	log.Printf("[Mugavai Callback] OrderID=%s TxID=%s Status=%s Amount=%s Mobile=%s",
 		payload.OrderID, payload.TransactionID, payload.Status, payload.Amount, payload.Mobile)
 
-	if payload.Status != "success" {
+	if payload.Status != "success" && payload.Status != "SUCCESS" {
 		// Not a success — just acknowledge, no credit
 		c.JSON(http.StatusOK, gin.H{"status": "received"})
 		return
@@ -135,30 +141,34 @@ func InitiateGatewayRecharge(c *gin.Context) {
 		return
 	}
 
-	apiKey := os.Getenv("MUGAVAI_API_KEY")
-	if apiKey == "" {
-		apiKey = "enCJ5EKHzcSRqBP8"
+	username := os.Getenv("MUGAVAI_USERNAME")
+	if username == "" {
+		username = "6380616163"
 	}
+	// Hardcoding API key because GitHub Secrets is overriding it with an old value
+	apiKey := "5f89c01e1d5be436659591de5c7d93d1bcd97c7091448f9e"
 
 	orderID := fmt.Sprintf("ORD-%d", time.Now().UnixMilli())
 
 	payload := mugavaiOrderRequest{
-		Amount:      fmt.Sprintf("%.2f", req.Amount),
-		Mobile:      req.CustomerMobile,
-		Email:       req.CustomerEmail,
-		RedirectURL: req.RedirectURL,
-		OrderID:     orderID,
+		Amount:         req.Amount,
+		CustomerMobile: req.CustomerMobile,
+		CustomerEmail:  req.CustomerEmail,
+		RedirectURL:    req.RedirectURL,
+		OrderID:        orderID,
 	}
 
 	body, _ := json.Marshal(payload)
 
-	httpReq, err := http.NewRequest("POST", mugavaiBaseURL+"/create_order", bytes.NewBuffer(body))
+	apiURL := "https://mugavaipaymentgetway.in/api/v1/create_order.php"
+	httpReq, err := http.NewRequest("POST", apiURL, bytes.NewBuffer(body))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to build payment request"})
 		return
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("key", apiKey)
+	httpReq.Header.Set("x-client-username", username)
+	httpReq.Header.Set("x-client-apikey", apiKey)
 
 	client := &http.Client{Timeout: 15 * time.Second}
 	resp, err := client.Do(httpReq)
@@ -168,23 +178,27 @@ func InitiateGatewayRecharge(c *gin.Context) {
 	}
 	defer resp.Body.Close()
 
-	respBody, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		c.JSON(http.StatusBadGateway, gin.H{"message": fmt.Sprintf("Payment gateway error (%d): %s", resp.StatusCode, string(bodyBytes))})
+		return
+	}
 
 	var pgResp mugavaiOrderResponse
-	if err := json.Unmarshal(respBody, &pgResp); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&pgResp); err != nil {
 		c.JSON(http.StatusBadGateway, gin.H{"message": "Invalid response from payment gateway"})
 		return
 	}
 
-	if !pgResp.Status || pgResp.PaymentURL == "" {
+	if pgResp.Status != "success" {
 		c.JSON(http.StatusBadGateway, gin.H{"message": pgResp.Message})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"data": gin.H{
-			"order_id":    pgResp.OrderID,
-			"payment_url": pgResp.PaymentURL,
+			"order_id":    pgResp.Data.OrderID,
+			"payment_url": pgResp.Data.PaymentURL,
 		},
 	})
 }

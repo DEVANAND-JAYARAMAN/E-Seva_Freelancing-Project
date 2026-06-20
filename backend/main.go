@@ -30,7 +30,12 @@ func main() {
 
 	// CORS configuration
 	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"http://localhost:3000", "http://localhost:3001", "http://3.111.41.182:3000", "http://3.111.41.182", "https://main.dft1zhsxacjk.amplifyapp.com", "https://thuruvancommunications.com"}
+	ec2IP := os.Getenv("EC2_PUBLIC_IP")
+	allowOrigins := []string{"http://localhost:3000", "http://localhost:3001", "https://main.dft1zhsxacjk.amplifyapp.com", "https://thuruvancommunications.com"}
+	if ec2IP != "" {
+		allowOrigins = append(allowOrigins, "http://"+ec2IP, "http://"+ec2IP+":3000")
+	}
+	config.AllowOrigins = allowOrigins
 	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
 	config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
 	r.Use(cors.New(config))
@@ -38,6 +43,10 @@ func main() {
 	// Routes
 	api := r.Group("/api")
 	{
+		api.GET("/health", func(c *gin.Context) {
+			c.JSON(200, gin.H{"status": "ok"})
+		})
+
 		authGroup := api.Group("/auth")
 		{
 			authGroup.POST("/signup", auth.Signup)
@@ -75,6 +84,7 @@ func main() {
 			walletGroup.GET("/transactions", service.GetWalletTransactions)
 			walletGroup.POST("/recharge/gateway", wallet.InitiateGatewayRecharge)
 			walletGroup.POST("/payment/callback", wallet.HandlePaymentCallback)
+			walletGroup.GET("/recharge/status/:order_id", wallet.CheckGatewayRechargeStatus)
 		}
 
 		v1Group := api.Group("/v1")

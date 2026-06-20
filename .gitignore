@@ -8,6 +8,16 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+node_modules
+.next
+out
+dist
+.env
+.env.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 next-dev*.log
 
 # Editor directories and tools
@@ -15,3 +25,4 @@ next-dev*.log
 
 # Build artifacts
 *.exe
+.netlify/  
