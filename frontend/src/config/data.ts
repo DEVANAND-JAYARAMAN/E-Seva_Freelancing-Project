@@ -67,7 +67,6 @@ export const stats: StatCard[] = [
 
 export const walletCards: WalletCard[] = [
   { label: "Main Wallet", value: "2895.00", icon: Wallet },
-  { label: "API Wallet", value: "4.00", icon: CircleDollarSign },
   { label: "Wallet Request", value: "0", icon: UserCheck },
   { label: "Customers", value: "0", icon: Users },
   { label: "Retailers", value: "0", icon: Store },
@@ -161,16 +160,6 @@ export const initialTransactions: WalletTransaction[] = [
     walletType: "Main",
   },
   {
-    id: "tx-4",
-    date: "2026-05-23 10:15 AM",
-    type: "credit",
-    description: "API Wallet Allocation",
-    amount: 1000.0,
-    reference: "API-ALLOC-90",
-    status: "Success",
-    walletType: "API",
-  },
-  {
     id: "tx-5",
     date: "2026-05-22 04:12 PM",
     type: "credit",
@@ -195,19 +184,6 @@ export const initialPaymentRequests: PaymentRequest[] = [
     requestDate: "2026-05-23 10:30 AM",
     walletType: "Main",
     remarks: "Added money for bulk PAN applications",
-  },
-  {
-    id: "req-2",
-    retailerId: "ret-2",
-    retailerName: "Alam",
-    shopName: "Digital Point",
-    amount: 5000.0,
-    paymentMode: "Bank Transfer",
-    utrNumber: "N20260523000918",
-    status: "Pending",
-    requestDate: "2026-05-23 10:15 AM",
-    walletType: "API",
-    remarks: "API recharge for monthly quota",
   },
   {
     id: "req-3",

@@ -7,7 +7,9 @@ interface PanToMsmeUdhayamFindProps {
   onCancel: () => void;
 }
 
-export const PanToMsmeUdhayamFind: React.FC<PanToMsmeUdhayamFindProps> = ({ onCancel }) => {
+export const PanToMsmeUdhayamFind: React.FC<PanToMsmeUdhayamFindProps> = ({
+  onCancel,
+}) => {
   const [formData, setFormData] = useState<Record<string, string>>({
     panNo: "",
   });
@@ -18,12 +20,16 @@ export const PanToMsmeUdhayamFind: React.FC<PanToMsmeUdhayamFindProps> = ({ onCa
   const handleFieldChange = (name: string, value: string) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
-      
+
       // Live validation on edit
       if (errors[name]) {
         let rule = {};
         if (name === "panNo") {
-          rule = { required: true, pattern: PATTERNS.PAN, patternMessage: "Must be a valid 10-character PAN" };
+          rule = {
+            required: true,
+            pattern: PATTERNS.PAN,
+            patternMessage: "Must be a valid 10-character PAN",
+          };
         }
 
         const errorMsg = validateField(name, value, rule, updated);
@@ -45,14 +51,19 @@ export const PanToMsmeUdhayamFind: React.FC<PanToMsmeUdhayamFindProps> = ({ onCa
     e.preventDefault();
 
     const newErrors: Record<string, string> = {};
-    
+
     // Pan No validation
-    const panErr = validateField("panNo", formData.panNo, {
-      required: true,
-      requiredMessage: "PAN Number is required",
-      pattern: PATTERNS.PAN,
-      patternMessage: "Must be a valid 10-character PAN",
-    }, formData);
+    const panErr = validateField(
+      "panNo",
+      formData.panNo,
+      {
+        required: true,
+        requiredMessage: "PAN Number is required",
+        pattern: PATTERNS.PAN,
+        patternMessage: "Must be a valid 10-character PAN",
+      },
+      formData,
+    );
     if (panErr) newErrors.panNo = panErr;
 
     if (Object.keys(newErrors).length > 0) {
@@ -82,7 +93,8 @@ export const PanToMsmeUdhayamFind: React.FC<PanToMsmeUdhayamFindProps> = ({ onCa
             Search Placed Successfully!
           </h5>
           <p className="text-sm text-slate-400 dark:text-slate-555 mt-2 max-w-md leading-relaxed">
-            Your search request for **Pan To Msme Udhayam Find** has been registered. The results will be updated soon.
+            Your search request for **Pan To Msme Udhayam Find** has been
+            registered. The results will be updated soon.
           </p>
         </div>
       </div>
@@ -135,7 +147,7 @@ export const PanToMsmeUdhayamFind: React.FC<PanToMsmeUdhayamFindProps> = ({ onCa
           Cancel
         </button>
         <SubmitButton
-          text="Search Details"
+          text="Submit"
           loading={isSubmitting}
           disabled={isSubmitting}
         />

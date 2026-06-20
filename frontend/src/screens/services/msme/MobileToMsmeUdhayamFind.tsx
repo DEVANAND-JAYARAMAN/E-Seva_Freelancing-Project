@@ -7,7 +7,9 @@ interface MobileToMsmeUdhayamFindProps {
   onCancel: () => void;
 }
 
-export const MobileToMsmeUdhayamFind: React.FC<MobileToMsmeUdhayamFindProps> = ({ onCancel }) => {
+export const MobileToMsmeUdhayamFind: React.FC<
+  MobileToMsmeUdhayamFindProps
+> = ({ onCancel }) => {
   const [formData, setFormData] = useState<Record<string, string>>({
     mobileNo: "",
   });
@@ -18,12 +20,16 @@ export const MobileToMsmeUdhayamFind: React.FC<MobileToMsmeUdhayamFindProps> = (
   const handleFieldChange = (name: string, value: string) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
-      
+
       // Live validation on edit
       if (errors[name]) {
         let rule = {};
         if (name === "mobileNo") {
-          rule = { required: true, pattern: PATTERNS.PHONE, patternMessage: "Must be a valid 10-digit number" };
+          rule = {
+            required: true,
+            pattern: PATTERNS.PHONE,
+            patternMessage: "Must be a valid 10-digit number",
+          };
         }
 
         const errorMsg = validateField(name, value, rule, updated);
@@ -45,14 +51,19 @@ export const MobileToMsmeUdhayamFind: React.FC<MobileToMsmeUdhayamFindProps> = (
     e.preventDefault();
 
     const newErrors: Record<string, string> = {};
-    
+
     // Mobile No validation
-    const mobileErr = validateField("mobileNo", formData.mobileNo, {
-      required: true,
-      requiredMessage: "Mobile Number is required",
-      pattern: PATTERNS.PHONE,
-      patternMessage: "Must be a valid 10-digit number",
-    }, formData);
+    const mobileErr = validateField(
+      "mobileNo",
+      formData.mobileNo,
+      {
+        required: true,
+        requiredMessage: "Mobile Number is required",
+        pattern: PATTERNS.PHONE,
+        patternMessage: "Must be a valid 10-digit number",
+      },
+      formData,
+    );
     if (mobileErr) newErrors.mobileNo = mobileErr;
 
     if (Object.keys(newErrors).length > 0) {
@@ -82,7 +93,8 @@ export const MobileToMsmeUdhayamFind: React.FC<MobileToMsmeUdhayamFindProps> = (
             Search Placed Successfully!
           </h5>
           <p className="text-sm text-slate-400 dark:text-slate-555 mt-2 max-w-md leading-relaxed">
-            Your search request for **Mobile To Msme Udhayam Find** has been registered. The results will be updated soon.
+            Your search request for **Mobile To Msme Udhayam Find** has been
+            registered. The results will be updated soon.
           </p>
         </div>
       </div>
@@ -134,7 +146,7 @@ export const MobileToMsmeUdhayamFind: React.FC<MobileToMsmeUdhayamFindProps> = (
           Cancel
         </button>
         <SubmitButton
-          text="Search Details"
+          text="Submit"
           loading={isSubmitting}
           disabled={isSubmitting}
         />

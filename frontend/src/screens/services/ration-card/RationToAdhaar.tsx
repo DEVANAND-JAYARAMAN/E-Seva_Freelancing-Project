@@ -143,7 +143,7 @@ export const RationToAdhaar: React.FC<RationToAdhaarProps> = ({ onCancel }) => {
           Cancel
         </button>
         <SubmitButton
-          text="Search Details"
+          text="Submit"
           loading={isSubmitting}
           disabled={isSubmitting}
         />
