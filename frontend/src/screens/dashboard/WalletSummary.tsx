@@ -3,7 +3,6 @@ import { walletCards } from "../../config/data";
 export function WalletSummary() {
   const descMap: Record<string, string> = {
     "main wallet": "Available balance",
-    "api wallet": "API balance",
     "wallet request": "Pending approvals",
     customers: "Subscribed Clients",
     retailers: "Registered Agents",
@@ -13,8 +12,6 @@ export function WalletSummary() {
   const toneClasses: Record<string, string> = {
     "main wallet":
       "bg-[#e8f5e9] dark:bg-emerald-950/30 text-[#005c3a] dark:text-emerald-400",
-    "api wallet":
-      "bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400",
     "wallet request":
       "bg-sky-50 dark:bg-sky-950/30 text-sky-600 dark:text-sky-400",
     customers:

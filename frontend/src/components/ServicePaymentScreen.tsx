@@ -19,7 +19,9 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
   onSuccess,
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"wallet" | "gateway">("wallet");
+  const [paymentMethod, setPaymentMethod] = useState<"wallet" | "gateway">(
+    "wallet",
+  );
   const [upiId, setUpiId] = useState("");
   const [customerWhatsApp, setCustomerWhatsApp] = useState("");
   const [error, setError] = useState("");
@@ -100,52 +102,90 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
             Select Payment Option
           </label>
           <div className="grid grid-cols-2 gap-3">
-            <label 
-              onClick={() => { setPaymentMethod("wallet"); setError(""); }}
+            <label
+              onClick={() => {
+                setPaymentMethod("wallet");
+                setError("");
+              }}
               className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                paymentMethod === "wallet" 
-                  ? "border-[#005c3a] bg-[#005c3a]/5 dark:border-emerald-600 dark:bg-emerald-950/20" 
+                paymentMethod === "wallet"
+                  ? "border-[#005c3a] bg-[#005c3a]/5 dark:border-emerald-600 dark:bg-emerald-950/20"
                   : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-[#131926] opacity-60 hover:opacity-100"
               }`}
             >
-              <input type="radio" name="paymentMethod" value="wallet" className="sr-only" checked={paymentMethod === "wallet"} readOnly />
-              <Wallet size={20} className={`mb-2 ${paymentMethod === "wallet" ? "text-[#005c3a] dark:text-emerald-400" : "text-slate-400"}`} />
-              <span className={`text-xs font-extrabold uppercase tracking-wider text-center ${paymentMethod === "wallet" ? "text-[#005c3a] dark:text-emerald-400" : "text-slate-500"}`}>
+              <input
+                type="radio"
+                name="paymentMethod"
+                value="wallet"
+                className="sr-only"
+                checked={paymentMethod === "wallet"}
+                readOnly
+              />
+              <Wallet
+                size={20}
+                className={`mb-2 ${paymentMethod === "wallet" ? "text-[#005c3a] dark:text-emerald-400" : "text-slate-400"}`}
+              />
+              <span
+                className={`text-xs font-extrabold uppercase tracking-wider text-center ${paymentMethod === "wallet" ? "text-[#005c3a] dark:text-emerald-400" : "text-slate-500"}`}
+              >
                 Main Wallet
               </span>
             </label>
-            <label 
-              onClick={() => { setPaymentMethod("gateway"); setError(""); }}
+            <label
+              onClick={() => {
+                setPaymentMethod("gateway");
+                setError("");
+              }}
               className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-all ${
                 paymentMethod === "gateway"
                   ? "border-[#005c3a] bg-[#005c3a]/5 dark:border-emerald-600 dark:bg-emerald-950/20"
                   : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-[#131926] opacity-60 hover:opacity-100"
               }`}
             >
-              <input type="radio" name="paymentMethod" value="gateway" className="sr-only" checked={paymentMethod === "gateway"} readOnly />
-              <svg className={`w-5 h-5 mb-2 ${paymentMethod === "gateway" ? "text-[#005c3a] dark:text-emerald-400" : "text-slate-400"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              <input
+                type="radio"
+                name="paymentMethod"
+                value="gateway"
+                className="sr-only"
+                checked={paymentMethod === "gateway"}
+                readOnly
+              />
+              <svg
+                className={`w-5 h-5 mb-2 ${paymentMethod === "gateway" ? "text-[#005c3a] dark:text-emerald-400" : "text-slate-400"}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                />
               </svg>
-              <span className={`text-[10px] font-extrabold uppercase tracking-wider text-center ${paymentMethod === "gateway" ? "text-[#005c3a] dark:text-emerald-400" : "text-slate-500"}`}>
+              <span
+                className={`text-[10px] font-extrabold uppercase tracking-wider text-center ${paymentMethod === "gateway" ? "text-[#005c3a] dark:text-emerald-400" : "text-slate-500"}`}
+              >
                 Online Gateway
               </span>
             </label>
           </div>
 
           <div className="mt-2 p-3 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-900/30">
-             <label className="block text-[10px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-2">
-               Customer WhatsApp Number (Optional)
-             </label>
-             <input
-                type="text"
-                placeholder="e.g. 9876543210"
-                value={customerWhatsApp}
-                onChange={(e) => setCustomerWhatsApp(e.target.value)}
-                className="w-full px-4 py-2 rounded-lg border border-blue-200 dark:border-blue-800 focus:border-blue-500 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white dark:bg-[#0a0f18]/30 transition-all"
-              />
-              <p className="text-[9px] text-blue-500 dark:text-blue-400 mt-1.5 font-medium">
-                Customer will receive an automated WhatsApp message when the service is marked as completed by Admin.
-              </p>
+            <label className="block text-[10px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider mb-2">
+              Customer WhatsApp Number (Optional)
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. 9876543210"
+              value={customerWhatsApp}
+              onChange={(e) => setCustomerWhatsApp(e.target.value)}
+              className="w-full px-4 py-2 rounded-lg border border-blue-200 dark:border-blue-800 focus:border-blue-500 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 bg-white dark:bg-[#0a0f18]/30 transition-all"
+            />
+            <p className="text-[9px] text-blue-500 dark:text-blue-400 mt-1.5 font-medium">
+              Customer will receive an automated WhatsApp message when the
+              service is marked as completed by Admin.
+            </p>
           </div>
 
           {paymentMethod === "gateway" && (
@@ -157,13 +197,17 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
                 type="text"
                 placeholder="e.g. user@okicici"
                 value={upiId}
-                onChange={(e) => { setUpiId(e.target.value); setError(""); }}
+                onChange={(e) => {
+                  setUpiId(e.target.value);
+                  setError("");
+                }}
                 className={`w-full px-4 py-2.5 rounded-lg border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#005c3a]/15 bg-white dark:bg-[#0a0f18]/30 transition-all ${
                   error && paymentMethod === 'gateway' ? "border-rose-400 dark:border-rose-500/50" : "border-slate-200 dark:border-slate-800 focus:border-[#005c3a]"
                 }`}
               />
               <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-2 font-medium">
-                You will receive a payment request on your UPI app. Approve it to proceed.
+                You will receive a payment request on your UPI app. Approve it
+                to proceed.
               </p>
             </div>
           )}
@@ -190,7 +234,7 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
           onClick={onBack}
           className="flex-1 px-4 py-3 border border-slate-200 dark:border-slate-850 rounded-xl text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900/40 text-xs font-bold uppercase tracking-wider transition-all"
         >
-          Back to Form
+          Back
         </button>
         <button
           type="button"
@@ -212,7 +256,10 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
   );
 };
 
-export const ServiceSuccessScreen: React.FC<{ serviceName: string; onClose?: () => void }> = ({ serviceName, onClose }) => {
+export const ServiceSuccessScreen: React.FC<{
+  serviceName: string;
+  onClose?: () => void;
+}> = ({ serviceName, onClose }) => {
   return (
     <div className="py-16 flex flex-col items-center justify-center text-center gap-4">
       <span className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-400 animate-bounce">
@@ -223,8 +270,10 @@ export const ServiceSuccessScreen: React.FC<{ serviceName: string; onClose?: () 
           Application Placed Successfully!
         </h5>
         <p className="text-sm text-slate-400 dark:text-slate-555 mt-2 max-w-md leading-relaxed">
-          Your request for <strong>{serviceName}</strong> has been successfully registered and forwarded to the Admin Panel.
-          <br/><br/>
+          Your request for <strong>{serviceName}</strong> has been successfully
+          registered and forwarded to the Admin Panel.
+          <br />
+          <br />
           <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-widest bg-emerald-50 dark:bg-emerald-900/30 px-3 py-1.5 rounded-full inline-block">
             Note: Amount will be re-credited if Admin rejects
           </span>

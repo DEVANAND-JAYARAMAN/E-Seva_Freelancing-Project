@@ -68,7 +68,7 @@ export function AgriStackPdfPage() {
               className="flex items-center justify-center gap-1.5 h-9 px-4 rounded-xl border border-slate-200 dark:border-slate-855 hover:bg-slate-50 dark:hover:bg-slate-900 text-xs font-bold text-slate-500 hover:text-slate-750 transition-colors"
             >
               <ArrowLeft size={13} />
-              <span>Back to Services</span>
+              <span>Back</span>
             </Link>
           </div>
         </div>
