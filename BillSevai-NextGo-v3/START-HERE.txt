@@ -1,0 +1,54 @@
+========================================
+  BillSevai v3 — START HERE (தமிழ்)
+========================================
+
+இது BillSevai v2-ஐ Next.js + Golang + AWS RDS model-ல்
+மாற்றிய புதிய project.
+
+STACK:
+  Frontend  → Next.js (port 3000)
+  Backend   → Golang API (port 8080)
+  Database  → MySQL (Laragon local / AWS RDS)
+
+முதல் முறை SETUP:
+-----------------
+1) Go install பண்ணுங்க: https://go.dev/dl/
+   (Install பண்ணி PC restart)
+
+2) Laragon MySQL ON பண்ணுங்க
+
+3) IMPORT-DB.bat double-click → database import
+
+4) backend\.env.example → backend\.env copy
+   Local Laragon-க்கு:
+     DB_HOST=127.0.0.1
+     DB_USER=root
+     DB_PASS=
+     DB_NAME=billsevai
+
+   AWS RDS-க்கு:
+     DB_HOST=your-db.ap-south-1.rds.amazonaws.com
+     DB_USER=admin
+     DB_PASS=your-password
+     DB_NAME=billsevai
+     DB_SSL=true
+
+5) START-ALL.bat double-click
+
+6) Browser: http://localhost:3000
+   Login: owner@demo.test
+   Password: password
+
+PAGES:
+  /billing    — Counter billing
+  /bills      — Bill list + print
+  /services   — Service master
+  /customers  — Customer list
+  /settings   — Shop branding, UPI
+
+AWS DEPLOY:
+  - RDS MySQL create → schema.sql import
+  - Backend: EC2/ECS with .env pointing to RDS
+  - Frontend: Vercel/Amplify with NEXT_PUBLIC_API_URL
+
+========================================

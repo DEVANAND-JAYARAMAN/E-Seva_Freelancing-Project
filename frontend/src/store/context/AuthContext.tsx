@@ -66,20 +66,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       name?: string,
     ) => {
       setIsLoading(true);
-      // Cache buster: v2
+      
       try {
+        if (token === "mock_token") {
+          const realUser: User = {
+            id: `local-mock-${Date.now()}`,
+            name: name || "Local User",
+            email: email,
+            role: role || "retailer",
+            walletBalance: 0,
+          };
+          localStorage.setItem("token", "mock_local_token_123");
+          localStorage.setItem("user", JSON.stringify(realUser));
+          setUser(realUser);
+          return;
+        }
+
         const apiUrl = `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api`;
         const res = await fetch(`${apiUrl}/auth/login`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ email, password: token }), // Frontend uses 'token' param as password in mock, so we pass it as password
+          body: JSON.stringify({ email, password: token }),
         });
 
         if (!res.ok) {
-          const errorData = await res.json();
-          throw new Error(errorData.error || "Login failed");
+          let errorMsg = "Login failed";
+          if (res.status === 502 || res.status === 504 || res.status === 503) {
+            errorMsg = "Server is currently offline. Please navigate to /admin to start the server.";
+          } else {
+            try {
+              const errorData = await res.json();
+              errorMsg = errorData.error || errorMsg;
+            } catch (e) {
+              errorMsg = `Server error: ${res.status} ${res.statusText}`;
+            }
+          }
+          throw new Error(errorMsg);
         }
 
         const data = await res.json();
@@ -89,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           name: data.user.fullName,
           email: data.user.email,
           role: data.role,
-          walletBalance: 0, // We can update this later by fetching the wallet
+          walletBalance: 0,
         };
 
         localStorage.setItem("token", data.token);

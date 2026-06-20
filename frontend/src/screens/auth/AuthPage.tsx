@@ -209,6 +209,8 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
         }).catch(err => {
           console.error(err);
           setErrors({ email: err.message || "Login failed" });
+        }).finally(() => {
+          setIsSubmitting(false);
         });
       } else if (mode === "register") {
         const apiUrl = `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api`;
@@ -225,8 +227,18 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
         });
         
         if (!res.ok) {
-           const errorData = await res.json();
-           throw new Error(errorData.error || "Signup failed");
+           let errorMsg = "Signup failed";
+           if (res.status === 502 || res.status === 504 || res.status === 503) {
+             errorMsg = "Server is currently offline. Please navigate to /admin to start the server.";
+           } else {
+             try {
+               const errorData = await res.json();
+               errorMsg = errorData.error || errorMsg;
+             } catch (e) {
+               errorMsg = `Server error: ${res.status} ${res.statusText}`;
+             }
+           }
+           throw new Error(errorMsg);
         }
 
         setFormData({ role: "retailer" });
@@ -420,6 +432,7 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
                   onChange={(val) => handleFieldChange("fullName", val)}
                   error={errors.fullName}
                   disabled={isSubmitting}
+                  disableEdit={true}
                 />
               )}
 
@@ -432,6 +445,7 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
                 onChange={(val) => handleFieldChange("email", val)}
                 error={errors.email}
                 disabled={isSubmitting}
+                disableEdit={true}
               />
 
               {mode === "register" && (
@@ -444,6 +458,7 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
                   onChange={(val) => handleFieldChange("mobile", val)}
                   error={errors.mobile}
                   disabled={isSubmitting}
+                  disableEdit={true}
                 />
               )}
 
@@ -457,6 +472,7 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
                   onChange={(val) => handleFieldChange("password", val)}
                   error={errors.password}
                   disabled={isSubmitting}
+                  disableEdit={true}
                 />
               )}
 
@@ -470,6 +486,7 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
                   onChange={(val) => handleFieldChange("confirmPassword", val)}
                   error={errors.confirmPassword}
                   disabled={isSubmitting}
+                  disableEdit={true}
                 />
               )}
 
@@ -506,6 +523,7 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
                   }
                   loading={isSubmitting}
                   disabled={isSubmitting}
+                  hideEditButton={true}
                 />
               </div>
             </form>
