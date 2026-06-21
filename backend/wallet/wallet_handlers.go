@@ -142,11 +142,7 @@ func InitiateGatewayRecharge(c *gin.Context) {
 	}
 
 	username := os.Getenv("MUGAVAI_USERNAME")
-	if username == "" {
-		username = "6380616163"
-	}
-	// Hardcoding API key because GitHub Secrets is overriding it with an old value
-	apiKey := "5f89c01e1d5be436659591de5c7d93d1bcd97c7091448f9e"
+	apiKey := os.Getenv("MUGAVAI_API_KEY")
 
 	orderID := fmt.Sprintf("ORD-%d", time.Now().UnixMilli())
 

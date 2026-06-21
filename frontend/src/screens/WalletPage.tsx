@@ -8,7 +8,7 @@ import {
   ArrowUpRight,
   ArrowDownLeft,
   History,
-  X as XIcon,
+  X,
   CheckCircle2,
   AlertCircle,
   Filter,
@@ -163,7 +163,8 @@ export function WalletPage() {
       return;
     }
 
-    setGatewayProcessing(true);
+    if (paymentMode === "UPI" && upiOption === "id") {
+      setGatewayProcessing(true);
 
       try {
         const reqBody = {
@@ -717,7 +718,7 @@ export function WalletPage() {
                       onClick={() => setIsModalOpen(false)}
                       className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-750 dark:hover:text-slate-200 transition-colors"
                     >
-                      <XIcon size={14} />
+                      <X size={14} />
                     </button>
                   </div>
 
