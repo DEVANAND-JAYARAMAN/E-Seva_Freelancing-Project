@@ -233,7 +233,8 @@ func Login(c *gin.Context) {
 		"user": gin.H{
 			"id":       user.UserId,
 			"fullName": user.FullName,
-			"email":    user.Email,
+			"email":         user.Email,
+			"walletBalance": user.WalletBalance,
 		},
 	})
 }

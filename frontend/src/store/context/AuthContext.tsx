@@ -113,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           name: data.user.fullName,
           email: data.user.email,
           role: data.role,
-          walletBalance: 0,
+          walletBalance: data.user.walletBalance || 0,
         };
 
         localStorage.setItem("token", data.token);

@@ -8,10 +8,11 @@ type User struct {
 	Email        string `dynamodbav:"email"`
 	Mobile       string `dynamodbav:"mobile"`
 	Role         string `dynamodbav:"role"`
-	PasswordHash string `dynamodbav:"passwordHash"`
-	Status       string `dynamodbav:"status"`
-	CreatedAt    string `dynamodbav:"createdAt"`
-	UpdatedAt    string `dynamodbav:"updatedAt"`
+	PasswordHash  string  `dynamodbav:"passwordHash" json:"-"`
+	Status        string  `dynamodbav:"status" json:"status"`
+	WalletBalance float64 `dynamodbav:"walletBalance" json:"walletBalance"`
+	CreatedAt     string  `dynamodbav:"createdAt" json:"createdAt"`
+	UpdatedAt     string  `dynamodbav:"updatedAt" json:"updatedAt"`
 }
 
 type Retailer struct {
