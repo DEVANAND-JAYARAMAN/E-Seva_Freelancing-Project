@@ -57,7 +57,7 @@ export function WalletPage() {
   const [utrNumber, setUtrNumber] = useState("");
   const [upiId, setUpiId] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
-  const [upiOption, setUpiOption] = useState<"id" | "qr">("id");
+  const [upiOption, setUpiOption] = useState<"app" | "qr">("app");
   const [gatewayProcessing, setGatewayProcessing] = useState(false);
   const [remarks, setRemarks] = useState("");
   const [formError, setFormError] = useState("");
@@ -110,7 +110,7 @@ export function WalletPage() {
     setUtrNumber("");
     setUpiId("");
     setMobileNumber("");
-    setUpiOption("id");
+    setUpiOption("app");
     setGatewayProcessing(false);
     setRemarks("");
     setFormError("");
@@ -135,31 +135,14 @@ export function WalletPage() {
       return;
     }
 
-    if (upiOption === "id") {
-      if (!upiId.trim()) {
-        setFormError("Please enter a UPI ID.");
-        return;
-      }
-      const upiRegex = /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/;
-      if (!upiRegex.test(upiId.trim())) {
-        setFormError("Please enter a valid UPI ID (e.g. yourname@bank).");
-        return;
-      }
-    } else {
-      if (!utrNumber.trim()) {
-        setFormError("Transaction Reference/UTR Number is required.");
-        return;
-      }
-      if (utrNumber.trim().length < 8) {
-        setFormError(
-          "UTR / Reference number must be at least 8 characters long.",
-        );
-        return;
-      }
+    if (!utrNumber.trim()) {
+      setFormError("Transaction Reference/UTR Number is required.");
+      return;
     }
-
-    if (upiOption === "qr") {
-      completeRequest(utrNumber.trim());
+    if (utrNumber.trim().length < 8) {
+      setFormError(
+        "UTR / Reference number must be at least 8 characters long.",
+      );
       return;
     }
 
@@ -167,10 +150,6 @@ export function WalletPage() {
       // Direct UPI App Intent
       const upiUrl = `upi://pay?pa=thuruvan@ybl&pn=Thuruvan&am=${amount || 0}&cu=INR`;
       window.location.href = upiUrl;
-      
-      // We still need the UTR for verification
-      completeRequest(utrNumber.trim());
-      return;
     }
 
     completeRequest(utrNumber.trim());
@@ -200,11 +179,7 @@ export function WalletPage() {
     setTransactions((prev) => [newTransaction, ...prev]);
 
     // Update wallet balance locally
-    if (selectedWalletType === "Main") {
-      updateWallet(mainBalance + amtNum);
-    } else {
-      setApiBalance((prev) => prev + amtNum);
-    }
+    updateWallet(mainBalance + amtNum);
 
     setFormSuccess(true);
     setTimeout(() => {
@@ -224,7 +199,7 @@ export function WalletPage() {
       amount: amtNum,
       paymentMode,
       utrNumber: finalUtr,
-      status: "Success",
+      status: "Pending",
       requestDate: new Date().toLocaleString("en-US", {
         year: "numeric",
         month: "2-digit",
@@ -255,18 +230,14 @@ export function WalletPage() {
       description: `Wallet Recharge (${paymentMode})`,
       amount: amtNum,
       reference: finalUtr,
-      status: "Success",
+      status: "Pending",
       walletType: selectedWalletType,
     };
 
     setTransactions((prev) => [newTransaction, ...prev]);
 
-    // Immediately update the wallet balance
-    if (selectedWalletType === "Main") {
-      updateWallet(mainBalance + amtNum);
-    } else {
-      setApiBalance((prev) => prev + amtNum);
-    }
+    // Ensure balance updating correctly (currently only Main wallet is supported)
+    updateWallet(mainBalance + amtNum);
 
     // Success response
     setFormSuccess(true);
@@ -674,9 +645,9 @@ export function WalletPage() {
                             }
                             onChange={(e) => {
                               const val = e.target.value;
-                              if (val === "UPI_id") {
+                              if (val === "UPI_app") {
                                 setPaymentMode("UPI");
-                                setUpiOption("id");
+                                setUpiOption("app");
                               } else if (val === "UPI_qr") {
                                 setPaymentMode("UPI");
                                 setUpiOption("qr");
@@ -729,23 +700,21 @@ export function WalletPage() {
                       </div>
 
                       {/* UTR reference (shown for both QR and App intents) */}
-                      {(upiOption === "qr" || upiOption === "app") && (
-                        <div className="space-y-1.5 animate-in fade-in duration-200">
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
-                            Transaction UTR / Ref ID
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="Enter 12-digit UTR/Ref No."
-                            value={utrNumber}
-                            onChange={(e) => {
-                              setUtrNumber(e.target.value);
-                              setFormError("");
-                            }}
-                            className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
-                          />
-                        </div>
-                      )}
+                      <div className="space-y-1.5 animate-in fade-in duration-200">
+                        <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+                          Transaction UTR / Ref ID
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Enter 12-digit UTR/Ref No."
+                          value={utrNumber}
+                          onChange={(e) => {
+                            setUtrNumber(e.target.value);
+                            setFormError("");
+                          }}
+                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
+                        />
+                      </div>
 
                       {/* Remarks */}
                       <div className="space-y-1.5">
@@ -789,7 +758,7 @@ export function WalletPage() {
                           </div>
                         )}
 
-                        {upiOption === "id" && (
+                        {upiOption === "app" && (
                           <div className="flex flex-col items-center gap-3 text-slate-500 dark:text-slate-400 p-2 animate-in fade-in duration-200">
                             <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-450 shadow-sm">
                               <Wallet size={20} />
@@ -828,7 +797,7 @@ export function WalletPage() {
                             <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                             Connecting to Gateway...
                           </>
-                        ) : upiOption === "id" ? (
+                        ) : upiOption === "app" ? (
                           "Pay Now"
                         ) : (
                           "Submit Request"
