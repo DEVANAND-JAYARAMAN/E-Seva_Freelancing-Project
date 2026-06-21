@@ -142,6 +142,9 @@ func InitiateGatewayRecharge(c *gin.Context) {
 	}
 
 	username := os.Getenv("MUGAVAI_USERNAME")
+	if username == "" {
+		username = "8526629676"
+	}
 	apiKey := os.Getenv("MUGAVAI_API_KEY")
 
 	orderID := fmt.Sprintf("ORD-%d", time.Now().UnixMilli())
