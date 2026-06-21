@@ -10,44 +10,7 @@ import { RetailerForm } from "./RetailerForm";
 import type { Retailer } from "./types";
 
 // Premium Initial Seed Mockup Data
-const initialRetailersList: Retailer[] = [
-  {
-    id: "ret-1",
-    name: "Deva",
-    shopName: "Jayaraman Multi Services",
-    email: "dev@jayaraman.in",
-    phone: "9876543210",
-    city: "Chennai",
-    balance: 5230.5,
-    status: "Active",
-    createdDate: "2026-05-10",
-    aadhaarNo: "3672 8901 2345",
-  },
-  {
-    id: "ret-2",
-    name: "Alam",
-    shopName: "Digital Point",
-    email: "priya@eseva.org",
-    phone: "8765432109",
-    city: "Kolkata",
-    balance: 12000.0,
-    status: "Active",
-    createdDate: "2026-05-15",
-    aadhaarNo: "4892 0184 7291",
-  },
-  {
-    id: "ret-3",
-    name: "Priya Sharma",
-    shopName: "Priya Online E-Seva",
-    email: "priya@eseva.org",
-    phone: "7654321098",
-    city: "Mumbai",
-    balance: 0.0,
-    status: "Suspended",
-    createdDate: "2026-05-20",
-    aadhaarNo: "9012 3456 7890",
-  },
-];
+const initialRetailersList: Retailer[] = [];
 
 export function RetailersPage() {
   const [retailers, setRetailers] = useLocalStorage<Retailer[]>(

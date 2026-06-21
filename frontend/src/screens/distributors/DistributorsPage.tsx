@@ -10,44 +10,7 @@ import { DistributorForm } from "./DistributorForm";
 import type { Distributor } from "./types";
 
 // Premium Initial Seed Mockup Data for Distributors
-const initialDistributorsList: Distributor[] = [
-  {
-    id: "dist-1",
-    name: "Devanand Jayaraman",
-    shopName: "Jayaraman Digital Agencies",
-    email: "agency@jayaraman.in",
-    phone: "9876543222",
-    city: "Chennai",
-    balance: 85200.0,
-    status: "Active",
-    createdDate: "2026-04-01",
-    aadhaarNo: "4532 9012 3456",
-  },
-  {
-    id: "dist-2",
-    name: "Sahin Alam",
-    shopName: "Thuruvan Telecom Systems",
-    email: "sahin@telecom.in",
-    phone: "8765432333",
-    city: "Kolkata",
-    balance: 145000.0,
-    status: "Active",
-    createdDate: "2026-04-10",
-    aadhaarNo: "8912 0184 7291",
-  },
-  {
-    id: "dist-3",
-    name: "Rajesh Kumar",
-    shopName: "South India Digital Network",
-    email: "rajesh@sidn.co.in",
-    phone: "7654324444",
-    city: "Bangalore",
-    balance: 0.0,
-    status: "Suspended",
-    createdDate: "2026-05-01",
-    aadhaarNo: "5612 3456 7890",
-  },
-];
+const initialDistributorsList: Distributor[] = [];
 
 export function DistributorsPage() {
   const [distributors, setDistributors] = useLocalStorage<Distributor[]>(
