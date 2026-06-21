@@ -34,7 +34,7 @@ jobs:
       - name: Get EC2 IP
         id: get-ip
         run: |
-          IP=$(curl -s https://daqpqxq9zg.execute-api.ap-south-1.amazonaws.com/prod/ip | jq -r .public_ip)
+          IP="15.206.185.70"
           echo "EC2_IP=$IP" >> $GITHUB_ENV
 
       - name: Deploy to EC2
