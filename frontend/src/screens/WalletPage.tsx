@@ -163,105 +163,13 @@ export function WalletPage() {
       return;
     }
 
-    if (paymentMode === "UPI" && upiOption === "id") {
-      setGatewayProcessing(true);
-
-      try {
-        const reqBody = {
-          amount: amtNum,
-          customer_mobile: mobileNumber.trim(),
-          customer_email: user?.email || "user@example.com",
-          redirect_url: window.location.origin,
-        };
-
-        // Calling our backend API instead of exposing Mugavai credentials
-        const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(
-          /(?:\/api|\/)+$/,
-          "",
-        );
-        const response = await fetch(`${baseUrl}/api/wallet/recharge/gateway`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            // Include authorization token if your app uses one
-            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
-          },
-          body: JSON.stringify(reqBody),
-        });
-
-        const data = await response.json();
-
-        if (response.ok && data.data?.payment_url) {
-          const width = 500;
-          const height = 700;
-          const left = window.screenX + (window.outerWidth - width) / 2;
-          const top = window.screenY + (window.outerHeight - height) / 2;
-          const popup = window.open(
-            data.data.payment_url,
-            "Mugavai Payment",
-            `width=${width},height=${height},left=${left},top=${top}`,
-          );
-
-          const pollTimer = setInterval(async () => {
-            try {
-              if (
-                popup &&
-                !popup.closed &&
-                popup.location.href.includes(window.location.origin)
-              ) {
-                popup.close();
-              }
-            } catch (e) {
-              // Ignore cross-origin error
-            }
-
-            if (!popup || popup.closed) {
-              clearInterval(pollTimer);
-              setGatewayProcessing(true);
-
-              // Poll backend for final status
-              try {
-                const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(
-                  /(?:\/api|\/)+$/,
-                  "",
-                );
-                const statusRes = await fetch(
-                  `${baseUrl}/api/wallet/recharge/status/${data.data.order_id}`,
-                );
-                const statusData = await statusRes.json();
-
-                setGatewayProcessing(false);
-                if (
-                  statusData.status === "Success" ||
-                  statusData.status === "SUCCESS" ||
-                  statusData.status === "success"
-                ) {
-                  handleGatewaySuccess(data.data.order_id);
-                } else if (statusData.status === "Pending") {
-                  setFormError(
-                    "Payment is pending or canceled. If deducted, it will be credited soon.",
-                  );
-                } else {
-                  setFormError(
-                    `Payment failed or canceled (Status: ${statusData.status})`,
-                  );
-                }
-              } catch (err) {
-                setGatewayProcessing(false);
-                setFormError(
-                  "Could not verify payment status. Please check transaction history.",
-                );
-              }
-            }
-          }, 1000);
-        } else {
-          setGatewayProcessing(false);
-          setFormError(data.message || "Failed to initiate payment gateway.");
-        }
-      } catch (err) {
-        setGatewayProcessing(false);
-        setFormError("Error connecting to Mugavai Payment Gateway.");
-      }
+    if (paymentMode === "UPI" && upiOption === "app") {
+      // Direct UPI App Intent
+      const upiUrl = `upi://pay?pa=thuruvan@ybl&pn=Thuruvan&am=${amount || 0}&cu=INR`;
+      window.location.href = upiUrl;
+      
+      // We still need the UTR for verification
+      completeRequest(utrNumber.trim());
       return;
     }
 
@@ -780,10 +688,10 @@ export function WalletPage() {
                             className="w-full pl-4 pr-10 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none appearance-none transition-all"
                           >
                             <option
-                              value="UPI_id"
+                              value="UPI_app"
                               className="dark:bg-[#090d16]"
                             >
-                              UPI ID Request
+                              Direct UPI App (Mobile)
                             </option>
                             <option
                               value="UPI_qr"
@@ -820,27 +728,8 @@ export function WalletPage() {
                         />
                       </div>
 
-                      {/* UPI ID Field */}
-                      {upiOption === "id" && (
-                        <div className="space-y-1.5 animate-in fade-in duration-200">
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
-                            Enter UPI ID
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="e.g. user@okicici or 9876543210@ybl"
-                            value={upiId}
-                            onChange={(e) => {
-                              setUpiId(e.target.value);
-                              setFormError("");
-                            }}
-                            className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
-                          />
-                        </div>
-                      )}
-
-                      {/* UTR reference (shown for QR scans) */}
-                      {upiOption === "qr" && (
+                      {/* UTR reference (shown for both QR and App intents) */}
+                      {(upiOption === "qr" || upiOption === "app") && (
                         <div className="space-y-1.5 animate-in fade-in duration-200">
                           <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
                             Transaction UTR / Ref ID
