@@ -204,63 +204,93 @@ export function WalletPage() {
     }, 2000);
   };
 
-  const completeRequest = (finalUtr: string) => {
+  const completeRequest = async (finalUtr: string) => {
     const amtNum = parseFloat(amount);
-    // Create a new Payment Request
-    const newRequest: PaymentRequest = {
-      id: `req-${Date.now()}`,
-      retailerId: user?.id ?? "usr_1001",
-      retailerName: user?.name ?? "Thuruvan Dev",
-      shopName: "Thuruvan Headquarters",
-      amount: amtNum,
-      paymentMode,
-      utrNumber: finalUtr,
-      status: "Pending",
-      requestDate: new Date().toLocaleString("en-US", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      }),
-      walletType: selectedWalletType,
-      remarks: remarks.trim() || undefined,
-    };
+    
+    setGatewayProcessing(true);
+    setFormError("");
 
-    // Save to payment requests list in local storage
-    setPaymentRequests((prev) => [newRequest, ...prev]);
+    try {
+      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "");
+      const res = await fetch(`${baseUrl}/api/wallet/recharge/manual`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          amount: amtNum,
+          utrNumber: finalUtr,
+          remarks: remarks.trim(),
+          userId: user?.id ?? "usr_1001",
+        }),
+      });
 
-    // Add a corresponding "Success" transaction inside the user's ledger as well
-    const newTransaction: WalletTransaction = {
-      id: `tx-req-${Date.now()}`,
-      date: new Date().toLocaleString("en-US", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      }),
-      type: "credit",
-      description: `Wallet Recharge (${paymentMode})`,
-      amount: amtNum,
-      reference: finalUtr,
-      status: "Pending",
-      walletType: selectedWalletType,
-    };
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.message || "Failed to recharge wallet");
+      }
 
-    setTransactions((prev) => [newTransaction, ...prev]);
+      // Create a new Payment Request locally
+      const newRequest: PaymentRequest = {
+        id: `req-${Date.now()}`,
+        retailerId: user?.id ?? "usr_1001",
+        retailerName: user?.name ?? "Thuruvan Dev",
+        shopName: "Thuruvan Headquarters",
+        amount: amtNum,
+        paymentMode,
+        utrNumber: finalUtr,
+        status: "Pending", // Or "Success" since we instantly credited
+        requestDate: new Date().toLocaleString("en-US", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        }),
+        walletType: selectedWalletType,
+        remarks: remarks.trim() || undefined,
+      };
 
-    // Ensure balance updating correctly (currently only Main wallet is supported)
-    updateWallet(mainBalance + amtNum);
+      // Save to payment requests list in local storage
+      setPaymentRequests((prev) => [newRequest, ...prev]);
 
-    // Success response
-    setFormSuccess(true);
-    setTimeout(() => {
-      setIsModalOpen(false);
-      setFormSuccess(false);
-    }, 1800);
+      // Add a corresponding "Success" transaction inside the user's ledger
+      const newTransaction: WalletTransaction = {
+        id: `tx-req-${Date.now()}`,
+        date: new Date().toLocaleString("en-US", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        }),
+        type: "credit",
+        description: `Wallet Recharge (${paymentMode})`,
+        amount: amtNum,
+        reference: finalUtr,
+        status: "Success",
+        walletType: selectedWalletType,
+      };
+
+      setTransactions((prev) => [newTransaction, ...prev]);
+
+      // Ensure balance updating correctly
+      updateWallet(mainBalance + amtNum);
+
+      // Success response
+      setGatewayProcessing(false);
+      setFormSuccess(true);
+      setTimeout(() => {
+        setIsModalOpen(false);
+        setFormSuccess(false);
+      }, 1800);
+    } catch (error: any) {
+      setGatewayProcessing(false);
+      setFormError(error.message || "Something went wrong while saving to database.");
+    }
   };
 
   // Reset to default seeds

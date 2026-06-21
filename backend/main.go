@@ -83,6 +83,7 @@ func main() {
 		{
 			walletGroup.GET("/transactions", service.GetWalletTransactions)
 			walletGroup.POST("/recharge/gateway", wallet.InitiateGatewayRecharge)
+			walletGroup.POST("/recharge/manual", wallet.ManualRecharge)
 			walletGroup.POST("/payment/callback", wallet.HandlePaymentCallback)
 			walletGroup.GET("/recharge/status/:order_id", wallet.CheckGatewayRechargeStatus)
 		}
