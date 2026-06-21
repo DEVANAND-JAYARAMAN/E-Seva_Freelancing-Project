@@ -120,7 +120,7 @@ export type PaymentRequest = {
   retailerName: string;
   shopName: string;
   amount: number;
-  paymentMode: "UPI" | "IMPS" | "NEFT" | "Bank Transfer";
+  paymentMode: "UPI";
   utrNumber: string;
   status: "Pending" | "Approved" | "Resubmit" | "Rejected";
   requestDate: string;
