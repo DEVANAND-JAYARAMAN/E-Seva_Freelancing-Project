@@ -313,9 +313,17 @@ export function WalletPage() {
         }),
       });
 
+      let data;
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        data = await res.json();
+      } else {
+        const textData = await res.text();
+        throw new Error(`Server returned unexpected format (Status: ${res.status}). Server might be outdated or unreachable.`);
+      }
+
       if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.message || "Failed to recharge wallet");
+        throw new Error(data.message || "Failed to recharge wallet");
       }
 
       // Create a new Payment Request locally
