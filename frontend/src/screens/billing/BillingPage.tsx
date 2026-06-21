@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import {
@@ -17,7 +17,7 @@ import {
   Download,
 } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
-import { useLocalStorage } from "../../hooks/useLocalStorage";
+import { useAuth } from "../../store/context/AuthContext";
 
 export interface Invoice {
   id: string;
@@ -93,10 +93,31 @@ const initialInvoices: Invoice[] = [
 ];
 
 export function BillingPage() {
-  const [invoices, setInvoices] = useLocalStorage<Invoice[]>(
-    "thuruvan_billing_invoices",
-    initialInvoices,
-  );
+  const { user } = useAuth();
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "");
+
+  const fetchInvoices = async () => {
+    try {
+      const res = await fetch(`${baseUrl}/api/billing/invoices`);
+      if (res.ok) {
+        const data = await res.json();
+        setInvoices(data || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch invoices", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchInvoices();
+  }, []);
+
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [categoryFilter, setCategoryFilter] = useState("All");
@@ -122,31 +143,46 @@ export function BillingPage() {
     return matchesSearch && matchesStatus && matchesCategory;
   });
 
-  const handleAddInvoice = (e: React.FormEvent) => {
+  const handleAddInvoice = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!retailerName || !amount || !dueDate) return;
+    setIsSubmitting(true);
 
-    const newInvoice: Invoice = {
-      id: `inv-${Date.now()}`,
-      invoiceNumber: `INV-2026-00${invoices.length + 1}`,
+    const newInvoice = {
       retailerName,
       amount: parseFloat(amount),
-      date: new Date().toISOString().split("T")[0],
       dueDate,
       status,
       category,
       utrNumber: utrNumber || undefined,
     };
 
-    setInvoices([newInvoice, ...invoices]);
-    setIsFormOpen(false);
-    // Reset Form
-    setRetailerName("");
-    setAmount("");
-    setDueDate("");
-    setCategory("Service Charges");
-    setStatus("Pending");
-    setUtrNumber("");
+    try {
+      const res = await fetch(`${baseUrl}/api/billing/invoices`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newInvoice),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setInvoices([data, ...invoices]);
+        setIsFormOpen(false);
+        // Reset Form
+        setRetailerName("");
+        setAmount("");
+        setDueDate("");
+        setCategory("Service Charges");
+        setStatus("Pending");
+        setUtrNumber("");
+      } else {
+        console.error("Failed to add invoice");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const downloadInvoicePDF = (invoice: Invoice) => {
@@ -542,9 +578,10 @@ export function BillingPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] dark:hover:bg-emerald-500 text-white text-sm font-extrabold"
+                  disabled={isSubmitting}
+                  className="px-5 py-2.5 rounded-xl bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] dark:hover:bg-emerald-500 text-white text-sm font-extrabold disabled:opacity-50"
                 >
-                  Draft Invoice
+                  {isSubmitting ? "Drafting..." : "Draft Invoice"}
                 </button>
               </div>
             </form>

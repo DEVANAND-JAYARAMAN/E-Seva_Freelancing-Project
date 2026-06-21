@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
@@ -19,7 +19,7 @@ import {
   FileSpreadsheet,
 } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
-import { useLocalStorage } from "../../hooks/useLocalStorage";
+import { useAuth } from "../../store/context/AuthContext";
 
 export interface Customer {
   id: string;
@@ -92,10 +92,31 @@ const initialCustomers: Customer[] = [
 ];
 
 export function CrmPage() {
-  const [customers, setCustomers] = useLocalStorage<Customer[]>(
-    "thuruvan_crm_customers",
-    initialCustomers,
-  );
+  const { user } = useAuth();
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "");
+
+  const fetchCustomers = async () => {
+    try {
+      const res = await fetch(`${baseUrl}/api/crm/customers`);
+      if (res.ok) {
+        const data = await res.json();
+        setCustomers(data || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch customers", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -121,12 +142,12 @@ export function CrmPage() {
     return matchesSearch && matchesType && matchesStatus;
   });
 
-  const handleAddCustomer = (e: React.FormEvent) => {
+  const handleAddCustomer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !shopName || !email || !phone) return;
+    setIsSubmitting(true);
 
-    const newCustomer: Customer = {
-      id: `cust-${Date.now()}`,
+    const newCustomer = {
       name,
       shopName,
       email,
@@ -134,19 +155,35 @@ export function CrmPage() {
       city: city || "Unknown",
       type,
       status,
-      joinedDate: new Date().toISOString().split("T")[0],
     };
 
-    setCustomers([newCustomer, ...customers]);
-    setIsFormOpen(false);
-    // Reset Form
-    setName("");
-    setShopName("");
-    setEmail("");
-    setPhone("");
-    setCity("");
-    setType("Retailer");
-    setStatus("Active");
+    try {
+      const res = await fetch(`${baseUrl}/api/crm/customers`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newCustomer),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setCustomers([data, ...customers]);
+        setIsFormOpen(false);
+        // Reset Form
+        setName("");
+        setShopName("");
+        setEmail("");
+        setPhone("");
+        setCity("");
+        setType("Retailer");
+        setStatus("Active");
+      } else {
+        console.error("Failed to add customer");
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const exportToPDF = () => {
@@ -540,9 +577,10 @@ export function CrmPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] dark:hover:bg-emerald-500 text-white text-sm font-extrabold"
+                  disabled={isSubmitting}
+                  className="px-5 py-2.5 rounded-xl bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] dark:hover:bg-emerald-500 text-white text-sm font-extrabold disabled:opacity-50"
                 >
-                  Create Client
+                  {isSubmitting ? "Creating..." : "Create Client"}
                 </button>
               </div>
             </form>
