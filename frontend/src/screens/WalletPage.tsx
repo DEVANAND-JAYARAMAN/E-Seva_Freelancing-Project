@@ -8,6 +8,7 @@ import {
   ArrowUpRight,
   ArrowDownLeft,
   History,
+  X as XIcon,
   CheckCircle2,
   AlertCircle,
   Filter,
@@ -714,7 +715,7 @@ export function WalletPage() {
                       onClick={() => setIsModalOpen(false)}
                       className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-750 dark:hover:text-slate-200 transition-colors"
                     >
-                      <X size={14} />
+                      <XIcon size={14} />
                     </button>
                   </div>
 

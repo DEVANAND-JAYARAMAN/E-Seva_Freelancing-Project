@@ -1,11 +1,16 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "../../src/store/context/AuthContext";
 
 const ADMIN_KEY = process.env.NEXT_PUBLIC_ADMIN_KEY || "eseva-admin-2024";
 const LAMBDA_URL = (process.env.NEXT_PUBLIC_LAMBDA_URL || "").replace(/\/+$/, "");
 
 export default function AdminPage() {
+  const router = useRouter();
+  const { user, isAuthenticated, isLoading } = useAuth();
+  
   const [state, setState] = useState<string>("unknown");
   const [publicIP, setPublicIP] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -24,7 +29,20 @@ export default function AdminPage() {
     }
   }
 
-  useEffect(() => { fetchStatus(); }, []);
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated || user?.role !== "admin") {
+        router.replace("/login");
+      } else {
+        fetchStatus();
+      }
+    }
+  }, [isLoading, isAuthenticated, user, router]);
+
+  // Prevent rendering while loading auth state or if not admin
+  if (isLoading || !isAuthenticated || user?.role !== "admin") {
+    return <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4"><p className="text-white">Checking authorization...</p></div>;
+  }
 
   async function handleStart() {
     setLoading(true);
