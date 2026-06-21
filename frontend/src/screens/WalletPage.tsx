@@ -315,7 +315,7 @@ export function WalletPage() {
       amount: amtNum,
       paymentMode,
       utrNumber: finalUtr,
-      status: "Pending",
+      status: "Success",
       requestDate: new Date().toLocaleString("en-US", {
         year: "numeric",
         month: "2-digit",
@@ -331,7 +331,7 @@ export function WalletPage() {
     // Save to payment requests list in local storage
     setPaymentRequests((prev) => [newRequest, ...prev]);
 
-    // Add a corresponding "Pending" transaction inside the user's ledger as well
+    // Add a corresponding "Success" transaction inside the user's ledger as well
     const newTransaction: WalletTransaction = {
       id: `tx-req-${Date.now()}`,
       date: new Date().toLocaleString("en-US", {
@@ -343,14 +343,21 @@ export function WalletPage() {
         hour12: true,
       }),
       type: "credit",
-      description: `Pending Wallet Recharge Request (${paymentMode})`,
+      description: `Wallet Recharge (${paymentMode})`,
       amount: amtNum,
       reference: finalUtr,
-      status: "Pending",
+      status: "Success",
       walletType: selectedWalletType,
     };
 
     setTransactions((prev) => [newTransaction, ...prev]);
+
+    // Immediately update the wallet balance
+    if (selectedWalletType === "Main") {
+      updateWallet(mainBalance + amtNum);
+    } else {
+      setApiBalance((prev) => prev + amtNum);
+    }
 
     // Success response
     setFormSuccess(true);
