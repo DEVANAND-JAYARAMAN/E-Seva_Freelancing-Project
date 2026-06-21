@@ -57,7 +57,7 @@ export function WalletPage() {
   const [utrNumber, setUtrNumber] = useState("");
   const [upiId, setUpiId] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
-  const [upiOption, setUpiOption] = useState<"app" | "qr">("app");
+  const [upiOption, setUpiOption] = useState<"id" | "app" | "qr">("app");
   const [gatewayProcessing, setGatewayProcessing] = useState(false);
   const [remarks, setRemarks] = useState("");
   const [formError, setFormError] = useState("");
@@ -135,14 +135,127 @@ export function WalletPage() {
       return;
     }
 
-    if (!utrNumber.trim()) {
-      setFormError("Transaction Reference/UTR Number is required.");
-      return;
+    if (upiOption === "id") {
+      if (!upiId.trim()) {
+        setFormError("Please enter a UPI ID.");
+        return;
+      }
+      const upiRegex = /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/;
+      if (!upiRegex.test(upiId.trim())) {
+        setFormError("Please enter a valid UPI ID (e.g. yourname@bank).");
+        return;
+      }
+    } else {
+      if (!utrNumber.trim()) {
+        setFormError("Transaction Reference/UTR Number is required.");
+        return;
+      }
+      if (utrNumber.trim().length < 8) {
+        setFormError(
+          "UTR / Reference number must be at least 8 characters long.",
+        );
+        return;
+      }
     }
-    if (utrNumber.trim().length < 8) {
-      setFormError(
-        "UTR / Reference number must be at least 8 characters long.",
-      );
+
+    if (paymentMode === "UPI" && upiOption === "id") {
+      setGatewayProcessing(true);
+
+      try {
+        const reqBody = {
+          amount: amtNum,
+          customer_mobile: mobileNumber.trim(),
+          customer_email: user?.email || "user@example.com",
+          redirect_url: window.location.origin,
+        };
+
+        // Calling our backend API instead of exposing Mugavai credentials
+        const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(
+          /(?:\/api|\/)+$/,
+          "",
+        );
+        const response = await fetch(`${baseUrl}/api/wallet/recharge/gateway`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          },
+          body: JSON.stringify(reqBody),
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.data?.payment_url) {
+          const width = 500;
+          const height = 700;
+          const left = window.screenX + (window.outerWidth - width) / 2;
+          const top = window.screenY + (window.outerHeight - height) / 2;
+          const popup = window.open(
+            data.data.payment_url,
+            "Mugavai Payment",
+            `width=${width},height=${height},left=${left},top=${top}`,
+          );
+
+          const pollTimer = setInterval(async () => {
+            try {
+              if (
+                popup &&
+                !popup.closed &&
+                popup.location.href.includes(window.location.origin)
+              ) {
+                popup.close();
+              }
+            } catch (e) {
+              // Ignore cross-origin error
+            }
+
+            if (!popup || popup.closed) {
+              clearInterval(pollTimer);
+              setGatewayProcessing(true);
+
+              // Poll backend for final status
+              try {
+                const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(
+                  /(?:\/api|\/)+$/,
+                  "",
+                );
+                const statusRes = await fetch(
+                  `${baseUrl}/api/wallet/recharge/status/${data.data.order_id}`,
+                );
+                const statusData = await statusRes.json();
+
+                setGatewayProcessing(false);
+                if (
+                  statusData.status === "Success" ||
+                  statusData.status === "SUCCESS" ||
+                  statusData.status === "success"
+                ) {
+                  handleGatewaySuccess(data.data.order_id);
+                } else if (statusData.status === "Pending") {
+                  setFormError(
+                    "Payment is pending or canceled. If deducted, it will be credited soon.",
+                  );
+                } else {
+                  setFormError(
+                    `Payment failed or canceled (Status: ${statusData.status})`,
+                  );
+                }
+              } catch (err) {
+                setGatewayProcessing(false);
+                setFormError(
+                  "Could not verify payment status. Please check transaction history.",
+                );
+              }
+            }
+          }, 1000);
+        } else {
+          setGatewayProcessing(false);
+          setFormError(data.message || "Failed to initiate payment gateway.");
+        }
+      } catch (err) {
+        setGatewayProcessing(false);
+        setFormError("Error connecting to Mugavai Payment Gateway.");
+      }
       return;
     }
 
@@ -648,6 +761,9 @@ export function WalletPage() {
                               if (val === "UPI_app") {
                                 setPaymentMode("UPI");
                                 setUpiOption("app");
+                              } else if (val === "UPI_id") {
+                                setPaymentMode("UPI");
+                                setUpiOption("id");
                               } else if (val === "UPI_qr") {
                                 setPaymentMode("UPI");
                                 setUpiOption("qr");
@@ -663,6 +779,12 @@ export function WalletPage() {
                               className="dark:bg-[#090d16]"
                             >
                               Direct UPI App (Mobile)
+                            </option>
+                            <option
+                              value="UPI_id"
+                              className="dark:bg-[#090d16]"
+                            >
+                              UPI ID Request
                             </option>
                             <option
                               value="UPI_qr"
@@ -698,6 +820,25 @@ export function WalletPage() {
                           required
                         />
                       </div>
+
+                      {/* UPI ID Field */}
+                      {upiOption === "id" && (
+                        <div className="space-y-1.5 animate-in fade-in duration-200">
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+                            Enter UPI ID
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g. user@okicici or 9876543210@ybl"
+                            value={upiId}
+                            onChange={(e) => {
+                              setUpiId(e.target.value);
+                              setFormError("");
+                            }}
+                            className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
+                          />
+                        </div>
+                      )}
 
                       {/* UTR reference (shown for both QR and App intents) */}
                       <div className="space-y-1.5 animate-in fade-in duration-200">
