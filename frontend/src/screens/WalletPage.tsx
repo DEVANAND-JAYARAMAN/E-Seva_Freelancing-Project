@@ -14,6 +14,7 @@ import {
   Download,
   RefreshCw,
   ChevronDown,
+  X,
 } from "lucide-react";
 import { AppShell } from "../layouts/AppShell";
 import { useLocalStorage } from "../hooks/useLocalStorage";
@@ -230,7 +231,11 @@ export function WalletPage() {
 
           const pollTimer = setInterval(async () => {
             try {
-              if (popup && !popup.closed && popup.location.href.includes(window.location.origin)) {
+              if (
+                popup &&
+                !popup.closed &&
+                popup.location.href.includes(window.location.origin)
+              ) {
                 popup.close();
               }
             } catch (e) {
@@ -240,24 +245,39 @@ export function WalletPage() {
             if (!popup || popup.closed) {
               clearInterval(pollTimer);
               setGatewayProcessing(true);
-              
+
               // Poll backend for final status
               try {
-                const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "");
-                const statusRes = await fetch(`${baseUrl}/api/wallet/recharge/status/${data.data.order_id}`);
+                const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(
+                  /(?:\/api|\/)+$/,
+                  "",
+                );
+                const statusRes = await fetch(
+                  `${baseUrl}/api/wallet/recharge/status/${data.data.order_id}`,
+                );
                 const statusData = await statusRes.json();
-                
+
                 setGatewayProcessing(false);
-                if (statusData.status === "Success" || statusData.status === "SUCCESS" || statusData.status === "success") {
+                if (
+                  statusData.status === "Success" ||
+                  statusData.status === "SUCCESS" ||
+                  statusData.status === "success"
+                ) {
                   handleGatewaySuccess(data.data.order_id);
                 } else if (statusData.status === "Pending") {
-                   setFormError("Payment is pending or canceled. If deducted, it will be credited soon.");
+                  setFormError(
+                    "Payment is pending or canceled. If deducted, it will be credited soon.",
+                  );
                 } else {
-                   setFormError(`Payment failed or canceled (Status: ${statusData.status})`);
+                  setFormError(
+                    `Payment failed or canceled (Status: ${statusData.status})`,
+                  );
                 }
               } catch (err) {
                 setGatewayProcessing(false);
-                setFormError("Could not verify payment status. Please check transaction history.");
+                setFormError(
+                  "Could not verify payment status. Please check transaction history.",
+                );
               }
             }
           }, 1000);
@@ -277,13 +297,17 @@ export function WalletPage() {
 
   const handleGatewaySuccess = (orderId: string) => {
     const amtNum = parseFloat(amount);
-    
+
     // Add transaction to ledger as Success
     const newTransaction: WalletTransaction = {
       id: `tx-gw-${Date.now()}`,
       date: new Date().toLocaleString("en-US", {
-        year: "numeric", month: "2-digit", day: "2-digit",
-        hour: "2-digit", minute: "2-digit", hour12: true,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
       }),
       type: "credit",
       description: `Wallet Recharge via Mugavai Gateway`,
@@ -295,11 +319,7 @@ export function WalletPage() {
     setTransactions((prev) => [newTransaction, ...prev]);
 
     // Update wallet balance locally
-    if (selectedWalletType === "Main") {
-      updateWallet(mainBalance + amtNum);
-    } else {
-      setApiBalance((prev) => prev + amtNum);
-    }
+    updateWallet(mainBalance + amtNum);
 
     setFormSuccess(true);
     setTimeout(() => {
@@ -768,8 +788,6 @@ export function WalletPage() {
                               } else if (val === "UPI_qr") {
                                 setPaymentMode("UPI");
                                 setUpiOption("qr");
-                              } else {
-                                setPaymentMode(val as any);
                               }
                               setFormError("");
                             }}
@@ -786,18 +804,6 @@ export function WalletPage() {
                               className="dark:bg-[#090d16]"
                             >
                               UPI QR Code (Scan & Pay)
-                            </option>
-                            <option value="IMPS" className="dark:bg-[#090d16]">
-                              IMPS Instant Transfer
-                            </option>
-                            <option value="NEFT" className="dark:bg-[#090d16]">
-                              NEFT / RTGS Transfer
-                            </option>
-                            <option
-                              value="Bank Transfer"
-                              className="dark:bg-[#090d16]"
-                            >
-                              Direct Bank Cash Deposit
                             </option>
                           </select>
                           <ChevronDown
