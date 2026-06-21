@@ -146,6 +146,22 @@ export function WalletPage() {
       return;
     }
 
+    const isDuplicate =
+      paymentRequests.some(
+        (req) => req.utrNumber.toLowerCase() === utrNumber.trim().toLowerCase(),
+      ) ||
+      transactions.some(
+        (t) =>
+          t.reference.toLowerCase() === utrNumber.trim().toLowerCase(),
+      );
+
+    if (isDuplicate) {
+      setFormError(
+        "This UTR/Reference number is already added to the wallet. Duplicate entry is not allowed.",
+      );
+      return;
+    }
+
     if (paymentMode === "UPI" && upiOption === "app") {
       // Direct UPI App Intent
       const upiUrl = `upi://pay?pa=thuruvan@ybl&pn=Thuruvan&am=${amount || 0}&cu=INR`;
