@@ -38,12 +38,21 @@ export function TopBar({ onMenuClick }: TopBarProps) {
   const fetchNotifications = useCallback(async () => {
     if (!user) return;
     try {
+      const targetUserId = user.role === "admin" ? "ADMIN" : user.id;
       const res = await fetch(
-        `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/notifications?userId=${user.id}`,
+        `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/notifications?userId=${targetUserId}`,
       );
       if (res.ok) {
         const data = await res.json();
-        setNotifications(data);
+        const mapped = (data || []).map((n: any) => ({
+          id: n.Id || n.id,
+          title: n.Title || n.title,
+          message: n.Message || n.message,
+          type: n.Type || n.type,
+          isRead: n.IsRead || n.isRead,
+          createdAt: n.CreatedAt || n.createdAt,
+        }));
+        setNotifications(mapped);
       }
     } catch (err) {
       console.error("Failed to fetch notifications:", err);

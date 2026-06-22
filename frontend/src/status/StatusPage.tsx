@@ -96,15 +96,15 @@ export function StatusPage() {
         const data = await res.json();
         // map backend model to StatusTicket
         const mapped: StatusTicket[] = (data || []).map((app: any) => ({
-          id: app.id,
-          transactionId: app.id,
-          serviceName: app.serviceName,
-          retailerName: app.retailerId, // maybe map retailer name later
-          amount: app.cost,
-          status: app.status as TicketStatus,
-          createdDate: app.createdAt.split("T")[0],
-          lastUpdated: app.lastUpdated.split("T")[0],
-          remarks: app.adminRemarks || "No remarks.",
+          id: app.Id,
+          transactionId: app.Id,
+          serviceName: app.ServiceName,
+          retailerName: app.RetailerId, 
+          amount: app.Cost,
+          status: app.Status as TicketStatus,
+          createdDate: app.CreatedDate ? app.CreatedDate.split("T")[0] : "",
+          lastUpdated: app.LastUpdated ? app.LastUpdated.split("T")[0] : "",
+          remarks: app.AdminRemarks || "No remarks.",
         }));
         setTickets(mapped);
       }
