@@ -52,18 +52,6 @@ func main() {
 			c.JSON(200, gin.H{"status": "ok"})
 		})
 
-		walletGroup := api.Group("/wallet")
-		{
-			walletGroup.POST("/add", wallet.AddMoney)
-			walletGroup.POST("/deduct", wallet.DeductMoney)
-			walletGroup.GET("/transactions", service.GetWalletTransactions) // Using service for now as it contains the logic
-		}
-
-		adminGroup := api.Group("/admin")
-		{
-			adminGroup.GET("/dashboard", admin.GetDashboardStats)
-		}
-
 		authGroup := api.Group("/auth")
 		{
 			authGroup.POST("/signup", auth.Signup)
