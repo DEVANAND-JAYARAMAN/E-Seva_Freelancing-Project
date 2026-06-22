@@ -11,7 +11,6 @@ jobs:
           echo "EC2_IP=$IP" >> $GITHUB_ENV
 
       - name: Update DynamoDB on EC2
-        continue-on-error: true
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ env.EC2_IP }}
