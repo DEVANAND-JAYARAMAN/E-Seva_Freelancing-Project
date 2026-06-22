@@ -19,8 +19,8 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_SSH_PORT }}
           script: |
-            echo "Scanning for all retailer user IDs..."
-            USER_IDS=$(aws dynamodb scan --region ap-south-1 --table-name Users --filter-expression "#role = :roleVal" --expression-attribute-names '{"#role":"role"}' --expression-attribute-values '{":roleVal":{"S":"retailer"}}' --query "Items[*].PK.S" --output text)
+            echo "Scanning for all user IDs..."
+            USER_IDS=$(aws dynamodb scan --region ap-south-1 --table-name Users --query "Items[*].PK.S" --output text)
             
             for USER_ID in $USER_IDS; do
               if [ "$USER_ID" != "None" ] && [ -n "$USER_ID" ]; then
