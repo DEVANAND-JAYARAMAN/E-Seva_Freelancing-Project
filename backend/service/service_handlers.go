@@ -22,12 +22,13 @@ import (
 )
 
 type CreateServiceReq struct {
-	RetailerId  string  `json:"retailerId" binding:"required"`
-	ServiceId   string  `json:"serviceId" binding:"required"`
-	ServiceName      string  `json:"serviceName" binding:"required"`
-	Cost             float64 `json:"cost" binding:"required"`
-	CustomerWhatsApp string  `json:"customerWhatsApp"`
-	WalletType       string  `json:"walletType"` // "Retailer" or "Distributor" (needed for history)
+	RetailerId       string  `form:"retailerId" binding:"required"`
+	ServiceId        string  `form:"serviceId" binding:"required"`
+	ServiceName      string  `form:"serviceName" binding:"required"`
+	Cost             float64 `form:"cost" binding:"required"`
+	CustomerWhatsApp string  `form:"customerWhatsApp"`
+	WalletType       string  `form:"walletType"` // "Retailer" or "Distributor" (needed for history)
+	FormData         string  `form:"formData"`
 }
 
 type UpdateServiceStatusReq struct {
@@ -77,7 +78,7 @@ func generateId(prefix string) string {
 
 func CreateServiceRequest(c *gin.Context) {
 	var req CreateServiceReq
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := c.ShouldBind(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -135,6 +136,24 @@ func CreateServiceRequest(c *gin.Context) {
 	appId := generateId("SRVREQ")
 	now := time.Now().UTC().Format(time.RFC3339)
 
+	var formData map[string]string
+	if req.FormData != "" {
+		_ = json.Unmarshal([]byte(req.FormData), &formData)
+	}
+
+	var documents []string
+	form, err := c.MultipartForm()
+	if err == nil {
+		files := form.File["documents"]
+		for _, file := range files {
+			filename := fmt.Sprintf("%s_%s", appId, file.Filename)
+			filepath := "uploads/" + filename
+			if err := c.SaveUploadedFile(file, filepath); err == nil {
+				documents = append(documents, "/uploads/"+filename)
+			}
+		}
+	}
+
 	app := models.ServiceApplication{
 		PK:               "SERVICEAPP#" + appId,
 		SK:               "PROFILE",
@@ -144,6 +163,8 @@ func CreateServiceRequest(c *gin.Context) {
 		ServiceName:      req.ServiceName,
 		Cost:             req.Cost,
 		CustomerWhatsApp: req.CustomerWhatsApp,
+		FormData:         formData,
+		Documents:        documents,
 		Status:           "Pending",
 		CreatedDate:      now,
 		LastUpdated:      now,
@@ -309,26 +330,6 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 			go sendWhatsAppMessage(app.CustomerWhatsApp, app.ServiceName)
 		}
 
-		if req.Status == "Completed" {
-			notifId := generateId("NOTIF")
-			notif := models.Notification{
-				PK:        "USER#" + app.RetailerId,
-				SK:        "NOTIF#" + now + "#" + notifId,
-				Id:        notifId,
-				UserId:    app.RetailerId,
-				Title:     "Service Request Completed",
-				Message:   fmt.Sprintf("Your request for %s has been completed by Admin.", app.ServiceName),
-				Type:      "success",
-				IsRead:    false,
-				CreatedAt: now,
-			}
-			notifItem, _ := attributevalue.MarshalMap(notif)
-			db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
-				TableName: aws.String("Notifications"),
-				Item:      notifItem,
-			})
-		}
-
 	} else if req.Status == "Rejected" {
 		walletPK := "WALLET#" + app.RetailerId
 		txId := generateId("TX")
@@ -404,6 +405,34 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 			return
 		}
 	}
+
+	// Send Notification to Retailer/Distributor
+	notifId := generateId("NOTIF")
+	title := "Service Request " + req.Status
+	notifType := "info"
+	if req.Status == "Completed" || req.Status == "Approved" {
+		notifType = "success"
+	} else if req.Status == "Rejected" {
+		notifType = "error"
+	}
+
+	notif := models.Notification{
+		PK:        "USER#" + app.RetailerId,
+		SK:        "NOTIF#" + now + "#" + notifId,
+		Id:        notifId,
+		UserId:    app.RetailerId,
+		Title:     title,
+		Message:   fmt.Sprintf("Your request for %s has been %s by Admin.", app.ServiceName, req.Status),
+		Type:      notifType,
+		IsRead:    false,
+		CreatedAt: now,
+		Link:      "/dashboard/history", // Provide link to redirect
+	}
+	notifItem, _ := attributevalue.MarshalMap(notif)
+	db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+		TableName: aws.String("Notifications"),
+		Item:      notifItem,
+	})
 
 	c.JSON(http.StatusOK, gin.H{"message": "Request " + req.Status + " successfully"})
 }

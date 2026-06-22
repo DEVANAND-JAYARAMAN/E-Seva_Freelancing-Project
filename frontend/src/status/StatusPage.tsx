@@ -105,6 +105,8 @@ export function StatusPage() {
           createdDate: app.CreatedDate ? app.CreatedDate.split("T")[0] : "",
           lastUpdated: app.LastUpdated ? app.LastUpdated.split("T")[0] : "",
           remarks: app.AdminRemarks || "No remarks.",
+          formData: app.FormData,
+          documents: app.Documents,
         }));
         setTickets(mapped);
       }

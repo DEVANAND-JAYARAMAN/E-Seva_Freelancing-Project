@@ -129,6 +129,49 @@ export function StatusDetailModal({
             </div>
           </div>
 
+          {/* Form Data */}
+          {ticket.formData && Object.keys(ticket.formData).length > 0 && (
+            <div className="space-y-2 pt-2">
+              <span className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
+                Form Details
+              </span>
+              <div className="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-[#0a0f18]/30 p-4 rounded-xl border border-slate-100 dark:border-slate-800/50">
+                {Object.entries(ticket.formData).map(([key, value]) => (
+                  <div key={key}>
+                    <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase block">
+                      {key.replace(/([A-Z])/g, " $1").trim()}
+                    </span>
+                    <span className="font-semibold text-slate-700 dark:text-slate-300 text-xs">
+                      {value || "-"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Documents */}
+          {ticket.documents && ticket.documents.length > 0 && (
+            <div className="space-y-2 pt-2">
+              <span className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
+                Attached Documents
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {ticket.documents.map((doc, idx) => (
+                  <a
+                    key={idx}
+                    href={`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}${doc}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center h-8 px-3 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 dark:text-blue-400 text-xs font-bold transition-colors"
+                  >
+                    View Document {idx + 1}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Workflow Status Actions */}
           {showEditControls && (
             <div className="space-y-3 pt-2">

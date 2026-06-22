@@ -7,11 +7,13 @@ type ServiceApplication struct {
 	RetailerId   string  `dynamodbav:"retailerId"`
 	ServiceId    string  `dynamodbav:"serviceId"`
 	ServiceName  string  `dynamodbav:"serviceName"`
-	Cost             float64 `dynamodbav:"cost"`
-	CustomerWhatsApp string  `dynamodbav:"customerWhatsApp"`
-	Status           string  `dynamodbav:"status"` // Pending, Approved, Rejected, Completed
-	CreatedDate      string  `dynamodbav:"createdDate"`
-	LastUpdated      string  `dynamodbav:"lastUpdated"`
+	Cost             float64           `dynamodbav:"cost"`
+	CustomerWhatsApp string            `dynamodbav:"customerWhatsApp"`
+	FormData         map[string]string `dynamodbav:"formData"`
+	Documents        []string          `dynamodbav:"documents"`
+	Status           string            `dynamodbav:"status"` // Pending, Approved, Rejected, Completed
+	CreatedDate      string            `dynamodbav:"createdDate"`
+	LastUpdated      string            `dynamodbav:"lastUpdated"`
 }
 
 type Wallet struct {

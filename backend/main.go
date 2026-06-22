@@ -40,6 +40,10 @@ func main() {
 	config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
 	r.Use(cors.New(config))
 
+	// Serve uploaded files statically
+	os.MkdirAll("uploads", os.ModePerm)
+	r.Static("/uploads", "./uploads")
+
 	// Routes
 	api := r.Group("/api")
 	{

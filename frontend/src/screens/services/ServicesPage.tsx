@@ -1331,6 +1331,7 @@ export function ServicesPage() {
   const [paymentPhase, setPaymentPhase] = useState<
     "form" | "payment" | "success"
   >("form");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -1716,6 +1717,7 @@ export function ServicesPage() {
     setSelectedService(service);
     setFormData({});
     setErrors({});
+    setSelectedFiles([]);
     setPaymentPhase("form");
     setIsModalOpen(true);
   };
@@ -1768,19 +1770,22 @@ export function ServicesPage() {
       const userStr = localStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : null;
       
-      const reqBody = {
-        retailerId: user?.id || "unknown_retailer",
-        serviceId: selectedService.id,
-        serviceName: selectedService.name,
-        cost: Number(selectedService.price?.retailer) || 0,
-        customerWhatsApp: customerWhatsApp || "",
-        walletType: "Main"
-      };
+      const submitData = new FormData();
+      submitData.append("retailerId", user?.id || "unknown_retailer");
+      submitData.append("serviceId", selectedService.id);
+      submitData.append("serviceName", selectedService.name);
+      submitData.append("cost", String(selectedService.price?.retailer || 0));
+      submitData.append("customerWhatsApp", customerWhatsApp || "");
+      submitData.append("walletType", "Main");
+      submitData.append("formData", JSON.stringify(formData));
+
+      selectedFiles.forEach((file) => {
+        submitData.append("documents", file);
+      });
 
       const res = await fetch(`${apiUrl}/services/request`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(reqBody)
+        body: submitData,
       });
 
       if (!res.ok) {
@@ -2188,6 +2193,22 @@ export function ServicesPage() {
                         </div>
                       );
                     })}
+
+                    <div className="space-y-1.5 mt-2">
+                      <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                        Upload Supporting Documents (Optional)
+                      </label>
+                      <input
+                        type="file"
+                        multiple
+                        className="w-full text-xs"
+                        onChange={(e) => {
+                          if (e.target.files) {
+                            setSelectedFiles(Array.from(e.target.files));
+                          }
+                        }}
+                      />
+                    </div>
 
                     {/* Submit & Cancel Buttons */}
                     <div className="flex items-center gap-3 border-t border-slate-50 dark:border-slate-900/50 pt-4 mt-2">

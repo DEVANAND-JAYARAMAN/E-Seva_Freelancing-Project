@@ -21,6 +21,7 @@ type Notification = {
   type: string;
   isRead: boolean;
   createdAt: string;
+  link?: string;
 };
 
 type TopBarProps = {
@@ -51,6 +52,7 @@ export function TopBar({ onMenuClick }: TopBarProps) {
           type: n.Type || n.type,
           isRead: n.IsRead || n.isRead,
           createdAt: n.CreatedAt || n.createdAt,
+          link: n.Link || n.link,
         }));
         setNotifications(mapped);
       }
@@ -174,9 +176,10 @@ export function TopBar({ onMenuClick }: TopBarProps) {
                         </span>
                         {!notif.isRead && (
                           <button
-                            onClick={() =>
-                              markAsRead(notif.id, notif.createdAt)
-                            }
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              markAsRead(notif.id, notif.createdAt);
+                            }}
                             className="text-[#005c3a] dark:text-emerald-400 hover:opacity-70"
                             title="Mark as read"
                           >
@@ -184,7 +187,18 @@ export function TopBar({ onMenuClick }: TopBarProps) {
                           </button>
                         )}
                       </div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400">
+                      <p
+                        className="text-xs text-slate-600 dark:text-slate-400 cursor-pointer hover:underline"
+                        onClick={() => {
+                          if (notif.link) {
+                            router.push(notif.link);
+                            setIsNotifOpen(false);
+                            if (!notif.isRead) {
+                              markAsRead(notif.id, notif.createdAt);
+                            }
+                          }
+                        }}
+                      >
                         {notif.message}
                       </p>
                       <span className="text-[10px] text-slate-400 dark:text-slate-600 mt-1">

@@ -10,4 +10,5 @@ type Notification struct {
 	Type      string `dynamodbav:"type"` // "info", "success", "warning", "error"
 	IsRead    bool   `dynamodbav:"isRead"`
 	CreatedAt string `dynamodbav:"createdAt"`
+	Link      string `dynamodbav:"link"`
 }

@@ -16,6 +16,8 @@ export interface StatusTicket {
   lastUpdated: string;
   remarks?: string;
   userRole?: "Retailer" | "Distributor";
+  formData?: Record<string, string>;
+  documents?: string[];
 }
 
 export interface StatusStatsData {
