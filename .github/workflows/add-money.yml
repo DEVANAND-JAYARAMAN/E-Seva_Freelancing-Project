@@ -19,19 +19,21 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_SSH_PORT }}
           script: |
-            echo "Scanning for retailer user ID..."
-            USER_ID=$(aws dynamodb scan --region ap-south-1 --table-name Users --filter-expression "#role = :roleVal" --expression-attribute-names '{"#role":"role"}' --expression-attribute-values '{":roleVal":{"S":"retailer"}}' --query "Items[0].PK.S" --output text)
-            if [ "$USER_ID" != "None" ] && [ -n "$USER_ID" ]; then
-              echo "Found User ID: $USER_ID"
-              aws dynamodb update-item --region ap-south-1 --table-name Users --key "{\"PK\":{\"S\":\"$USER_ID\"},\"SK\":{\"S\":\"PROFILE\"}}" --update-expression "SET walletBalance = if_not_exists(walletBalance, :zero) + :amt" --expression-attribute-values '{":amt":{"N":"100"}, ":zero":{"N":"0"}}'
-              
-              WALLET_PK=$(echo $USER_ID | sed 's/USER#/WALLET#/')
-              echo "Updating Wallet PK: $WALLET_PK"
-              aws dynamodb update-item --region ap-south-1 --table-name Wallets --key "{\"PK\":{\"S\":\"$WALLET_PK\"},\"SK\":{\"S\":\"TYPE#Main\"}}" --update-expression "ADD balance :amt, totalCredits :amt" --expression-attribute-values '{":amt":{"N":"100"}}'
-              
-              # Add dummy transaction
-              TX_ID="TX#$(date -u +'%Y-%m-%dT%H:%M:%SZ')#DUMMY100"
-              aws dynamodb put-item --region ap-south-1 --table-name WalletTransactions --item "{\"PK\":{\"S\":\"$WALLET_PK\"},\"SK\":{\"S\":\"$TX_ID\"},\"id\":{\"S\":\"DUMMY100\"},\"amount\":{\"N\":\"100\"},\"type\":{\"S\":\"Credit\"},\"status\":{\"S\":\"Success\"},\"description\":{\"S\":\"Manual Credit for Testing\"},\"createdAt\":{\"S\":\"$(date -u +'%Y-%m-%dT%H:%M:%SZ')\"}}"
-            else
-              echo "No retailer found!"
-            fi
+            echo "Scanning for all retailer user IDs..."
+            USER_IDS=$(aws dynamodb scan --region ap-south-1 --table-name Users --filter-expression "#role = :roleVal" --expression-attribute-names '{"#role":"role"}' --expression-attribute-values '{":roleVal":{"S":"retailer"}}' --query "Items[*].PK.S" --output text)
+            
+            for USER_ID in $USER_IDS; do
+              if [ "$USER_ID" != "None" ] && [ -n "$USER_ID" ]; then
+                echo "Updating User ID: $USER_ID"
+                aws dynamodb update-item --region ap-south-1 --table-name Users --key "{\"PK\":{\"S\":\"$USER_ID\"},\"SK\":{\"S\":\"PROFILE\"}}" --update-expression "SET walletBalance = if_not_exists(walletBalance, :zero) + :amt" --expression-attribute-values '{":amt":{"N":"100"}, ":zero":{"N":"0"}}'
+                
+                WALLET_PK=$(echo $USER_ID | sed 's/USER#/WALLET#/')
+                echo "Updating Wallet PK: $WALLET_PK"
+                aws dynamodb update-item --region ap-south-1 --table-name Wallets --key "{\"PK\":{\"S\":\"$WALLET_PK\"},\"SK\":{\"S\":\"TYPE#Main\"}}" --update-expression "ADD balance :amt, totalCredits :amt" --expression-attribute-values '{":amt":{"N":"100"}}'
+                
+                # Add dummy transaction
+                TX_ID="TX#$(date -u +'%Y-%m-%dT%H:%M:%SZ')#DUMMY100"
+                aws dynamodb put-item --region ap-south-1 --table-name WalletTransactions --item "{\"PK\":{\"S\":\"$WALLET_PK\"},\"SK\":{\"S\":\"$TX_ID\"},\"id\":{\"S\":\"DUMMY100\"},\"amount\":{\"N\":\"100\"},\"type\":{\"S\":\"Credit\"},\"status\":{\"S\":\"Success\"},\"description\":{\"S\":\"Manual Credit for Testing\"},\"createdAt\":{\"S\":\"$(date -u +'%Y-%m-%dT%H:%M:%SZ')\"}}"
+              fi
+            done
+            echo "Done updating all retailers!"
