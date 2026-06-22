@@ -7,7 +7,7 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "http://3.110.218.80:8080/api/:splat"
+  to = "http://43.204.238.185:8080/api/:splat"
   status = 200
   force = true
 
