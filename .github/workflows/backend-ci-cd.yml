@@ -59,8 +59,8 @@ jobs:
           script: |
             set -e
             cd /opt/eservice
-            git reset --hard HEAD
-            git pull origin main
+            git fetch --all
+            git reset --hard origin/main
             cd backend
             cat > .env <<EOF
             AWS_REGION=ap-south-1
@@ -68,7 +68,6 @@ jobs:
             MUGAVAI_USERNAME=${{ secrets.MUGAVAI_USERNAME }}
             MUGAVAI_API_KEY=${{ secrets.MUGAVAI_API_KEY }}
             EOF
-            /usr/local/go/bin/go build -o eservice-backend . || go build -o eservice-backend . || true
             sudo systemctl restart eservice-backend
             sleep 3
             sudo systemctl is-active --quiet eservice-backend && echo "Service is running"
