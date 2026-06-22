@@ -10,7 +10,8 @@ export function ServiceQueue() {
     fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/requests`)
       .then(res => res.json())
       .then(data => {
-        const sorted = (data || []).sort((a: any, b: any) => 
+        const dataArray = Array.isArray(data) ? data : [];
+        const sorted = dataArray.sort((a: any, b: any) => 
           new Date(b.createdDate || "").getTime() - new Date(a.createdDate || "").getTime()
         ).slice(0, 5);
         setServicesData(sorted);

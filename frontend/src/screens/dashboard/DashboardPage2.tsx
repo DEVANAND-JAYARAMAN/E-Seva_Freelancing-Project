@@ -61,7 +61,8 @@ export function DashboardPage2({
     fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/requests${userFilter}`)
       .then(res => res.json())
       .then(data => {
-        const sorted = (data || []).sort((a: any, b: any) => 
+        const dataArray = Array.isArray(data) ? data : [];
+        const sorted = dataArray.sort((a: any, b: any) => 
           new Date(b.createdDate || "").getTime() - new Date(a.createdDate || "").getTime()
         ).slice(0, 5); // top 5 recent
         setTransactions(sorted);
