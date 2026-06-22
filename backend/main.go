@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"eservice-backend/admin"
 	"eservice-backend/auth"
 	"eservice-backend/billing"
 	"eservice-backend/crm"
@@ -51,6 +52,18 @@ func main() {
 			c.JSON(200, gin.H{"status": "ok"})
 		})
 
+		walletGroup := api.Group("/wallet")
+		{
+			walletGroup.POST("/add", wallet.AddMoney)
+			walletGroup.POST("/deduct", wallet.DeductMoney)
+			walletGroup.GET("/transactions", service.GetWalletTransactions) // Using service for now as it contains the logic
+		}
+
+		adminGroup := api.Group("/admin")
+		{
+			adminGroup.GET("/dashboard", admin.GetDashboardStats)
+		}
+
 		authGroup := api.Group("/auth")
 		{
 			authGroup.POST("/signup", auth.Signup)
@@ -77,6 +90,7 @@ func main() {
 			notificationGroup.POST("/", notification.CreateNotification)
 			notificationGroup.GET("/", notification.GetNotifications)
 			notificationGroup.PATCH("/:id/read", notification.MarkAsRead)
+			notificationGroup.DELETE("/:id", notification.DeleteNotification)
 		}
 
 		serviceGroup := api.Group("/services")
@@ -93,6 +107,11 @@ func main() {
 			walletGroup.POST("/recharge/manual", wallet.ManualRecharge)
 			walletGroup.POST("/payment/callback", wallet.HandlePaymentCallback)
 			walletGroup.GET("/recharge/status/:order_id", wallet.CheckGatewayRechargeStatus)
+		}
+
+		adminGroup := api.Group("/admin")
+		{
+			adminGroup.GET("/dashboard", admin.GetDashboardStats)
 		}
 
 		v1Group := api.Group("/v1")

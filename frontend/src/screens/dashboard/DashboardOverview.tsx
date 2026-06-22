@@ -1,6 +1,6 @@
 import { ActivityChart } from "../../components/charts/ActivityChart";
 
-export function DashboardOverview() {
+export function DashboardOverview({ stats }: { stats?: any }) {
   return (
     <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-center w-full">
       {/* Left copy column */}
@@ -35,7 +35,7 @@ export function DashboardOverview() {
         {/* Amount */}
         <div className="my-3">
           <div className="text-4xl sm:text-5xl font-extrabold tracking-tight text-[#005c3a] dark:text-emerald-400">
-            ₹50.00
+            ₹{stats?.todayPayment !== undefined ? stats.todayPayment.toFixed(2) : "0.00"}
           </div>
         </div>
 

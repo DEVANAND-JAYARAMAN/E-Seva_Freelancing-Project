@@ -1,17 +1,37 @@
-import { services } from "../../config/data";
+"use client";
+
+import { useEffect, useState } from "react";
 import { FileText, User, Wallet } from "lucide-react";
 
 export function ServiceQueue() {
+  const [servicesData, setServicesData] = useState<any[]>([]);
+
+  useEffect(() => {
+    fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/requests`)
+      .then(res => res.json())
+      .then(data => {
+        const sorted = (data || []).sort((a: any, b: any) => 
+          new Date(b.createdDate || "").getTime() - new Date(a.createdDate || "").getTime()
+        ).slice(0, 5);
+        setServicesData(sorted);
+      })
+      .catch(console.error);
+  }, []);
+
   // Map status styles using tailwind
   const statusClasses: Record<string, string> = {
     Approved:
       "bg-[#e8f5e9] dark:bg-emerald-950/30 text-[#005c3a] dark:text-emerald-400",
     Pending:
       "bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400",
-    "In process":
+    "Inprocess":
+      "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400",
+    "Processing":
       "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400",
     Resubmit:
       "bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400",
+    Completed:
+      "bg-teal-50 dark:bg-teal-950/30 text-teal-600 dark:text-teal-400",
   };
 
   // Map icons and their background colors based on status
@@ -24,12 +44,22 @@ export function ServiceQueue() {
       bg: "bg-[#e8f5e9] dark:bg-emerald-950/30",
       text: "text-[#005c3a] dark:text-emerald-400",
     },
+    Completed: {
+      icon: FileText,
+      bg: "bg-teal-50 dark:bg-teal-950/30",
+      text: "text-teal-600 dark:text-teal-400",
+    },
     Pending: {
       icon: FileText,
       bg: "bg-amber-50 dark:bg-amber-950/30",
       text: "text-amber-600 dark:text-amber-400",
     },
-    "In process": {
+    "Inprocess": {
+      icon: User,
+      bg: "bg-blue-50 dark:bg-blue-950/30",
+      text: "text-blue-600 dark:text-blue-400",
+    },
+    "Processing": {
       icon: User,
       bg: "bg-blue-50 dark:bg-blue-950/30",
       text: "text-blue-600 dark:text-blue-400",
@@ -53,7 +83,7 @@ export function ServiceQueue() {
       </div>
 
       <div className="space-y-4">
-        {services.map((service) => {
+        {servicesData.map((service) => {
           const statusStyle =
             statusClasses[service.status] ||
             "bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-300";
@@ -67,7 +97,7 @@ export function ServiceQueue() {
           return (
             <div
               className="flex items-center justify-between gap-4 pb-4 border-b border-slate-50 dark:border-slate-900/30 last:pb-0 last:border-b-0"
-              key={service.name}
+              key={service.id || service.name || Math.random().toString()}
             >
               {/* Icon, Name & Time */}
               <div className="flex items-center gap-3 min-w-0">
@@ -78,10 +108,10 @@ export function ServiceQueue() {
                 </span>
                 <div className="min-w-0">
                   <strong className="block font-bold text-slate-900 dark:text-slate-100 text-sm tracking-tight truncate">
-                    {service.name}
+                    {service.serviceName || service.name || "Unknown Service"}
                   </strong>
                   <span className="block text-[11px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5">
-                    {service.time}
+                    {service.createdDate ? new Date(service.createdDate).toLocaleDateString() : (service.time || "Just now")}
                   </span>
                 </div>
               </div>
@@ -95,7 +125,7 @@ export function ServiceQueue() {
                 </span>
                 <div className="flex items-baseline gap-0.5 w-16 justify-end">
                   <span className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                    {service.amount}
+                    ₹{service.cost || service.amount || "0.00"}
                   </span>
                 </div>
               </div>

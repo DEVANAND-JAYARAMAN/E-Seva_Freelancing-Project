@@ -1,6 +1,6 @@
 import { walletCards } from "../../config/data";
 
-export function WalletSummary() {
+export function WalletSummary({ stats }: { stats?: any }) {
   const descMap: Record<string, string> = {
     "main wallet": "Available balance",
     "wallet request": "Pending approvals",
@@ -32,6 +32,15 @@ export function WalletSummary() {
         const toneStyle =
           toneClasses[labelLower] ||
           "bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-350";
+          
+        let dynamicValue = card.value;
+        if (stats) {
+          if (labelLower === "main wallet") dynamicValue = (5000).toFixed(2); // Mock for now, since not computed
+          if (labelLower === "customers") dynamicValue = String(stats.customers || 0);
+          if (labelLower === "retailers") dynamicValue = String(stats.retailers || 0);
+          if (labelLower === "distributors") dynamicValue = String(stats.distributors || 0);
+          if (labelLower === "wallet request") dynamicValue = "0"; // Placeholder
+        }
 
         return (
           <article
@@ -48,7 +57,7 @@ export function WalletSummary() {
                     ₹
                   </span>
                 )}
-                {card.value}
+                {dynamicValue}
               </strong>
               <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block truncate">
                 {description}

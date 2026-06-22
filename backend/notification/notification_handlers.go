@@ -115,3 +115,26 @@ func MarkAsRead(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Notification marked as read"})
 }
+
+func DeleteNotification(c *gin.Context) {
+	id := c.Param("id")
+	userId := c.Query("userId")
+	if userId == "" {
+		userId = "ALL"
+	}
+	createdAt := c.Query("createdAt") // SK needs timestamp
+
+	_, err := db.DynamoClient.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
+		TableName: aws.String("Notifications"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: "USER#" + userId},
+			"SK": &types.AttributeValueMemberS{Value: "NOTIF#" + createdAt + "#" + id},
+		},
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete notification"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Notification deleted successfully"})
+}

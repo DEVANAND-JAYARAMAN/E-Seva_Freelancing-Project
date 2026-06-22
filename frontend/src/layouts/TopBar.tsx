@@ -9,6 +9,7 @@ import {
   User,
   LogOut,
   Check,
+  X,
 } from "lucide-react";
 import { useTheme } from "../store/context/ThemeProvider";
 import { useAuth } from "../store/context/AuthContext";
@@ -77,6 +78,19 @@ export function TopBar({ onMenuClick }: TopBarProps) {
       fetchNotifications();
     } catch (err) {
       console.error("Failed to mark as read:", err);
+    }
+  };
+
+  const clearNotification = async (id: string, createdAt: string) => {
+    if (!user) return;
+    try {
+      await fetch(
+        `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/notifications/${id}?userId=${user.role === "admin" ? "ADMIN" : user.id}&createdAt=${createdAt}`,
+        { method: "DELETE" }
+      );
+      fetchNotifications();
+    } catch (err) {
+      console.error("Failed to clear notification:", err);
     }
   };
 
@@ -157,8 +171,13 @@ export function TopBar({ onMenuClick }: TopBarProps) {
                 onClick={() => setIsNotifOpen(false)}
               />
               <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#0c101d] p-3 shadow-2xl dark:shadow-black/50 z-50 animate-in fade-in slide-in-from-top-2 duration-150 flex flex-col gap-2">
-                <h3 className="text-sm font-extrabold px-2 pt-1 pb-2 border-b border-slate-100 dark:border-slate-800">
-                  Notifications
+                <h3 className="text-sm font-extrabold px-2 pt-1 pb-2 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                  <span>Notifications</span>
+                  {notifications.length > 0 && (
+                    <span className="text-[10px] text-slate-400 font-normal">
+                      {unreadCount} unread
+                    </span>
+                  )}
                 </h3>
                 {notifications.length === 0 ? (
                   <p className="text-xs text-center py-4 text-slate-500">
@@ -168,40 +187,50 @@ export function TopBar({ onMenuClick }: TopBarProps) {
                   notifications.map((notif) => (
                     <div
                       key={notif.id}
-                      className={`flex flex-col gap-1 p-3 rounded-xl border ${notif.isRead ? "border-transparent opacity-70" : "border-[#005c3a]/20 bg-[#005c3a]/5 dark:border-emerald-500/20 dark:bg-emerald-950/20"} transition-all`}
+                      className={`flex flex-col gap-1 p-3 rounded-xl border cursor-pointer hover:bg-slate-50 dark:hover:bg-[#0f1423] ${notif.isRead ? "border-transparent opacity-70" : "border-[#005c3a]/20 bg-[#005c3a]/5 dark:border-emerald-500/20 dark:bg-emerald-950/20"} transition-all group`}
+                      onClick={() => {
+                        if (notif.link) {
+                          router.push(notif.link);
+                          setIsNotifOpen(false);
+                          if (!notif.isRead) {
+                            markAsRead(notif.id, notif.createdAt);
+                          }
+                        }
+                      }}
                     >
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                           {notif.title}
                         </span>
-                        {!notif.isRead && (
+                        <div className="flex items-center gap-1">
+                          {!notif.isRead && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                markAsRead(notif.id, notif.createdAt);
+                              }}
+                              className="text-[#005c3a] dark:text-emerald-400 hover:opacity-70 p-1 bg-[#005c3a]/10 dark:bg-emerald-950/40 rounded-md"
+                              title="Mark as read"
+                            >
+                              <Check size={12} />
+                            </button>
+                          )}
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              markAsRead(notif.id, notif.createdAt);
+                              clearNotification(notif.id, notif.createdAt);
                             }}
-                            className="text-[#005c3a] dark:text-emerald-400 hover:opacity-70"
-                            title="Mark as read"
+                            className="text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 p-1 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="Clear notification"
                           >
-                            <Check size={14} />
+                            <X size={12} />
                           </button>
-                        )}
+                        </div>
                       </div>
-                      <p
-                        className="text-xs text-slate-600 dark:text-slate-400 cursor-pointer hover:underline"
-                        onClick={() => {
-                          if (notif.link) {
-                            router.push(notif.link);
-                            setIsNotifOpen(false);
-                            if (!notif.isRead) {
-                              markAsRead(notif.id, notif.createdAt);
-                            }
-                          }
-                        }}
-                      >
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">
                         {notif.message}
                       </p>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-600 mt-1">
+                      <span className="text-[9px] font-semibold text-slate-400 dark:text-slate-500 mt-1">
                         {new Date(notif.createdAt).toLocaleString()}
                       </span>
                     </div>

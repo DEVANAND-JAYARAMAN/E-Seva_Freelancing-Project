@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useState, useEffect } from "react";
 import { AppShell } from "../../layouts/AppShell";
 import { DashboardOverview } from "./DashboardOverview";
 import { ServiceQueue } from "./ServiceQueue";
@@ -16,6 +17,16 @@ export function DashboardPage({
 }) {
   const { user } = useAuth();
   const role = forceRole || user?.role;
+  const [stats, setStats] = useState<any>(null);
+
+  useEffect(() => {
+    if (role === "admin") {
+      fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/admin/dashboard`)
+        .then(res => res.json())
+        .then(data => setStats(data))
+        .catch(err => console.error("Failed to load dashboard stats", err));
+    }
+  }, [role]);
 
   if (role === "retailer" || role === "distributor") {
     return <DashboardPage2 forceRole={role} />;
@@ -25,15 +36,15 @@ export function DashboardPage({
     <AppShell activePage="Dashboard">
       <section className="flex flex-col gap-6 w-full">
         {/* Operations Overview and Today Collection */}
-        <DashboardOverview />
+        <DashboardOverview stats={stats} />
 
         {/* Combined Stats & Wallets Grid (3 rows, 4 columns on large screens) */}
         <section
           className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
           aria-label="Wallet and metrics summary"
         >
-          <WalletSummary />
-          <StatsGrid />
+          <WalletSummary stats={stats} />
+          <StatsGrid stats={stats} />
         </section>
 
         {/* Live Queues & Wallet Warnings */}
