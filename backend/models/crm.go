@@ -1,17 +1,17 @@
 package models
 
 type CRMCustomer struct {
-	PK         string `dynamodbav:"PK"`
-	SK         string `dynamodbav:"SK"`
-	Id         string `dynamodbav:"id"`
-	Name       string `dynamodbav:"name"`
-	ShopName   string `dynamodbav:"shopName"`
-	Email      string `dynamodbav:"email"`
-	Phone      string `dynamodbav:"phone"`
-	City       string `dynamodbav:"city"`
-	Type       string `dynamodbav:"type"`
-	Status     string `dynamodbav:"status"`
-	JoinedDate string `dynamodbav:"joinedDate"`
-	CreatedAt  string `dynamodbav:"createdAt"`
-	UpdatedAt  string `dynamodbav:"updatedAt"`
+	PK         string `dynamodbav:"PK" json:"PK"`
+	SK         string `dynamodbav:"SK" json:"SK"`
+	Id         string `dynamodbav:"id" json:"id"`
+	Name       string `dynamodbav:"name" json:"name"`
+	ShopName   string `dynamodbav:"shopName" json:"shopName"`
+	Email      string `dynamodbav:"email" json:"email"`
+	Phone      string `dynamodbav:"phone" json:"phone"`
+	City       string `dynamodbav:"city" json:"city"`
+	Type       string `dynamodbav:"type" json:"type"`
+	Status     string `dynamodbav:"status" json:"status"`
+	JoinedDate string `dynamodbav:"joinedDate" json:"joinedDate"`
+	CreatedAt  string `dynamodbav:"createdAt" json:"createdAt"`
+	UpdatedAt  string `dynamodbav:"updatedAt" json:"updatedAt"`
 }

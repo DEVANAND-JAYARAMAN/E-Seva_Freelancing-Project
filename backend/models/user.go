@@ -1,13 +1,13 @@
 package models
 
 type User struct {
-	PK           string `dynamodbav:"PK"`
-	SK           string `dynamodbav:"SK"`
-	UserId       string `dynamodbav:"userId"`
-	FullName     string `dynamodbav:"name"`
-	Email        string `dynamodbav:"email"`
-	Mobile       string `dynamodbav:"mobile"`
-	Role         string `dynamodbav:"role"`
+	PK            string  `dynamodbav:"PK" json:"PK"`
+	SK            string  `dynamodbav:"SK" json:"SK"`
+	UserId        string  `dynamodbav:"userId" json:"userId"`
+	FullName      string  `dynamodbav:"name" json:"name"`
+	Email         string  `dynamodbav:"email" json:"email"`
+	Mobile        string  `dynamodbav:"mobile" json:"mobile"`
+	Role          string  `dynamodbav:"role" json:"role"`
 	PasswordHash  string  `dynamodbav:"passwordHash" json:"-"`
 	Status        string  `dynamodbav:"status" json:"status"`
 	WalletBalance float64 `dynamodbav:"walletBalance" json:"walletBalance"`
@@ -16,25 +16,25 @@ type User struct {
 }
 
 type Retailer struct {
-	PK          string `dynamodbav:"PK"`
-	SK          string `dynamodbav:"SK"`
-	Id          string `dynamodbav:"id"`
-	Name        string `dynamodbav:"name"`
-	Email       string `dynamodbav:"email"`
-	Phone       string `dynamodbav:"phone"`
-	Status      string `dynamodbav:"status"`
-	CreatedDate string `dynamodbav:"createdDate"`
-	UpdatedAt   string `dynamodbav:"updatedAt"`
+	PK          string `dynamodbav:"PK" json:"PK"`
+	SK          string `dynamodbav:"SK" json:"SK"`
+	Id          string `dynamodbav:"id" json:"id"`
+	Name        string `dynamodbav:"name" json:"name"`
+	Email       string `dynamodbav:"email" json:"email"`
+	Phone       string `dynamodbav:"phone" json:"phone"`
+	Status      string `dynamodbav:"status" json:"status"`
+	CreatedDate string `dynamodbav:"createdDate" json:"createdDate"`
+	UpdatedAt   string `dynamodbav:"updatedAt" json:"updatedAt"`
 }
 
 type Distributor struct {
-	PK          string `dynamodbav:"PK"`
-	SK          string `dynamodbav:"SK"`
-	Id          string `dynamodbav:"id"`
-	Name        string `dynamodbav:"name"`
-	Email       string `dynamodbav:"email"`
-	Phone       string `dynamodbav:"phone"`
-	Status      string `dynamodbav:"status"`
-	CreatedDate string `dynamodbav:"createdDate"`
-	UpdatedAt   string `dynamodbav:"updatedAt"`
+	PK          string `dynamodbav:"PK" json:"PK"`
+	SK          string `dynamodbav:"SK" json:"SK"`
+	Id          string `dynamodbav:"id" json:"id"`
+	Name        string `dynamodbav:"name" json:"name"`
+	Email       string `dynamodbav:"email" json:"email"`
+	Phone       string `dynamodbav:"phone" json:"phone"`
+	Status      string `dynamodbav:"status" json:"status"`
+	CreatedDate string `dynamodbav:"createdDate" json:"createdDate"`
+	UpdatedAt   string `dynamodbav:"updatedAt" json:"updatedAt"`
 }

@@ -134,8 +134,8 @@ export function BillingPage() {
 
   const filteredInvoices = invoices.filter((i) => {
     const matchesSearch =
-      i.retailerName.toLowerCase().includes(search.toLowerCase()) ||
-      i.invoiceNumber.toLowerCase().includes(search.toLowerCase()) ||
+      (i.retailerName || "").toLowerCase().includes(search.toLowerCase()) ||
+      (i.invoiceNumber || "").toLowerCase().includes(search.toLowerCase()) ||
       (i.utrNumber && i.utrNumber.includes(search));
     const matchesStatus = statusFilter === "All" || i.status === statusFilter;
     const matchesCategory =

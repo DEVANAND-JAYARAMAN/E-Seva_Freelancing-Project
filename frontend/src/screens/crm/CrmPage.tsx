@@ -133,10 +133,10 @@ export function CrmPage() {
 
   const filteredCustomers = customers.filter((c) => {
     const matchesSearch =
-      c.name.toLowerCase().includes(search.toLowerCase()) ||
-      c.shopName.toLowerCase().includes(search.toLowerCase()) ||
-      c.email.toLowerCase().includes(search.toLowerCase()) ||
-      c.phone.includes(search);
+      (c.name || "").toLowerCase().includes(search.toLowerCase()) ||
+      (c.shopName || "").toLowerCase().includes(search.toLowerCase()) ||
+      (c.email || "").toLowerCase().includes(search.toLowerCase()) ||
+      (c.phone || "").includes(search);
     const matchesType = typeFilter === "All" || c.type === typeFilter;
     const matchesStatus = statusFilter === "All" || c.status === statusFilter;
     return matchesSearch && matchesType && matchesStatus;
