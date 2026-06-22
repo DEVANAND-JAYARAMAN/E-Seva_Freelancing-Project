@@ -3,7 +3,8 @@ export type TicketStatus =
   | "Resubmit"
   | "Processing"
   | "Rejected"
-  | "Approved";
+  | "Approved"
+  | "Completed";
 
 export interface StatusTicket {
   id: string;

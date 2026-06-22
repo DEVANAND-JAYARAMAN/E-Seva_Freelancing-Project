@@ -181,6 +181,7 @@ func CreateServiceRequest(c *gin.Context) {
 		Type:      "info",
 		IsRead:    false,
 		CreatedAt: now,
+		Link:      "/status",
 	}
 
 	appItem, err := attributevalue.MarshalMap(app)
@@ -277,7 +278,11 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 		return
 	}
 
-	if req.Status != "Approved" && req.Status != "Rejected" && req.Status != "Completed" {
+
+	validStatuses := map[string]bool{
+		"Approved": true, "Rejected": true, "Completed": true, "Processing": true, "Resubmit": true,
+	}
+	if !validStatuses[req.Status] {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid status"})
 		return
 	}
@@ -477,6 +482,27 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process rejection and refund"})
 			return
 		}
+	} else {
+		// Processing, Resubmit — simple status update
+		_, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+			TableName: aws.String("ServiceApplications"),
+			Key: map[string]types.AttributeValue{
+				"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
+				"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+			},
+			UpdateExpression: aws.String("SET #s = :status, lastUpdated = :time"),
+			ExpressionAttributeNames: map[string]string{
+				"#s": "status",
+			},
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":status": &types.AttributeValueMemberS{Value: req.Status},
+				":time":   &types.AttributeValueMemberS{Value: now},
+			},
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update request status"})
+			return
+		}
 	}
 
 	// Send Notification to Retailer/Distributor
@@ -499,7 +525,7 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 		Type:      notifType,
 		IsRead:    false,
 		CreatedAt: now,
-		Link:      "/dashboard/history", // Provide link to redirect
+		Link:      "/status",
 	}
 	notifItem, _ := attributevalue.MarshalMap(notif)
 	db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{

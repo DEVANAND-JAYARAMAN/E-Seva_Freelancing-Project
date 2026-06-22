@@ -4,6 +4,7 @@ import {
   Loader,
   AlertTriangle,
   CheckCircle2,
+  CheckCheck,
 } from "lucide-react";
 import type { StatusTicket, TicketStatus } from "./types";
 
@@ -70,10 +71,20 @@ export function StatusStats({
       activeClass:
         "ring-2 ring-emerald-500/50 bg-[#e8f5e9]/40 dark:bg-emerald-950/10",
     },
+    {
+      label: "Completed",
+      value: getCount("Completed"),
+      icon: CheckCheck,
+      status: "Completed" as TicketStatus,
+      colorClass:
+        "bg-teal-50 dark:bg-teal-950/20 text-teal-700 dark:text-teal-400 border-teal-100 dark:border-teal-900/30",
+      activeClass:
+        "ring-2 ring-teal-500/50 bg-teal-50/50 dark:bg-teal-950/10",
+    },
   ];
 
   return (
-    <section className="grid grid-cols-2 md:grid-cols-5 gap-4 w-full">
+    <section className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 w-full">
       {/* "All" Filter Card */}
       <button
         type="button"

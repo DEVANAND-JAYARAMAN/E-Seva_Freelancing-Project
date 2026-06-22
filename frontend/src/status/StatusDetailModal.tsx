@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, Check, AlertOctagon, RefreshCw, Loader } from "lucide-react";
+import { X, Check, AlertOctagon, RefreshCw, Loader, Download, Eye, FileText, Image as ImageIcon, CheckCircle } from "lucide-react";
 import type { StatusTicket, TicketStatus } from "./types";
 import { useAuth } from "../store/context/AuthContext";
 
@@ -37,6 +37,8 @@ export function StatusDetailModal({
 
   if (!isOpen || !ticket) return null;
 
+  const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "");
+
   const handleStatusClick = (newStatus: TicketStatus) => {
     let finalRemarks = remarks.trim();
     if (!finalRemarks || !isCustomRemarks) {
@@ -53,18 +55,45 @@ export function StatusDetailModal({
     onClose();
   };
 
+  // Completed is handled via the same API but we cast it
+  const handleCompleted = () => {
+    let finalRemarks = remarks.trim();
+    if (!finalRemarks || !isCustomRemarks) {
+      finalRemarks = "Service request has been completed successfully.";
+    }
+    onUpdateStatus(ticket.id, "Completed" as TicketStatus, finalRemarks);
+    onClose();
+  };
+
+  const getFileIcon = (path: string) => {
+    const ext = path.split(".").pop()?.toLowerCase() || "";
+    if (["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"].includes(ext)) {
+      return <ImageIcon size={14} className="text-blue-500" />;
+    }
+    return <FileText size={14} className="text-orange-500" />;
+  };
+
+  const getFileName = (path: string) => {
+    return path.split("/").pop() || `Document`;
+  };
+
+  const isImageFile = (path: string) => {
+    const ext = path.split(".").pop()?.toLowerCase() || "";
+    return ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"].includes(ext);
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-md p-4 animate-fadeIn">
-      {/* Modal Container */}
-      <div className="relative w-full max-w-lg bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl shadow-xl overflow-hidden animate-slideUp">
+      {/* Modal Container - scrollable */}
+      <div className="relative w-full max-w-2xl max-h-[90vh] bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl shadow-xl overflow-hidden animate-slideUp flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-50 dark:border-slate-900/40">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-50 dark:border-slate-900/40 shrink-0">
           <div>
             <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">
-              Service Ticket Details
+              Service Request Details
             </h3>
             <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 mt-0.5 font-mono">
-              TXN: {ticket.transactionId}
+              ID: {ticket.transactionId}
             </p>
           </div>
           <button
@@ -75,8 +104,9 @@ export function StatusDetailModal({
           </button>
         </div>
 
-        {/* Details Grid */}
-        <div className="p-6 space-y-6">
+        {/* Scrollable Content */}
+        <div className="p-6 space-y-6 overflow-y-auto flex-1">
+          {/* Core Details Grid */}
           <div className="grid grid-cols-2 gap-4 bg-slate-50/50 dark:bg-[#0a0f18]/10 p-5 rounded-2xl border border-slate-100 dark:border-slate-900/40">
             {/* Service Name */}
             <div className="col-span-2">
@@ -91,10 +121,20 @@ export function StatusDetailModal({
             {/* Retailer */}
             <div>
               <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
-                Retailer Merchant
+                Retailer / Distributor
               </span>
               <span className="font-semibold text-slate-700 dark:text-slate-300 text-sm mt-0.5 block">
                 {ticket.retailerName}
+              </span>
+            </div>
+
+            {/* Role */}
+            <div>
+              <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
+                User Role
+              </span>
+              <span className="font-semibold text-slate-700 dark:text-slate-300 text-sm mt-0.5 block">
+                {ticket.userRole || "Retailer"}
               </span>
             </div>
 
@@ -105,6 +145,23 @@ export function StatusDetailModal({
               </span>
               <span className="font-extrabold text-[#005c3a] dark:text-emerald-400 text-sm mt-0.5 block">
                 ₹{ticket.amount.toFixed(2)}
+              </span>
+            </div>
+
+            {/* Current Status */}
+            <div>
+              <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
+                Current Status
+              </span>
+              <span className={`inline-flex items-center px-2.5 py-1 mt-1 rounded-lg text-[10px] font-extrabold tracking-wider uppercase ${
+                ticket.status === "Approved" ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" :
+                ticket.status === "Pending" ? "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" :
+                ticket.status === "Processing" ? "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" :
+                ticket.status === "Rejected" ? "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400" :
+                ticket.status === "Resubmit" ? "bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400" :
+                "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400"
+              }`}>
+                {ticket.status}
               </span>
             </div>
 
@@ -129,19 +186,19 @@ export function StatusDetailModal({
             </div>
           </div>
 
-          {/* Form Data */}
+          {/* Form Data - Customer Details */}
           {ticket.formData && Object.keys(ticket.formData).length > 0 && (
-            <div className="space-y-2 pt-2">
+            <div className="space-y-3">
               <span className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
-                Form Details
+                📋 Customer Application Data
               </span>
-              <div className="grid grid-cols-2 gap-2 bg-slate-50 dark:bg-[#0a0f18]/30 p-4 rounded-xl border border-slate-100 dark:border-slate-800/50">
+              <div className="grid grid-cols-2 gap-3 bg-slate-50 dark:bg-[#0a0f18]/30 p-5 rounded-xl border border-slate-100 dark:border-slate-800/50">
                 {Object.entries(ticket.formData).map(([key, value]) => (
-                  <div key={key}>
-                    <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase block">
-                      {key.replace(/([A-Z])/g, " $1").trim()}
+                  <div key={key} className="space-y-0.5">
+                    <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase block tracking-wider">
+                      {key.replace(/([A-Z])/g, " $1").replace(/_/g, " ").trim()}
                     </span>
-                    <span className="font-semibold text-slate-700 dark:text-slate-300 text-xs">
+                    <span className="font-semibold text-slate-700 dark:text-slate-300 text-xs break-words">
                       {value || "-"}
                     </span>
                   </div>
@@ -150,25 +207,106 @@ export function StatusDetailModal({
             </div>
           )}
 
-          {/* Documents */}
+          {/* Documents & Files - With Preview and Download */}
           {ticket.documents && ticket.documents.length > 0 && (
-            <div className="space-y-2 pt-2">
+            <div className="space-y-3">
               <span className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
-                Attached Documents
+                📎 Attached Documents ({ticket.documents.length})
               </span>
-              <div className="flex flex-wrap gap-2">
-                {ticket.documents.map((doc, idx) => (
-                  <a
-                    key={idx}
-                    href={`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}${doc}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center h-8 px-3 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 dark:text-blue-400 text-xs font-bold transition-colors"
-                  >
-                    View Document {idx + 1}
-                  </a>
-                ))}
+              <div className="space-y-3">
+                {ticket.documents.map((doc, idx) => {
+                  const fullUrl = `${baseUrl}${doc}`;
+                  const fileName = getFileName(doc);
+                  const isImage = isImageFile(doc);
+
+                  return (
+                    <div
+                      key={idx}
+                      className="bg-slate-50 dark:bg-[#0a0f18]/30 rounded-xl border border-slate-100 dark:border-slate-800/50 overflow-hidden"
+                    >
+                      {/* Image Preview */}
+                      {isImage && (
+                        <div className="w-full max-h-52 overflow-hidden bg-slate-100 dark:bg-slate-900/50 flex items-center justify-center">
+                          <img
+                            src={fullUrl}
+                            alt={fileName}
+                            className="w-full h-full object-contain max-h-52"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = "none";
+                            }}
+                          />
+                        </div>
+                      )}
+
+                      {/* File Info Bar */}
+                      <div className="flex items-center justify-between px-4 py-3">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          {getFileIcon(doc)}
+                          <span className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
+                            {fileName}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          {/* View in new tab */}
+                          <a
+                            href={fullUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 text-blue-600 dark:text-blue-400 transition-colors"
+                            title="View document"
+                          >
+                            <Eye size={14} />
+                          </a>
+
+                          {/* Download */}
+                          <a
+                            href={fullUrl}
+                            download={fileName}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 transition-colors"
+                            title="Download document"
+                          >
+                            <Download size={14} />
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
+            </div>
+          )}
+
+          {/* Remarks Section */}
+          {ticket.remarks && (
+            <div className="space-y-2">
+              <span className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
+                Admin Remarks
+              </span>
+              <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-[#0a0f18]/30 p-4 rounded-xl border border-slate-100 dark:border-slate-800/50">
+                {ticket.remarks}
+              </p>
+            </div>
+          )}
+
+          {/* Admin: Custom Remarks Input */}
+          {showEditControls && (
+            <div className="space-y-2">
+              <span className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
+                Update Remarks (Optional)
+              </span>
+              <textarea
+                value={remarks}
+                onChange={(e) => {
+                  setRemarks(e.target.value);
+                  setIsCustomRemarks(true);
+                }}
+                rows={2}
+                placeholder="Enter custom remarks before updating status..."
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18] text-sm font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 dark:focus:ring-emerald-500/20 transition-all resize-none"
+              />
             </div>
           )}
 
@@ -217,6 +355,16 @@ export function StatusDetailModal({
                 >
                   <Loader size={13} />
                   <span>Process</span>
+                </button>
+
+                {/* Complete - Full Width */}
+                <button
+                  type="button"
+                  onClick={handleCompleted}
+                  className="col-span-2 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-extrabold uppercase tracking-wider transition-all duration-200 bg-gradient-to-r from-[#005c3a] to-emerald-600 hover:from-emerald-600 hover:to-[#005c3a] text-white shadow-lg shadow-emerald-900/20 active:scale-[0.98]"
+                >
+                  <CheckCircle size={16} />
+                  <span>Mark as Completed</span>
                 </button>
               </div>
             </div>
