@@ -87,7 +87,7 @@ func CreateServiceRequest(c *gin.Context) {
 		TableName: aws.String("Wallets"),
 		Key: map[string]types.AttributeValue{
 			"PK": &types.AttributeValueMemberS{Value: walletPK},
-			"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+			"SK": &types.AttributeValueMemberS{Value: "TYPE#Main"},
 		},
 	})
 	
@@ -243,7 +243,7 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 			TableName: aws.String("Wallets"),
 			Key: map[string]types.AttributeValue{
 				"PK": &types.AttributeValueMemberS{Value: walletPK},
-				"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+				"SK": &types.AttributeValueMemberS{Value: "TYPE#Main"},
 			},
 		})
 		if err != nil || outWallet.Item == nil {
