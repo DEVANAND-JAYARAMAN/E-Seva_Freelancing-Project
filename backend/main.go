@@ -57,6 +57,9 @@ func main() {
 			authGroup.POST("/login", auth.Login)
 		}
 
+		api.GET("/retailers", auth.GetRetailers)
+		api.GET("/distributors", auth.GetDistributors)
+
 		crmGroup := api.Group("/crm")
 		{
 			crmGroup.POST("/customers", crm.CreateCustomer)

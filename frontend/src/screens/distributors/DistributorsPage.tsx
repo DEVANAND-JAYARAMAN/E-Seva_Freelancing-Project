@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Building2 } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
@@ -13,13 +13,37 @@ import type { Distributor } from "./types";
 const initialDistributorsList: Distributor[] = [];
 
 export function DistributorsPage() {
-  const [distributors, setDistributors] = useLocalStorage<Distributor[]>(
-    "thuruvan_distributors_list",
-    initialDistributorsList,
-  );
+  const [distributors, setDistributors] = useState<Distributor[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedDistributor, setSelectedDistributor] =
-    useState<Distributor | null>(null);
+  const [selectedDistributor, setSelectedDistributor] = useState<Distributor | null>(null);
+
+  // Fetch real data from backend
+  const fetchDistributors = async () => {
+    try {
+      const res = await fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/distributors`);
+      if (res.ok) {
+        const data = await res.json();
+        const mapped = (data || []).map((user: any) => ({
+          id: user.UserId || user.userId,
+          name: user.FullName || user.name || "Unknown",
+          shopName: "E-Seva Center", // Backend doesn't store this yet
+          email: user.Email || user.email,
+          phone: user.Mobile || user.mobile,
+          city: "Tamil Nadu", // Default
+          balance: user.WalletBalance || user.walletBalance || 0,
+          status: user.Status || user.status || "Active",
+          createdDate: (user.CreatedAt || user.createdAt || "").split("T")[0],
+        }));
+        setDistributors(mapped);
+      }
+    } catch (e) {
+      console.error("Failed to fetch distributors:", e);
+    }
+  };
+
+  useEffect(() => {
+    fetchDistributors();
+  }, []);
 
   // Add / Edit submission handler
   const handleFormSubmit = (
@@ -30,33 +54,16 @@ export function DistributorsPage() {
       setDistributors((prev) =>
         prev.map((item) =>
           item.id === data.id
-            ? {
-                ...item,
-                name: data.name,
-                shopName: data.shopName,
-                email: data.email,
-                phone: data.phone,
-                city: data.city,
-                balance: data.balance,
-                status: data.status,
-                aadhaarNo: data.aadhaarNo,
-              }
+            ? { ...item, ...data }
             : item,
         ),
       );
     } else {
       // Add mode
       const newDistributor: Distributor = {
+        ...data,
         id: `dist-${Date.now()}`,
-        name: data.name,
-        shopName: data.shopName,
-        email: data.email,
-        phone: data.phone,
-        city: data.city,
-        balance: data.balance,
-        status: data.status,
         createdDate: new Date().toISOString().split("T")[0],
-        aadhaarNo: data.aadhaarNo,
       };
       setDistributors((prev) => [newDistributor, ...prev]);
     }

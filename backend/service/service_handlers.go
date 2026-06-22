@@ -305,21 +305,94 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 	now := time.Now().UTC().Format(time.RFC3339)
 
 	if req.Status == "Approved" || req.Status == "Completed" {
-		_, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
-			TableName: aws.String("ServiceApplications"),
-			Key: map[string]types.AttributeValue{
-				"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
-				"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
-			},
-			UpdateExpression: aws.String("SET #s = :status, lastUpdated = :time"),
-			ExpressionAttributeNames: map[string]string{
-				"#s": "status",
-			},
-			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":status": &types.AttributeValueMemberS{Value: req.Status},
-				":time":   &types.AttributeValueMemberS{Value: now},
-			},
-		})
+		if req.Status == "Completed" {
+			crmId := generateId("CRM")
+			invoiceId := generateId("INV")
+			
+			crmCust := models.CRMCustomer{
+				PK:         "CUSTOMER#" + crmId,
+				SK:         "PROFILE",
+				Id:         crmId,
+				Name:       app.CustomerWhatsApp, // Mocked to WhatsApp or retrieve from FormData
+				ShopName:   "Unknown",
+				Email:      "unknown@example.com",
+				Phone:      app.CustomerWhatsApp,
+				City:       "Unknown",
+				Type:       "RetailerCustomer",
+				Status:     "Active",
+				JoinedDate: now,
+				CreatedAt:  now,
+				UpdatedAt:  now,
+			}
+			crmItem, _ := attributevalue.MarshalMap(crmCust)
+
+			invoice := models.Invoice{
+				PK:            "INVOICE#" + invoiceId,
+				SK:            "PROFILE",
+				Id:            invoiceId,
+				InvoiceNumber: "INV-" + invoiceId,
+				RetailerName:  app.RetailerId,
+				Amount:        app.Cost,
+				Date:          now,
+				DueDate:       now,
+				Status:        "Paid",
+				UtrNumber:     app.ServiceId,
+				Category:      app.ServiceName,
+				CreatedAt:     now,
+				UpdatedAt:     now,
+			}
+			invoiceItem, _ := attributevalue.MarshalMap(invoice)
+
+			_, err = db.DynamoClient.TransactWriteItems(context.TODO(), &dynamodb.TransactWriteItemsInput{
+				TransactItems: []types.TransactWriteItem{
+					{
+						Update: &types.Update{
+							TableName: aws.String("ServiceApplications"),
+							Key: map[string]types.AttributeValue{
+								"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
+								"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+							},
+							UpdateExpression: aws.String("SET #s = :status, lastUpdated = :time"),
+							ExpressionAttributeNames: map[string]string{
+								"#s": "status",
+							},
+							ExpressionAttributeValues: map[string]types.AttributeValue{
+								":status": &types.AttributeValueMemberS{Value: req.Status},
+								":time":   &types.AttributeValueMemberS{Value: now},
+							},
+						},
+					},
+					{
+						Put: &types.Put{
+							TableName: aws.String("CRMCustomers"),
+							Item:      crmItem,
+						},
+					},
+					{
+						Put: &types.Put{
+							TableName: aws.String("Invoices"),
+							Item:      invoiceItem,
+						},
+					},
+				},
+			})
+		} else {
+			_, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+				TableName: aws.String("ServiceApplications"),
+				Key: map[string]types.AttributeValue{
+					"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
+					"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+				},
+				UpdateExpression: aws.String("SET #s = :status, lastUpdated = :time"),
+				ExpressionAttributeNames: map[string]string{
+					"#s": "status",
+				},
+				ExpressionAttributeValues: map[string]types.AttributeValue{
+					":status": &types.AttributeValueMemberS{Value: req.Status},
+					":time":   &types.AttributeValueMemberS{Value: now},
+				},
+			})
+		}
 
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update request status"})
