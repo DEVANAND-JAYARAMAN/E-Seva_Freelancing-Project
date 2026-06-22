@@ -138,3 +138,38 @@ func DeleteNotification(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Notification deleted successfully"})
 }
+
+func ClearAllNotifications(c *gin.Context) {
+	userId := c.Query("userId")
+	if userId == "" {
+		userId = "ALL"
+	}
+
+	// First query all notifications for this user
+	out, err := db.DynamoClient.Query(context.TODO(), &dynamodb.QueryInput{
+		TableName: aws.String("Notifications"),
+		KeyConditionExpression: aws.String("PK = :pk AND begins_with(SK, :sk)"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":pk": &types.AttributeValueMemberS{Value: "USER#" + userId},
+			":sk": &types.AttributeValueMemberS{Value: "NOTIF#"},
+		},
+	})
+	
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch notifications to delete"})
+		return
+	}
+
+	// Delete them one by one
+	for _, item := range out.Items {
+		db.DynamoClient.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
+			TableName: aws.String("Notifications"),
+			Key: map[string]types.AttributeValue{
+				"PK": item["PK"],
+				"SK": item["SK"],
+			},
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "All notifications cleared successfully"})
+}

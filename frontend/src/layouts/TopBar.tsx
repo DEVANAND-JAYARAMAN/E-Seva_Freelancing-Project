@@ -172,11 +172,32 @@ export function TopBar({ onMenuClick }: TopBarProps) {
               />
               <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#0c101d] p-3 shadow-2xl dark:shadow-black/50 z-50 animate-in fade-in slide-in-from-top-2 duration-150 flex flex-col gap-2">
                 <h3 className="text-sm font-extrabold px-2 pt-1 pb-2 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                  <span>Notifications</span>
+                  <div className="flex items-center gap-2">
+                    <span>Notifications</span>
+                    {notifications.length > 0 && (
+                      <span className="text-[10px] text-slate-400 font-normal">
+                        {unreadCount} unread
+                      </span>
+                    )}
+                  </div>
                   {notifications.length > 0 && (
-                    <span className="text-[10px] text-slate-400 font-normal">
-                      {unreadCount} unread
-                    </span>
+                    <button
+                      onClick={async () => {
+                        if (!user) return;
+                        try {
+                          await fetch(
+                            `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/notifications/all?userId=${user.role === "admin" ? "ADMIN" : user.id}`,
+                            { method: "DELETE" }
+                          );
+                          setNotifications([]);
+                        } catch (err) {
+                          console.error("Failed to clear all notifications:", err);
+                        }
+                      }}
+                      className="text-[10px] font-bold text-slate-400 hover:text-rose-500 transition-colors uppercase tracking-wider"
+                    >
+                      Clear All
+                    </button>
                   )}
                 </h3>
                 {notifications.length === 0 ? (

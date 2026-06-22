@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AppShell } from "../../layouts/AppShell";
 import { useAuth } from "../../store/context/AuthContext";
 import {
