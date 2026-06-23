@@ -32,7 +32,8 @@ type CreateServiceReq struct {
 }
 
 type UpdateServiceStatusReq struct {
-	Status string `json:"status" binding:"required"`
+	Status       string `json:"status" binding:"required"`
+	AdminRemarks string `json:"adminRemarks"`
 }
 
 // sendWhatsAppMessage automatically sends a text message via Mugavai API
@@ -362,13 +363,14 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 								"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
 								"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
 							},
-							UpdateExpression: aws.String("SET #s = :status, lastUpdated = :time"),
+							UpdateExpression: aws.String("SET #s = :status, lastUpdated = :time, adminRemarks = :remarks"),
 							ExpressionAttributeNames: map[string]string{
 								"#s": "status",
 							},
 							ExpressionAttributeValues: map[string]types.AttributeValue{
-								":status": &types.AttributeValueMemberS{Value: req.Status},
-								":time":   &types.AttributeValueMemberS{Value: now},
+								":status":  &types.AttributeValueMemberS{Value: req.Status},
+								":time":    &types.AttributeValueMemberS{Value: now},
+								":remarks": &types.AttributeValueMemberS{Value: req.AdminRemarks},
 							},
 						},
 					},
@@ -393,13 +395,14 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 					"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
 					"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
 				},
-				UpdateExpression: aws.String("SET #s = :status, lastUpdated = :time"),
+				UpdateExpression: aws.String("SET #s = :status, lastUpdated = :time, adminRemarks = :remarks"),
 				ExpressionAttributeNames: map[string]string{
 					"#s": "status",
 				},
 				ExpressionAttributeValues: map[string]types.AttributeValue{
-					":status": &types.AttributeValueMemberS{Value: req.Status},
-					":time":   &types.AttributeValueMemberS{Value: now},
+					":status":  &types.AttributeValueMemberS{Value: req.Status},
+					":time":    &types.AttributeValueMemberS{Value: now},
+					":remarks": &types.AttributeValueMemberS{Value: req.AdminRemarks},
 				},
 			})
 		}
@@ -438,13 +441,14 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 							"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
 							"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
 						},
-						UpdateExpression: aws.String("SET #s = :status, lastUpdated = :time"),
+						UpdateExpression: aws.String("SET #s = :status, lastUpdated = :time, adminRemarks = :remarks"),
 						ExpressionAttributeNames: map[string]string{
 							"#s": "status",
 						},
 						ExpressionAttributeValues: map[string]types.AttributeValue{
-							":status": &types.AttributeValueMemberS{Value: "Rejected"},
-							":time":   &types.AttributeValueMemberS{Value: now},
+							":status":  &types.AttributeValueMemberS{Value: "Rejected"},
+							":time":    &types.AttributeValueMemberS{Value: now},
+							":remarks": &types.AttributeValueMemberS{Value: req.AdminRemarks},
 						},
 					},
 				},
@@ -495,13 +499,14 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 				"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
 				"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
 			},
-			UpdateExpression: aws.String("SET #s = :status, lastUpdated = :time"),
+			UpdateExpression: aws.String("SET #s = :status, lastUpdated = :time, adminRemarks = :remarks"),
 			ExpressionAttributeNames: map[string]string{
 				"#s": "status",
 			},
 			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":status": &types.AttributeValueMemberS{Value: req.Status},
-				":time":   &types.AttributeValueMemberS{Value: now},
+				":status":  &types.AttributeValueMemberS{Value: req.Status},
+				":time":    &types.AttributeValueMemberS{Value: now},
+				":remarks": &types.AttributeValueMemberS{Value: req.AdminRemarks},
 			},
 		})
 		if err != nil {

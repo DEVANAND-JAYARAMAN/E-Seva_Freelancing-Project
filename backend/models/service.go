@@ -12,6 +12,7 @@ type ServiceApplication struct {
 	FormData         map[string]string `dynamodbav:"formData" json:"formData"`
 	Documents        []string          `dynamodbav:"documents" json:"documents"`
 	Status           string            `dynamodbav:"status" json:"status"` // Pending, Approved, Rejected, Completed
+	AdminRemarks     string            `dynamodbav:"adminRemarks" json:"adminRemarks"`
 	CreatedDate      string            `dynamodbav:"createdDate" json:"createdDate"`
 	LastUpdated      string            `dynamodbav:"lastUpdated" json:"lastUpdated"`
 }
