@@ -21,7 +21,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const mugavaiBaseURL = "https://mugavaipaymentgetway.in/api/v1"
 
 type GatewayRechargeRequest struct {
 	Amount         float64 `json:"amount" binding:"required,gt=0"`

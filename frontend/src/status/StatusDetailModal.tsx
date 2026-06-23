@@ -227,6 +227,7 @@ export function StatusDetailModal({
                       {/* Image Preview */}
                       {isImage && (
                         <div className="w-full max-h-52 overflow-hidden bg-slate-100 dark:bg-slate-900/50 flex items-center justify-center">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={fullUrl}
                             alt={fileName}
