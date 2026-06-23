@@ -41,13 +41,15 @@ func main() {
 	config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
 	r.Use(cors.New(config))
 
-	// Serve uploaded files statically
+	// Ensure uploads directory exists
 	os.MkdirAll("uploads", os.ModePerm)
-	r.Static("/uploads", "./uploads")
 
 	// Routes
 	api := r.Group("/api")
 	{
+		// Serve uploaded files under /api/uploads to be correctly proxied by Nginx
+		api.Static("/uploads", "./uploads")
+
 		api.GET("/health", func(c *gin.Context) {
 			c.JSON(200, gin.H{"status": "ok"})
 		})

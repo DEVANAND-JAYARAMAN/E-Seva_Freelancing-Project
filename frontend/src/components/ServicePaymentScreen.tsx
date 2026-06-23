@@ -29,7 +29,7 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
   const [upiId, setUpiId] = useState("");
   const [customerWhatsApp, setCustomerWhatsApp] = useState("");
   const [error, setError] = useState("");
-  const { user } = useAuth();
+  const { user, updateWallet } = useAuth();
   const walletBalance = user?.walletBalance || 0;
 
   const handlePaymentSubmit = async () => {
@@ -76,6 +76,11 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
         setError(errData.error || "Failed to create service request");
         setIsSubmitting(false);
         return;
+      }
+
+      // Update local wallet balance if payment was via wallet
+      if (paymentMethod === "wallet") {
+        updateWallet(walletBalance - retailerCharge);
       }
 
       setIsSubmitting(false);

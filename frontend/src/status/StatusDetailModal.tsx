@@ -187,7 +187,7 @@ export function StatusDetailModal({
           </div>
 
           {/* Form Data - Customer Details */}
-          {ticket.formData && Object.keys(ticket.formData).length > 0 && (
+          {!isEditMode && ticket.formData && Object.keys(ticket.formData).length > 0 && (
             <div className="space-y-3">
               <span className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                 📋 Customer Application Data
@@ -208,14 +208,14 @@ export function StatusDetailModal({
           )}
 
           {/* Documents & Files - With Preview and Download */}
-          {ticket.documents && ticket.documents.length > 0 && (
+          {!isEditMode && ticket.documents && ticket.documents.length > 0 && (
             <div className="space-y-3">
               <span className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                 📎 Attached Documents ({ticket.documents.length})
               </span>
               <div className="space-y-3">
                 {ticket.documents.map((doc, idx) => {
-                  const fullUrl = `${baseUrl}${doc}`;
+                  const fullUrl = `${baseUrl}/api${doc}`;
                   const fileName = getFileName(doc);
                   const isImage = isImageFile(doc);
 
@@ -292,7 +292,7 @@ export function StatusDetailModal({
           )}
 
           {/* Admin: Custom Remarks Input */}
-          {showEditControls && (
+          {showEditControls && isEditMode && (
             <div className="space-y-2">
               <span className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                 Update Remarks (Optional)
@@ -311,7 +311,7 @@ export function StatusDetailModal({
           )}
 
           {/* Workflow Status Actions */}
-          {showEditControls && (
+          {showEditControls && isEditMode && (
             <div className="space-y-3 pt-2">
               <span className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                 Workflow Status Actions

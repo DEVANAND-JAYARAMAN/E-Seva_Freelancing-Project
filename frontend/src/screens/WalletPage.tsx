@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Wallet,
   Plus,
@@ -27,7 +27,11 @@ import {
 } from "../config/data";
 
 export function WalletPage() {
-  const { user, updateWallet } = useAuth();
+  const { user, updateWallet, refreshProfile } = useAuth();
+
+  useEffect(() => {
+    refreshProfile();
+  }, [refreshProfile]);
 
   // Balances
   const mainBalance = user?.walletBalance ?? 2895.0;

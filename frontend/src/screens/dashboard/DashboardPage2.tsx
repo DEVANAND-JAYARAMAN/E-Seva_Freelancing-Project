@@ -22,7 +22,7 @@ export function DashboardPage2({
 }: {
   forceRole?: "retailer" | "distributor";
 }) {
-  const { user: contextUser, updateWallet } = useAuth();
+  const { user: contextUser, updateWallet, refreshProfile } = useAuth();
   const user = forceRole ? { ...contextUser, role: forceRole } : contextUser;
 
   // State for wallet request popup
@@ -54,6 +54,11 @@ export function DashboardPage2({
   };
 
   const [transactions, setTransactions] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Silently refresh wallet balance upon visiting dashboard
+    refreshProfile();
+  }, [refreshProfile]);
 
   useEffect(() => {
     // Fetch live requests specific to user

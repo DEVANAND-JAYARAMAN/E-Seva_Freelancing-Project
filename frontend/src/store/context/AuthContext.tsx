@@ -30,6 +30,7 @@ type AuthContextType = {
   ) => Promise<void>;
   logout: () => void;
   updateWallet: (newBalance: number) => void;
+  refreshProfile: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -146,6 +147,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const refreshProfile = useCallback(async () => {
+    if (!user?.email) return;
+    if (user.role === "admin") return;
+    try {
+      const apiUrl = `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api`;
+      const endpoint = user.role === "retailer" ? "/retailers" : "/distributors";
+      const res = await fetch(`${apiUrl}${endpoint}`);
+      if (res.ok) {
+        const data = await res.json();
+        const me = (data || []).find((u: any) => u.email === user.email || u.Email === user.email);
+        if (me) {
+          const balance = me.walletBalance || me.WalletBalance || 0;
+          updateWallet(balance);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to refresh profile:", e);
+    }
+  }, [user, updateWallet]);
+
   const authContextValue = useMemo(
     () => ({
       user,
@@ -154,8 +175,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       logout,
       updateWallet,
+      refreshProfile,
     }),
-    [user, isLoading, login, logout, updateWallet],
+    [user, isLoading, login, logout, updateWallet, refreshProfile],
   );
 
   return (
