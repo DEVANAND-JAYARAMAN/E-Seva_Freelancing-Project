@@ -170,7 +170,7 @@ export function StatusTable({
                       >
                         <Eye size={13} />
                       </button>
-                      {isAdmin && (
+                      {isAdmin && ticket.status !== "Completed" && ticket.status !== "Rejected" && (
                         <button
                           onClick={() => onSelectTicket(ticket, true)}
                           className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200/60 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-[#005c3a] dark:text-emerald-400 transition-colors"

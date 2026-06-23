@@ -94,8 +94,11 @@ export function StatusPage() {
       const res = await fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/requests`);
       if (res.ok) {
         const data = await res.json();
+        const sortedData = (data || []).sort((a: any, b: any) => 
+          new Date(b.createdDate || b.CreatedDate || "").getTime() - new Date(a.createdDate || a.CreatedDate || "").getTime()
+        );
         // map backend model to StatusTicket
-        const mapped: StatusTicket[] = (data || []).map((app: any) => ({
+        const mapped: StatusTicket[] = sortedData.map((app: any) => ({
           id: app.id || app.Id,
           transactionId: app.id || app.Id,
           serviceName: app.serviceName || app.ServiceName || "Unknown Service",
