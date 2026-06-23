@@ -7,6 +7,8 @@ interface ServicePaymentScreenProps {
   serviceId?: string;
   serviceName: string;
   retailerCharge: number;
+  formData?: Record<string, string>;
+  files?: File[];
   onBack: () => void;
   onSuccess: (customerWhatsApp?: string) => void;
 }
@@ -15,6 +17,8 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
   serviceId,
   serviceName,
   retailerCharge,
+  formData,
+  files,
   onBack,
   onSuccess,
 }) => {
@@ -43,19 +47,28 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
 
     try {
       const apiUrl = `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api`;
-      const reqBody = {
-        retailerId: user?.id || "unknown_retailer",
-        serviceId: serviceId || serviceName.toLowerCase().replace(/\s+/g, "_"),
-        serviceName: serviceName,
-        cost: retailerCharge,
-        customerWhatsApp: customerWhatsApp.trim(),
-        walletType: "Main"
-      };
+      
+      const submitData = new FormData();
+      submitData.append("retailerId", user?.id || "unknown_retailer");
+      submitData.append("serviceId", serviceId || serviceName.toLowerCase().replace(/\s+/g, "_"));
+      submitData.append("serviceName", serviceName);
+      submitData.append("cost", String(retailerCharge));
+      submitData.append("customerWhatsApp", customerWhatsApp.trim());
+      submitData.append("walletType", "Main");
+      
+      if (formData) {
+        submitData.append("formData", JSON.stringify(formData));
+      }
+      
+      if (files) {
+        files.forEach((file) => {
+          submitData.append("documents", file);
+        });
+      }
 
       const res = await fetch(`${apiUrl}/services/request`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(reqBody)
+        body: submitData
       });
 
       if (!res.ok) {

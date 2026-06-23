@@ -37,7 +37,7 @@ export const NewFssaiRegistration: React.FC<NewFssaiRegistrationProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
 
@@ -264,7 +264,7 @@ export const NewFssaiRegistration: React.FC<NewFssaiRegistrationProps> = ({
           value={formData.fssaiCategory}
           error={errors.fssaiCategory}
           disabled={isSubmitting}
-          onChange={(val) => handleFieldChange("fssaiCategory", val)}
+          onChange={(val, file) => handleFieldChange("fssaiCategory", val, file)}
         />
       </div>
 
@@ -281,7 +281,7 @@ export const NewFssaiRegistration: React.FC<NewFssaiRegistrationProps> = ({
               value={formData.shopName}
               error={errors.shopName}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("shopName", val)}
+              onChange={(val, file) => handleFieldChange("shopName", val, file)}
             />
           </div>
 
@@ -294,7 +294,7 @@ export const NewFssaiRegistration: React.FC<NewFssaiRegistrationProps> = ({
               error={errors.shopAddress}
               disabled={isSubmitting}
               rows={3}
-              onChange={(val) => handleFieldChange("shopAddress", val)}
+              onChange={(val, file) => handleFieldChange("shopAddress", val, file)}
             />
           </div>
 
@@ -325,7 +325,7 @@ export const NewFssaiRegistration: React.FC<NewFssaiRegistrationProps> = ({
               value={formData.emailId}
               error={errors.emailId}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("emailId", val)}
+              onChange={(val, file) => handleFieldChange("emailId", val, file)}
             />
           </div>
 
@@ -338,7 +338,7 @@ export const NewFssaiRegistration: React.FC<NewFssaiRegistrationProps> = ({
               value={formData.applicantName}
               error={errors.applicantName}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("applicantName", val)}
+              onChange={(val, file) => handleFieldChange("applicantName", val, file)}
             />
           </div>
 
@@ -373,7 +373,7 @@ export const NewFssaiRegistration: React.FC<NewFssaiRegistrationProps> = ({
               value={formData.documentType}
               error={errors.documentType}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("documentType", val)}
+              onChange={(val, file) => handleFieldChange("documentType", val, file)}
             />
           </div>
         </div>
@@ -394,7 +394,7 @@ export const NewFssaiRegistration: React.FC<NewFssaiRegistrationProps> = ({
               value={formData.foodCategory}
               error={errors.foodCategory}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("foodCategory", val)}
+              onChange={(val, file) => handleFieldChange("foodCategory", val, file)}
             />
           </div>
 
@@ -406,7 +406,7 @@ export const NewFssaiRegistration: React.FC<NewFssaiRegistrationProps> = ({
               value={formData.shopPhoto}
               error={errors.shopPhoto}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("shopPhoto", val)}
+              onChange={(val, file) => handleFieldChange("shopPhoto", val, file)}
             />
           </div>
 
@@ -419,7 +419,7 @@ export const NewFssaiRegistration: React.FC<NewFssaiRegistrationProps> = ({
               value={formData.blockDivision}
               error={errors.blockDivision}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("blockDivision", val)}
+              onChange={(val, file) => handleFieldChange("blockDivision", val, file)}
             />
           </div>
 
@@ -446,7 +446,7 @@ export const NewFssaiRegistration: React.FC<NewFssaiRegistrationProps> = ({
               value={formData.panCard}
               error={errors.panCard}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("panCard", val)}
+              onChange={(val, file) => handleFieldChange("panCard", val, file)}
             />
           </div>
 
@@ -458,7 +458,7 @@ export const NewFssaiRegistration: React.FC<NewFssaiRegistrationProps> = ({
               value={formData.aadhaarCard}
               error={errors.aadhaarCard}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("aadhaarCard", val)}
+              onChange={(val, file) => handleFieldChange("aadhaarCard", val, file)}
             />
           </div>
 
@@ -470,7 +470,7 @@ export const NewFssaiRegistration: React.FC<NewFssaiRegistrationProps> = ({
               value={formData.applicantPhoto}
               error={errors.applicantPhoto}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("applicantPhoto", val)}
+              onChange={(val, file) => handleFieldChange("applicantPhoto", val, file)}
             />
           </div>
         </div>

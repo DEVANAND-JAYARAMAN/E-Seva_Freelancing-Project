@@ -79,7 +79,7 @@ export function TnegaCustomerForm({
 
   if (!isOpen) return null;
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
       setErrors((prev) => {
@@ -163,7 +163,7 @@ export function TnegaCustomerForm({
               placeholder="Applicant Name"
               value={formData.applicantName}
               error={errors.applicantName}
-              onChange={(val) => handleFieldChange("applicantName", val)}
+              onChange={(val, file) => handleFieldChange("applicantName", val, file)}
             />
             <InputField
               type="date"
@@ -172,7 +172,7 @@ export function TnegaCustomerForm({
               placeholder="mm/dd/yyyy"
               value={formData.dob}
               error={errors.dob}
-              onChange={(val) => handleFieldChange("dob", val)}
+              onChange={(val, file) => handleFieldChange("dob", val, file)}
             />
             <SelectField
               name="gender"
@@ -184,7 +184,7 @@ export function TnegaCustomerForm({
               ]}
               value={formData.gender}
               error={errors.gender}
-              onChange={(val) => handleFieldChange("gender", val)}
+              onChange={(val, file) => handleFieldChange("gender", val, file)}
             />
             <InputField
               type="text"
@@ -193,7 +193,7 @@ export function TnegaCustomerForm({
               placeholder="Phone"
               value={formData.phone}
               error={errors.phone}
-              onChange={(val) => handleFieldChange("phone", val)}
+              onChange={(val, file) => handleFieldChange("phone", val, file)}
             />
             <SelectField
               name="district"
@@ -206,7 +206,7 @@ export function TnegaCustomerForm({
               ]}
               value={formData.district}
               error={errors.district}
-              onChange={(val) => handleFieldChange("district", val)}
+              onChange={(val, file) => handleFieldChange("district", val, file)}
             />
             <InputField
               type="text"
@@ -215,7 +215,7 @@ export function TnegaCustomerForm({
               placeholder="Taluk"
               value={formData.taluk}
               error={errors.taluk}
-              onChange={(val) => handleFieldChange("taluk", val)}
+              onChange={(val, file) => handleFieldChange("taluk", val, file)}
             />
             <InputField
               type="text"
@@ -224,7 +224,7 @@ export function TnegaCustomerForm({
               placeholder="VAO"
               value={formData.vao}
               error={errors.vao}
-              onChange={(val) => handleFieldChange("vao", val)}
+              onChange={(val, file) => handleFieldChange("vao", val, file)}
             />
             <InputField
               type="file"
@@ -233,7 +233,7 @@ export function TnegaCustomerForm({
               placeholder="No file chosen"
               value={formData.photo}
               error={errors.photo}
-              onChange={(val) => handleFieldChange("photo", val)}
+              onChange={(val, file) => handleFieldChange("photo", val, file)}
             />
             <InputField
               type="text"
@@ -242,7 +242,7 @@ export function TnegaCustomerForm({
               placeholder="Aadhaar No"
               value={formData.aadhaarNo}
               error={errors.aadhaarNo}
-              onChange={(val) => handleFieldChange("aadhaarNo", val)}
+              onChange={(val, file) => handleFieldChange("aadhaarNo", val, file)}
             />
             <InputField
               type="file"
@@ -251,7 +251,7 @@ export function TnegaCustomerForm({
               placeholder="No file chosen"
               value={formData.aadhaarCard}
               error={errors.aadhaarCard}
-              onChange={(val) => handleFieldChange("aadhaarCard", val)}
+              onChange={(val, file) => handleFieldChange("aadhaarCard", val, file)}
             />
             <InputField
               type="text"
@@ -260,7 +260,7 @@ export function TnegaCustomerForm({
               placeholder="Smart Card No"
               value={formData.smartCardNo}
               error={errors.smartCardNo}
-              onChange={(val) => handleFieldChange("smartCardNo", val)}
+              onChange={(val, file) => handleFieldChange("smartCardNo", val, file)}
             />
             <InputField
               type="file"
@@ -269,7 +269,7 @@ export function TnegaCustomerForm({
               placeholder="No file chosen"
               value={formData.smartCard}
               error={errors.smartCard}
-              onChange={(val) => handleFieldChange("smartCard", val)}
+              onChange={(val, file) => handleFieldChange("smartCard", val, file)}
             />
             <InputField
               type="file"
@@ -278,7 +278,7 @@ export function TnegaCustomerForm({
               placeholder="No file chosen"
               value={formData.signature}
               error={errors.signature}
-              onChange={(val) => handleFieldChange("signature", val)}
+              onChange={(val, file) => handleFieldChange("signature", val, file)}
             />
             <TextAreaField
               name="address"
@@ -286,7 +286,7 @@ export function TnegaCustomerForm({
               placeholder="Address"
               value={formData.address}
               error={errors.address}
-              onChange={(val) => handleFieldChange("address", val)}
+              onChange={(val, file) => handleFieldChange("address", val, file)}
             />
           </div>
 

@@ -20,7 +20,7 @@ export const EidToAadhaarPdf: React.FC<EidToAadhaarPdfProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
 
@@ -131,7 +131,7 @@ export const EidToAadhaarPdf: React.FC<EidToAadhaarPdfProps> = ({
               value={formData.fullName}
               error={errors.fullName}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("fullName", val)}
+              onChange={(val, file) => handleFieldChange("fullName", val, file)}
             />
           </div>
 
@@ -159,7 +159,7 @@ export const EidToAadhaarPdf: React.FC<EidToAadhaarPdfProps> = ({
               value={formData.date}
               error={errors.date}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("date", val)}
+              onChange={(val, file) => handleFieldChange("date", val, file)}
             />
           </div>
 
@@ -172,7 +172,7 @@ export const EidToAadhaarPdf: React.FC<EidToAadhaarPdfProps> = ({
               value={formData.time}
               error={errors.time}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("time", val)}
+              onChange={(val, file) => handleFieldChange("time", val, file)}
             />
           </div>
         </div>

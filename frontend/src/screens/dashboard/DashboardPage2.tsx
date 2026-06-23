@@ -214,7 +214,7 @@ export function DashboardPage2({
               <strong className="block text-2xl font-black text-slate-900 dark:text-white">
                 ₹
                 {user?.walletBalance !== undefined
-                  ? user.walletBalance.toFixed(2)
+                  ? Number(user.walletBalance).toFixed(2)
                   : "2895.00"}
               </strong>
               <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">

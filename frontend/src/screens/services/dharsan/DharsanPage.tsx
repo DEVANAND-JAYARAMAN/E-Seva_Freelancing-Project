@@ -39,6 +39,7 @@ export function DharsanPage() {
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const dharsanServicesList: DharsanSubService[] = [
     {
@@ -52,6 +53,7 @@ export function DharsanPage() {
   const handleCardClick = (service: DharsanSubService) => {
     setFormData({});
     setErrors({});
+    setSelectedFiles([]);
     setPaymentPhase("form");
     if (service.id === "sabarimala") {
       setActiveForm("sabarimala");
@@ -125,8 +127,11 @@ export function DharsanPage() {
     }
   };
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (file) {
+      setSelectedFiles((prev) => [...prev, file]);
+    }
     if (errors[name]) {
       setErrors((prev) => {
         const next = { ...prev };
@@ -214,6 +219,7 @@ export function DharsanPage() {
     setTimeout(() => {
       setActiveForm(null);
       setFormData({});
+      setSelectedFiles([]);
       setPaymentPhase("form");
     }, 3000);
   };
@@ -259,8 +265,11 @@ export function DharsanPage() {
               ) : paymentPhase === "payment" ? (
                 <div className="py-2">
                   <ServicePaymentScreen
+                    serviceId="dharsan"
                     serviceName="Sabarimala Dharsan Booking"
                     retailerCharge={150}
+                    formData={formData}
+                    files={selectedFiles}
                     onBack={() => setPaymentPhase("form")}
                     onSuccess={handlePaymentSuccess}
                   />
@@ -304,8 +313,8 @@ export function DharsanPage() {
                           label="Photo"
                           type="file"
                           value={formData.photoUpload || ""}
-                          onChange={(val) =>
-                            handleFieldChange("photoUpload", val)
+                          onChange={(val, file) =>
+                            handleFieldChange("photoUpload", val, file)
                           }
                           error={errors.photoUpload}
                           disabled={isSubmitting}
@@ -331,8 +340,8 @@ export function DharsanPage() {
                           label="Aadhaar Card (Front&Back)"
                           type="file"
                           value={formData.aadhaarUpload || ""}
-                          onChange={(val) =>
-                            handleFieldChange("aadhaarUpload", val)
+                          onChange={(val, file) =>
+                            handleFieldChange("aadhaarUpload", val, file)
                           }
                           error={errors.aadhaarUpload}
                           disabled={isSubmitting}
@@ -371,7 +380,7 @@ export function DharsanPage() {
                           label="Route"
                           options={routeOptions}
                           value={formData.route || ""}
-                          onChange={(val) => handleFieldChange("route", val)}
+                          onChange={(val, file) => handleFieldChange("route", val, file)}
                           error={errors.route}
                           disabled={isSubmitting}
                         />

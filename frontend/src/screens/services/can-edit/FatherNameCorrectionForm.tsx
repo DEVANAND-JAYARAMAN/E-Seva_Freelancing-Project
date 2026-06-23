@@ -20,7 +20,7 @@ export const FatherNameCorrectionForm: React.FC<
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
       if (errors[name]) {
@@ -125,7 +125,7 @@ export const FatherNameCorrectionForm: React.FC<
                   value={formData.relationship}
                   error={errors.relationship}
                   disabled={isSubmitting}
-                  onChange={(val) => handleFieldChange("relationship", val)}
+                  onChange={(val, file) => handleFieldChange("relationship", val, file)}
                 />
               </div>
 
@@ -138,7 +138,7 @@ export const FatherNameCorrectionForm: React.FC<
                   value={formData.canNumber}
                   error={errors.canNumber}
                   disabled={isSubmitting}
-                  onChange={(val) => handleFieldChange("canNumber", val)}
+                  onChange={(val, file) => handleFieldChange("canNumber", val, file)}
                 />
               </div>
 
@@ -150,7 +150,7 @@ export const FatherNameCorrectionForm: React.FC<
                   value={formData.aadhaarCard}
                   error={errors.aadhaarCard}
                   disabled={isSubmitting}
-                  onChange={(val) => handleFieldChange("aadhaarCard", val)}
+                  onChange={(val, file) => handleFieldChange("aadhaarCard", val, file)}
                 />
               </div>
 
@@ -162,7 +162,7 @@ export const FatherNameCorrectionForm: React.FC<
                   value={formData.smartCard}
                   error={errors.smartCard}
                   disabled={isSubmitting}
-                  onChange={(val) => handleFieldChange("smartCard", val)}
+                  onChange={(val, file) => handleFieldChange("smartCard", val, file)}
                 />
               </div>
             </div>

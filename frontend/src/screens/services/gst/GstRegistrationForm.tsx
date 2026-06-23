@@ -33,7 +33,7 @@ export const GstRegistrationForm: React.FC<GstRegistrationFormProps> = ({
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
       setErrors((prev) => {
@@ -113,7 +113,7 @@ export const GstRegistrationForm: React.FC<GstRegistrationFormProps> = ({
             value={formData.tradeName}
             error={errors.tradeName}
             disabled={isLoading}
-            onChange={(val) => handleFieldChange("tradeName", val)}
+            onChange={(val, file) => handleFieldChange("tradeName", val, file)}
           />
 
           <InputField
@@ -176,7 +176,7 @@ export const GstRegistrationForm: React.FC<GstRegistrationFormProps> = ({
             value={formData.businessDetails}
             error={errors.businessDetails}
             disabled={isLoading}
-            onChange={(val) => handleFieldChange("businessDetails", val)}
+            onChange={(val, file) => handleFieldChange("businessDetails", val, file)}
           />
         </div>
 
@@ -189,7 +189,7 @@ export const GstRegistrationForm: React.FC<GstRegistrationFormProps> = ({
             value={formData.photo}
             error={errors.photo}
             disabled={isLoading}
-            onChange={(val) => handleFieldChange("photo", val)}
+            onChange={(val, file) => handleFieldChange("photo", val, file)}
           />
 
           <InputField
@@ -199,7 +199,7 @@ export const GstRegistrationForm: React.FC<GstRegistrationFormProps> = ({
             value={formData.aadhaarCard}
             error={errors.aadhaarCard}
             disabled={isLoading}
-            onChange={(val) => handleFieldChange("aadhaarCard", val)}
+            onChange={(val, file) => handleFieldChange("aadhaarCard", val, file)}
           />
 
           <InputField
@@ -209,7 +209,7 @@ export const GstRegistrationForm: React.FC<GstRegistrationFormProps> = ({
             value={formData.panCard}
             error={errors.panCard}
             disabled={isLoading}
-            onChange={(val) => handleFieldChange("panCard", val)}
+            onChange={(val, file) => handleFieldChange("panCard", val, file)}
           />
 
           <InputField
@@ -219,7 +219,7 @@ export const GstRegistrationForm: React.FC<GstRegistrationFormProps> = ({
             value={formData.bankPassbook}
             error={errors.bankPassbook}
             disabled={isLoading}
-            onChange={(val) => handleFieldChange("bankPassbook", val)}
+            onChange={(val, file) => handleFieldChange("bankPassbook", val, file)}
           />
 
           <TextAreaField
@@ -230,7 +230,7 @@ export const GstRegistrationForm: React.FC<GstRegistrationFormProps> = ({
             error={errors.businessAddress}
             disabled={isLoading}
             rows={3}
-            onChange={(val) => handleFieldChange("businessAddress", val)}
+            onChange={(val, file) => handleFieldChange("businessAddress", val, file)}
           />
         </div>
       </div>

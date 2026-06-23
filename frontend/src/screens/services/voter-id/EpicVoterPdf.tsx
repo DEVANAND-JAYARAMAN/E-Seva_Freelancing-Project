@@ -16,7 +16,7 @@ export const EpicVoterPdf: React.FC<EpicVoterPdfProps> = ({ onCancel }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
       
@@ -112,7 +112,7 @@ export const EpicVoterPdf: React.FC<EpicVoterPdfProps> = ({ onCancel }) => {
               value={formData.nameAsPerAadhaar}
               error={errors.nameAsPerAadhaar}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("nameAsPerAadhaar", val)}
+              onChange={(val, file) => handleFieldChange("nameAsPerAadhaar", val, file)}
             />
           </div>
 

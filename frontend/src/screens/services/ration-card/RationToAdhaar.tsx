@@ -15,7 +15,7 @@ export const RationToAdhaar: React.FC<RationToAdhaarProps> = ({ onCancel }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
 
@@ -124,7 +124,7 @@ export const RationToAdhaar: React.FC<RationToAdhaarProps> = ({ onCancel }) => {
               type="text"
               placeholder="Enter ration card number"
               value={formData.rationCardNo}
-              onChange={(val) => handleFieldChange("rationCardNo", val)}
+              onChange={(val, file) => handleFieldChange("rationCardNo", val, file)}
               error={errors.rationCardNo}
               disabled={isSubmitting}
             />

@@ -137,8 +137,13 @@ func CreateServiceRequest(c *gin.Context) {
 	now := time.Now().UTC().Format(time.RFC3339)
 
 	var formData map[string]string
-	if req.FormData != "" {
-		_ = json.Unmarshal([]byte(req.FormData), &formData)
+	formDataStr := req.FormData
+	if formDataStr == "" {
+		formDataStr = c.PostForm("formData")
+	}
+
+	if formDataStr != "" {
+		_ = json.Unmarshal([]byte(formDataStr), &formData)
 	}
 
 	var documents []string

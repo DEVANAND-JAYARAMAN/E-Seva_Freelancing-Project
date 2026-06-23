@@ -1723,7 +1723,7 @@ export function ServicesPage() {
   };
 
   // Form field value change
-  const handleFieldChange = (field: string, val: string) => {
+  const handleFieldChange = (field: string, val: string, file?: File) => {
     setFormData((prev) => ({ ...prev, [field]: val }));
     if (errors[field]) {
       setErrors((prev) => {
@@ -1763,44 +1763,12 @@ export function ServicesPage() {
   };
 
   const handlePaymentSuccess = async (customerWhatsApp?: string) => {
-    if (!selectedService) return;
-    
-    try {
-      const apiUrl = `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api`;
-      const userStr = localStorage.getItem("user");
-      const user = userStr ? JSON.parse(userStr) : null;
-      
-      const submitData = new FormData();
-      submitData.append("retailerId", user?.id || "unknown_retailer");
-      submitData.append("serviceId", selectedService.id);
-      submitData.append("serviceName", selectedService.name);
-      submitData.append("cost", String(selectedService.price?.retailer || 0));
-      submitData.append("customerWhatsApp", customerWhatsApp || "");
-      submitData.append("walletType", "Main");
-      submitData.append("formData", JSON.stringify(formData));
-
-      selectedFiles.forEach((file) => {
-        submitData.append("documents", file);
-      });
-
-      const res = await fetch(`${apiUrl}/services/request`, {
-        method: "POST",
-        body: submitData,
-      });
-
-      if (!res.ok) {
-        console.error("Failed to create service request");
-        // We'll proceed to success anyway for demo purposes if it fails, or you could show an error.
-      }
-    } catch (e) {
-      console.error(e);
-    }
-
     setPaymentPhase("success");
     setTimeout(() => {
       setIsModalOpen(false);
       setPaymentPhase("form");
       setFormData({});
+      setSelectedFiles([]);
     }, 3000);
   };
 
@@ -1975,6 +1943,8 @@ export function ServicesPage() {
                     retailerCharge={
                       Number(selectedService.price?.retailer) || 0
                     }
+                    formData={formData}
+                    files={selectedFiles}
                     onBack={() => setPaymentPhase("form")}
                     onSuccess={handlePaymentSuccess}
                   />

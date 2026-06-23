@@ -21,7 +21,7 @@ export const SavedAppRemovedForm: React.FC<SavedAppRemovedFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
       if (errors[name]) {
@@ -128,7 +128,7 @@ export const SavedAppRemovedForm: React.FC<SavedAppRemovedFormProps> = ({
                   value={formData.canNumber}
                   error={errors.canNumber}
                   disabled={isSubmitting}
-                  onChange={(val) => handleFieldChange("canNumber", val)}
+                  onChange={(val, file) => handleFieldChange("canNumber", val, file)}
                 />
               </div>
 
@@ -140,7 +140,7 @@ export const SavedAppRemovedForm: React.FC<SavedAppRemovedFormProps> = ({
                   value={formData.aadhaarFront}
                   error={errors.aadhaarFront}
                   disabled={isSubmitting}
-                  onChange={(val) => handleFieldChange("aadhaarFront", val)}
+                  onChange={(val, file) => handleFieldChange("aadhaarFront", val, file)}
                 />
               </div>
 
@@ -153,7 +153,7 @@ export const SavedAppRemovedForm: React.FC<SavedAppRemovedFormProps> = ({
                   value={formData.applicantName}
                   error={errors.applicantName}
                   disabled={isSubmitting}
-                  onChange={(val) => handleFieldChange("applicantName", val)}
+                  onChange={(val, file) => handleFieldChange("applicantName", val, file)}
                 />
               </div>
 
@@ -166,7 +166,7 @@ export const SavedAppRemovedForm: React.FC<SavedAppRemovedFormProps> = ({
                   value={formData.certificateName}
                   error={errors.certificateName}
                   disabled={isSubmitting}
-                  onChange={(val) => handleFieldChange("certificateName", val)}
+                  onChange={(val, file) => handleFieldChange("certificateName", val, file)}
                 />
               </div>
 

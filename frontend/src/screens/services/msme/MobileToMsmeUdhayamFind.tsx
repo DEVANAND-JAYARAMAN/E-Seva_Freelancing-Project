@@ -17,7 +17,7 @@ export const MobileToMsmeUdhayamFind: React.FC<
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
 
@@ -129,7 +129,7 @@ export const MobileToMsmeUdhayamFind: React.FC<
               value={formData.mobileNo}
               error={errors.mobileNo}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("mobileNo", val)}
+              onChange={(val, file) => handleFieldChange("mobileNo", val, file)}
             />
           </div>
         </div>

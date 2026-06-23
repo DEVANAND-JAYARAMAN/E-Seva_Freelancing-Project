@@ -19,7 +19,7 @@ export const AgriStackPdfForm: React.FC<AgriStackPdfFormProps> = ({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
       setErrors((prev) => {

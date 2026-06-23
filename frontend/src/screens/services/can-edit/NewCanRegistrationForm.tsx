@@ -52,7 +52,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
 
@@ -211,7 +211,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.salutation}
               error={errors.salutation}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("salutation", val)}
+              onChange={(val, file) => handleFieldChange("salutation", val, file)}
             />
           </div>
 
@@ -226,7 +226,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.relationship1}
               error={errors.relationship1}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("relationship1", val)}
+              onChange={(val, file) => handleFieldChange("relationship1", val, file)}
             />
           </div>
 
@@ -238,7 +238,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.relationship2}
               error={errors.relationship2}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("relationship2", val)}
+              onChange={(val, file) => handleFieldChange("relationship2", val, file)}
             />
           </div>
 
@@ -250,7 +250,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.relationship3}
               error={errors.relationship3}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("relationship3", val)}
+              onChange={(val, file) => handleFieldChange("relationship3", val, file)}
             />
           </div>
 
@@ -286,7 +286,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.religion}
               error={errors.religion}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("religion", val)}
+              onChange={(val, file) => handleFieldChange("religion", val, file)}
             />
           </div>
 
@@ -299,7 +299,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.education}
               error={errors.education}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("education", val)}
+              onChange={(val, file) => handleFieldChange("education", val, file)}
             />
           </div>
 
@@ -312,7 +312,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.work}
               error={errors.work}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("work", val)}
+              onChange={(val, file) => handleFieldChange("work", val, file)}
             />
           </div>
 
@@ -325,7 +325,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.doorNo}
               error={errors.doorNo}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("doorNo", val)}
+              onChange={(val, file) => handleFieldChange("doorNo", val, file)}
             />
           </div>
 
@@ -342,7 +342,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.district}
               error={errors.district}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("district", val)}
+              onChange={(val, file) => handleFieldChange("district", val, file)}
             />
           </div>
 
@@ -355,7 +355,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.taluk}
               error={errors.taluk}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("taluk", val)}
+              onChange={(val, file) => handleFieldChange("taluk", val, file)}
             />
           </div>
         </div>
@@ -371,7 +371,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.applicantNameTamil}
               error={errors.applicantNameTamil}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("applicantNameTamil", val)}
+              onChange={(val, file) => handleFieldChange("applicantNameTamil", val, file)}
             />
           </div>
 
@@ -384,7 +384,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.fatherNameTamil}
               error={errors.fatherNameTamil}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("fatherNameTamil", val)}
+              onChange={(val, file) => handleFieldChange("fatherNameTamil", val, file)}
             />
           </div>
 
@@ -397,7 +397,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.motherNameTamil}
               error={errors.motherNameTamil}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("motherNameTamil", val)}
+              onChange={(val, file) => handleFieldChange("motherNameTamil", val, file)}
             />
           </div>
 
@@ -410,7 +410,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.relationNameTamil}
               error={errors.relationNameTamil}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("relationNameTamil", val)}
+              onChange={(val, file) => handleFieldChange("relationNameTamil", val, file)}
             />
           </div>
 
@@ -446,7 +446,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.community}
               error={errors.community}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("community", val)}
+              onChange={(val, file) => handleFieldChange("community", val, file)}
             />
           </div>
 
@@ -477,7 +477,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.smartNumber}
               error={errors.smartNumber}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("smartNumber", val)}
+              onChange={(val, file) => handleFieldChange("smartNumber", val, file)}
             />
           </div>
 
@@ -490,7 +490,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.streetNameTamil}
               error={errors.streetNameTamil}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("streetNameTamil", val)}
+              onChange={(val, file) => handleFieldChange("streetNameTamil", val, file)}
             />
           </div>
 
@@ -503,7 +503,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.postNameTamil}
               error={errors.postNameTamil}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("postNameTamil", val)}
+              onChange={(val, file) => handleFieldChange("postNameTamil", val, file)}
             />
           </div>
 
@@ -516,7 +516,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.villageTamil}
               error={errors.villageTamil}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("villageTamil", val)}
+              onChange={(val, file) => handleFieldChange("villageTamil", val, file)}
             />
           </div>
         </div>
@@ -532,7 +532,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.applicantNameEnglish}
               error={errors.applicantNameEnglish}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("applicantNameEnglish", val)}
+              onChange={(val, file) => handleFieldChange("applicantNameEnglish", val, file)}
             />
           </div>
 
@@ -545,7 +545,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.fatherNameEnglish}
               error={errors.fatherNameEnglish}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("fatherNameEnglish", val)}
+              onChange={(val, file) => handleFieldChange("fatherNameEnglish", val, file)}
             />
           </div>
 
@@ -558,7 +558,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.motherNameEnglish}
               error={errors.motherNameEnglish}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("motherNameEnglish", val)}
+              onChange={(val, file) => handleFieldChange("motherNameEnglish", val, file)}
             />
           </div>
 
@@ -571,7 +571,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.relationNameEnglish}
               error={errors.relationNameEnglish}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("relationNameEnglish", val)}
+              onChange={(val, file) => handleFieldChange("relationNameEnglish", val, file)}
             />
           </div>
 
@@ -588,7 +588,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.maritalStatus}
               error={errors.maritalStatus}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("maritalStatus", val)}
+              onChange={(val, file) => handleFieldChange("maritalStatus", val, file)}
             />
           </div>
 
@@ -601,7 +601,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.caste}
               error={errors.caste}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("caste", val)}
+              onChange={(val, file) => handleFieldChange("caste", val, file)}
             />
           </div>
 
@@ -613,7 +613,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.aadhaarCard}
               error={errors.aadhaarCard}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("aadhaarCard", val)}
+              onChange={(val, file) => handleFieldChange("aadhaarCard", val, file)}
             />
           </div>
 
@@ -625,7 +625,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.smartCard}
               error={errors.smartCard}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("smartCard", val)}
+              onChange={(val, file) => handleFieldChange("smartCard", val, file)}
             />
           </div>
 
@@ -638,7 +638,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.streetNameEnglish}
               error={errors.streetNameEnglish}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("streetNameEnglish", val)}
+              onChange={(val, file) => handleFieldChange("streetNameEnglish", val, file)}
             />
           </div>
 
@@ -666,7 +666,7 @@ export const NewCanRegistrationForm: React.FC<NewCanRegistrationFormProps> = ({
               value={formData.postalArea}
               error={errors.postalArea}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("postalArea", val)}
+              onChange={(val, file) => handleFieldChange("postalArea", val, file)}
             />
           </div>
         </div>

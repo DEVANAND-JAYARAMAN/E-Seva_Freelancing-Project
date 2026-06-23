@@ -20,7 +20,7 @@ export const DocumentCopy: React.FC<DocumentCopyProps> = ({ onCancel }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
       
@@ -148,7 +148,7 @@ export const DocumentCopy: React.FC<DocumentCopyProps> = ({ onCancel }) => {
                 value={formData.district}
                 error={errors.district}
                 disabled={isSubmitting}
-                onChange={(val) => handleFieldChange("district", val)}
+                onChange={(val, file) => handleFieldChange("district", val, file)}
               />
             </div>
 
@@ -161,7 +161,7 @@ export const DocumentCopy: React.FC<DocumentCopyProps> = ({ onCancel }) => {
                 value={formData.docNumber}
                 error={errors.docNumber}
                 disabled={isSubmitting}
-                onChange={(val) => handleFieldChange("docNumber", val)}
+                onChange={(val, file) => handleFieldChange("docNumber", val, file)}
               />
             </div>
 
@@ -190,7 +190,7 @@ export const DocumentCopy: React.FC<DocumentCopyProps> = ({ onCancel }) => {
                 value={formData.sro}
                 error={errors.sro}
                 disabled={isSubmitting}
-                onChange={(val) => handleFieldChange("sro", val)}
+                onChange={(val, file) => handleFieldChange("sro", val, file)}
               />
             </div>
 

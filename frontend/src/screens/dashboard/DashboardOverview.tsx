@@ -35,7 +35,7 @@ export function DashboardOverview({ stats }: { stats?: any }) {
         {/* Amount */}
         <div className="my-3">
           <div className="text-4xl sm:text-5xl font-extrabold tracking-tight text-[#005c3a] dark:text-emerald-400">
-            ₹{stats?.todayPayment !== undefined ? stats.todayPayment.toFixed(2) : "0.00"}
+            ₹{stats?.todayPayment !== undefined ? Number(stats.todayPayment).toFixed(2) : "0.00"}
           </div>
         </div>
 

@@ -105,8 +105,8 @@ export function StatusPage() {
           createdDate: (app.createdDate || app.CreatedDate || "").split("T")[0],
           lastUpdated: (app.lastUpdated || app.LastUpdated || "").split("T")[0],
           remarks: app.adminRemarks || app.AdminRemarks || "No remarks.",
-          formData: app.formData || app.FormData || {},
-          documents: app.documents || app.Documents || [],
+          formData: typeof (app.formData || app.FormData) === "string" ? JSON.parse(app.formData || app.FormData || "{}") : (app.formData || app.FormData || {}),
+          documents: typeof (app.documents || app.Documents) === "string" ? JSON.parse(app.documents || app.Documents || "[]") : (app.documents || app.Documents || []),
         }));
         setTickets(mapped);
       }

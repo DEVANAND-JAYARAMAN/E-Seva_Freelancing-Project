@@ -116,7 +116,7 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
       setErrors((prev) => {
@@ -195,7 +195,7 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
             value={formData.name}
             error={errors.name}
             disabled={isLoading}
-            onChange={(val) => handleFieldChange("name", val)}
+            onChange={(val, file) => handleFieldChange("name", val, file)}
           />
 
           <InputField
@@ -206,7 +206,7 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
             value={formData.doorNo}
             error={errors.doorNo}
             disabled={isLoading}
-            onChange={(val) => handleFieldChange("doorNo", val)}
+            onChange={(val, file) => handleFieldChange("doorNo", val, file)}
           />
 
           <SelectField
@@ -216,7 +216,7 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
             value={formData.district}
             error={errors.district}
             disabled={isLoading}
-            onChange={(val) => handleFieldChange("district", val)}
+            onChange={(val, file) => handleFieldChange("district", val, file)}
           />
 
           <InputField
@@ -245,7 +245,7 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
             value={formData.significant}
             error={errors.significant}
             disabled={isLoading}
-            onChange={(val) => handleFieldChange("significant", val)}
+            onChange={(val, file) => handleFieldChange("significant", val, file)}
           />
 
           <InputField
@@ -256,7 +256,7 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
             value={formData.streetName}
             error={errors.streetName}
             disabled={isLoading}
-            onChange={(val) => handleFieldChange("streetName", val)}
+            onChange={(val, file) => handleFieldChange("streetName", val, file)}
           />
 
           <InputField
@@ -267,7 +267,7 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
             value={formData.taluk}
             error={errors.taluk}
             disabled={isLoading}
-            onChange={(val) => handleFieldChange("taluk", val)}
+            onChange={(val, file) => handleFieldChange("taluk", val, file)}
           />
 
           <SelectField
@@ -277,7 +277,7 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
             value={formData.courseName}
             error={errors.courseName}
             disabled={isLoading}
-            onChange={(val) => handleFieldChange("courseName", val)}
+            onChange={(val, file) => handleFieldChange("courseName", val, file)}
           />
         </div>
 
@@ -291,7 +291,7 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
             value={formData.fatherName}
             error={errors.fatherName}
             disabled={isLoading}
-            onChange={(val) => handleFieldChange("fatherName", val)}
+            onChange={(val, file) => handleFieldChange("fatherName", val, file)}
           />
 
           <InputField
@@ -302,7 +302,7 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
             value={formData.postalArea}
             error={errors.postalArea}
             disabled={isLoading}
-            onChange={(val) => handleFieldChange("postalArea", val)}
+            onChange={(val, file) => handleFieldChange("postalArea", val, file)}
           />
 
           <InputField

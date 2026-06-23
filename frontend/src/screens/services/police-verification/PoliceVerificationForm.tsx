@@ -29,7 +29,7 @@ export const PoliceVerificationForm: React.FC<PoliceVerificationFormProps> = ({
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
       setErrors((prev) => {
@@ -112,7 +112,7 @@ export const PoliceVerificationForm: React.FC<PoliceVerificationFormProps> = ({
             value={formData.name}
             error={errors.name}
             disabled={isLoading}
-            onChange={(val) => handleFieldChange("name", val)}
+            onChange={(val, file) => handleFieldChange("name", val, file)}
           />
 
           <InputField
@@ -123,7 +123,7 @@ export const PoliceVerificationForm: React.FC<PoliceVerificationFormProps> = ({
             value={formData.dob}
             error={errors.dob}
             disabled={isLoading}
-            onChange={(val) => handleFieldChange("dob", val)}
+            onChange={(val, file) => handleFieldChange("dob", val, file)}
           />
 
           <TextAreaField
@@ -134,7 +134,7 @@ export const PoliceVerificationForm: React.FC<PoliceVerificationFormProps> = ({
             error={errors.addressTamil}
             disabled={isLoading}
             rows={3}
-            onChange={(val) => handleFieldChange("addressTamil", val)}
+            onChange={(val, file) => handleFieldChange("addressTamil", val, file)}
           />
 
           <InputField
@@ -145,7 +145,7 @@ export const PoliceVerificationForm: React.FC<PoliceVerificationFormProps> = ({
             value={formData.email}
             error={errors.email}
             disabled={isLoading}
-            onChange={(val) => handleFieldChange("email", val)}
+            onChange={(val, file) => handleFieldChange("email", val, file)}
           />
 
           {/* Aadhaar Card Upload (PDF Format Only, with Red Helper Text) */}
@@ -206,7 +206,7 @@ export const PoliceVerificationForm: React.FC<PoliceVerificationFormProps> = ({
             value={formData.fatherName}
             error={errors.fatherName}
             disabled={isLoading}
-            onChange={(val) => handleFieldChange("fatherName", val)}
+            onChange={(val, file) => handleFieldChange("fatherName", val, file)}
           />
 
           <InputField
@@ -233,7 +233,7 @@ export const PoliceVerificationForm: React.FC<PoliceVerificationFormProps> = ({
             error={errors.addressEnglish}
             disabled={isLoading}
             rows={3}
-            onChange={(val) => handleFieldChange("addressEnglish", val)}
+            onChange={(val, file) => handleFieldChange("addressEnglish", val, file)}
           />
 
           <InputField

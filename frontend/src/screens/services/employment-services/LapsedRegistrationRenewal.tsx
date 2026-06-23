@@ -24,7 +24,7 @@ export const LapsedRegistrationRenewal: React.FC<
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
 
@@ -187,7 +187,7 @@ export const LapsedRegistrationRenewal: React.FC<
               value={formData.username}
               error={errors.username}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("username", val)}
+              onChange={(val, file) => handleFieldChange("username", val, file)}
             />
           </div>
 
@@ -218,7 +218,7 @@ export const LapsedRegistrationRenewal: React.FC<
               value={formData.nameAsPerReg}
               error={errors.nameAsPerReg}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("nameAsPerReg", val)}
+              onChange={(val, file) => handleFieldChange("nameAsPerReg", val, file)}
             />
           </div>
 
@@ -231,7 +231,7 @@ export const LapsedRegistrationRenewal: React.FC<
               value={formData.password}
               error={errors.password}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("password", val)}
+              onChange={(val, file) => handleFieldChange("password", val, file)}
             />
           </div>
 
@@ -244,7 +244,7 @@ export const LapsedRegistrationRenewal: React.FC<
               value={formData.employmentRegNo}
               error={errors.employmentRegNo}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("employmentRegNo", val)}
+              onChange={(val, file) => handleFieldChange("employmentRegNo", val, file)}
             />
           </div>
 
@@ -280,7 +280,7 @@ export const LapsedRegistrationRenewal: React.FC<
               value={formData.employmentDocs}
               error={errors.employmentDocs}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("employmentDocs", val)}
+              onChange={(val, file) => handleFieldChange("employmentDocs", val, file)}
             />
           </div>
 
@@ -292,7 +292,7 @@ export const LapsedRegistrationRenewal: React.FC<
               value={formData.oldCertificate}
               error={errors.oldCertificate}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("oldCertificate", val)}
+              onChange={(val, file) => handleFieldChange("oldCertificate", val, file)}
             />
           </div>
         </div>
