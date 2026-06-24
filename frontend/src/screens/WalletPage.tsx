@@ -898,7 +898,7 @@ export function WalletPage() {
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
                                 src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(
-                                  `upi://pay?pa=${process.env.NEXT_PUBLIC_MERCHANT_UPI || "merchant@upi"}&pn=${process.env.NEXT_PUBLIC_MERCHANT_NAME || "Merchant"}&am=${amount || 0}&cu=INR`,
+                                  `upi://pay?pa=${"mkksriptsami@oksbi"}&pn=${"Thuruvan Communications"}&am=${amount || 0}&cu=INR`,
                                 )}`}
                                 alt="Payment QR Code"
                                 className="w-28 h-28 object-contain"
