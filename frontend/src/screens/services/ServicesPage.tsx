@@ -1386,6 +1386,7 @@ export function ServicesPage() {
         glowColor: "shadow-rose-500/10 dark:shadow-rose-950/20",
         category: "Top",
         formFields: ["pdfType", "fileUpload", "customerMobile", "remarks"],
+        price: { retailer: 150, distributor: 150 }
       },
 
       // All Services Group
@@ -1397,7 +1398,7 @@ export function ServicesPage() {
         glowColor: "shadow-sky-500/10",
         category: "All",
         formFields: ["softwareType", "quantity", "customerEmail"],
-        price: { retailer: 0, distributor: 0 },
+        price: { retailer: 150, distributor: 150 },
       },
       {
         id: "msme",
@@ -1503,6 +1504,7 @@ export function ServicesPage() {
         glowColor: "shadow-teal-500/10",
         category: "All",
         formFields: ["courseName", "studentName", "qualification", "mobile"],
+        price: { retailer: 150, distributor: 150 }
       },
       {
         id: "employment-services",
@@ -1512,6 +1514,7 @@ export function ServicesPage() {
         glowColor: "shadow-slate-500/10",
         category: "All",
         formFields: ["registrationNo", "candidateName", "dob", "qualification"],
+        price: { retailer: 150, distributor: 150 }
       },
       {
         id: "police-verification",
@@ -1521,6 +1524,7 @@ export function ServicesPage() {
         glowColor: "shadow-violet-500/10",
         category: "All",
         formFields: ["applicantName", "purpose", "aadhaarNo", "district"],
+        price: { retailer: 150, distributor: 150 }
       },
       {
         id: "utisl-pan",
@@ -1530,7 +1534,7 @@ export function ServicesPage() {
         glowColor: "shadow-sky-500/10",
         category: "All",
         formFields: ["applicantName", "dob", "aadhaarNo", "couponNumber"],
-        price: { retailer: 0, distributor: 0 },
+        price: { retailer: 150, distributor: 150 },
       },
       {
         id: "agri-stack-pdf",
@@ -1545,6 +1549,7 @@ export function ServicesPage() {
           "customerMobile",
           "aadhaarUpload",
         ],
+        price: { retailer: 150, distributor: 150 }
       },
       {
         id: "pvc-card-print",
@@ -1554,6 +1559,7 @@ export function ServicesPage() {
         glowColor: "shadow-amber-500/10",
         category: "All",
         formFields: ["pvcCardType", "fileUpload", "customerMobile"],
+        price: { retailer: 150, distributor: 150 }
       },
       {
         id: "cm-health-card",
@@ -1569,6 +1575,7 @@ export function ServicesPage() {
           "customerMobile",
           "incomeCertificateUpload",
         ],
+        price: { retailer: 150, distributor: 150 }
       },
       {
         id: "tnega",
@@ -1598,6 +1605,7 @@ export function ServicesPage() {
           "bookingDate",
           "customerMobile",
         ],
+        price: { retailer: 150, distributor: 150 }
       },
     ],
   );

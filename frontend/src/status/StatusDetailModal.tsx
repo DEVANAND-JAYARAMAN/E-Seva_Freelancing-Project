@@ -87,9 +87,9 @@ export function StatusDetailModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-md p-4 animate-fadeIn">
-      {/* Modal Container - scrollable */}
-      <div className="relative w-full max-w-4xl max-h-[90vh] bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl shadow-xl overflow-hidden animate-slideUp flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-50 dark:bg-[#04080f] animate-fadeIn overflow-y-auto">
+      {/* Full Page Container */}
+      <div className="relative w-full min-h-screen max-w-5xl mx-auto bg-white dark:bg-[#090d16] sm:border-x border-slate-100 dark:border-slate-900/60 shadow-2xl flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-50 dark:border-slate-900/40 shrink-0">
           <div>
@@ -194,19 +194,25 @@ export function StatusDetailModal({
 
           {/* Form Data - Customer Details */}
           {!isEditMode && ticket.formData && Object.keys(ticket.formData).length > 0 && (
-            <div className="space-y-3">
-              <span className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
-                📋 Customer Application Data
-              </span>
-              <div className="grid grid-cols-2 gap-3 bg-slate-50 dark:bg-[#0a0f18]/30 p-5 rounded-xl border border-slate-100 dark:border-slate-800/50">
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <FileText size={14} className="text-slate-400 dark:text-slate-500" />
+                <span className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
+                  Customer Application Data
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 bg-slate-50/50 dark:bg-[#0a0f18]/10 p-6 rounded-2xl border border-slate-100 dark:border-slate-900/40">
                 {Object.entries(ticket.formData).map(([key, value]) => (
-                  <div key={key} className="space-y-0.5">
-                    <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase block tracking-wider">
+                  <div key={key} className="space-y-1.5 flex flex-col">
+                    <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase block tracking-widest pl-1">
                       {key.replace(/([A-Z])/g, " $1").replace(/_/g, " ").trim()}
-                    </span>
-                    <span className="font-semibold text-slate-700 dark:text-slate-300 text-xs break-words">
-                      {value || "-"}
-                    </span>
+                    </label>
+                    <input
+                      type="text"
+                      readOnly
+                      value={value || ""}
+                      className="w-full bg-white dark:bg-[#090d16] border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 dark:text-slate-200 focus:outline-none shadow-sm cursor-default"
+                    />
                   </div>
                 ))}
               </div>
@@ -215,10 +221,13 @@ export function StatusDetailModal({
 
           {/* Documents & Files - With Preview and Download */}
           {!isEditMode && ticket.documents && ticket.documents.length > 0 && (
-            <div className="space-y-3">
-              <span className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
-                📎 Attached Documents ({ticket.documents.length})
-              </span>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <ImageIcon size={14} className="text-slate-400 dark:text-slate-500" />
+                <span className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
+                  Attached Documents ({ticket.documents.length})
+                </span>
+              </div>
               <div className="space-y-3">
                 {ticket.documents.map((doc, idx) => {
                   const fullUrl = `${baseUrl}/api${doc}`;
