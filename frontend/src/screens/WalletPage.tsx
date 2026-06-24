@@ -108,11 +108,11 @@ export function WalletPage() {
   const filteredTransactions = useMemo(() => {
     return transactions.filter((t) => {
       const matchesSearch =
-        t.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        t.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (t.description || "").toLowerCase().includes((searchTerm || "").toLowerCase()) ||
+        (t.reference || "").toLowerCase().includes((searchTerm || "").toLowerCase()) ||
         t.amount.toString().includes(searchTerm);
 
-      const matchesType = typeFilter === "all" ? true : t.type === typeFilter;
+      const matchesType = typeFilter === "all" ? true : (t.type || "").toLowerCase() === typeFilter.toLowerCase();
       const matchesWallet = t.walletType === "Main";
 
       return matchesSearch && matchesType && matchesWallet;
@@ -164,11 +164,11 @@ export function WalletPage() {
 
       const isDuplicate =
         paymentRequests.some(
-          (req) => req.utrNumber.toLowerCase() === utrNumber.trim().toLowerCase(),
+          (req) => (req.utrNumber || "").toLowerCase() === (utrNumber || "").trim().toLowerCase(),
         ) ||
         transactions.some(
           (t) =>
-            t.reference.toLowerCase() === utrNumber.trim().toLowerCase(),
+            (t.reference || "").toLowerCase() === (utrNumber || "").trim().toLowerCase(),
         );
 
       if (isDuplicate) {
