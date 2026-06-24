@@ -30,16 +30,10 @@ export function StatusTable({
     switch (status) {
       case "Pending":
         return "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400";
-      case "Resubmit":
-        return "bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400";
-      case "Processing":
-        return "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400";
       case "Rejected":
         return "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400";
       case "Approved":
         return "bg-[#e8f5e9] dark:bg-emerald-950/40 text-[#005c3a] dark:text-emerald-400";
-      case "Completed":
-        return "bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-400";
       default:
         return "bg-slate-50 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400";
     }
@@ -170,7 +164,7 @@ export function StatusTable({
                       >
                         <Eye size={13} />
                       </button>
-                      {isAdmin && ticket.status !== "Completed" && ticket.status !== "Rejected" && (
+                      {isAdmin && ticket.status !== "Approved" && ticket.status !== "Rejected" && (
                         <button
                           onClick={() => onSelectTicket(ticket, true)}
                           className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200/60 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-[#005c3a] dark:text-emerald-400 transition-colors"

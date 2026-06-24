@@ -1,10 +1,7 @@
 export type TicketStatus =
   | "Pending"
-  | "Resubmit"
-  | "Processing"
-  | "Rejected"
   | "Approved"
-  | "Completed";
+  | "Rejected";
 
 export interface StatusTicket {
   id: string;

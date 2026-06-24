@@ -303,7 +303,7 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 
 
 	validStatuses := map[string]bool{
-		"Approved": true, "Rejected": true, "Completed": true, "Processing": true, "Resubmit": true,
+		"Approved": true, "Rejected": true,
 	}
 	if !validStatuses[status] {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid status"})
@@ -325,17 +325,16 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 	var app models.ServiceApplication
 	attributevalue.UnmarshalMap(out.Item, &app)
 
-	if app.Status == "Completed" || app.Status == "Rejected" {
+	if app.Status == "Approved" || app.Status == "Completed" || app.Status == "Rejected" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Request is already in a final state"})
 		return
 	}
 
 	now := time.Now().UTC().Format(time.RFC3339)
 
-	if status == "Approved" || status == "Completed" {
-		if status == "Completed" {
-			crmId := generateId("CRM")
-			invoiceId := generateId("INV")
+	if status == "Approved" {
+		crmId := generateId("CRM")
+		invoiceId := generateId("INV")
 			
 			crmCust := models.CRMCustomer{
 				PK:         "CUSTOMER#" + crmId,
@@ -405,25 +404,6 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 					},
 				},
 			})
-		} else {
-			_, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
-				TableName: aws.String("ServiceApplications"),
-				Key: map[string]types.AttributeValue{
-					"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
-					"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
-				},
-				UpdateExpression: aws.String("SET #s = :status, lastUpdated = :time, adminRemarks = :remarks"),
-				ExpressionAttributeNames: map[string]string{
-					"#s": "status",
-				},
-				ExpressionAttributeValues: map[string]types.AttributeValue{
-					":status":  &types.AttributeValueMemberS{Value: status},
-					":time":    &types.AttributeValueMemberS{Value: now},
-					":remarks": &types.AttributeValueMemberS{Value: adminRemarks},
-				},
-			})
-		}
-
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update request status"})
 			return

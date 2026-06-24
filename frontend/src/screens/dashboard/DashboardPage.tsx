@@ -5,7 +5,6 @@ import { AppShell } from "../../layouts/AppShell";
 import { DashboardOverview } from "./DashboardOverview";
 import { ServiceQueue } from "./ServiceQueue";
 import { StatsGrid } from "./StatsGrid";
-import { WalletHealth } from "./WalletHealth";
 import { WalletSummary } from "./WalletSummary";
 import { useAuth } from "../../store/context/AuthContext";
 import { DashboardPage2 } from "./DashboardPage2";
@@ -47,13 +46,10 @@ export function DashboardPage({
           <StatsGrid stats={stats} />
         </section>
 
-        {/* Live Queues & Wallet Warnings */}
-        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-          <div className="lg:col-span-2">
-            <ServiceQueue />
-          </div>
+        {/* Live Queues */}
+        <section className="grid grid-cols-1 gap-6 items-start">
           <div className="lg:col-span-1">
-            <WalletHealth />
+            <ServiceQueue />
           </div>
         </section>
       </section>

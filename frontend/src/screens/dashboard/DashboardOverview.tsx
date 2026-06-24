@@ -1,4 +1,3 @@
-import { ActivityChart } from "../../components/charts/ActivityChart";
 
 export function DashboardOverview({ stats }: { stats?: any }) {
   return (
@@ -37,11 +36,6 @@ export function DashboardOverview({ stats }: { stats?: any }) {
           <div className="text-4xl sm:text-5xl font-extrabold tracking-tight text-[#005c3a] dark:text-emerald-400">
             ₹{stats?.todayPayment !== undefined ? Number(stats.todayPayment).toFixed(2) : "0.00"}
           </div>
-        </div>
-
-        {/* Elegant line chart */}
-        <div className="my-2 h-16 w-full opacity-95">
-          <ActivityChart />
         </div>
 
         {/* Footer info: Monospaced details */}

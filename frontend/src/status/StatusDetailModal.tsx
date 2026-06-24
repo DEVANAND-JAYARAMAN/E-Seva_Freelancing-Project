@@ -29,6 +29,7 @@ export function StatusDetailModal({
   const [remarks, setRemarks] = useState("");
   const [isCustomRemarks, setIsCustomRemarks] = useState(false);
   const [ackFiles, setAckFiles] = useState<File[]>([]);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -50,24 +51,12 @@ export function StatusDetailModal({
         finalRemarks = "Request approved and processed successfully.";
       if (newStatus === "Rejected")
         finalRemarks = "Rejected due to invalid documents or mismatch.";
-      if (newStatus === "Resubmit")
-        finalRemarks = "Incomplete profile. Please upload a clear photo copy.";
-      if (newStatus === "Processing")
-        finalRemarks = "Application is in review by backend administrator.";
     }
     onUpdateStatus(ticket.id, newStatus, finalRemarks, ackFiles);
     onClose();
   };
 
-  // Completed is handled via the same API but we cast it
-  const handleCompleted = () => {
-    let finalRemarks = remarks.trim();
-    if (!finalRemarks || !isCustomRemarks) {
-      finalRemarks = "Service request has been completed successfully.";
-    }
-    onUpdateStatus(ticket.id, "Completed" as TicketStatus, finalRemarks, ackFiles);
-    onClose();
-  };
+  // Removed handleCompleted as per requirements
 
   const getFileIcon = (path: string) => {
     const ext = path.split(".").pop()?.toLowerCase() || "";
@@ -100,7 +89,7 @@ export function StatusDetailModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-md p-4 animate-fadeIn">
       {/* Modal Container - scrollable */}
-      <div className="relative w-full max-w-2xl max-h-[90vh] bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl shadow-xl overflow-hidden animate-slideUp flex flex-col">
+      <div className="relative w-full max-w-4xl max-h-[90vh] bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl shadow-xl overflow-hidden animate-slideUp flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-50 dark:border-slate-900/40 shrink-0">
           <div>
@@ -120,9 +109,13 @@ export function StatusDetailModal({
         </div>
 
         {/* Scrollable Content */}
-        <div className="p-6 space-y-6 overflow-y-auto flex-1">
-          {/* Core Details Grid */}
-          <div className="grid grid-cols-2 gap-4 bg-slate-50/50 dark:bg-[#0a0f18]/10 p-5 rounded-2xl border border-slate-100 dark:border-slate-900/40">
+        <div className="p-6 overflow-y-auto flex-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            {/* Left Column: Details */}
+            <div className="space-y-6">
+              {/* Core Details Grid */}
+              <div className="grid grid-cols-2 gap-4 bg-slate-50/50 dark:bg-[#0a0f18]/10 p-5 rounded-2xl border border-slate-100 dark:border-slate-900/40">
             {/* Service Name */}
             <div className="col-span-2">
               <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
@@ -171,9 +164,7 @@ export function StatusDetailModal({
               <span className={`inline-flex items-center px-2.5 py-1 mt-1 rounded-lg text-[10px] font-extrabold tracking-wider uppercase ${
                 ticket.status === "Approved" ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400" :
                 ticket.status === "Pending" ? "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400" :
-                ticket.status === "Processing" ? "bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400" :
                 ticket.status === "Rejected" ? "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400" :
-                ticket.status === "Resubmit" ? "bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400" :
                 "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400"
               }`}>
                 {ticket.status}
@@ -264,16 +255,27 @@ export function StatusDetailModal({
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0">
-                          {/* View in new tab */}
-                          <a
-                            href={fullUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 text-blue-600 dark:text-blue-400 transition-colors"
-                            title="View document"
-                          >
-                            <Eye size={14} />
-                          </a>
+                          {/* View */}
+                          {isImage ? (
+                            <button
+                              type="button"
+                              onClick={() => setPreviewImage(fullUrl)}
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 text-blue-600 dark:text-blue-400 transition-colors"
+                              title="Preview document"
+                            >
+                              <Eye size={14} />
+                            </button>
+                          ) : (
+                            <a
+                              href={fullUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 text-blue-600 dark:text-blue-400 transition-colors"
+                              title="View document"
+                            >
+                              <Eye size={14} />
+                            </a>
+                          )}
 
                           {/* Download */}
                           <a
@@ -367,7 +369,10 @@ export function StatusDetailModal({
               </div>
             </div>
           )}
+        </div>
 
+        {/* Right Column: Actions & Form Data */}
+        <div className="space-y-6">
           {/* Remarks Section */}
           {ticket.remarks && (
             <div className="space-y-2">
@@ -455,8 +460,8 @@ export function StatusDetailModal({
 
           {/* Workflow Status Actions */}
           {showEditControls && isEditMode && (
-            <div className="space-y-3 pt-2">
-              <span className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
+            <div className="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800/50">
+              <span className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mt-4">
                 Workflow Status Actions
               </span>
               <div className="grid grid-cols-2 gap-3">
@@ -480,40 +485,34 @@ export function StatusDetailModal({
                   <span>Reject</span>
                 </button>
 
-                {/* Resubmit */}
-                <button
-                  type="button"
-                  onClick={() => handleStatusClick("Resubmit")}
-                  className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-violet-600 hover:bg-violet-500 text-white shadow-sm active:scale-[0.98]`}
-                >
-                  <RefreshCw size={13} />
-                  <span>Resubmit</span>
-                </button>
-
-                {/* Process */}
-                <button
-                  type="button"
-                  onClick={() => handleStatusClick("Processing")}
-                  className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-sky-600 hover:bg-sky-500 text-white shadow-sm active:scale-[0.98]`}
-                >
-                  <Loader size={13} />
-                  <span>Process</span>
-                </button>
-
-                {/* Complete - Full Width */}
-                <button
-                  type="button"
-                  onClick={handleCompleted}
-                  className="col-span-2 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-extrabold uppercase tracking-wider transition-all duration-200 bg-gradient-to-r from-[#005c3a] to-emerald-600 hover:from-emerald-600 hover:to-[#005c3a] text-white shadow-lg shadow-emerald-900/20 active:scale-[0.98]"
-                >
-                  <CheckCircle size={16} />
-                  <span>Mark as Completed</span>
-                </button>
               </div>
             </div>
           )}
         </div>
       </div>
     </div>
+  </div>
+
+  {/* Image Preview Modal */}
+  {previewImage && (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4">
+      <div className="relative w-full max-w-5xl h-full flex items-center justify-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={previewImage}
+          alt="Preview"
+          className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
+        />
+        <button
+          onClick={() => setPreviewImage(null)}
+          className="absolute top-4 right-4 sm:-right-12 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm transition-colors"
+          title="Close preview"
+        >
+          <X size={20} />
+        </button>
+      </div>
+    </div>
+  )}
+</div>
   );
 }

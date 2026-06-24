@@ -23,6 +23,7 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
   onSuccess,
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [customerWhatsApp, setCustomerWhatsApp] = useState("");
 
   const [error, setError] = useState("");
   const { user, updateWallet } = useAuth();

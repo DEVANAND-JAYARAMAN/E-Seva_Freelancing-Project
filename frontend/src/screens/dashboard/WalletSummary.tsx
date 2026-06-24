@@ -1,6 +1,10 @@
 import { walletCards } from "../../config/data";
 
+import { useAuth } from "../../store/context/AuthContext";
+
 export function WalletSummary({ stats }: { stats?: any }) {
+  const { user } = useAuth();
+  
   const descMap: Record<string, string> = {
     "main wallet": "Available balance",
     "wallet request": "Pending approvals",
@@ -34,11 +38,11 @@ export function WalletSummary({ stats }: { stats?: any }) {
           "bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-350";
           
         let dynamicValue = card.value;
-        if (stats) {
-          if (labelLower === "main wallet") dynamicValue = (5000).toFixed(2); // Mock for now, since not computed
-          if (labelLower === "customers") dynamicValue = String(stats.customers || 0);
-          if (labelLower === "retailers") dynamicValue = String(stats.retailers || 0);
-          if (labelLower === "distributors") dynamicValue = String(stats.distributors || 0);
+        if (stats || user) {
+          if (labelLower === "main wallet") dynamicValue = (user?.walletBalance || 0).toFixed(2);
+          if (labelLower === "customers") dynamicValue = String(stats?.customers || 0);
+          if (labelLower === "retailers") dynamicValue = String(stats?.retailers || 0);
+          if (labelLower === "distributors") dynamicValue = String(stats?.distributors || 0);
           if (labelLower === "wallet request") dynamicValue = "0"; // Placeholder
         }
 

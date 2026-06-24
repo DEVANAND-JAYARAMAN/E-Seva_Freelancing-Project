@@ -17,9 +17,8 @@ import (
 type DashboardStats struct {
 	TodayPayment float64 `json:"todayPayment"`
 	Pending      int     `json:"pending"`
-	InProcess    int     `json:"inProcess"`
 	Approved     int     `json:"approved"`
-	Resubmit     int     `json:"resubmit"`
+	Projected    float64 `json:"projected"`
 	Customers    int     `json:"customers"`
 	Retailers    int     `json:"retailers"`
 	Distributors int     `json:"distributors"`
@@ -60,16 +59,13 @@ func GetDashboardStats(c *gin.Context) {
 
 		if status == "Pending" {
 			stats.Pending++
-		} else if status == "Processing" || status == "Inprocess" || status == "In Process" {
-			stats.InProcess++
-		} else if status == "Approved" || status == "Completed" {
+			stats.Projected += cost
+		} else if status == "Approved" {
 			stats.Approved++
 			// if created/updated today, add to todayPayment
 			if len(createdDate) >= 10 && createdDate[:10] == todayStr {
 				stats.TodayPayment += cost
 			}
-		} else if status == "Resubmit" {
-			stats.Resubmit++
 		}
 	}
 

@@ -47,11 +47,11 @@ const seedTickets: StatusTicket[] = [
     serviceName: "Voter Card Correction",
     retailerName: "Priya Sharma",
     amount: 80.0,
-    status: "Resubmit",
+    status: "Pending",
     createdDate: "2026-05-21",
     lastUpdated: "2026-05-22",
     remarks:
-      "Incomplete profile. Please upload a clear photo copy of address proof.",
+      "Awaiting processing.",
     userRole: "Retailer",
   },
   {
@@ -60,7 +60,7 @@ const seedTickets: StatusTicket[] = [
     serviceName: "Income Certificate E-Seva",
     retailerName: "Deva",
     amount: 150.0,
-    status: "Processing",
+    status: "Pending",
     createdDate: "2026-05-22",
     lastUpdated: "2026-05-22",
     remarks: "Sent to local Tahsildar department for verifying signatures.",
@@ -175,19 +175,11 @@ export function StatusPage() {
             </h2>
             <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed max-w-2xl">
               Seamlessly track, manage, and transition the operational lifecycle
-              of service requests across five standard stages:{" "}
+              of service requests across standard stages:{" "}
               <strong className="font-extrabold text-slate-700 dark:text-slate-300">
                 Pending
               </strong>{" "}
               review,{" "}
-              <strong className="font-extrabold text-slate-700 dark:text-slate-300">
-                Resubmission
-              </strong>{" "}
-              required, active{" "}
-              <strong className="font-extrabold text-slate-700 dark:text-slate-300">
-                Processing
-              </strong>
-              ,{" "}
               <strong className="font-extrabold text-slate-700 dark:text-slate-300">
                 Rejected
               </strong>

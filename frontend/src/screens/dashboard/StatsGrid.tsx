@@ -56,10 +56,12 @@ export function StatsGrid({ stats }: { stats?: any }) {
         if (stats) {
           if (labelLower === "today payment") dynamicValue = stats.todayPayment?.toFixed(2) || "0.00";
           if (labelLower === "pending") dynamicValue = String(stats.pending || 0);
-          if (labelLower === "in process") dynamicValue = String(stats.inProcess || 0);
           if (labelLower === "approved") dynamicValue = String(stats.approved || 0);
-          if (labelLower === "projected") dynamicValue = "0.00"; // not computed on backend yet
-          if (labelLower === "resubmit") dynamicValue = String(stats.resubmit || 0);
+          if (labelLower === "projected") dynamicValue = stats.projected?.toFixed(2) || "0.00";
+        }
+
+        if (labelLower === "in process" || labelLower === "resubmit") {
+          return null;
         }
 
         return (
