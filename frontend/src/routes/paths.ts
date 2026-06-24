@@ -30,7 +30,6 @@ export const PATHS = {
   RTO_SERVICES: "/services/rto-services",
   DISTRIBUTORS: "/distributors",
   RETAILERS: "/retailers",
-  CRM: "/crm",
   BILLING: "/billing",
   AGRI_STACK: "/services/agri-stack-pdf",
   PVC_CARD: "/services/pvc-card-print",
