@@ -20,8 +20,6 @@ import { AppShell } from "../layouts/AppShell";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { useAuth } from "../store/context/AuthContext";
 import {
-  initialTransactions,
-  initialPaymentRequests,
   type WalletTransaction,
   type PaymentRequest,
 } from "../config/data";
@@ -37,15 +35,28 @@ export function WalletPage() {
   const mainBalance = user?.walletBalance ?? 2895.0;
 
   // Transactions list via local storage
-  const [transactions, setTransactions] = useLocalStorage<WalletTransaction[]>(
-    "thuruvan_wallet_transactions",
-    initialTransactions,
-  );
+  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
+  
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const baseUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace(/(?:\/api|\/)+$/, '');
+        const res = await fetch(`${baseUrl}/api/wallet/transactions?userId=${user?.id}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        if(res.ok) {
+          const data = await res.json();
+          setTransactions(data || []);
+        }
+      } catch(err) {
+        console.error(err);
+      }
+    };
+    if (user?.id) fetchTransactions();
+  }, [user?.id]);
 
   // Payment Requests list via local storage (to sync with Admin Verification panel)
-  const [paymentRequests, setPaymentRequests] = useLocalStorage<
-    PaymentRequest[]
-  >("thuruvan_payment_requests", initialPaymentRequests);
+  const [paymentRequests, setPaymentRequests] = useState<PaymentRequest[]>([]);
 
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState("");
@@ -399,8 +410,8 @@ export function WalletPage() {
         "Are you sure you want to reset all wallet transaction history and requests to defaults?",
       )
     ) {
-      setTransactions(initialTransactions);
-      setPaymentRequests(initialPaymentRequests);
+      setTransactions([]);
+      setPaymentRequests([]);
       updateWallet(2895.0);
     }
   };

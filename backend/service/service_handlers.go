@@ -47,15 +47,20 @@ func sendWhatsAppMessage(customerNumber string, serviceName string) {
 		return
 	}
 
-	url := "https://mugavaiwapp.in.net/send-message"
+	url := "https://mugavaiwapp.in.net/api/send"
 
 	message := fmt.Sprintf("Dear Customer,\nYour service request for '%s' has been successfully completed. Thank you for choosing E-Seva!", serviceName)
 
+		number := customerNumber
+	if len(number) == 10 {
+		number = "91" + number
+	}
 	payload := map[string]string{
-		"api_key": apiKey,
-		"sender":  senderDevice,
-		"number":  customerNumber,
-		"message": message,
+		"access_token": apiKey,
+		"instance_id":  senderDevice,
+		"number":       number,
+		"type":         "text",
+		"message":      message,
 	}
 
 	jsonValue, _ := json.Marshal(payload)
@@ -590,12 +595,17 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 		senderDevice := os.Getenv("WHATSAPP_SENDER_DEVICE")
 
 		if apiKey != "" && senderDevice != "" {
-			url := "https://mugavaiwapp.in.net/send-message"
+			url := "https://mugavaiwapp.in.net/api/send"
+						number := app.CustomerWhatsApp
+			if len(number) == 10 {
+				number = "91" + number
+			}
 			payload := map[string]string{
-				"api_key": apiKey,
-				"sender":  senderDevice,
-				"number":  app.CustomerWhatsApp,
-				"message": message,
+				"access_token": apiKey,
+				"instance_id":  senderDevice,
+				"number":       number,
+				"type":         "text",
+				"message":      message,
 			}
 			jsonValue, _ := json.Marshal(payload)
 			go func() {
