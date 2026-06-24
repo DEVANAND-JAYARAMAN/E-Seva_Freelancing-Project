@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { PATHS } from "../../routes/paths";
 import {
@@ -21,6 +21,7 @@ import {
   ServicePaymentScreen,
   ServiceSuccessScreen,
 } from "../../components/ServicePaymentScreen";
+import { AddServiceModal } from "./AddServiceModal";
 
 // Service item interface
 export interface EService {
@@ -1374,7 +1375,7 @@ export function ServicesPage() {
 
   // List of all 19 services customizer from localStorage
   const [servicesList, setServicesList] = useLocalStorage<EService[]>(
-    "thuruvan_services_custom_list_v5",
+    "eseva_services_directory",
     [
       // Top Services Group
       {
@@ -1601,6 +1602,71 @@ export function ServicesPage() {
     ],
   );
 
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  const fetchDynamicServices = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/dynamic`);
+      if (response.ok) {
+        const data = await response.json();
+        if (Array.isArray(data) && data.length > 0) {
+          const dynamicServices: EService[] = data.map((d: any) => ({
+            id: d.id,
+            name: d.name,
+            color: "text-blue-500 dark:text-blue-400",
+            bgColor: "bg-blue-500",
+            glowColor: "shadow-blue-500/10",
+            category: "All",
+            formFields: d.formFields,
+            price: { retailer: d.retailerCharge, distributor: d.distributorCharge },
+          }));
+
+          setServicesList((prev) => {
+            const existingIds = new Set(prev.map((p) => p.id));
+            const newServices = dynamicServices.filter((d) => !existingIds.has(d.id));
+            return [...prev, ...newServices];
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch dynamic services", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchDynamicServices();
+  }, []);
+
+  const handleAddService = async (newService: EService) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/dynamic`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: newService.name,
+          retailerCharge: Number(newService.price?.retailer) || 0,
+          distributorCharge: Number(newService.price?.distributor) || 0,
+          formFields: newService.formFields,
+        }),
+      });
+
+      if (response.ok) {
+        setServicesList((prev) => [...prev, newService]);
+      } else {
+        console.error("Failed to add dynamic service via API");
+        // Fallback to local storage only if API fails, or just show error. Let's add it anyway.
+        setServicesList((prev) => [...prev, newService]);
+      }
+    } catch (error) {
+      console.error("Failed to call API, adding locally", error);
+      setServicesList((prev) => [...prev, newService]);
+    }
+    
+    setIsAddModalOpen(false);
+  };
+
   // Filter list based on role permissions from localStorage matrix
   const allowedServicesList = useMemo(() => {
     if (!user || user.role === "admin") return servicesList;
@@ -1786,19 +1852,29 @@ export function ServicesPage() {
           <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto">
             {/* Show/Hide Toggle Button for Admin */}
             {user?.role === "admin" && (
-              <button
-                type="button"
-                onClick={() => setIsManageMode(!isManageMode)}
-                className={`inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all select-none border border-slate-200 dark:border-slate-800 whitespace-nowrap ${
-                  isManageMode
-                    ? "bg-amber-500 hover:bg-amber-600 text-white border-transparent"
-                    : "bg-white dark:bg-transparent text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-900"
-                }`}
-              >
-                <span>
-                  {isManageMode ? "Exit Manage Mode" : "Show/Hide Services"}
-                </span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsManageMode(!isManageMode)}
+                  className={`inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all select-none border border-slate-200 dark:border-slate-800 whitespace-nowrap ${
+                    isManageMode
+                      ? "bg-amber-500 hover:bg-amber-600 text-white border-transparent"
+                      : "bg-white dark:bg-transparent text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-900"
+                  }`}
+                >
+                  <span>
+                    {isManageMode ? "Exit Manage Mode" : "Show/Hide Services"}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(true)}
+                  className="inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all select-none border border-transparent bg-[#005c3a] hover:bg-[#004d30] text-white whitespace-nowrap"
+                >
+                  <Plus size={14} />
+                  <span>Add Service</span>
+                </button>
+              </div>
             )}
 
             {/* Search Bar inside Breadcrumb */}
@@ -2215,6 +2291,12 @@ export function ServicesPage() {
             onSave={handleSaveService}
           />
         )}
+
+        <AddServiceModal 
+          isOpen={isAddModalOpen} 
+          onClose={() => setIsAddModalOpen(false)} 
+          onAdd={handleAddService} 
+        />
       </section>
     </AppShell>
   );
