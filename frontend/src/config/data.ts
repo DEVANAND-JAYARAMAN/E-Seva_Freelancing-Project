@@ -52,7 +52,7 @@ export const navItems: NavItem[] = [
   { label: "PanCard Services", href: "/pancard", icon: Fingerprint },
   { label: "Distributors", href: "/distributors", icon: Building2 },
   { label: "Retailers", href: "/retailers", icon: Store },
-  { label: "Profit Analysis", href: "/billing", icon: Receipt },
+  { label: "Billing", href: "/billing", icon: Receipt },
   { label: "Wallet", href: "/wallets", icon: Wallet },
   { label: "Server Control", href: "/admin", icon: Server },
 ];
