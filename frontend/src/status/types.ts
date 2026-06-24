@@ -19,6 +19,7 @@ export interface StatusTicket {
   userRole?: "Retailer" | "Distributor";
   formData?: Record<string, string>;
   documents?: string[];
+  ackFiles?: string[];
 }
 
 export interface StatusStatsData {

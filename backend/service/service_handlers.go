@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"eservice-backend/db"
@@ -278,17 +279,33 @@ func CreateServiceRequest(c *gin.Context) {
 
 func UpdateServiceRequestStatus(c *gin.Context) {
 	appId := c.Param("id")
-	var req UpdateServiceStatusReq
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	// Handle Form Data instead of JSON to support file uploads
+	status := c.PostForm("status")
+	adminRemarks := c.PostForm("adminRemarks")
+
+	if status == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Status is required"})
 		return
+	}
+
+	var ackFiles []string
+	form, err := c.MultipartForm()
+	if err == nil {
+		files := form.File["ackFiles"]
+		for _, file := range files {
+			filename := fmt.Sprintf("ack_%s_%s", appId, file.Filename)
+			filepath := "uploads/" + filename
+			if err := c.SaveUploadedFile(file, filepath); err == nil {
+				ackFiles = append(ackFiles, "/uploads/"+filename)
+			}
+		}
 	}
 
 
 	validStatuses := map[string]bool{
 		"Approved": true, "Rejected": true, "Completed": true, "Processing": true, "Resubmit": true,
 	}
-	if !validStatuses[req.Status] {
+	if !validStatuses[status] {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid status"})
 		return
 	}
@@ -315,8 +332,8 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 
 	now := time.Now().UTC().Format(time.RFC3339)
 
-	if req.Status == "Approved" || req.Status == "Completed" {
-		if req.Status == "Completed" {
+	if status == "Approved" || status == "Completed" {
+		if status == "Completed" {
 			crmId := generateId("CRM")
 			invoiceId := generateId("INV")
 			
@@ -368,9 +385,9 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 								"#s": "status",
 							},
 							ExpressionAttributeValues: map[string]types.AttributeValue{
-								":status":  &types.AttributeValueMemberS{Value: req.Status},
+								":status":  &types.AttributeValueMemberS{Value: status},
 								":time":    &types.AttributeValueMemberS{Value: now},
-								":remarks": &types.AttributeValueMemberS{Value: req.AdminRemarks},
+								":remarks": &types.AttributeValueMemberS{Value: adminRemarks},
 							},
 						},
 					},
@@ -400,9 +417,9 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 					"#s": "status",
 				},
 				ExpressionAttributeValues: map[string]types.AttributeValue{
-					":status":  &types.AttributeValueMemberS{Value: req.Status},
+					":status":  &types.AttributeValueMemberS{Value: status},
 					":time":    &types.AttributeValueMemberS{Value: now},
-					":remarks": &types.AttributeValueMemberS{Value: req.AdminRemarks},
+					":remarks": &types.AttributeValueMemberS{Value: adminRemarks},
 				},
 			})
 		}
@@ -412,11 +429,9 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 			return
 		}
 
-		if req.Status == "Completed" && app.CustomerWhatsApp != "" {
-			go sendWhatsAppMessage(app.CustomerWhatsApp, app.ServiceName)
-		}
+		// WhatsApp message is handled at the end of the function
 
-	} else if req.Status == "Rejected" {
+	} else if status == "Rejected" {
 		walletPK := "WALLET#" + app.RetailerId
 		txId := generateId("TX")
 		refundTx := models.WalletTransaction{
@@ -448,7 +463,7 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 						ExpressionAttributeValues: map[string]types.AttributeValue{
 							":status":  &types.AttributeValueMemberS{Value: "Rejected"},
 							":time":    &types.AttributeValueMemberS{Value: now},
-							":remarks": &types.AttributeValueMemberS{Value: req.AdminRemarks},
+							":remarks": &types.AttributeValueMemberS{Value: adminRemarks},
 						},
 					},
 				},
@@ -504,9 +519,9 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 				"#s": "status",
 			},
 			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":status":  &types.AttributeValueMemberS{Value: req.Status},
+				":status":  &types.AttributeValueMemberS{Value: status},
 				":time":    &types.AttributeValueMemberS{Value: now},
-				":remarks": &types.AttributeValueMemberS{Value: req.AdminRemarks},
+				":remarks": &types.AttributeValueMemberS{Value: adminRemarks},
 			},
 		})
 		if err != nil {
@@ -515,13 +530,29 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 		}
 	}
 
+	// Update ackFiles if any were uploaded
+	if len(ackFiles) > 0 {
+		ackFilesAttr, _ := attributevalue.MarshalList(ackFiles)
+		_, _ = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+			TableName: aws.String("ServiceApplications"),
+			Key: map[string]types.AttributeValue{
+				"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
+				"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+			},
+			UpdateExpression: aws.String("SET ackFiles = :ackFiles"),
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":ackFiles": &types.AttributeValueMemberL{Value: ackFilesAttr},
+			},
+		})
+	}
+
 	// Send Notification to Retailer/Distributor
 	notifId := generateId("NOTIF")
-	title := "Service Request " + req.Status
+	title := "Service Request " + status
 	notifType := "info"
-	if req.Status == "Completed" || req.Status == "Approved" {
+	if status == "Completed" || status == "Approved" {
 		notifType = "success"
-	} else if req.Status == "Rejected" {
+	} else if status == "Rejected" {
 		notifType = "error"
 	}
 
@@ -531,7 +562,7 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 		Id:        notifId,
 		UserId:    app.RetailerId,
 		Title:     title,
-		Message:   fmt.Sprintf("Your request for %s has been %s by Admin.", app.ServiceName, req.Status),
+		Message:   fmt.Sprintf("Your request for %s has been %s by Admin.", app.ServiceName, status),
 		Type:      notifType,
 		IsRead:    false,
 		CreatedAt: now,
@@ -543,7 +574,60 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 		Item:      notifItem,
 	})
 
-	c.JSON(http.StatusOK, gin.H{"message": "Request " + req.Status + " successfully"})
+	// Try to find the customer name and WhatsApp number from the application
+	var customerName string
+	if app.FormData != nil {
+		for key, val := range app.FormData {
+			lowerKey := strings.ToLower(key)
+			if strings.Contains(lowerKey, "name") && !strings.Contains(lowerKey, "father") && !strings.Contains(lowerKey, "mother") {
+				customerName = val
+				break
+			}
+		}
+	}
+	if customerName == "" {
+		customerName = "Customer"
+	}
+
+	if (status == "Approved" || status == "Completed") && app.CustomerWhatsApp != "" {
+		ackLinks := ""
+		if len(ackFiles) > 0 {
+			baseURL := os.Getenv("NEXT_PUBLIC_API_URL")
+			if baseURL == "" {
+				baseURL = "http://localhost:8080" // fallback
+			}
+			baseURL = strings.TrimSuffix(baseURL, "/api")
+			
+			ackLinks = "\n\nAcknowledgement Document(s):\n"
+			for i, file := range ackFiles {
+				ackLinks += fmt.Sprintf("%d. %s/api%s\n", i+1, baseURL, file)
+			}
+		}
+
+		message := fmt.Sprintf("Dear %s,\nYour service request for '%s' has been successfully %s by E-Seva.%s\nThank you for choosing E-Seva!", customerName, app.ServiceName, status, ackLinks)
+		
+		apiKey := os.Getenv("WHATSAPP_API_KEY")
+		senderDevice := os.Getenv("WHATSAPP_SENDER_DEVICE")
+
+		if apiKey != "" && senderDevice != "" {
+			url := "https://mugavaiwapp.in.net/send-message"
+			payload := map[string]string{
+				"api_key": apiKey,
+				"sender":  senderDevice,
+				"number":  app.CustomerWhatsApp,
+				"message": message,
+			}
+			jsonValue, _ := json.Marshal(payload)
+			go func() {
+				resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonValue))
+				if err == nil {
+					resp.Body.Close()
+				}
+			}()
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Request " + status + " successfully"})
 }
 
 func GetServiceRequests(c *gin.Context) {

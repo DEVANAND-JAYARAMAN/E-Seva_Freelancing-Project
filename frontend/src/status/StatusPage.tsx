@@ -110,6 +110,7 @@ export function StatusPage() {
           remarks: app.adminRemarks || app.AdminRemarks || "No remarks.",
           formData: typeof (app.formData || app.FormData) === "string" ? JSON.parse(app.formData || app.FormData || "{}") : (app.formData || app.FormData || {}),
           documents: typeof (app.documents || app.Documents) === "string" ? JSON.parse(app.documents || app.Documents || "[]") : (app.documents || app.Documents || []),
+          ackFiles: typeof (app.ackFiles || app.AckFiles) === "string" ? JSON.parse(app.ackFiles || app.AckFiles || "[]") : (app.ackFiles || app.AckFiles || []),
         }));
         setTickets(mapped);
       }
@@ -129,12 +130,22 @@ export function StatusPage() {
     id: string,
     newStatus: TicketStatus,
     remarks: string,
+    ackFiles?: File[]
   ) => {
     try {
+      const formData = new FormData();
+      formData.append("status", newStatus);
+      formData.append("adminRemarks", remarks);
+      
+      if (ackFiles && ackFiles.length > 0) {
+        ackFiles.forEach(file => {
+          formData.append("ackFiles", file);
+        });
+      }
+
       const res = await fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/${id}/status`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus, adminRemarks: remarks }),
+        body: formData,
       });
       if (res.ok) {
         fetchTickets(); // Refresh data
