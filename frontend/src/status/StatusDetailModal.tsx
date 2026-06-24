@@ -87,11 +87,11 @@ export function StatusDetailModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-50 dark:bg-[#04080f] animate-fadeIn overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex bg-slate-50 dark:bg-[#04080f] animate-fadeIn">
       {/* Full Page Container */}
-      <div className="relative w-full min-h-screen max-w-5xl mx-auto bg-white dark:bg-[#090d16] sm:border-x border-slate-100 dark:border-slate-900/60 shadow-2xl flex flex-col">
+      <div className="relative w-full h-full bg-white dark:bg-[#090d16] shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-50 dark:border-slate-900/40 shrink-0">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-slate-900/60 shrink-0 bg-white dark:bg-[#090d16] z-10">
           <div>
             <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">
               Service Request Details
@@ -110,10 +110,10 @@ export function StatusDetailModal({
 
         {/* Scrollable Content */}
         <div className="p-6 overflow-y-auto flex-1">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full">
             
             {/* Left Column: Details */}
-            <div className="space-y-6">
+            <div className="space-y-6 lg:col-span-2">
               {/* Core Details Grid */}
               <div className="grid grid-cols-2 gap-4 bg-slate-50/50 dark:bg-[#0a0f18]/10 p-5 rounded-2xl border border-slate-100 dark:border-slate-900/40">
             {/* Service Name */}
@@ -275,15 +275,12 @@ export function StatusDetailModal({
                               <Eye size={14} />
                             </button>
                           ) : (
-                            <a
-                              href={fullUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                            <button type="button" onClick={() => setPreviewImage(fullUrl)}
                               className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 text-blue-600 dark:text-blue-400 transition-colors"
                               title="View document"
                             >
                               <Eye size={14} />
-                            </a>
+                          </button>
                           )}
 
                           {/* Download */}
@@ -349,15 +346,12 @@ export function StatusDetailModal({
 
                         <div className="flex items-center gap-2 shrink-0">
                           {/* View in new tab */}
-                          <a
-                            href={fullUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button type="button" onClick={() => setPreviewImage(fullUrl)}
                             className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100/50 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 transition-colors"
                             title="View document"
                           >
                             <Eye size={14} />
-                          </a>
+                          </button>
 
                           {/* Download */}
                           <a
@@ -381,7 +375,7 @@ export function StatusDetailModal({
         </div>
 
         {/* Right Column: Actions & Form Data */}
-        <div className="space-y-6">
+        <div className="space-y-6 lg:col-span-1">
           {/* Remarks Section */}
           {ticket.remarks && (
             <div className="space-y-2">
@@ -514,7 +508,7 @@ export function StatusDetailModal({
         />
         <button
           onClick={() => setPreviewImage(null)}
-          className="absolute top-4 right-4 sm:-right-12 inline-flex h-10 w-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white backdrop-blur-sm transition-colors"
+          className="absolute top-4 right-4 sm:top-6 sm:right-6 inline-flex h-12 w-12 items-center justify-center rounded-full bg-red-600/90 hover:bg-red-500 text-white backdrop-blur-md transition-colors shadow-2xl z-[110]"
           title="Close preview"
         >
           <X size={20} />
