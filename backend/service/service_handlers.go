@@ -671,6 +671,7 @@ type RechargeGatewayReq struct {
 	CustomerMobile string  `json:"customer_mobile"`
 	CustomerEmail  string  `json:"customer_email"`
 	RedirectURL    string  `json:"redirect_url"`
+	UserID         string  `json:"user_id"`
 }
 
 type MugavaiCreateOrderReq struct {
@@ -765,6 +766,22 @@ func RechargeGateway(c *gin.Context) {
 		return
 	}
 
+	// Store orderId → userId mapping in DynamoDB so webhook can credit the right wallet
+	if req.UserID != "" {
+		now := time.Now().UTC().Format(time.RFC3339)
+		_, _ = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+			TableName: aws.String("WalletTransactions"),
+			Item: map[string]types.AttributeValue{
+				"PK":        &types.AttributeValueMemberS{Value: "ORDER#" + orderId},
+				"SK":        &types.AttributeValueMemberS{Value: "META"},
+				"userId":    &types.AttributeValueMemberS{Value: req.UserID},
+				"amount":    &types.AttributeValueMemberN{Value: fmt.Sprintf("%.2f", req.Amount)},
+				"status":    &types.AttributeValueMemberS{Value: "Pending"},
+				"createdAt": &types.AttributeValueMemberS{Value: now},
+			},
+		})
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Payment gateway initialized successfully",
 		"data": map[string]interface{}{
@@ -789,17 +806,91 @@ func RechargeWebhook(c *gin.Context) {
 		return
 	}
 
-	// For a real app, you'd look up the user/wallet associated with the order_id,
-	// verify the amount, and then update their balance in the "Wallets" DynamoDB table.
-	log.Printf("Received payment webhook: Order=%s Status=%s Amount=%.2f UTR=%s\n", req.OrderID, req.Status, req.Amount, req.UTR)
+	log.Printf("[Webhook] Order=%s Status=%s Amount=%.2f UTR=%s", req.OrderID, req.Status, req.Amount, req.UTR)
 
-	if req.Status == "SUCCESS" {
-		// Example: Mark wallet transaction as successful
-		log.Println("Payment was successful. You should update the wallet balance here.")
+	if req.Status != "SUCCESS" && req.Status != "success" {
+		c.JSON(http.StatusOK, gin.H{"status": "received"})
+		return
 	}
 
-	// Just return success so the gateway knows we received it
-	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Webhook processed"})
+	// Look up orderId → userId mapping
+	meta, err := db.DynamoClient.GetItem(context.TODO(), &dynamodb.GetItemInput{
+		TableName: aws.String("WalletTransactions"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: "ORDER#" + req.OrderID},
+			"SK": &types.AttributeValueMemberS{Value: "META"},
+		},
+	})
+	if err != nil || meta.Item == nil {
+		log.Printf("[Webhook] Order meta not found for %s", req.OrderID)
+		c.JSON(http.StatusOK, gin.H{"status": "order_not_found"})
+		return
+	}
+
+	userIdAttr, ok := meta.Item["userId"].(*types.AttributeValueMemberS)
+	if !ok || userIdAttr.Value == "" {
+		c.JSON(http.StatusOK, gin.H{"status": "user_not_found"})
+		return
+	}
+	userId := userIdAttr.Value
+
+	now := time.Now().UTC()
+	amountStr := fmt.Sprintf("%.2f", req.Amount)
+
+	// Credit Wallets table
+	_, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+		TableName: aws.String("Wallets"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: "WALLET#" + userId},
+			"SK": &types.AttributeValueMemberS{Value: "TYPE#Main"},
+		},
+		UpdateExpression: aws.String("ADD balance :amt SET updatedAt = :ts"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":amt": &types.AttributeValueMemberN{Value: amountStr},
+			":ts":  &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
+		},
+	})
+	if err != nil {
+		log.Printf("[Webhook] Failed to credit Wallets for user %s: %v", userId, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "wallet credit failed"})
+		return
+	}
+
+	// Credit Users.walletBalance
+	_, _ = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+		TableName: aws.String("Users"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: "USER#" + userId},
+			"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+		},
+		UpdateExpression: aws.String("SET walletBalance = if_not_exists(walletBalance, :zero) + :amt, updatedAt = :ts"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":amt":  &types.AttributeValueMemberN{Value: amountStr},
+			":zero": &types.AttributeValueMemberN{Value: "0"},
+			":ts":   &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
+		},
+	})
+
+	// Write transaction record
+	txId := "TX#" + now.Format("20060102150405") + "#" + req.OrderID
+	_, _ = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+		TableName: aws.String("WalletTransactions"),
+		Item: map[string]types.AttributeValue{
+			"PK":          &types.AttributeValueMemberS{Value: "WALLET#" + userId},
+			"SK":          &types.AttributeValueMemberS{Value: txId},
+			"id":          &types.AttributeValueMemberS{Value: req.OrderID},
+			"type":        &types.AttributeValueMemberS{Value: "credit"},
+			"amount":      &types.AttributeValueMemberN{Value: amountStr},
+			"reference":   &types.AttributeValueMemberS{Value: req.UTR},
+			"description": &types.AttributeValueMemberS{Value: fmt.Sprintf("Wallet Recharge via Gateway (UTR: %s)", req.UTR)},
+			"status":      &types.AttributeValueMemberS{Value: "Success"},
+			"walletType":  &types.AttributeValueMemberS{Value: "Main"},
+			"createdAt":   &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
+		},
+	})
+
+	log.Printf("[Webhook] Successfully credited ₹%.2f to user %s", req.Amount, userId)
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Wallet credited"})
 }
 
 

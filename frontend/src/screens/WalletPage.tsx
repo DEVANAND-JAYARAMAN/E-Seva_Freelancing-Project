@@ -186,7 +186,7 @@ export function WalletPage() {
           /(?:\/api|\/)+$/,
           "",
         );
-        const res = await fetch(`${baseUrl}/api/wallet/recharge/gateway`, {
+        const res = await fetch(`${baseUrl}/api/v1/wallet/recharge/gateway`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -197,6 +197,7 @@ export function WalletPage() {
             customer_mobile: mobileNumber,
             customer_email: user?.email || "user@thuruvan.com",
             redirect_url: window.location.origin + "/dashboard",
+            user_id: user?.id || "",
           }),
         });
         const data = await res.json();
@@ -232,6 +233,7 @@ export function WalletPage() {
               try {
                 const statusRes = await fetch(
                   `${baseUrl}/api/wallet/recharge/status/${data.data.order_id}`,
+                  { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } },
                 );
                 const statusData = await statusRes.json();
 
@@ -898,7 +900,7 @@ export function WalletPage() {
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
                                 src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(
-                                  `upi://pay?pa=${"mkksriptsami@oksbi"}&pn=${"Thuruvan Communications"}&am=${amount || 0}&cu=INR`,
+                                  `upi://pay?pa=${process.env.NEXT_PUBLIC_UPI_ID || "mkksriptsami@oksbi"}&pn=Thuruvan%20Communications&am=${amount || 0}&cu=INR&tn=Wallet%20Recharge`,
                                 )}`}
                                 alt="Payment QR Code"
                                 className="w-28 h-28 object-contain"
