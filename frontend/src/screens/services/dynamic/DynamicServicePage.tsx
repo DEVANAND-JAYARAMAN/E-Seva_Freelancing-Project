@@ -3,12 +3,12 @@
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { FileText, ArrowLeft, Send } from "lucide-react";
-import { AppShell } from "../../../../layouts/AppShell";
-import { useAuth } from "../../../../store/context/AuthContext";
+import { AppShell } from "../../../layouts/AppShell";
+import { useAuth } from "../../../store/context/AuthContext";
 import {
   ServicePaymentScreen,
   ServiceSuccessScreen,
-} from "../../../../components/ServicePaymentScreen";
+} from "../../../components/ServicePaymentScreen";
 import { EService } from "../ServicesPage";
 
 export function DynamicServicePage({ serviceId }: { serviceId: string }) {
@@ -207,8 +207,8 @@ export function DynamicServicePage({ serviceId }: { serviceId: string }) {
                       type="text"
                       value={formData[field] || ""}
                       onChange={(e) => handleFieldChange(field, e.target.value)}
-                      placeholder={\`Enter \${label}\`}
-                      className={`w-full px-4 py-3 rounded-xl border \${
+                      placeholder={`Enter ${label}`}
+                      className={`w-full px-4 py-3 rounded-xl border ${
                         isError
                           ? "border-rose-300 dark:border-rose-900 focus:border-rose-500 focus:ring-rose-500/20"
                           : "border-slate-200 dark:border-slate-800 focus:border-[#005c3a] focus:ring-[#005c3a]/20"
