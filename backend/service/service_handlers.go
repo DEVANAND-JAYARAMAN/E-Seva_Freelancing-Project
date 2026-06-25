@@ -792,23 +792,45 @@ func RechargeGateway(c *gin.Context) {
 }
 
 type RechargeWebhookReq struct {
-	OrderID string  `form:"order_id" json:"order_id"`
-	Status  string  `form:"status" json:"status"`
-	Amount  float64 `form:"amount" json:"amount"`
-	UTR     string  `form:"utr" json:"utr"`
+	OrderID      string      `form:"order_id" json:"order_id"`
+	ClientTxnID  string      `form:"client_txn_id" json:"client_txn_id"`
+	TxnID        string      `form:"txn_id" json:"txn_id"`
+	Status       string      `form:"status" json:"status"`
+	Amount       interface{} `form:"amount" json:"amount"`
+	UTR          string      `form:"utr" json:"utr"`
+	UpiTxnID     string      `form:"upi_txn_id" json:"upi_txn_id"`
 }
 
 // RechargeWebhook handles the callback from Mugavai payment gateway
 func RechargeWebhook(c *gin.Context) {
 	var req RechargeWebhookReq
 	if err := c.ShouldBind(&req); err != nil {
+		log.Printf("[Webhook] Error binding: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	log.Printf("[Webhook] Order=%s Status=%s Amount=%.2f UTR=%s", req.OrderID, req.Status, req.Amount, req.UTR)
+	actualOrderID := req.OrderID
+	if actualOrderID == "" {
+		actualOrderID = req.ClientTxnID
+	}
 
-	if req.Status != "SUCCESS" && req.Status != "success" {
+	actualUTR := req.UTR
+	if actualUTR == "" {
+		actualUTR = req.UpiTxnID
+	}
+
+	var parsedAmount float64
+	switch v := req.Amount.(type) {
+	case float64:
+		parsedAmount = v
+	case string:
+		fmt.Sscanf(v, "%f", &parsedAmount)
+	}
+
+	log.Printf("[Webhook] Order=%s Status=%s Amount=%.2f UTR=%s", actualOrderID, req.Status, parsedAmount, actualUTR)
+
+	if req.Status != "SUCCESS" && req.Status != "success" && req.Status != "COMPLETED" && req.Status != "Completed" {
 		c.JSON(http.StatusOK, gin.H{"status": "received"})
 		return
 	}
@@ -817,12 +839,12 @@ func RechargeWebhook(c *gin.Context) {
 	meta, err := db.DynamoClient.GetItem(context.TODO(), &dynamodb.GetItemInput{
 		TableName: aws.String("WalletTransactions"),
 		Key: map[string]types.AttributeValue{
-			"PK": &types.AttributeValueMemberS{Value: "ORDER#" + req.OrderID},
+			"PK": &types.AttributeValueMemberS{Value: "ORDER#" + actualOrderID},
 			"SK": &types.AttributeValueMemberS{Value: "META"},
 		},
 	})
 	if err != nil || meta.Item == nil {
-		log.Printf("[Webhook] Order meta not found for %s", req.OrderID)
+		log.Printf("[Webhook] Order meta not found for %s", actualOrderID)
 		c.JSON(http.StatusOK, gin.H{"status": "order_not_found"})
 		return
 	}
@@ -835,7 +857,7 @@ func RechargeWebhook(c *gin.Context) {
 	userId := userIdAttr.Value
 
 	now := time.Now().UTC()
-	amountStr := fmt.Sprintf("%.2f", req.Amount)
+	amountStr := fmt.Sprintf("%.2f", parsedAmount)
 
 	// Credit Wallets table
 	_, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
@@ -872,24 +894,24 @@ func RechargeWebhook(c *gin.Context) {
 	})
 
 	// Write transaction record
-	txId := "TX#" + now.Format("20060102150405") + "#" + req.OrderID
+	txId := "TX#" + now.Format("20060102150405") + "#" + actualOrderID
 	_, _ = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
 		TableName: aws.String("WalletTransactions"),
 		Item: map[string]types.AttributeValue{
 			"PK":          &types.AttributeValueMemberS{Value: "WALLET#" + userId},
 			"SK":          &types.AttributeValueMemberS{Value: txId},
-			"id":          &types.AttributeValueMemberS{Value: req.OrderID},
+			"id":          &types.AttributeValueMemberS{Value: actualOrderID},
 			"type":        &types.AttributeValueMemberS{Value: "credit"},
 			"amount":      &types.AttributeValueMemberN{Value: amountStr},
-			"reference":   &types.AttributeValueMemberS{Value: req.UTR},
-			"description": &types.AttributeValueMemberS{Value: fmt.Sprintf("Wallet Recharge via Gateway (UTR: %s)", req.UTR)},
+			"reference":   &types.AttributeValueMemberS{Value: actualUTR},
+			"description": &types.AttributeValueMemberS{Value: fmt.Sprintf("Wallet Recharge via Gateway (UTR: %s)", actualUTR)},
 			"status":      &types.AttributeValueMemberS{Value: "Success"},
 			"walletType":  &types.AttributeValueMemberS{Value: "Main"},
 			"createdAt":   &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
 		},
 	})
 
-	log.Printf("[Webhook] Successfully credited ₹%.2f to user %s", req.Amount, userId)
+	log.Printf("[Webhook] Successfully credited ₹%.2f to user %s", parsedAmount, userId)
 	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Wallet credited"})
 }
 
