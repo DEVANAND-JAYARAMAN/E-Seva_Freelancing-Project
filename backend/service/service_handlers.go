@@ -596,7 +596,7 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 
 		if apiKey != "" && senderDevice != "" {
 			url := "https://mugavaiwapp.in.net/api/send"
-						number := app.CustomerWhatsApp
+						number := strings.ReplaceAll(app.CustomerWhatsApp, "+", "")
 			if len(number) == 10 {
 				number = "91" + number
 			}
@@ -610,9 +610,13 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 			jsonValue, _ := json.Marshal(payload)
 			go func() {
 				resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonValue))
-				if err == nil {
-					resp.Body.Close()
+				if err != nil {
+					log.Printf("WhatsApp API Error: %v", err)
+					return
 				}
+				defer resp.Body.Close()
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				log.Printf("WhatsApp API Response for %s: %s", number, string(bodyBytes))
 			}()
 		}
 	}
