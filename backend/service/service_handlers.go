@@ -727,7 +727,7 @@ func RechargeGateway(c *gin.Context) {
 		username = "6380616163"
 	}
 	// Hardcoding API key because GitHub Secrets is overriding it with an old value
-	apiKey := "5f89c01e1d5be436659591de5c7d93d1bcd97c7091448f9e"
+	apiKey := "de84d65d816961eef8662345e4147587c38f2963ca480dbd"
 
 	apiURL := "https://mugavaipaymentgetway.in/api/v1/create_order.php"
 	
