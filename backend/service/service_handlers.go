@@ -801,3 +801,52 @@ func RechargeWebhook(c *gin.Context) {
 	// Just return success so the gateway knows we received it
 	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Webhook processed"})
 }
+
+
+func UpdateDynamicService(c *gin.Context) {
+	id := c.Param("id")
+	var req models.DynamicService
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	req.Id = id
+	req.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
+
+	item, err := attributevalue.MarshalMap(req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to marshal item"})
+		return
+	}
+
+	_, err = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+		TableName: aws.String("DynamicServices"),
+		Item:      item,
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update dynamic service"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Service updated successfully"})
+}
+
+func DeleteDynamicService(c *gin.Context) {
+	id := c.Param("id")
+
+	_, err := db.DynamoClient.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
+		TableName: aws.String("DynamicServices"),
+		Key: map[string]types.AttributeValue{
+			"id": &types.AttributeValueMemberS{Value: id},
+		},
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete dynamic service"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Service deleted successfully"})
+}
