@@ -902,8 +902,8 @@ func UpdateDynamicService(c *gin.Context) {
 		return
 	}
 
-	req.Id = id
-	req.UpdatedAt = time.Now().UTC().Format(time.RFC3339)
+	req.ID = id
+	req.CreatedDate = time.Now().UTC().Format(time.RFC3339)
 
 	item, err := attributevalue.MarshalMap(req)
 	if err != nil {

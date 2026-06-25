@@ -1,12 +1,6 @@
 package auth
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"io"
-	"os"
-	"strings"
 	"context"
 	"errors"
 	"log"
