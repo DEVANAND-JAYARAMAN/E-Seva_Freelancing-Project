@@ -14,6 +14,8 @@ export interface StatusTicket {
   lastUpdated: string;
   remarks?: string;
   userRole?: "Retailer" | "Distributor";
+  customerName?: string;
+  mobileNumber?: string;
   formData?: Record<string, string>;
   documents?: string[];
   ackFiles?: string[];

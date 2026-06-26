@@ -5,6 +5,7 @@ import {
   Edit2,
   AlertCircle,
   Phone,
+  User,
   ArrowUpRight,
   HelpCircle,
 } from "lucide-react";
@@ -77,7 +78,7 @@ export function StatusTable({
                 Service
               </th>
               <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                Retailer / Distributor
+                Contact Details
               </th>
               <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                 Role
@@ -111,10 +112,21 @@ export function StatusTable({
                     </div>
                   </td>
 
-                  {/* Retailer / Merchant */}
+                  {/* Contact Details: Name + Mobile */}
                   <td className="py-4 px-6">
-                    <div className="font-semibold text-slate-700 dark:text-slate-300 text-sm">
-                      {ticket.retailerName}
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                        <User size={11} className="text-slate-400 shrink-0" />
+                        <span className="text-sm font-semibold truncate">
+                          {ticket.customerName || ticket.retailerName || "—"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                        <Phone size={11} className="text-slate-400 shrink-0" />
+                        <span className="text-xs font-medium">
+                          {ticket.mobileNumber || "—"}
+                        </span>
+                      </div>
                     </div>
                   </td>
 
@@ -164,15 +176,17 @@ export function StatusTable({
                       >
                         <Eye size={13} />
                       </button>
-                      {isAdmin && ticket.status !== "Approved" && ticket.status !== "Rejected" && (
-                        <button
-                          onClick={() => onSelectTicket(ticket, true)}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200/60 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-[#005c3a] dark:text-emerald-400 transition-colors"
-                          title="Edit status ticket details"
-                        >
-                          <Edit2 size={13} />
-                        </button>
-                      )}
+                      {isAdmin &&
+                        ticket.status !== "Approved" &&
+                        ticket.status !== "Rejected" && (
+                          <button
+                            onClick={() => onSelectTicket(ticket, true)}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200/60 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-[#005c3a] dark:text-emerald-400 transition-colors"
+                            title="Edit status ticket details"
+                          >
+                            <Edit2 size={13} />
+                          </button>
+                        )}
                     </div>
                   </td>
                 </tr>

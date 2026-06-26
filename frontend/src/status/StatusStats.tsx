@@ -28,52 +28,42 @@ export function StatusStats({
       value: getCount("Pending"),
       icon: Clock,
       status: "Pending" as TicketStatus,
-      colorClass:
-        "bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-900/30",
-      activeClass:
-        "ring-2 ring-amber-500/50 bg-amber-50/50 dark:bg-amber-950/10",
+      gradientClass: "bg-gradient-to-br from-amber-500 to-yellow-400",
     },
     {
       label: "Rejected",
       value: getCount("Rejected"),
       icon: AlertTriangle,
       status: "Rejected" as TicketStatus,
-      colorClass:
-        "bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-900/30",
-      activeClass: "ring-2 ring-rose-500/50 bg-rose-50/50 dark:bg-rose-950/10",
+      gradientClass: "bg-gradient-to-br from-rose-500 to-pink-400",
     },
     {
       label: "Approved",
       value: getCount("Approved"),
       icon: CheckCircle2,
       status: "Approved" as TicketStatus,
-      colorClass:
-        "bg-emerald-50 dark:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/30",
-      activeClass:
-        "ring-2 ring-emerald-500/50 bg-[#e8f5e9]/40 dark:bg-emerald-950/10",
+      gradientClass: "bg-gradient-to-br from-emerald-500 to-green-400",
     },
   ];
 
   return (
     <section className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
-      {/* "All" Filter Card */}
+      {/* "All" Filter Card — slate-indigo gradient */}
       <button
         type="button"
         onClick={() => onFilterChange("All")}
-        className={`bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between items-start text-left group col-span-2 md:col-span-1 ${
-          activeFilter === "All"
-            ? "ring-2 ring-emerald-500/30 border-emerald-500/30"
-            : ""
+        className={`bg-gradient-to-br from-slate-600 to-indigo-500 rounded-2xl p-4 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 flex flex-col justify-between items-start text-left group col-span-2 md:col-span-1 ${
+          activeFilter === "All" ? "ring-2 ring-white/40" : ""
         }`}
       >
-        <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+        <span className="text-[10px] font-extrabold text-white/70 uppercase tracking-widest">
           Total Requests
         </span>
         <div className="flex items-baseline gap-2 mt-2">
-          <span className="text-3xl font-extrabold text-slate-900 dark:text-white">
+          <span className="text-3xl font-extrabold text-white">
             {tickets.length}
           </span>
-          <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+          <span className="text-[10px] font-extrabold text-white/60 uppercase tracking-widest">
             All
           </span>
         </div>
@@ -89,23 +79,19 @@ export function StatusStats({
             key={idx}
             type="button"
             onClick={() => onFilterChange(stat.status)}
-            className={`bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-2xl p-4 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between items-start text-left group ${
-              isActive ? stat.activeClass + " border-transparent" : ""
+            className={`${stat.gradientClass} rounded-2xl p-4 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 flex flex-col justify-between items-start text-left group ${
+              isActive ? "ring-2 ring-white/40" : ""
             }`}
           >
             <div className="flex items-center justify-between w-full">
-              <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+              <span className="text-[10px] font-extrabold text-white/70 uppercase tracking-widest">
                 {stat.label}
               </span>
-              <div
-                className={`p-1.5 rounded-lg border ${stat.colorClass} group-hover:scale-105 transition-transform duration-200`}
-              >
-                <Icon
-                  size={12}
-                />
+              <div className="p-1.5 rounded-lg bg-white/20 text-white group-hover:scale-105 transition-transform duration-200">
+                <Icon size={12} />
               </div>
             </div>
-            <div className="text-2xl font-extrabold text-slate-900 dark:text-white mt-3">
+            <div className="text-2xl font-extrabold text-white mt-3">
               {stat.value}
             </div>
           </button>
