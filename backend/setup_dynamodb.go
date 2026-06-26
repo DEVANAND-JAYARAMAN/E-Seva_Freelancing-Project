@@ -300,6 +300,7 @@ func createDistributorsTable(ctx context.Context) error {
 				},
 			},
 		},
+	})
 }
 
 func createAdminsTable(ctx context.Context) error {
@@ -908,6 +909,33 @@ func createNotificationsTable(ctx context.Context) error {
 	})
 }
 
+func createDynamicServicesTable(ctx context.Context) error {
+	return createTableIfNotExists(ctx, "DynamicServices", &dynamodb.CreateTableInput{
+		TableName: aws.String("DynamicServices"),
+		KeySchema: []types.KeySchemaElement{
+			{
+				AttributeName: aws.String("PK"),
+				KeyType:       types.KeyTypeHash,
+			},
+			{
+				AttributeName: aws.String("SK"),
+				KeyType:       types.KeyTypeRange,
+			},
+		},
+		AttributeDefinitions: []types.AttributeDefinition{
+			{
+				AttributeName: aws.String("PK"),
+				AttributeType: types.ScalarAttributeTypeS,
+			},
+			{
+				AttributeName: aws.String("SK"),
+				AttributeType: types.ScalarAttributeTypeS,
+			},
+		},
+		BillingMode: types.BillingModePayPerRequest,
+	})
+}
+
 func main() {
 	if len(os.Args) > 1 && os.Args[1] == "help" {
 		fmt.Println(`
@@ -972,6 +1000,7 @@ Tables Created:
 		{"CRMCustomers", createCRMCustomersTable},
 		{"Notifications", createNotificationsTable},
 		{"Admins", createAdminsTable},
+		{"DynamicServices", createDynamicServicesTable},
 	}
 
 	errors := 0

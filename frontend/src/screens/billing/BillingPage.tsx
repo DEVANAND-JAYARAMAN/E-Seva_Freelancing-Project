@@ -1,456 +1,286 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
+import { useState, useEffect, useMemo } from "react";
 import {
-  Plus,
-  Receipt,
-  Search,
-  FileText,
-  CheckCircle,
-  Clock,
-  AlertTriangle,
-  ArrowUpRight,
-  ArrowDownRight,
+  TrendingUp,
+  TrendingDown,
   DollarSign,
-  Download,
+  Activity,
+  CreditCard,
+  Search,
 } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
 import { useAuth } from "../../store/context/AuthContext";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  AreaChart,
+  Area
+} from "recharts";
 
-export interface Invoice {
+export interface ServiceRequest {
   id: string;
-  invoiceNumber: string;
-  retailerName: string;
-  amount: number;
-  date: string;
-  dueDate: string;
-  status: "Paid" | "Pending" | "Overdue";
-  utrNumber?: string;
-  category:
-    | "Service Charges"
-    | "Wallet Topup"
-    | "API Recharge"
-    | "Late Penalty";
+  serviceName: string;
+  cost: number;
+  status: string;
+  createdDate: string;
 }
-
-const initialInvoices: Invoice[] = [
-  {
-    id: "inv-1",
-    invoiceNumber: "INV-2026-001",
-    retailerName: "Devanand Jayaraman",
-    amount: 1500.0,
-    date: "2026-05-23",
-    dueDate: "2026-06-05",
-    status: "Paid",
-    utrNumber: "629810458129",
-    category: "Wallet Topup",
-  },
-  {
-    id: "inv-2",
-    invoiceNumber: "INV-2026-002",
-    retailerName: "Sahin Alam",
-    amount: 5000.0,
-    date: "2026-05-23",
-    dueDate: "2026-06-05",
-    status: "Pending",
-    utrNumber: "N20260523000918",
-    category: "API Recharge",
-  },
-  {
-    id: "inv-3",
-    invoiceNumber: "INV-2026-003",
-    retailerName: "Priya Sharma",
-    amount: 500.0,
-    date: "2026-05-22",
-    dueDate: "2026-05-29",
-    status: "Pending",
-    utrNumber: "991827364510",
-    category: "Wallet Topup",
-  },
-  {
-    id: "inv-4",
-    invoiceNumber: "INV-2026-004",
-    retailerName: "Karthik Raja",
-    amount: 120.0,
-    date: "2026-05-18",
-    dueDate: "2026-05-25",
-    status: "Overdue",
-    category: "Service Charges",
-  },
-  {
-    id: "inv-5",
-    invoiceNumber: "INV-2026-005",
-    retailerName: "Rajesh Kumar",
-    amount: 250.0,
-    date: "2026-05-15",
-    dueDate: "2026-05-22",
-    status: "Paid",
-    utrNumber: "551928374619",
-    category: "Service Charges",
-  },
-];
 
 export function BillingPage() {
   const { user } = useAuth();
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [requests, setRequests] = useState<ServiceRequest[]>([]);
+  const [officialCosts, setOfficialCosts] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [timeFilter, setTimeFilter] = useState<"day" | "month" | "year">("day");
 
   const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "");
 
-  const fetchInvoices = async () => {
+  const fetchRequests = async () => {
     try {
-      const res = await fetch(`${baseUrl}/api/billing/invoices`);
+      const res = await fetch(`${baseUrl}/api/services/requests`);
       if (res.ok) {
         const data = await res.json();
-        setInvoices(data || []);
+        const mapped = (data || []).map((app: any) => ({
+          id: app.id || app.Id,
+          serviceName: app.serviceName || app.ServiceName || "Unknown Service",
+          cost: parseFloat(app.cost || app.Cost || "0"),
+          status: app.status || app.Status || "Pending",
+          createdDate: (app.createdDate || app.CreatedDate || "").split("T")[0],
+        }));
+        setRequests(mapped);
       }
     } catch (err) {
-      console.error("Failed to fetch invoices", err);
+      console.error("Failed to fetch requests", err);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchInvoices();
+    fetchRequests();
+    // Load saved official costs from local storage
+    const saved = localStorage.getItem("eseva_official_costs");
+    if (saved) {
+      try {
+        setOfficialCosts(JSON.parse(saved));
+      } catch (e) {
+        console.error(e);
+      }
+    }
   }, []);
 
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [categoryFilter, setCategoryFilter] = useState("All");
-  const [isFormOpen, setIsFormOpen] = useState(false);
-
-  // Form State
-  const [retailerName, setRetailerName] = useState("");
-  const [amount, setAmount] = useState("");
-  const [dueDate, setDueDate] = useState("");
-  const [category, setCategory] =
-    useState<Invoice["category"]>("Service Charges");
-  const [status, setStatus] = useState<Invoice["status"]>("Pending");
-  const [utrNumber, setUtrNumber] = useState("");
-
-  const filteredInvoices = invoices.filter((i) => {
-    const matchesSearch =
-      i.retailerName.toLowerCase().includes(search.toLowerCase()) ||
-      i.invoiceNumber.toLowerCase().includes(search.toLowerCase()) ||
-      (i.utrNumber && i.utrNumber.includes(search));
-    const matchesStatus = statusFilter === "All" || i.status === statusFilter;
-    const matchesCategory =
-      categoryFilter === "All" || i.category === categoryFilter;
-    return matchesSearch && matchesStatus && matchesCategory;
-  });
-
-  const handleAddInvoice = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!retailerName || !amount || !dueDate) return;
-    setIsSubmitting(true);
-
-    const newInvoice = {
-      retailerName,
-      amount: parseFloat(amount),
-      dueDate,
-      status,
-      category,
-      utrNumber: utrNumber || undefined,
-    };
-
-    try {
-      const res = await fetch(`${baseUrl}/api/billing/invoices`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newInvoice),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        setInvoices([data, ...invoices]);
-        setIsFormOpen(false);
-        // Reset Form
-        setRetailerName("");
-        setAmount("");
-        setDueDate("");
-        setCategory("Service Charges");
-        setStatus("Pending");
-        setUtrNumber("");
-      } else {
-        console.error("Failed to add invoice");
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleOfficialCostChange = (id: string, value: string) => {
+    const numericValue = parseFloat(value) || 0;
+    const newCosts = { ...officialCosts, [id]: numericValue };
+    setOfficialCosts(newCosts);
+    localStorage.setItem("eseva_official_costs", JSON.stringify(newCosts));
   };
 
-  const downloadInvoicePDF = (invoice: Invoice) => {
-    const doc = new jsPDF();
-    doc.setFontSize(20);
-    doc.text("INVOICE", 14, 22);
+  const filteredRequests = useMemo(() => {
+    return requests
+      .filter((r) => r.status === "Completed") // Focus only on completed services for profit
+      .filter((r) => r.serviceName.toLowerCase().includes(searchTerm.toLowerCase()));
+  }, [requests, searchTerm]);
 
-    doc.setFontSize(10);
-    doc.text(`Invoice Number: ${invoice.invoiceNumber}`, 14, 30);
-    doc.text(`Date: ${invoice.date}`, 14, 36);
-    doc.text(`Due Date: ${invoice.dueDate}`, 14, 42);
-    doc.text(`Status: ${invoice.status}`, 14, 48);
-    if (invoice.utrNumber) {
-      doc.text(`UTR Number: ${invoice.utrNumber}`, 14, 54);
-    }
+  // Calculations
+  const totalServiceCharge = useMemo(() => {
+    return filteredRequests.reduce((sum, r) => sum + r.cost, 0);
+  }, [filteredRequests]);
 
-    doc.setFontSize(12);
-    doc.text(`Billed To: ${invoice.retailerName}`, 14, 65);
+  const totalOfficialCost = useMemo(() => {
+    return filteredRequests.reduce((sum, r) => sum + (officialCosts[r.id] || 0), 0);
+  }, [filteredRequests, officialCosts]);
 
-    autoTable(doc, {
-      startY: 75,
-      head: [["Description", "Amount (INR)"]],
-      body: [[invoice.category, invoice.amount.toFixed(2)]],
-      foot: [["Total", invoice.amount.toFixed(2)]],
-      theme: "grid",
+  const netProfit = totalServiceCharge - totalOfficialCost;
+  const isProfitPositive = netProfit >= 0;
+
+  // Chart Data preparation
+  const chartData = useMemo(() => {
+    const groupedByTime: Record<string, { serviceCharge: number; officialCost: number; profit: number }> = {};
+
+    filteredRequests.forEach((req) => {
+      let timeKey = req.createdDate;
+      if (timeFilter === "month") {
+        timeKey = req.createdDate.substring(0, 7); // YYYY-MM
+      } else if (timeFilter === "year") {
+        timeKey = req.createdDate.substring(0, 4); // YYYY
+      }
+
+      const serviceCharge = req.cost;
+      const officialCost = getOfficialCost(req);
+      const profit = serviceCharge - officialCost;
+
+      if (!groupedByTime[timeKey]) {
+        groupedByTime[timeKey] = { serviceCharge: 0, officialCost: 0, profit: 0 };
+      }
+      groupedByTime[timeKey].serviceCharge += serviceCharge;
+      groupedByTime[timeKey].officialCost += officialCost;
+      groupedByTime[timeKey].profit += profit;
     });
 
-    doc.save(`${invoice.invoiceNumber}.pdf`);
-  };
-
-  const totalRevenue = invoices
-    .filter((i) => i.status === "Paid")
-    .reduce((sum, i) => sum + i.amount, 0);
-
-  const outstandingAmount = invoices
-    .filter((i) => i.status === "Pending")
-    .reduce((sum, i) => sum + i.amount, 0);
-
-  const overdueAmount = invoices
-    .filter((i) => i.status === "Overdue")
-    .reduce((sum, i) => sum + i.amount, 0);
+    return Object.keys(groupedByTime)
+      .sort()
+      .slice(-15)
+      .map((key) => ({
+        date: key,
+        "Service Charge": groupedByTime[key].serviceCharge,
+        "Official Cost": groupedByTime[key].officialCost,
+        "Net Profit": groupedByTime[key].profit,
+      }));
+  }, [filteredRequests, officialCosts, timeFilter]);
 
   return (
     <AppShell activePage="Billing">
-      <section className="flex flex-col gap-8 w-full">
+      <section className="flex flex-col gap-8 w-full pb-10">
         {/* Header Block */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-50 dark:border-slate-900/30 pb-6">
           <div className="space-y-1.5">
             <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
-              Billing & Invoices Hub
+              Billing
             </h2>
             <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed max-w-2xl">
-              Monitor payments received, draft business invoices, manage
-              outstanding subscription dues, and track bank UTR allocations.
+              Track the official service cost versus how much we charged to calculate net profit.
             </p>
           </div>
         </div>
 
         {/* Financial Metrics */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="p-6 rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 shadow-sm flex flex-col gap-2">
-            <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-              Paid Revenue
-            </span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-black text-slate-800 dark:text-white">
-                ₹
-                {totalRevenue.toLocaleString("en-IN", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="p-6 rounded-3xl bg-white dark:bg-[#0b101e] border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                Total Official Cost
               </span>
-              <span className="text-xs font-extrabold text-emerald-500 flex items-center gap-0.5">
-                <ArrowUpRight size={12} /> Settled
-              </span>
+              <div className="p-2 bg-slate-50 dark:bg-slate-900 rounded-lg text-slate-400">
+                <CreditCard size={16} />
+              </div>
             </div>
+            <span className="text-3xl font-black text-slate-800 dark:text-white">
+              ₹{totalOfficialCost.toLocaleString()}
+            </span>
           </div>
-          <div className="p-6 rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 shadow-sm flex flex-col gap-2">
-            <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-              Outstanding Dues
-            </span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-black text-slate-800 dark:text-white">
-                ₹
-                {outstandingAmount.toLocaleString("en-IN", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
+
+          <div className="p-6 rounded-3xl bg-white dark:bg-[#0b101e] border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                Total Service Charge (Revenue)
               </span>
-              <span className="text-xs font-extrabold text-amber-500 flex items-center gap-0.5">
-                <Clock size={12} /> Awaiting
-              </span>
+              <div className="p-2 bg-slate-50 dark:bg-slate-900 rounded-lg text-slate-400">
+                <DollarSign size={16} />
+              </div>
             </div>
+            <span className="text-3xl font-black text-slate-800 dark:text-white">
+              ₹{totalServiceCharge.toLocaleString()}
+            </span>
           </div>
-          <div className="p-6 rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 shadow-sm flex flex-col gap-2">
-            <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-              Overdue Invoices
-            </span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-black text-slate-800 dark:text-white">
-                ₹
-                {overdueAmount.toLocaleString("en-IN", {
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2,
-                })}
+
+          <div className="p-6 rounded-3xl bg-white dark:bg-[#0b101e] border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                Net Profit
               </span>
-              <span className="text-xs font-extrabold text-rose-500 flex items-center gap-0.5">
-                <ArrowDownRight size={12} /> Critical
-              </span>
+              <div
+                className={`p-2 rounded-lg ${
+                  isProfitPositive
+                    ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-500"
+                    : "bg-rose-50 dark:bg-rose-950/30 text-rose-500"
+                }`}
+              >
+                {isProfitPositive ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
+              </div>
             </div>
-          </div>
-          <div className="p-6 rounded-2xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 shadow-sm flex flex-col gap-2">
-            <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-              Collectability Rate
+            <span
+              className={`text-3xl font-black ${
+                isProfitPositive ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+              }`}
+            >
+              ₹{netProfit.toLocaleString()}
             </span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-black text-slate-800 dark:text-white">
-                {(
-                  (totalRevenue /
-                    (totalRevenue + outstandingAmount + overdueAmount || 1)) *
-                  100
-                ).toFixed(0)}
-                %
-              </span>
-              <span className="text-xs font-extrabold text-emerald-500">
-                Efficiency
-              </span>
-            </div>
           </div>
         </div>
 
-        {/* Filters and List */}
-        <div className="flex flex-col gap-6 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 rounded-3xl p-6 shadow-sm">
+        {/* Table Section */}
+        <div className="flex flex-col gap-6 bg-white dark:bg-[#0b101e] border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="relative flex-1 max-w-md">
-              <Search
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-600"
-                size={18}
-              />
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+              <Activity size={20} className="text-[#005c3a] dark:text-emerald-500" />
+              Completed Services
+            </h3>
+            <div className="relative max-w-sm w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
               <input
                 type="text"
-                placeholder="Search by client, invoice or UTR..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-[#005c3a]/50 dark:focus:ring-emerald-500/50"
+                placeholder="Search services..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-[#005c3a]/50"
               />
-            </div>
-
-            <div className="flex flex-wrap items-center gap-3">
-              <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-transparent text-sm font-semibold text-slate-600 dark:text-slate-300 focus:outline-none"
-              >
-                <option value="All">All Categories</option>
-                <option value="Service Charges">Service Charges</option>
-                <option value="Wallet Topup">Wallet Topup</option>
-                <option value="API Recharge">API Recharge</option>
-                <option value="Late Penalty">Late Penalty</option>
-              </select>
-
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-transparent text-sm font-semibold text-slate-600 dark:text-slate-300 focus:outline-none"
-              >
-                <option value="All">All Status</option>
-                <option value="Paid">Paid</option>
-                <option value="Pending">Pending</option>
-                <option value="Overdue">Overdue</option>
-              </select>
             </div>
           </div>
 
-          {/* Invoices Table */}
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-100 dark:border-slate-900 text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                  <th className="py-4 px-4">Invoice</th>
-                  <th className="py-4 px-4">Client</th>
-                  <th className="py-4 px-4">Category</th>
-                  <th className="py-4 px-4">Amount</th>
-                  <th className="py-4 px-4">Due Date</th>
-                  <th className="py-4 px-4">Status</th>
-                  <th className="py-4 px-4 text-right">Actions</th>
+                <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <th className="py-4 px-4">Date</th>
+                  <th className="py-4 px-4">Service Name</th>
+                  <th className="py-4 px-4 text-center">Service Charge</th>
+                  <th className="py-4 px-4 text-center">Official Cost</th>
+                  <th className="py-4 px-4 text-right">Profit</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-900 text-sm">
-                {filteredInvoices.length > 0 ? (
-                  filteredInvoices.map((invoice) => (
-                    <tr
-                      key={invoice.id}
-                      className="hover:bg-slate-50/50 dark:hover:bg-slate-900/10 transition-colors"
-                    >
-                      <td className="py-4 px-4">
-                        <div className="flex items-center gap-2">
-                          <FileText size={16} className="text-slate-400" />
-                          <div className="font-extrabold text-slate-800 dark:text-white">
-                            {invoice.invoiceNumber}
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={5} className="py-12 text-center text-slate-400 font-semibold">
+                      Loading data...
+                    </td>
+                  </tr>
+                ) : filteredRequests.length > 0 ? (
+                  filteredRequests.map((req) => {
+                    const offCost = getOfficialCost(req);
+                    const profit = req.cost - offCost;
+                    return (
+                      <tr key={req.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/20 transition-colors">
+                        <td className="py-4 px-4 font-semibold text-slate-500">{req.createdDate}</td>
+                        <td className="py-4 px-4 font-bold text-slate-800 dark:text-white">
+                          {req.serviceName}
+                        </td>
+                        <td className="py-4 px-4 text-center font-bold text-slate-600 dark:text-slate-300">
+                          ₹{req.cost.toLocaleString()}
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="flex items-center justify-center">
+                            <span className="text-slate-400 mr-2 font-bold">₹</span>
+                            <input
+                              type="number"
+                              min="0"
+                              value={officialCosts[req.id] || ""}
+                              onChange={(e) => handleOfficialCostChange(req.id, e.target.value)}
+                              placeholder="0"
+                              className="w-24 px-3 py-1.5 text-center font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0a0f18] text-slate-800 dark:text-white focus:outline-none focus:border-[#005c3a] dark:focus:border-emerald-500 shadow-sm"
+                            />
                           </div>
-                        </div>
-                        <div className="text-xs text-slate-400 font-semibold">
-                          {invoice.date}
-                        </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="font-extrabold text-slate-800 dark:text-white">
-                          {invoice.retailerName}
-                        </div>
-                        {invoice.utrNumber && (
-                          <div className="text-xs text-[#005c3a] dark:text-emerald-400 font-semibold">
-                            UTR: {invoice.utrNumber}
-                          </div>
-                        )}
-                      </td>
-                      <td className="py-4 px-4">
-                        <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                          {invoice.category}
-                        </span>
-                      </td>
-                      <td className="py-4 px-4 font-black text-slate-800 dark:text-white">
-                        ₹
-                        {invoice.amount.toLocaleString("en-IN", {
-                          minimumFractionDigits: 2,
-                        })}
-                      </td>
-                      <td className="py-4 px-4 font-semibold text-slate-500 dark:text-slate-400">
-                        {invoice.dueDate}
-                      </td>
-                      <td className="py-4 px-4">
-                        <span
-                          className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold ${
-                            invoice.status === "Paid"
-                              ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400"
-                              : invoice.status === "Pending"
-                                ? "bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400"
-                                : "bg-rose-50 dark:bg-rose-950/30 text-rose-600 dark:text-rose-400"
-                          }`}
-                        >
-                          {invoice.status === "Paid" ? (
-                            <CheckCircle size={10} />
-                          ) : invoice.status === "Pending" ? (
-                            <Clock size={10} />
-                          ) : (
-                            <AlertTriangle size={10} />
-                          )}
-                          {invoice.status}
-                        </span>
-                      </td>
-                      <td className="py-4 px-4 text-right">
-                        <button
-                          onClick={() => downloadInvoicePDF(invoice)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-[#005c3a] dark:hover:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                          title="Download PDF"
-                        >
-                          <Download size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                        </td>
+                        <td className="py-4 px-4 text-right font-black">
+                          <span className={profit >= 0 ? "text-emerald-500" : "text-rose-500"}>
+                            {profit > 0 ? "+" : ""}₹{profit.toLocaleString()}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
-                    <td
-                      colSpan={7}
-                      className="py-12 text-center text-slate-400 dark:text-slate-600 font-semibold"
-                    >
-                      No matching invoices found.
+                    <td colSpan={5} className="py-12 text-center text-slate-400 font-semibold">
+                      No completed services found.
                     </td>
                   </tr>
                 )}
@@ -458,136 +288,78 @@ export function BillingPage() {
             </table>
           </div>
         </div>
-      </section>
 
-      {/* Modal Form */}
-      {isFormOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-3xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 shadow-xl overflow-hidden">
-            <div className="px-6 py-5 border-b border-slate-100 dark:border-slate-900 flex items-center justify-between">
-              <h3 className="text-lg font-black text-slate-800 dark:text-white">
-                Create New Business Invoice
+        {/* Chart Section */}
+        {chartData.length > 0 && (
+          <div className="flex flex-col gap-6 bg-white dark:bg-[#0b101e] border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                <TrendingUp size={20} className="text-[#005c3a] dark:text-emerald-500" />
+                Profit Analysis Chart
               </h3>
-              <button
-                onClick={() => setIsFormOpen(false)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 text-sm font-black"
-              >
-                ✕
-              </button>
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900/50 p-1 rounded-xl">
+                <button
+                  onClick={() => setTimeFilter("day")}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                    timeFilter === "day"
+                      ? "bg-white dark:bg-slate-800 shadow-sm text-emerald-600 dark:text-emerald-400"
+                      : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                  }`}
+                >
+                  Day
+                </button>
+                <button
+                  onClick={() => setTimeFilter("month")}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                    timeFilter === "month"
+                      ? "bg-white dark:bg-slate-800 shadow-sm text-emerald-600 dark:text-emerald-400"
+                      : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                  }`}
+                >
+                  Month
+                </button>
+                <button
+                  onClick={() => setTimeFilter("year")}
+                  className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                    timeFilter === "year"
+                      ? "bg-white dark:bg-slate-800 shadow-sm text-emerald-600 dark:text-emerald-400"
+                      : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                  }`}
+                >
+                  Year
+                </button>
+              </div>
             </div>
-            <form onSubmit={handleAddInvoice} className="p-6 space-y-4">
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase">
-                  Client / Retailer Name
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={retailerName}
-                  onChange={(e) => setRetailerName(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-transparent text-sm"
-                  placeholder="e.g. Priyan Sharma"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase">
-                    Amount (INR)
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    required
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-transparent text-sm"
-                    placeholder="0.00"
+            <div className="w-full h-80 mt-4">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.3} />
+                  <XAxis dataKey="date" tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "#0f172a", border: "none", borderRadius: "12px", color: "#fff" }}
+                    itemStyle={{ fontWeight: "bold" }}
                   />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase">
-                    Due Date
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={dueDate}
-                    onChange={(e) => setDueDate(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-transparent text-sm"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase">
-                    Invoice Category
-                  </label>
-                  <select
-                    value={category}
-                    onChange={(e) =>
-                      setCategory(e.target.value as Invoice["category"])
-                    }
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-sm"
-                  >
-                    <option value="Service Charges">Service Charges</option>
-                    <option value="Wallet Topup">Wallet Topup</option>
-                    <option value="API Recharge">API Recharge</option>
-                    <option value="Late Penalty">Late Penalty</option>
-                  </select>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase">
-                    Payment Status
-                  </label>
-                  <select
-                    value={status}
-                    onChange={(e) =>
-                      setStatus(e.target.value as Invoice["status"])
-                    }
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-sm"
-                  >
-                    <option value="Pending">Pending</option>
-                    <option value="Paid">Paid</option>
-                    <option value="Overdue">Overdue</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase">
-                  UTR / Reference Number (Optional)
-                </label>
-                <input
-                  type="text"
-                  value={utrNumber}
-                  onChange={(e) => setUtrNumber(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-transparent text-sm"
-                  placeholder="Bank payment transaction UTR reference"
-                />
-              </div>
-
-              <div className="pt-4 flex items-center justify-end gap-3 border-t border-slate-100 dark:border-slate-900">
-                <button
-                  type="button"
-                  onClick={() => setIsFormOpen(false)}
-                  className="px-4 py-2 rounded-xl text-slate-500 dark:text-slate-400 text-sm font-bold hover:bg-slate-50 dark:hover:bg-slate-900"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-5 py-2.5 rounded-xl bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] dark:hover:bg-emerald-500 text-white text-sm font-extrabold disabled:opacity-50"
-                >
-                  {isSubmitting ? "Drafting..." : "Draft Invoice"}
-                </button>
-              </div>
-            </form>
+                  <Legend wrapperStyle={{ paddingTop: "20px" }} />
+                  <Area type="monotone" dataKey="Service Charge" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
+                  <Line type="monotone" dataKey="Official Cost" stroke="#ef4444" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+                  <Area type="monotone" dataKey="Net Profit" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorProfit)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </section>
     </AppShell>
   );
 }

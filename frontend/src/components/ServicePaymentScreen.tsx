@@ -7,6 +7,8 @@ interface ServicePaymentScreenProps {
   serviceId?: string;
   serviceName: string;
   retailerCharge: number;
+  formData?: Record<string, string>;
+  files?: File[];
   onBack: () => void;
   onSuccess: (customerWhatsApp?: string) => void;
 }
@@ -15,47 +17,51 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
   serviceId,
   serviceName,
   retailerCharge,
+  formData,
+  files,
   onBack,
   onSuccess,
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<"wallet" | "gateway">(
-    "wallet",
-  );
-  const [upiId, setUpiId] = useState("");
   const [customerWhatsApp, setCustomerWhatsApp] = useState("");
+
   const [error, setError] = useState("");
-  const { user } = useAuth();
+  const { user, updateWallet } = useAuth();
   const walletBalance = user?.walletBalance || 0;
 
   const handlePaymentSubmit = async () => {
-    if (paymentMethod === "wallet" && walletBalance < retailerCharge) {
+    if (walletBalance < retailerCharge) {
       setError(`Insufficient wallet balance (₹${walletBalance.toFixed(2)}). Please add funds to your wallet to proceed.`);
       return;
     }
 
-    if (paymentMethod === "gateway" && !upiId.trim()) {
-      setError("Please enter a valid UPI ID");
-      return;
-    }
     setError("");
     setIsSubmitting(true);
 
     try {
       const apiUrl = `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api`;
-      const reqBody = {
-        retailerId: user?.id || "unknown_retailer",
-        serviceId: serviceId || serviceName.toLowerCase().replace(/\s+/g, "_"),
-        serviceName: serviceName,
-        cost: retailerCharge,
-        customerWhatsApp: customerWhatsApp.trim(),
-        walletType: "Main"
-      };
+      
+      const submitData = new FormData();
+      submitData.append("retailerId", user?.id || "unknown_retailer");
+      submitData.append("serviceId", serviceId || serviceName.toLowerCase().replace(/\s+/g, "_"));
+      submitData.append("serviceName", serviceName);
+      submitData.append("cost", String(retailerCharge));
+      submitData.append("customerWhatsApp", customerWhatsApp.trim());
+      submitData.append("walletType", "Main");
+      
+      if (formData) {
+        submitData.append("formData", JSON.stringify(formData));
+      }
+      
+      if (files) {
+        files.forEach((file) => {
+          submitData.append("documents", file);
+        });
+      }
 
       const res = await fetch(`${apiUrl}/services/request`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(reqBody)
+        body: submitData
       });
 
       if (!res.ok) {
@@ -64,6 +70,9 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
         setIsSubmitting(false);
         return;
       }
+
+      // Update local wallet balance since payment is always via wallet
+      updateWallet(walletBalance - retailerCharge);
 
       setIsSubmitting(false);
       onSuccess(customerWhatsApp.trim() || undefined);
@@ -101,74 +110,19 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
           <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider pl-2">
             Select Payment Option
           </label>
-          <div className="grid grid-cols-2 gap-3">
-            <label
-              onClick={() => {
-                setPaymentMethod("wallet");
-                setError("");
-              }}
-              className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                paymentMethod === "wallet"
-                  ? "border-[#005c3a] bg-[#005c3a]/5 dark:border-emerald-600 dark:bg-emerald-950/20"
-                  : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-[#131926] opacity-60 hover:opacity-100"
-              }`}
-            >
-              <input
-                type="radio"
-                name="paymentMethod"
-                value="wallet"
-                className="sr-only"
-                checked={paymentMethod === "wallet"}
-                readOnly
-              />
-              <Wallet
-                size={20}
-                className={`mb-2 ${paymentMethod === "wallet" ? "text-[#005c3a] dark:text-emerald-400" : "text-slate-400"}`}
-              />
-              <span
-                className={`text-xs font-extrabold uppercase tracking-wider text-center ${paymentMethod === "wallet" ? "text-[#005c3a] dark:text-emerald-400" : "text-slate-500"}`}
-              >
+          <div className="p-4 rounded-xl border-2 border-[#005c3a] bg-[#005c3a]/5 dark:border-emerald-600 dark:bg-emerald-950/20 flex items-center gap-3">
+            <Wallet
+              size={24}
+              className="text-[#005c3a] dark:text-emerald-400"
+            />
+            <div className="flex flex-col">
+              <span className="text-xs font-extrabold uppercase tracking-wider text-[#005c3a] dark:text-emerald-400">
                 Main Wallet
               </span>
-            </label>
-            <label
-              onClick={() => {
-                setPaymentMethod("gateway");
-                setError("");
-              }}
-              className={`flex flex-col items-center justify-center p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                paymentMethod === "gateway"
-                  ? "border-[#005c3a] bg-[#005c3a]/5 dark:border-emerald-600 dark:bg-emerald-950/20"
-                  : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white dark:bg-[#131926] opacity-60 hover:opacity-100"
-              }`}
-            >
-              <input
-                type="radio"
-                name="paymentMethod"
-                value="gateway"
-                className="sr-only"
-                checked={paymentMethod === "gateway"}
-                readOnly
-              />
-              <svg
-                className={`w-5 h-5 mb-2 ${paymentMethod === "gateway" ? "text-[#005c3a] dark:text-emerald-400" : "text-slate-400"}`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                />
-              </svg>
-              <span
-                className={`text-[10px] font-extrabold uppercase tracking-wider text-center ${paymentMethod === "gateway" ? "text-[#005c3a] dark:text-emerald-400" : "text-slate-500"}`}
-              >
-                Online Gateway
+              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                Amount will be automatically deducted
               </span>
-            </label>
+            </div>
           </div>
 
           <div className="mt-2 p-3 bg-blue-50/50 dark:bg-blue-900/10 rounded-xl border border-blue-100 dark:border-blue-900/30">
@@ -188,42 +142,10 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
             </p>
           </div>
 
-          {paymentMethod === "gateway" && (
-            <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-xl border border-slate-200 dark:border-slate-800 animate-in fade-in slide-in-from-top-2">
-              <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
-                Enter UPI ID
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. user@okicici"
-                value={upiId}
-                onChange={(e) => {
-                  setUpiId(e.target.value);
-                  setError("");
-                }}
-                className={`w-full px-4 py-2.5 rounded-lg border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#005c3a]/15 bg-white dark:bg-[#0a0f18]/30 transition-all ${
-                  error && paymentMethod === 'gateway' ? "border-rose-400 dark:border-rose-500/50" : "border-slate-200 dark:border-slate-800 focus:border-[#005c3a]"
-                }`}
-              />
-              <p className="text-[9px] text-slate-400 dark:text-slate-500 mt-2 font-medium">
-                You will receive a payment request on your UPI app. Approve it
-                to proceed.
-              </p>
-            </div>
-          )}
-
-          {error && (
-            <div className="mt-4 p-3 bg-rose-50 dark:bg-rose-950/20 rounded-xl border border-rose-200 dark:border-rose-900/30 flex items-start gap-2 text-rose-600 dark:text-rose-400">
-              <AlertCircle size={16} className="shrink-0 mt-0.5" />
-              <div className="flex flex-col gap-1.5">
-                <span className="text-xs font-semibold">{error}</span>
-                {paymentMethod === "wallet" && walletBalance < retailerCharge && (
-                  <Link href="/wallets" className="text-[10px] font-extrabold uppercase tracking-wider underline underline-offset-2 hover:text-rose-700 dark:hover:text-rose-300 w-fit">
-                    Go to Wallet to Add Funds
-                  </Link>
-                )}
-              </div>
-            </div>
+          {walletBalance < retailerCharge && (
+            <Link href="/wallets" className="text-[10px] font-extrabold uppercase tracking-wider underline underline-offset-2 hover:text-rose-700 dark:hover:text-rose-300 w-fit">
+              Go to Wallet to Add Funds
+            </Link>
           )}
         </div>
       </div>

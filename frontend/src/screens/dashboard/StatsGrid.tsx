@@ -1,4 +1,4 @@
-import { stats } from "../../config/data";
+import { stats as statsData } from "../../config/data";
 import {
   Clock,
   Zap,
@@ -8,7 +8,7 @@ import {
   Cpu,
 } from "lucide-react";
 
-export function StatsGrid() {
+export function StatsGrid({ stats }: { stats?: any }) {
   const iconMap: Record<string, any> = {
     "today payment": Zap,
     pending: Clock,
@@ -39,7 +39,7 @@ export function StatsGrid() {
 
   return (
     <>
-      {stats.map((stat) => {
+      {statsData.map((stat) => {
         const labelLower = stat.label.toLowerCase();
         const Icon = iconMap[labelLower] || Zap;
         const description = descMap[labelLower] || "Stat overview";
@@ -47,6 +47,18 @@ export function StatsGrid() {
           cardBg[stat.tone] || "bg-gradient-to-br from-slate-500 to-slate-400";
         const isMoney =
           labelLower.includes("payment") || labelLower.includes("collection");
+          
+        let dynamicValue = stat.value;
+        if (stats) {
+          if (labelLower === "today payment") dynamicValue = stats.todayPayment?.toFixed(2) || "0.00";
+          if (labelLower === "pending") dynamicValue = String(stats.pending || 0);
+          if (labelLower === "approved") dynamicValue = String(stats.approved || 0);
+          if (labelLower === "projected") dynamicValue = stats.projected?.toFixed(2) || "0.00";
+        }
+
+        if (labelLower === "in process" || labelLower === "resubmit") {
+          return null;
+        }
 
         return (
           <article
@@ -63,7 +75,7 @@ export function StatsGrid() {
                     ₹
                   </span>
                 )}
-                {stat.value}
+                {dynamicValue}
               </strong>
               <span className="text-[10px] text-white/70 font-semibold block truncate">
                 {description}

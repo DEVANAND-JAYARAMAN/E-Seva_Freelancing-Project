@@ -16,7 +16,7 @@ export const AadhaarToPdf: React.FC<AadhaarToPdfProps> = ({ onCancel }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
 
@@ -138,7 +138,7 @@ export const AadhaarToPdf: React.FC<AadhaarToPdfProps> = ({ onCancel }) => {
               value={formData.fullName}
               error={errors.fullName}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("fullName", val)}
+              onChange={(val, file) => handleFieldChange("fullName", val, file)}
             />
           </div>
 

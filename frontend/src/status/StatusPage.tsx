@@ -47,11 +47,11 @@ const seedTickets: StatusTicket[] = [
     serviceName: "Voter Card Correction",
     retailerName: "Priya Sharma",
     amount: 80.0,
-    status: "Resubmit",
+    status: "Pending",
     createdDate: "2026-05-21",
     lastUpdated: "2026-05-22",
     remarks:
-      "Incomplete profile. Please upload a clear photo copy of address proof.",
+      "Awaiting processing.",
     userRole: "Retailer",
   },
   {
@@ -60,7 +60,7 @@ const seedTickets: StatusTicket[] = [
     serviceName: "Income Certificate E-Seva",
     retailerName: "Deva",
     amount: 150.0,
-    status: "Processing",
+    status: "Pending",
     createdDate: "2026-05-22",
     lastUpdated: "2026-05-22",
     remarks: "Sent to local Tahsildar department for verifying signatures.",
@@ -94,17 +94,23 @@ export function StatusPage() {
       const res = await fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/requests`);
       if (res.ok) {
         const data = await res.json();
+        const sortedData = (data || []).sort((a: any, b: any) => 
+          new Date(b.createdDate || b.CreatedDate || "").getTime() - new Date(a.createdDate || a.CreatedDate || "").getTime()
+        );
         // map backend model to StatusTicket
-        const mapped: StatusTicket[] = (data || []).map((app: any) => ({
-          id: app.id,
-          transactionId: app.id,
-          serviceName: app.serviceName,
-          retailerName: app.retailerId, // maybe map retailer name later
-          amount: app.cost,
-          status: app.status as TicketStatus,
-          createdDate: app.createdAt.split("T")[0],
-          lastUpdated: app.lastUpdated.split("T")[0],
-          remarks: app.adminRemarks || "No remarks.",
+        const mapped: StatusTicket[] = sortedData.map((app: any) => ({
+          id: app.id || app.Id,
+          transactionId: app.id || app.Id,
+          serviceName: app.serviceName || app.ServiceName || "Unknown Service",
+          retailerName: app.retailerId || app.RetailerId || "Unknown", 
+          amount: app.cost || app.Cost || 0,
+          status: (app.status || app.Status || "Pending") as TicketStatus,
+          createdDate: (app.createdDate || app.CreatedDate || "").split("T")[0],
+          lastUpdated: (app.lastUpdated || app.LastUpdated || "").split("T")[0],
+          remarks: app.adminRemarks || app.AdminRemarks || "No remarks.",
+          formData: typeof (app.formData || app.FormData) === "string" ? JSON.parse(app.formData || app.FormData || "{}") : (app.formData || app.FormData || {}),
+          documents: typeof (app.documents || app.Documents) === "string" ? JSON.parse(app.documents || app.Documents || "[]") : (app.documents || app.Documents || []),
+          ackFiles: typeof (app.ackFiles || app.AckFiles) === "string" ? JSON.parse(app.ackFiles || app.AckFiles || "[]") : (app.ackFiles || app.AckFiles || []),
         }));
         setTickets(mapped);
       }
@@ -124,12 +130,22 @@ export function StatusPage() {
     id: string,
     newStatus: TicketStatus,
     remarks: string,
+    ackFiles?: File[]
   ) => {
     try {
+      const formData = new FormData();
+      formData.append("status", newStatus);
+      formData.append("adminRemarks", remarks);
+      
+      if (ackFiles && ackFiles.length > 0) {
+        ackFiles.forEach(file => {
+          formData.append("ackFiles", file);
+        });
+      }
+
       const res = await fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/${id}/status`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus, adminRemarks: remarks }),
+        body: formData,
       });
       if (res.ok) {
         fetchTickets(); // Refresh data
@@ -159,19 +175,11 @@ export function StatusPage() {
             </h2>
             <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed max-w-2xl">
               Seamlessly track, manage, and transition the operational lifecycle
-              of service requests across five standard stages:{" "}
+              of service requests across standard stages:{" "}
               <strong className="font-extrabold text-slate-700 dark:text-slate-300">
                 Pending
               </strong>{" "}
               review,{" "}
-              <strong className="font-extrabold text-slate-700 dark:text-slate-300">
-                Resubmission
-              </strong>{" "}
-              required, active{" "}
-              <strong className="font-extrabold text-slate-700 dark:text-slate-300">
-                Processing
-              </strong>
-              ,{" "}
               <strong className="font-extrabold text-slate-700 dark:text-slate-300">
                 Rejected
               </strong>

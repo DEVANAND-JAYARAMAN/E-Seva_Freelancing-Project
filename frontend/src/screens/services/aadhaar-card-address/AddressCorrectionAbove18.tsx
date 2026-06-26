@@ -47,10 +47,15 @@ export const AddressCorrectionAbove18: React.FC<
   const [paymentPhase, setPaymentPhase] = useState<
     "form" | "payment" | "success"
   >("form");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
+
+      if (file) {
+        setSelectedFiles((prev) => [...prev, file]);
+      }
 
       // Live validation on edit
       if (errors[name]) {
@@ -245,6 +250,8 @@ export const AddressCorrectionAbove18: React.FC<
           serviceId="aadhaar_address_update"
           serviceName="Address Correction (above 18)"
           retailerCharge={100} // Hardcoded or imported from config
+          formData={formData}
+          files={selectedFiles}
           onBack={() => setPaymentPhase("form")}
           onSuccess={handlePaymentSuccess}
         />
@@ -318,7 +325,7 @@ export const AddressCorrectionAbove18: React.FC<
               value={formData.applicantName}
               error={errors.applicantName}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("applicantName", val)}
+              onChange={(val, file) => handleFieldChange("applicantName", val, file)}
             />
           </div>
 
@@ -331,7 +338,7 @@ export const AddressCorrectionAbove18: React.FC<
               value={formData.doorNo}
               error={errors.doorNo}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("doorNo", val)}
+              onChange={(val, file) => handleFieldChange("doorNo", val, file)}
             />
           </div>
 
@@ -344,7 +351,7 @@ export const AddressCorrectionAbove18: React.FC<
               value={formData.addressEnglish}
               error={errors.addressEnglish}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("addressEnglish", val)}
+              onChange={(val, file) => handleFieldChange("addressEnglish", val, file)}
             />
           </div>
 
@@ -356,7 +363,7 @@ export const AddressCorrectionAbove18: React.FC<
               value={formData.addressTamil}
               error={errors.addressTamil}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("addressTamil", val)}
+              onChange={(val, file) => handleFieldChange("addressTamil", val, file)}
             />
           </div>
 
@@ -369,7 +376,7 @@ export const AddressCorrectionAbove18: React.FC<
               value={formData.district}
               error={errors.district}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("district", val)}
+              onChange={(val, file) => handleFieldChange("district", val, file)}
             />
           </div>
 
@@ -382,7 +389,7 @@ export const AddressCorrectionAbove18: React.FC<
               value={formData.taluk}
               error={errors.taluk}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("taluk", val)}
+              onChange={(val, file) => handleFieldChange("taluk", val, file)}
             />
           </div>
 
@@ -396,7 +403,7 @@ export const AddressCorrectionAbove18: React.FC<
               value={formData.postalArea}
               error={errors.postalArea}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("postalArea", val)}
+              onChange={(val, file) => handleFieldChange("postalArea", val, file)}
             />
           </div>
 
@@ -424,7 +431,7 @@ export const AddressCorrectionAbove18: React.FC<
               value={formData.photo}
               error={errors.photo}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("photo", val)}
+              onChange={(val, file) => handleFieldChange("photo", val, file)}
             />
           </div>
 
@@ -436,7 +443,7 @@ export const AddressCorrectionAbove18: React.FC<
               value={formData.signature}
               error={errors.signature}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("signature", val)}
+              onChange={(val, file) => handleFieldChange("signature", val, file)}
             />
           </div>
 
@@ -449,7 +456,7 @@ export const AddressCorrectionAbove18: React.FC<
               value={formData.aadhaarCard}
               error={errors.aadhaarCard}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("aadhaarCard", val)}
+              onChange={(val, file) => handleFieldChange("aadhaarCard", val, file)}
             />
           </div>
         </div>

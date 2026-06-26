@@ -19,7 +19,7 @@ export const UpdateCellNumberWithOtp: React.FC<UpdateCellNumberWithOtpProps> = (
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
       
@@ -167,7 +167,7 @@ export const UpdateCellNumberWithOtp: React.FC<UpdateCellNumberWithOtpProps> = (
               value={formData.nameAsPerAadhaar}
               error={errors.nameAsPerAadhaar}
               disabled={isSubmitting || otpSent}
-              onChange={(val) => handleFieldChange("nameAsPerAadhaar", val)}
+              onChange={(val, file) => handleFieldChange("nameAsPerAadhaar", val, file)}
             />
           </div>
 

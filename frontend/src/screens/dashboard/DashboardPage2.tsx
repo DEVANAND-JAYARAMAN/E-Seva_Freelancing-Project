@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AppShell } from "../../layouts/AppShell";
 import { useAuth } from "../../store/context/AuthContext";
 import {
@@ -22,7 +22,7 @@ export function DashboardPage2({
 }: {
   forceRole?: "retailer" | "distributor";
 }) {
-  const { user: contextUser, updateWallet } = useAuth();
+  const { user: contextUser, updateWallet, refreshProfile } = useAuth();
   const user = forceRole ? { ...contextUser, role: forceRole } : contextUser;
 
   // State for wallet request popup
@@ -53,44 +53,36 @@ export function DashboardPage2({
     setRequestUtr("");
   };
 
-  // Exact mock list of transactions matching screenshot status log
-  const mockTransactions = [
-    {
-      id: "TXN-901",
-      service: "Aadhaar Address Update",
-      date: "Today, 04:30 PM",
-      amount: "₹200.00",
-      status: "Approved",
-    },
-    {
-      id: "TXN-902",
-      service: "PAN Card Application",
-      date: "Today, 11:15 AM",
-      amount: "₹120.00",
-      status: "Pending",
-    },
-    {
-      id: "TXN-903",
-      service: "Electricity Bill Payment",
-      date: "Yesterday, 06:12 PM",
-      amount: "₹1,450.00",
-      status: "Inprocess",
-    },
-    {
-      id: "TXN-904",
-      service: "Voter Card Correction",
-      date: "2 days ago",
-      amount: "₹150.00",
-      status: "Resubmit",
-    },
-    {
-      id: "TXN-905",
-      service: "Income Tax Return filing",
-      date: "3 days ago",
-      amount: "₹450.00",
-      status: "Rejected",
-    },
-  ];
+  const [allRequests, setAllRequests] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Silently refresh wallet balance upon visiting dashboard
+    refreshProfile();
+  }, [refreshProfile]);
+
+  useEffect(() => {
+    // Fetch live requests specific to user
+    const userFilter = user?.id ? `?userId=${user.id}` : "";
+    fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/requests${userFilter}`)
+      .then(res => res.json())
+      .then(data => {
+        const dataArray = Array.isArray(data) ? data : [];
+        const sorted = dataArray.sort((a: any, b: any) => 
+          new Date(b.createdDate || "").getTime() - new Date(a.createdDate || "").getTime()
+        ).slice(0, 5); // top 5 recent
+        setAllRequests(dataArray);
+      })
+      .catch(console.error);
+  }, [user]);
+
+    const pendingCount = allRequests.filter(r => r.status === "Pending").length;
+  const rejectedCount = allRequests.filter(r => r.status === "Rejected").length;
+  const approvedCount = allRequests.filter(r => r.status === "Approved" || r.status === "Completed").length;
+  const totalCount = allRequests.length;
+
+  const recentTransactions = [...allRequests].sort((a: any, b: any) => 
+    new Date(b.createdDate || "").getTime() - new Date(a.createdDate || "").getTime()
+  ).slice(0, 5);
 
   return (
     <AppShell activePage="Dashboard">
@@ -141,50 +133,14 @@ export function DashboardPage2({
                 Pending
               </p>
               <strong className="block text-2xl font-black text-slate-900 dark:text-white">
-                0
+                {pendingCount}
               </strong>
               <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
                 Awaiting Verification
               </span>
             </div>
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-purple-55 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400 bg-purple-50">
-              <Clock size={18} />
-            </span>
-          </article>
-
-          {/* Card 2: INPROCESS */}
-          <article className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
-            <div className="space-y-1">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                Inprocess
-              </p>
-              <strong className="block text-2xl font-black text-slate-900 dark:text-white">
-                0
-              </strong>
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
-                Currently Processing
-              </span>
-            </div>
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400">
-              <Zap size={18} />
-            </span>
-          </article>
-
-          {/* Card 3: RESUBMIT */}
-          <article className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
-            <div className="space-y-1">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                Resubmit
-              </p>
-              <strong className="block text-2xl font-black text-slate-900 dark:text-white">
-                0
-              </strong>
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
-                Needs Correction
-              </span>
-            </div>
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-teal-50 dark:bg-teal-950/20 text-teal-600 dark:text-teal-400">
-              <RefreshCw size={18} />
+              <Clock size={18} />
             </span>
           </article>
 
@@ -195,7 +151,7 @@ export function DashboardPage2({
                 Rejected
               </p>
               <strong className="block text-2xl font-black text-slate-900 dark:text-white">
-                0
+                {rejectedCount}
               </strong>
               <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
                 Declined Submissions
@@ -213,7 +169,7 @@ export function DashboardPage2({
                 Approved
               </p>
               <strong className="block text-2xl font-black text-slate-900 dark:text-white">
-                0
+                {approvedCount}
               </strong>
               <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
                 Completed Requests
@@ -226,8 +182,7 @@ export function DashboardPage2({
 
           {/* Card 6: WALLET */}
           <article
-            onClick={() => setShowRequestModal(true)}
-            className="cursor-pointer flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300"
+            className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300"
           >
             <div className="space-y-1">
               <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
@@ -236,8 +191,8 @@ export function DashboardPage2({
               <strong className="block text-2xl font-black text-slate-900 dark:text-white">
                 ₹
                 {user?.walletBalance !== undefined
-                  ? user.walletBalance.toFixed(2)
-                  : "2895.00"}
+                  ? Number(user.walletBalance).toFixed(2)
+                  : "0.00"}
               </strong>
               <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
                 Available balance
@@ -248,35 +203,17 @@ export function DashboardPage2({
             </span>
           </article>
 
-          {/* Card 7: WALLET REQUEST */}
+          {/* Card 8: TOTAL APPLICATIONS */}
           <article className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
             <div className="space-y-1">
               <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                Wallet Request
+                Applications
               </p>
               <strong className="block text-2xl font-black text-slate-900 dark:text-white">
-                0
+                {totalCount}
               </strong>
               <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
-                Pending approvals
-              </span>
-            </div>
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sky-50 dark:bg-sky-950/20 text-sky-600 dark:text-sky-405">
-              <CircleDollarSign size={18} />
-            </span>
-          </article>
-
-          {/* Card 8: CUSTOMERS */}
-          <article className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
-            <div className="space-y-1">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                Customers
-              </p>
-              <strong className="block text-2xl font-black text-slate-900 dark:text-white">
-                0
-              </strong>
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
-                Subscribed Clients
+                Total Submitted
               </span>
             </div>
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-950/20 text-blue-655 dark:text-blue-400">
@@ -292,10 +229,10 @@ export function DashboardPage2({
                   Retailers
                 </p>
                 <strong className="block text-2xl font-black text-slate-900 dark:text-white">
-                  12
+                  Active
                 </strong>
                 <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
-                  Registered Agents
+                  Network Partners
                 </span>
               </div>
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-orange-50 dark:bg-orange-950/20 text-orange-600 dark:text-orange-400">
@@ -304,22 +241,6 @@ export function DashboardPage2({
             </article>
           )}
         </section>
-
-        {/* Notifications Ribbon Alert */}
-        {notifications.length > 0 && (
-          <div className="bg-[#e8f5e9]/50 dark:bg-emerald-950/10 border border-emerald-100/60 dark:border-emerald-900/20 rounded-2xl p-4 flex gap-3 items-start animate-pulse">
-            <CheckCircle
-              className="text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5"
-              size={16}
-            />
-            <div className="flex-1 text-xs font-bold text-emerald-800 dark:text-emerald-350">
-              <span className="uppercase tracking-wider mr-2 text-[10px] bg-emerald-100 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded">
-                Latest Alert
-              </span>
-              {notifications[0]}
-            </div>
-          </div>
-        )}
 
         {/* Our Services Status Table section */}
         <section className="bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 shadow-sm">
@@ -334,7 +255,9 @@ export function DashboardPage2({
           </div>
 
           <div className="mt-6 space-y-4">
-            {mockTransactions.map((txn) => {
+            {recentTransactions.length === 0 ? (
+              <div className="text-center p-4 text-sm text-slate-500">No recent transactions found</div>
+            ) : recentTransactions.map((txn) => {
               // Exact colors matched to standard stages
               const statusColors: Record<string, string> = {
                 Approved:
@@ -343,26 +266,39 @@ export function DashboardPage2({
                   "bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/20",
                 Inprocess:
                   "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/20",
+                Processing:
+                  "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/20",
                 Resubmit:
                   "bg-purple-50 dark:bg-purple-950/30 text-purple-650 dark:text-purple-400 border border-purple-100 dark:border-purple-900/20",
                 Rejected:
                   "bg-red-50 dark:bg-red-950/30 text-red-500 dark:text-red-405 border border-red-100 dark:border-red-900/20",
+                Completed:
+                  "bg-teal-50 dark:bg-teal-950/30 text-teal-600 dark:text-teal-400 border border-teal-100 dark:border-teal-900/20",
               };
               const colorClass =
                 statusColors[txn.status] || "bg-slate-50 text-slate-600";
 
-              return (
+                const pendingCount = allRequests.filter(r => r.status === "Pending").length;
+  const rejectedCount = allRequests.filter(r => r.status === "Rejected").length;
+  const approvedCount = allRequests.filter(r => r.status === "Approved" || r.status === "Completed").length;
+  const totalCount = allRequests.length;
+
+  const recentTransactions = [...allRequests].sort((a: any, b: any) => 
+    new Date(b.createdDate || "").getTime() - new Date(a.createdDate || "").getTime()
+  ).slice(0, 5);
+
+  return (
                 <div
                   key={txn.id}
                   className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 border border-slate-50 dark:border-slate-900/50 rounded-2xl hover:bg-slate-50/50 dark:hover:bg-slate-900/10 transition-colors duration-200"
                 >
                   <div className="flex items-center gap-3">
                     <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-650 dark:text-slate-400">
-                      {txn.status === "Approved" ? (
+                      {txn.status === "Approved" || txn.status === "Completed" ? (
                         <CheckCircle size={16} className="text-emerald-500" />
                       ) : txn.status === "Pending" ? (
                         <Clock size={16} className="text-amber-500" />
-                      ) : txn.status === "Inprocess" ? (
+                      ) : txn.status === "Inprocess" || txn.status === "Processing" ? (
                         <Zap size={16} className="text-blue-500" />
                       ) : txn.status === "Resubmit" ? (
                         <RefreshCw size={16} className="text-purple-500" />
@@ -372,10 +308,10 @@ export function DashboardPage2({
                     </span>
                     <div>
                       <h4 className="text-sm font-bold text-slate-800 dark:text-white">
-                        {txn.service}
+                        {txn.serviceName || txn.service}
                       </h4>
                       <span className="text-[10px] text-slate-400 dark:text-slate-550 font-semibold block mt-0.5">
-                        {txn.date}
+                        {txn.createdDate ? new Date(txn.createdDate).toLocaleDateString() : txn.date}
                       </span>
                     </div>
                   </div>
@@ -383,7 +319,7 @@ export function DashboardPage2({
                   <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
                     <div className="text-left sm:text-right">
                       <span className="block text-sm font-extrabold text-slate-900 dark:text-white">
-                        {txn.amount}
+                        ₹{txn.cost || txn.amount || "0.00"}
                       </span>
                       <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold tracking-widest block mt-0.5 font-mono">
                         {txn.id}

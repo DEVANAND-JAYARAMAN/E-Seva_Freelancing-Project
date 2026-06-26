@@ -18,7 +18,7 @@ export const CanDeleteForm: React.FC<CanDeleteFormProps> = ({ onCancel }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
       if (errors[name]) {
@@ -148,7 +148,7 @@ export const CanDeleteForm: React.FC<CanDeleteFormProps> = ({ onCancel }) => {
                   value={formData.canNumber}
                   error={errors.canNumber}
                   disabled={isSubmitting}
-                  onChange={(val) => handleFieldChange("canNumber", val)}
+                  onChange={(val, file) => handleFieldChange("canNumber", val, file)}
                 />
               </div>
 
@@ -178,7 +178,7 @@ export const CanDeleteForm: React.FC<CanDeleteFormProps> = ({ onCancel }) => {
                   value={formData.aadhaarPdf}
                   error={errors.aadhaarPdf}
                   disabled={isSubmitting}
-                  onChange={(val) => handleFieldChange("aadhaarPdf", val)}
+                  onChange={(val, file) => handleFieldChange("aadhaarPdf", val, file)}
                 />
               </div>
 
@@ -190,7 +190,7 @@ export const CanDeleteForm: React.FC<CanDeleteFormProps> = ({ onCancel }) => {
                   value={formData.eshramPdf}
                   error={errors.eshramPdf}
                   disabled={isSubmitting}
-                  onChange={(val) => handleFieldChange("eshramPdf", val)}
+                  onChange={(val, file) => handleFieldChange("eshramPdf", val, file)}
                 />
               </div>
             </div>

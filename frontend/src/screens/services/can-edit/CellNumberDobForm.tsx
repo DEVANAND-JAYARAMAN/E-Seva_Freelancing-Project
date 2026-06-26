@@ -21,7 +21,7 @@ export const CellNumberDobForm: React.FC<CellNumberDobFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
       if (errors[name]) {
@@ -161,7 +161,7 @@ export const CellNumberDobForm: React.FC<CellNumberDobFormProps> = ({
                   value={formData.district}
                   error={errors.district}
                   disabled={isSubmitting}
-                  onChange={(val) => handleFieldChange("district", val)}
+                  onChange={(val, file) => handleFieldChange("district", val, file)}
                 />
               </div>
 
@@ -197,7 +197,7 @@ export const CellNumberDobForm: React.FC<CellNumberDobFormProps> = ({
                   value={formData.canNumber}
                   error={errors.canNumber}
                   disabled={isSubmitting}
-                  onChange={(val) => handleFieldChange("canNumber", val)}
+                  onChange={(val, file) => handleFieldChange("canNumber", val, file)}
                 />
               </div>
 
@@ -227,7 +227,7 @@ export const CellNumberDobForm: React.FC<CellNumberDobFormProps> = ({
                   value={formData.aadhaarFront}
                   error={errors.aadhaarFront}
                   disabled={isSubmitting}
-                  onChange={(val) => handleFieldChange("aadhaarFront", val)}
+                  onChange={(val, file) => handleFieldChange("aadhaarFront", val, file)}
                 />
               </div>
             </div>

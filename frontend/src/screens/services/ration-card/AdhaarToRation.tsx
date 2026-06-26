@@ -15,7 +15,7 @@ export const AdhaarToRation: React.FC<AdhaarToRationProps> = ({ onCancel }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
 
@@ -126,7 +126,7 @@ export const AdhaarToRation: React.FC<AdhaarToRationProps> = ({ onCancel }) => {
               type="text"
               placeholder="Enter 12-digit Adhaar number"
               value={formData.adhaarNo}
-              onChange={(val) => handleFieldChange("adhaarNo", val)}
+              onChange={(val, file) => handleFieldChange("adhaarNo", val, file)}
               error={errors.adhaarNo}
               disabled={isSubmitting}
             />

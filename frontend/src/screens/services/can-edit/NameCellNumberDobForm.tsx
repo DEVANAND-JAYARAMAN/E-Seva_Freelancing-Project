@@ -22,7 +22,7 @@ export const NameCellNumberDobForm: React.FC<NameCellNumberDobFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
       if (errors[name]) {
@@ -167,7 +167,7 @@ export const NameCellNumberDobForm: React.FC<NameCellNumberDobFormProps> = ({
                   value={formData.district}
                   error={errors.district}
                   disabled={isSubmitting}
-                  onChange={(val) => handleFieldChange("district", val)}
+                  onChange={(val, file) => handleFieldChange("district", val, file)}
                 />
               </div>
 
@@ -198,7 +198,7 @@ export const NameCellNumberDobForm: React.FC<NameCellNumberDobFormProps> = ({
                   value={formData.name}
                   error={errors.name}
                   disabled={isSubmitting}
-                  onChange={(val) => handleFieldChange("name", val)}
+                  onChange={(val, file) => handleFieldChange("name", val, file)}
                 />
               </div>
 
@@ -211,7 +211,7 @@ export const NameCellNumberDobForm: React.FC<NameCellNumberDobFormProps> = ({
                   value={formData.canNumber}
                   error={errors.canNumber}
                   disabled={isSubmitting}
-                  onChange={(val) => handleFieldChange("canNumber", val)}
+                  onChange={(val, file) => handleFieldChange("canNumber", val, file)}
                 />
               </div>
 
@@ -246,7 +246,7 @@ export const NameCellNumberDobForm: React.FC<NameCellNumberDobFormProps> = ({
                   value={formData.aadhaarFront}
                   error={errors.aadhaarFront}
                   disabled={isSubmitting}
-                  onChange={(val) => handleFieldChange("aadhaarFront", val)}
+                  onChange={(val, file) => handleFieldChange("aadhaarFront", val, file)}
                 />
               </div>
             </div>

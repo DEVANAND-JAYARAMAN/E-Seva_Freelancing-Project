@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { PATHS } from "../../routes/paths";
 import {
@@ -21,6 +21,7 @@ import {
   ServicePaymentScreen,
   ServiceSuccessScreen,
 } from "../../components/ServicePaymentScreen";
+import { AddServiceModal } from "./AddServiceModal";
 
 // Service item interface
 export interface EService {
@@ -1331,9 +1332,32 @@ export function ServicesPage() {
   const [paymentPhase, setPaymentPhase] = useState<
     "form" | "payment" | "success"
   >("form");
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const handleDeleteService = async () => {
+    if (!editingService) return;
+    if (!window.confirm("Are you sure you want to delete this service? This action cannot be undone.")) return;
+    
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/dynamic/${editingService.id}`, {
+        method: "DELETE",
+      });
+      if (response.ok) {
+        setServicesList((prev) => prev.filter(s => s.id !== editingService.id));
+        setEditModalOpen(false);
+        setEditingService(null);
+        alert("Service deleted successfully.");
+      } else {
+        alert("Failed to delete service.");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Error deleting service.");
+    }
+  };
 
   const handleSaveService = (
     updatedName: string,
@@ -1373,7 +1397,7 @@ export function ServicesPage() {
 
   // List of all 19 services customizer from localStorage
   const [servicesList, setServicesList] = useLocalStorage<EService[]>(
-    "thuruvan_services_custom_list_v5",
+    "eseva_services_directory",
     [
       // Top Services Group
       {
@@ -1384,6 +1408,7 @@ export function ServicesPage() {
         glowColor: "shadow-rose-500/10 dark:shadow-rose-950/20",
         category: "Top",
         formFields: ["pdfType", "fileUpload", "customerMobile", "remarks"],
+        price: { retailer: 150, distributor: 150 }
       },
 
       // All Services Group
@@ -1395,7 +1420,7 @@ export function ServicesPage() {
         glowColor: "shadow-sky-500/10",
         category: "All",
         formFields: ["softwareType", "quantity", "customerEmail"],
-        price: { retailer: 0, distributor: 0 },
+        price: { retailer: 150, distributor: 150 },
       },
       {
         id: "msme",
@@ -1501,6 +1526,7 @@ export function ServicesPage() {
         glowColor: "shadow-teal-500/10",
         category: "All",
         formFields: ["courseName", "studentName", "qualification", "mobile"],
+        price: { retailer: 150, distributor: 150 }
       },
       {
         id: "employment-services",
@@ -1510,6 +1536,7 @@ export function ServicesPage() {
         glowColor: "shadow-slate-500/10",
         category: "All",
         formFields: ["registrationNo", "candidateName", "dob", "qualification"],
+        price: { retailer: 150, distributor: 150 }
       },
       {
         id: "police-verification",
@@ -1519,6 +1546,7 @@ export function ServicesPage() {
         glowColor: "shadow-violet-500/10",
         category: "All",
         formFields: ["applicantName", "purpose", "aadhaarNo", "district"],
+        price: { retailer: 150, distributor: 150 }
       },
       {
         id: "utisl-pan",
@@ -1528,7 +1556,7 @@ export function ServicesPage() {
         glowColor: "shadow-sky-500/10",
         category: "All",
         formFields: ["applicantName", "dob", "aadhaarNo", "couponNumber"],
-        price: { retailer: 0, distributor: 0 },
+        price: { retailer: 150, distributor: 150 },
       },
       {
         id: "agri-stack-pdf",
@@ -1543,6 +1571,7 @@ export function ServicesPage() {
           "customerMobile",
           "aadhaarUpload",
         ],
+        price: { retailer: 150, distributor: 150 }
       },
       {
         id: "pvc-card-print",
@@ -1552,6 +1581,7 @@ export function ServicesPage() {
         glowColor: "shadow-amber-500/10",
         category: "All",
         formFields: ["pvcCardType", "fileUpload", "customerMobile"],
+        price: { retailer: 150, distributor: 150 }
       },
       {
         id: "cm-health-card",
@@ -1567,6 +1597,7 @@ export function ServicesPage() {
           "customerMobile",
           "incomeCertificateUpload",
         ],
+        price: { retailer: 150, distributor: 150 }
       },
       {
         id: "tnega",
@@ -1596,9 +1627,75 @@ export function ServicesPage() {
           "bookingDate",
           "customerMobile",
         ],
+        price: { retailer: 150, distributor: 150 }
       },
     ],
   );
+
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  const fetchDynamicServices = async () => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/dynamic`);
+      if (response.ok) {
+        const data = await response.json();
+        if (Array.isArray(data) && data.length > 0) {
+          const dynamicServices: EService[] = data.map((d: any) => ({
+            id: d.id,
+            name: d.name,
+            color: "text-blue-500 dark:text-blue-400",
+            bgColor: "bg-blue-500",
+            glowColor: "shadow-blue-500/10",
+            category: "All",
+            formFields: d.formFields,
+            price: { retailer: d.retailerCharge, distributor: d.distributorCharge },
+          }));
+
+          setServicesList((prev) => {
+            const existingIds = new Set(prev.map((p) => p.id));
+            const newServices = dynamicServices.filter((d) => !existingIds.has(d.id));
+            return [...prev, ...newServices];
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch dynamic services", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchDynamicServices();
+  }, []);
+
+  const handleAddService = async (newService: EService) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/dynamic`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: newService.name,
+          retailerCharge: Number(newService.price?.retailer) || 0,
+          distributorCharge: Number(newService.price?.distributor) || 0,
+          formFields: newService.formFields,
+        }),
+      });
+
+      if (response.ok) {
+        setServicesList((prev) => [...prev, newService]);
+      } else {
+        console.error("Failed to add dynamic service via API");
+        // Fallback to local storage only if API fails, or just show error. Let's add it anyway.
+        setServicesList((prev) => [...prev, newService]);
+      }
+    } catch (error) {
+      console.error("Failed to call API, adding locally", error);
+      setServicesList((prev) => [...prev, newService]);
+    }
+    
+    setIsAddModalOpen(false);
+  };
 
   // Filter list based on role permissions from localStorage matrix
   const allowedServicesList = useMemo(() => {
@@ -1716,12 +1813,13 @@ export function ServicesPage() {
     setSelectedService(service);
     setFormData({});
     setErrors({});
+    setSelectedFiles([]);
     setPaymentPhase("form");
     setIsModalOpen(true);
   };
 
   // Form field value change
-  const handleFieldChange = (field: string, val: string) => {
+  const handleFieldChange = (field: string, val: string, file?: File) => {
     setFormData((prev) => ({ ...prev, [field]: val }));
     if (errors[field]) {
       setErrors((prev) => {
@@ -1761,41 +1859,12 @@ export function ServicesPage() {
   };
 
   const handlePaymentSuccess = async (customerWhatsApp?: string) => {
-    if (!selectedService) return;
-    
-    try {
-      const apiUrl = `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api`;
-      const userStr = localStorage.getItem("user");
-      const user = userStr ? JSON.parse(userStr) : null;
-      
-      const reqBody = {
-        retailerId: user?.id || "unknown_retailer",
-        serviceId: selectedService.id,
-        serviceName: selectedService.name,
-        cost: Number(selectedService.price?.retailer) || 0,
-        customerWhatsApp: customerWhatsApp || "",
-        walletType: "Main"
-      };
-
-      const res = await fetch(`${apiUrl}/services/request`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(reqBody)
-      });
-
-      if (!res.ok) {
-        console.error("Failed to create service request");
-        // We'll proceed to success anyway for demo purposes if it fails, or you could show an error.
-      }
-    } catch (e) {
-      console.error(e);
-    }
-
     setPaymentPhase("success");
     setTimeout(() => {
       setIsModalOpen(false);
       setPaymentPhase("form");
       setFormData({});
+      setSelectedFiles([]);
     }, 3000);
   };
 
@@ -1813,19 +1882,29 @@ export function ServicesPage() {
           <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto">
             {/* Show/Hide Toggle Button for Admin */}
             {user?.role === "admin" && (
-              <button
-                type="button"
-                onClick={() => setIsManageMode(!isManageMode)}
-                className={`inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all select-none border border-slate-200 dark:border-slate-800 whitespace-nowrap ${
-                  isManageMode
-                    ? "bg-amber-500 hover:bg-amber-600 text-white border-transparent"
-                    : "bg-white dark:bg-transparent text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-900"
-                }`}
-              >
-                <span>
-                  {isManageMode ? "Exit Manage Mode" : "Show/Hide Services"}
-                </span>
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsManageMode(!isManageMode)}
+                  className={`inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all select-none border border-slate-200 dark:border-slate-800 whitespace-nowrap ${
+                    isManageMode
+                      ? "bg-amber-500 hover:bg-amber-600 text-white border-transparent"
+                      : "bg-white dark:bg-transparent text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-900"
+                  }`}
+                >
+                  <span>
+                    {isManageMode ? "Exit Manage Mode" : "Show/Hide Services"}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(true)}
+                  className="inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all select-none border border-transparent bg-[#005c3a] hover:bg-[#004d30] text-white whitespace-nowrap"
+                >
+                  <Plus size={14} />
+                  <span>Add Service</span>
+                </button>
+              </div>
             )}
 
             {/* Search Bar inside Breadcrumb */}
@@ -1970,6 +2049,8 @@ export function ServicesPage() {
                     retailerCharge={
                       Number(selectedService.price?.retailer) || 0
                     }
+                    formData={formData}
+                    files={selectedFiles}
                     onBack={() => setPaymentPhase("form")}
                     onSuccess={handlePaymentSuccess}
                   />
@@ -2189,6 +2270,22 @@ export function ServicesPage() {
                       );
                     })}
 
+                    <div className="space-y-1.5 mt-2">
+                      <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                        Upload Supporting Documents (Optional)
+                      </label>
+                      <input
+                        type="file"
+                        multiple
+                        className="w-full text-xs"
+                        onChange={(e) => {
+                          if (e.target.files) {
+                            setSelectedFiles(Array.from(e.target.files));
+                          }
+                        }}
+                      />
+                    </div>
+
                     {/* Submit & Cancel Buttons */}
                     <div className="flex items-center gap-3 border-t border-slate-50 dark:border-slate-900/50 pt-4 mt-2">
                       <button
@@ -2224,6 +2321,12 @@ export function ServicesPage() {
             onSave={handleSaveService}
           />
         )}
+
+        <AddServiceModal 
+          isOpen={isAddModalOpen} 
+          onClose={() => setIsAddModalOpen(false)} 
+          onAdd={handleAddService} 
+        />
       </section>
     </AppShell>
   );
@@ -2234,6 +2337,7 @@ type EditServiceModalProps = {
   onClose: () => void;
   service: EService;
   onSave: (name: string, customImage: string | null) => void;
+  onDelete?: () => void;
 };
 
 function EditServiceModal({

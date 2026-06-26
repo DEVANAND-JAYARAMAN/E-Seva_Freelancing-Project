@@ -4,6 +4,7 @@ import {
   Loader,
   AlertTriangle,
   CheckCircle2,
+  CheckCheck,
 } from "lucide-react";
 import type { StatusTicket, TicketStatus } from "./types";
 
@@ -33,25 +34,6 @@ export function StatusStats({
         "ring-2 ring-amber-500/50 bg-amber-50/50 dark:bg-amber-950/10",
     },
     {
-      label: "Resubmit",
-      value: getCount("Resubmit"),
-      icon: RefreshCw,
-      status: "Resubmit" as TicketStatus,
-      colorClass:
-        "bg-violet-50 dark:bg-violet-950/20 text-violet-600 dark:text-violet-400 border-violet-100 dark:border-violet-900/30",
-      activeClass:
-        "ring-2 ring-violet-500/50 bg-violet-50/50 dark:bg-violet-950/10",
-    },
-    {
-      label: "Processing",
-      value: getCount("Processing"),
-      icon: Loader,
-      status: "Processing" as TicketStatus,
-      colorClass:
-        "bg-sky-50 dark:bg-sky-950/20 text-sky-600 dark:text-sky-400 border-sky-100 dark:border-sky-900/30",
-      activeClass: "ring-2 ring-sky-500/50 bg-sky-50/50 dark:bg-sky-950/10",
-    },
-    {
       label: "Rejected",
       value: getCount("Rejected"),
       icon: AlertTriangle,
@@ -73,7 +55,7 @@ export function StatusStats({
   ];
 
   return (
-    <section className="grid grid-cols-2 md:grid-cols-5 gap-4 w-full">
+    <section className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
       {/* "All" Filter Card */}
       <button
         type="button"
@@ -120,12 +102,6 @@ export function StatusStats({
               >
                 <Icon
                   size={12}
-                  className={
-                    stat.status === "Processing" &&
-                    activeFilter === "Processing"
-                      ? "animate-spin"
-                      : ""
-                  }
                 />
               </div>
             </div>

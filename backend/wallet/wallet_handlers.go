@@ -21,7 +21,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const mugavaiBaseURL = "https://mugavaipaymentgetway.in/api/v1"
 
 type GatewayRechargeRequest struct {
 	Amount         float64 `json:"amount" binding:"required,gt=0"`
@@ -143,10 +142,9 @@ func InitiateGatewayRecharge(c *gin.Context) {
 
 	username := os.Getenv("MUGAVAI_USERNAME")
 	if username == "" {
-		username = "6380616163"
+		username = "8526629676"
 	}
-	// Hardcoding API key because GitHub Secrets is overriding it with an old value
-	apiKey := "5f89c01e1d5be436659591de5c7d93d1bcd97c7091448f9e"
+	apiKey := os.Getenv("MUGAVAI_API_KEY")
 
 	orderID := fmt.Sprintf("ORD-%d", time.Now().UnixMilli())
 
@@ -200,5 +198,74 @@ func InitiateGatewayRecharge(c *gin.Context) {
 			"order_id":    pgResp.Data.OrderID,
 			"payment_url": pgResp.Data.PaymentURL,
 		},
+	})
+}
+
+type ManualRechargeRequest struct {
+	Amount    float64 `json:"amount" binding:"required,gt=0"`
+	UtrNumber string  `json:"utrNumber" binding:"required"`
+	Remarks   string  `json:"remarks"`
+	UserId    string  `json:"userId" binding:"required"`
+}
+
+func ManualRecharge(c *gin.Context) {
+	var req ManualRechargeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
+	now := time.Now().UTC()
+	ownerPK := "USER#" + req.UserId
+	walletSK := "PROFILE"
+
+	// Credit wallet balance directly to the User profile
+	_, err := db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+		TableName: aws.String("Users"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: ownerPK},
+			"SK": &types.AttributeValueMemberS{Value: walletSK},
+		},
+		UpdateExpression: aws.String("SET walletBalance = if_not_exists(walletBalance, :zero) + :amt, updatedAt = :ts"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":amt":  &types.AttributeValueMemberN{Value: fmt.Sprintf("%f", req.Amount)},
+			":zero": &types.AttributeValueMemberN{Value: "0"},
+			":ts":   &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
+		},
+	})
+	if err != nil {
+		log.Printf("Failed to credit manual recharge: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Wallet credit failed"})
+		return
+	}
+
+	// Write transaction record
+	txId := "TX#" + now.Format("20060102150405") + "#" + req.UtrNumber
+	txRecord := map[string]interface{}{
+		"PK":          "WALLET#" + req.UserId,
+		"SK":          txId,
+		"id":          txId,
+		"date":        now.Format("01/02/2006, 03:04 PM"),
+		"type":        "credit",
+		"description": fmt.Sprintf("Manual Recharge (UTR: %s)", req.UtrNumber),
+		"amount":      req.Amount,
+		"reference":   req.UtrNumber,
+		"status":      "Success",
+		"walletType":  "Main",
+		"createdAt":   now.Format(time.RFC3339),
+	}
+
+	item, _ := attributevalue.MarshalMap(txRecord)
+	_, err = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+		TableName: aws.String("WalletTransactions"),
+		Item:      item,
+	})
+	if err != nil {
+		log.Printf("Failed to write manual tx record: %v", err)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Recharge successful",
+		"amount":  req.Amount,
 	})
 }

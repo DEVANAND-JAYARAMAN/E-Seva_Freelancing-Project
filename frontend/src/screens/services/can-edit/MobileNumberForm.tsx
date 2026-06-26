@@ -18,7 +18,7 @@ export const MobileNumberForm: React.FC<MobileNumberFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
       if (errors[name]) {
@@ -138,7 +138,7 @@ export const MobileNumberForm: React.FC<MobileNumberFormProps> = ({
                   value={formData.canNumber}
                   error={errors.canNumber}
                   disabled={isSubmitting}
-                  onChange={(val) => handleFieldChange("canNumber", val)}
+                  onChange={(val, file) => handleFieldChange("canNumber", val, file)}
                 />
               </div>
 

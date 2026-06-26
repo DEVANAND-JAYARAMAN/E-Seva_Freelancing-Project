@@ -144,7 +144,7 @@ interface BaseFieldProps {
 interface InputFieldProps extends BaseFieldProps {
   type: "text" | "number" | "email" | "password" | "file" | "date";
   value: string;
-  onChange: (val: string) => void;
+  onChange: (val: string, file?: File) => void;
 }
 
 export const InputField: React.FC<InputFieldProps> = ({
@@ -200,7 +200,7 @@ export const InputField: React.FC<InputFieldProps> = ({
                     className="hidden"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
-                      onChange(file ? file.name : "");
+                      onChange(file ? file.name : "", file);
                     }}
                   />
                 </label>
@@ -270,7 +270,7 @@ export const InputField: React.FC<InputFieldProps> = ({
 interface TextAreaFieldProps extends BaseFieldProps {
   value: string;
   rows?: number;
-  onChange: (val: string) => void;
+  onChange: (val: string, file?: File) => void;
 }
 
 export const TextAreaField: React.FC<TextAreaFieldProps> = ({
@@ -322,7 +322,7 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
 interface SelectFieldProps extends BaseFieldProps {
   options: FieldOption[];
   value: string;
-  onChange: (val: string) => void;
+  onChange: (val: string, file?: File) => void;
 }
 
 export const SelectField: React.FC<SelectFieldProps> = ({
@@ -372,7 +372,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
 // 4. PhoneField
 interface PhoneFieldProps extends BaseFieldProps {
   value: string;
-  onChange: (val: string) => void;
+  onChange: (val: string, file?: File) => void;
 }
 
 export const PhoneField: React.FC<PhoneFieldProps> = ({
@@ -429,7 +429,7 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
 // 5. CheckboxField
 interface CheckboxFieldProps extends BaseFieldProps {
   checked: boolean;
-  onChange: (val: boolean) => void;
+  onChange: (val: boolean, file?: File) => void;
 }
 
 export const CheckboxField: React.FC<CheckboxFieldProps> = ({
@@ -471,7 +471,7 @@ export const CheckboxField: React.FC<CheckboxFieldProps> = ({
 interface RadioFieldProps extends BaseFieldProps {
   options: FieldOption[];
   value: string;
-  onChange: (val: string) => void;
+  onChange: (val: string, file?: File) => void;
 }
 
 export const RadioField: React.FC<RadioFieldProps> = ({

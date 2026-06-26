@@ -233,7 +233,64 @@ func Login(c *gin.Context) {
 		"user": gin.H{
 			"id":       user.UserId,
 			"fullName": user.FullName,
-			"email":    user.Email,
+			"email":         user.Email,
+			"walletBalance": user.WalletBalance,
 		},
 	})
+}
+
+// GetRetailers fetches all retailers from Users table
+func GetRetailers(c *gin.Context) {
+	out, err := db.DynamoClient.Scan(context.TODO(), &dynamodb.ScanInput{
+		TableName: aws.String("Users"),
+		FilterExpression: aws.String("#r = :role"),
+		ExpressionAttributeNames: map[string]string{
+			"#r": "role",
+		},
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":role": &types.AttributeValueMemberS{Value: "retailer"},
+		},
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch retailers"})
+		return
+	}
+
+	var users []models.User
+	err = attributevalue.UnmarshalListOfMaps(out.Items, &users)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode retailers"})
+		return
+	}
+
+	c.JSON(http.StatusOK, users)
+}
+
+// GetDistributors fetches all distributors from Users table
+func GetDistributors(c *gin.Context) {
+	out, err := db.DynamoClient.Scan(context.TODO(), &dynamodb.ScanInput{
+		TableName: aws.String("Users"),
+		FilterExpression: aws.String("#r = :role"),
+		ExpressionAttributeNames: map[string]string{
+			"#r": "role",
+		},
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":role": &types.AttributeValueMemberS{Value: "distributor"},
+		},
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch distributors"})
+		return
+	}
+
+	var users []models.User
+	err = attributevalue.UnmarshalListOfMaps(out.Items, &users)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode distributors"})
+		return
+	}
+
+	c.JSON(http.StatusOK, users)
 }

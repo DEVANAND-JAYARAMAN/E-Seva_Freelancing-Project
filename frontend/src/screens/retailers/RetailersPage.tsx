@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Store } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
@@ -13,51 +13,57 @@ import type { Retailer } from "./types";
 const initialRetailersList: Retailer[] = [];
 
 export function RetailersPage() {
-  const [retailers, setRetailers] = useLocalStorage<Retailer[]>(
-    "thuruvan_retailers_list",
-    initialRetailersList,
-  );
+  const [retailers, setRetailers] = useState<Retailer[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedRetailer, setSelectedRetailer] = useState<Retailer | null>(
-    null,
-  );
+  const [selectedRetailer, setSelectedRetailer] = useState<Retailer | null>(null);
 
-  // Add / Edit submission handler
+  // Fetch real data from backend
+  const fetchRetailers = async () => {
+    try {
+      const res = await fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/retailers`);
+      if (res.ok) {
+        const data = await res.json();
+        const mapped = (data || []).map((user: any) => ({
+          id: user.UserId || user.userId,
+          name: user.FullName || user.name || "Unknown",
+          shopName: "E-Seva Center", // Backend doesn't store this yet
+          email: user.Email || user.email,
+          phone: user.Mobile || user.mobile,
+          city: "Tamil Nadu", // Default
+          balance: user.WalletBalance || user.walletBalance || 0,
+          status: user.Status || user.status || "Active",
+          createdDate: (user.CreatedAt || user.createdAt || "").split("T")[0],
+        }));
+        setRetailers(mapped);
+      }
+    } catch (e) {
+      console.error("Failed to fetch retailers:", e);
+    }
+  };
+
+  useEffect(() => {
+    fetchRetailers();
+  }, []);
+
+  // Add / Edit submission handler (Local state for now, backend save not fully implemented for editing)
   const handleFormSubmit = (
     data: Omit<Retailer, "id" | "createdDate"> & { id?: string },
   ) => {
     if (data.id) {
-      // Edit mode
+      // Edit mode (Mocked)
       setRetailers((prev) =>
         prev.map((item) =>
           item.id === data.id
-            ? {
-                ...item,
-                name: data.name,
-                shopName: data.shopName,
-                email: data.email,
-                phone: data.phone,
-                city: data.city,
-                balance: data.balance,
-                status: data.status,
-                aadhaarNo: data.aadhaarNo,
-              }
+            ? { ...item, ...data }
             : item,
         ),
       );
     } else {
-      // Add mode
+      // Add mode (Mocked)
       const newRetailer: Retailer = {
+        ...data,
         id: `ret-${Date.now()}`,
-        name: data.name,
-        shopName: data.shopName,
-        email: data.email,
-        phone: data.phone,
-        city: data.city,
-        balance: data.balance,
-        status: data.status,
         createdDate: new Date().toISOString().split("T")[0],
-        aadhaarNo: data.aadhaarNo,
       };
       setRetailers((prev) => [newRetailer, ...prev]);
     }

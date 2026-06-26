@@ -1,6 +1,10 @@
 import { walletCards } from "../../config/data";
 
-export function WalletSummary() {
+import { useAuth } from "../../store/context/AuthContext";
+
+export function WalletSummary({ stats }: { stats?: any }) {
+  const { user } = useAuth();
+  
   const descMap: Record<string, string> = {
     "main wallet": "Available balance",
     "wallet request": "Pending approvals",
@@ -53,7 +57,7 @@ export function WalletSummary() {
                     ₹
                   </span>
                 )}
-                {card.value}
+                {dynamicValue}
               </strong>
               <span className="text-[10px] text-white/70 font-semibold block truncate">
                 {description}

@@ -20,7 +20,7 @@ export const NameCorrectionForm: React.FC<NameCorrectionFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
       if (errors[name]) {
@@ -131,7 +131,7 @@ export const NameCorrectionForm: React.FC<NameCorrectionFormProps> = ({
               value={formData.district}
               error={errors.district}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("district", val)}
+              onChange={(val, file) => handleFieldChange("district", val, file)}
             />
           </div>
 
@@ -143,7 +143,7 @@ export const NameCorrectionForm: React.FC<NameCorrectionFormProps> = ({
               value={formData.candidateName}
               error={errors.candidateName}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("candidateName", val)}
+              onChange={(val, file) => handleFieldChange("candidateName", val, file)}
             />
           </div>
 
@@ -156,7 +156,7 @@ export const NameCorrectionForm: React.FC<NameCorrectionFormProps> = ({
               value={formData.panNumber}
               error={errors.panNumber}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("panNumber", val)}
+              onChange={(val, file) => handleFieldChange("panNumber", val, file)}
             />
           </div>
 
@@ -168,7 +168,7 @@ export const NameCorrectionForm: React.FC<NameCorrectionFormProps> = ({
               value={formData.aadhaarFront}
               error={errors.aadhaarFront}
               disabled={isSubmitting}
-              onChange={(val) => handleFieldChange("aadhaarFront", val)}
+              onChange={(val, file) => handleFieldChange("aadhaarFront", val, file)}
             />
           </div>
         </div>

@@ -150,7 +150,7 @@ export function SoftwareKeysPage() {
     setActiveForm(software.id);
   };
 
-  const handleFieldChange = (field: string, val: string) => {
+  const handleFieldChange = (field: string, val: string, file?: File) => {
     setFormData((prev) => ({ ...prev, [field]: val }));
     if (errors[field]) {
       setErrors((prev) => {
@@ -1195,6 +1195,7 @@ export function SoftwareKeysPage() {
                   <ServicePaymentScreen
                     serviceName={selectedSoftware.name}
                     retailerCharge={selectedSoftware.price}
+                    formData={formData}
                     onBack={() => setPaymentPhase("form")}
                     onSuccess={handlePaymentSuccess}
                   />
@@ -1225,6 +1226,7 @@ export function SoftwareKeysPage() {
                   <ServicePaymentScreen
                     serviceName={selectedSoftware.name}
                     retailerCharge={selectedSoftware.price}
+                    formData={formData}
                     onBack={() => setPaymentPhase("form")}
                     onSuccess={handlePaymentSuccess}
                   />

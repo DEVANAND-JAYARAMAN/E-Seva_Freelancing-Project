@@ -1,0 +1,38 @@
+name: Add Money Temporarily
+on: workflow_dispatch
+jobs:
+  add_money:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get EC2 IP
+        id: get-ip
+        run: |
+          IP=$(curl -s https://daqpqxq9zg.execute-api.ap-south-1.amazonaws.com/prod/ip | jq -r .public_ip)
+          echo "EC2_IP=$IP" >> $GITHUB_ENV
+
+      - name: Update DynamoDB on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.EC2_IP }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_SSH_PORT }}
+          script: |
+            echo "Scanning for all user IDs..."
+            USER_IDS=$(aws dynamodb scan --region ap-south-1 --table-name Users --query "Items[*].PK.S" --output text)
+            
+            for USER_ID in $USER_IDS; do
+              if [ "$USER_ID" != "None" ] && [ -n "$USER_ID" ]; then
+                echo "Updating User ID: $USER_ID"
+                aws dynamodb update-item --region ap-south-1 --table-name Users --key "{\"PK\":{\"S\":\"$USER_ID\"},\"SK\":{\"S\":\"PROFILE\"}}" --update-expression "SET walletBalance = if_not_exists(walletBalance, :zero) + :amt" --expression-attribute-values '{":amt":{"N":"100"}, ":zero":{"N":"0"}}'
+                
+                WALLET_PK=$(echo $USER_ID | sed 's/USER#/WALLET#/')
+                echo "Updating Wallet PK: $WALLET_PK"
+                aws dynamodb update-item --region ap-south-1 --table-name Wallets --key "{\"PK\":{\"S\":\"$WALLET_PK\"},\"SK\":{\"S\":\"TYPE#Main\"}}" --update-expression "ADD balance :amt, totalCredits :amt" --expression-attribute-values '{":amt":{"N":"100"}}'
+                
+                # Add dummy transaction
+                TX_ID="TX#$(date -u +'%Y-%m-%dT%H:%M:%SZ')#DUMMY100"
+                aws dynamodb put-item --region ap-south-1 --table-name WalletTransactions --item "{\"PK\":{\"S\":\"$WALLET_PK\"},\"SK\":{\"S\":\"$TX_ID\"},\"id\":{\"S\":\"DUMMY100\"},\"amount\":{\"N\":\"100\"},\"type\":{\"S\":\"Credit\"},\"status\":{\"S\":\"Success\"},\"description\":{\"S\":\"Manual Credit for Testing\"},\"createdAt\":{\"S\":\"$(date -u +'%Y-%m-%dT%H:%M:%SZ')\"}}"
+              fi
+            done
+            echo "Done updating all retailers!"

@@ -36,7 +36,7 @@ export const CmHealthCardForm: React.FC<CmHealthCardFormProps> = ({
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
       setErrors((prev) => {
@@ -147,7 +147,7 @@ export const CmHealthCardForm: React.FC<CmHealthCardFormProps> = ({
             value={formData.smartcardNo}
             error={errors.smartcardNo}
             disabled={isLoading}
-            onChange={(val) => handleFieldChange("smartcardNo", val)}
+            onChange={(val, file) => handleFieldChange("smartcardNo", val, file)}
           />
 
           <InputField
@@ -173,7 +173,7 @@ export const CmHealthCardForm: React.FC<CmHealthCardFormProps> = ({
             value={formData.cellNo}
             error={errors.cellNo}
             disabled={isLoading}
-            onChange={(val) => handleFieldChange("cellNo", val)}
+            onChange={(val, file) => handleFieldChange("cellNo", val, file)}
           />
 
           <InputField
@@ -202,7 +202,7 @@ export const CmHealthCardForm: React.FC<CmHealthCardFormProps> = ({
             value={formData.familyRelationName}
             error={errors.familyRelationName}
             disabled={isLoading}
-            onChange={(val) => handleFieldChange("familyRelationName", val)}
+            onChange={(val, file) => handleFieldChange("familyRelationName", val, file)}
           />
 
           <SelectField
@@ -217,7 +217,7 @@ export const CmHealthCardForm: React.FC<CmHealthCardFormProps> = ({
             value={formData.maritalStatus}
             error={errors.maritalStatus}
             disabled={isLoading}
-            onChange={(val) => handleFieldChange("maritalStatus", val)}
+            onChange={(val, file) => handleFieldChange("maritalStatus", val, file)}
           />
         </div>
       </div>
@@ -238,7 +238,7 @@ export const CmHealthCardForm: React.FC<CmHealthCardFormProps> = ({
             value={formData.vaoCertificateFile}
             error={errors.vaoCertificateFile}
             disabled={isLoading}
-            onChange={(val) => handleFieldChange("vaoCertificateFile", val)}
+            onChange={(val, file) => handleFieldChange("vaoCertificateFile", val, file)}
           />
 
           <InputField
@@ -248,7 +248,7 @@ export const CmHealthCardForm: React.FC<CmHealthCardFormProps> = ({
             value={formData.smartcardFile}
             error={errors.smartcardFile}
             disabled={isLoading}
-            onChange={(val) => handleFieldChange("smartcardFile", val)}
+            onChange={(val, file) => handleFieldChange("smartcardFile", val, file)}
           />
 
           <InputField
@@ -258,7 +258,7 @@ export const CmHealthCardForm: React.FC<CmHealthCardFormProps> = ({
             value={formData.aadhaarCardFile}
             error={errors.aadhaarCardFile}
             disabled={isLoading}
-            onChange={(val) => handleFieldChange("aadhaarCardFile", val)}
+            onChange={(val, file) => handleFieldChange("aadhaarCardFile", val, file)}
           />
 
           <InputField
@@ -268,7 +268,7 @@ export const CmHealthCardForm: React.FC<CmHealthCardFormProps> = ({
             value={formData.livePhotoFile}
             error={errors.livePhotoFile}
             disabled={isLoading}
-            onChange={(val) => handleFieldChange("livePhotoFile", val)}
+            onChange={(val, file) => handleFieldChange("livePhotoFile", val, file)}
           />
 
           <InputField
@@ -278,7 +278,7 @@ export const CmHealthCardForm: React.FC<CmHealthCardFormProps> = ({
             value={formData.passportPhotoFile}
             error={errors.passportPhotoFile}
             disabled={isLoading}
-            onChange={(val) => handleFieldChange("passportPhotoFile", val)}
+            onChange={(val, file) => handleFieldChange("passportPhotoFile", val, file)}
           />
         </div>
       </div>

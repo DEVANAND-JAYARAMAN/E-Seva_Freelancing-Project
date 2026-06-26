@@ -22,7 +22,7 @@ export const AddressCorrectionForm: React.FC<AddressCorrectionFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
       if (errors[name]) {
@@ -129,7 +129,7 @@ export const AddressCorrectionForm: React.FC<AddressCorrectionFormProps> = ({
                   value={formData.tamilName}
                   error={errors.tamilName}
                   disabled={isSubmitting}
-                  onChange={(val) => handleFieldChange("tamilName", val)}
+                  onChange={(val, file) => handleFieldChange("tamilName", val, file)}
                 />
               </div>
 
@@ -142,7 +142,7 @@ export const AddressCorrectionForm: React.FC<AddressCorrectionFormProps> = ({
                   value={formData.nameEnglish}
                   error={errors.nameEnglish}
                   disabled={isSubmitting}
-                  onChange={(val) => handleFieldChange("nameEnglish", val)}
+                  onChange={(val, file) => handleFieldChange("nameEnglish", val, file)}
                 />
               </div>
 
@@ -155,7 +155,7 @@ export const AddressCorrectionForm: React.FC<AddressCorrectionFormProps> = ({
                   value={formData.canNumber}
                   error={errors.canNumber}
                   disabled={isSubmitting}
-                  onChange={(val) => handleFieldChange("canNumber", val)}
+                  onChange={(val, file) => handleFieldChange("canNumber", val, file)}
                 />
               </div>
 
@@ -190,7 +190,7 @@ export const AddressCorrectionForm: React.FC<AddressCorrectionFormProps> = ({
                   value={formData.aadhaarCard}
                   error={errors.aadhaarCard}
                   disabled={isSubmitting}
-                  onChange={(val) => handleFieldChange("aadhaarCard", val)}
+                  onChange={(val, file) => handleFieldChange("aadhaarCard", val, file)}
                 />
               </div>
 
@@ -202,7 +202,7 @@ export const AddressCorrectionForm: React.FC<AddressCorrectionFormProps> = ({
                   value={formData.smartCard}
                   error={errors.smartCard}
                   disabled={isSubmitting}
-                  onChange={(val) => handleFieldChange("smartCard", val)}
+                  onChange={(val, file) => handleFieldChange("smartCard", val, file)}
                 />
               </div>
             </div>

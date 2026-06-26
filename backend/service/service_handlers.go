@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"eservice-backend/db"
@@ -22,16 +23,18 @@ import (
 )
 
 type CreateServiceReq struct {
-	RetailerId  string  `json:"retailerId" binding:"required"`
-	ServiceId   string  `json:"serviceId" binding:"required"`
-	ServiceName      string  `json:"serviceName" binding:"required"`
-	Cost             float64 `json:"cost" binding:"required"`
-	CustomerWhatsApp string  `json:"customerWhatsApp"`
-	WalletType       string  `json:"walletType"` // "Retailer" or "Distributor" (needed for history)
+	RetailerId       string  `form:"retailerId" binding:"required"`
+	ServiceId        string  `form:"serviceId" binding:"required"`
+	ServiceName      string  `form:"serviceName" binding:"required"`
+	Cost             float64 `form:"cost" binding:"required"`
+	CustomerWhatsApp string  `form:"customerWhatsApp"`
+	WalletType       string  `form:"walletType"` // "Retailer" or "Distributor" (needed for history)
+	FormData         string  `form:"formData"`
 }
 
 type UpdateServiceStatusReq struct {
-	Status string `json:"status" binding:"required"`
+	Status       string `json:"status" binding:"required"`
+	AdminRemarks string `json:"adminRemarks"`
 }
 
 // sendWhatsAppMessage automatically sends a text message via Mugavai API
@@ -44,15 +47,20 @@ func sendWhatsAppMessage(customerNumber string, serviceName string) {
 		return
 	}
 
-	url := "https://mugavaiwapp.in.net/send-message"
+	url := "https://mugavaiwapp.in.net/api/send"
 
 	message := fmt.Sprintf("Dear Customer,\nYour service request for '%s' has been successfully completed. Thank you for choosing E-Seva!", serviceName)
 
+		number := customerNumber
+	if len(number) == 10 {
+		number = "91" + number
+	}
 	payload := map[string]string{
-		"api_key": apiKey,
-		"sender":  senderDevice,
-		"number":  customerNumber,
-		"message": message,
+		"access_token": apiKey,
+		"instance_id":  senderDevice,
+		"number":       number,
+		"type":         "text",
+		"message":      message,
 	}
 
 	jsonValue, _ := json.Marshal(payload)
@@ -77,7 +85,7 @@ func generateId(prefix string) string {
 
 func CreateServiceRequest(c *gin.Context) {
 	var req CreateServiceReq
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := c.ShouldBind(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
@@ -87,7 +95,7 @@ func CreateServiceRequest(c *gin.Context) {
 		TableName: aws.String("Wallets"),
 		Key: map[string]types.AttributeValue{
 			"PK": &types.AttributeValueMemberS{Value: walletPK},
-			"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+			"SK": &types.AttributeValueMemberS{Value: "TYPE#Main"},
 		},
 	})
 	
@@ -135,6 +143,29 @@ func CreateServiceRequest(c *gin.Context) {
 	appId := generateId("SRVREQ")
 	now := time.Now().UTC().Format(time.RFC3339)
 
+	var formData map[string]string
+	formDataStr := req.FormData
+	if formDataStr == "" {
+		formDataStr = c.PostForm("formData")
+	}
+
+	if formDataStr != "" {
+		_ = json.Unmarshal([]byte(formDataStr), &formData)
+	}
+
+	var documents []string
+	form, err := c.MultipartForm()
+	if err == nil {
+		files := form.File["documents"]
+		for _, file := range files {
+			filename := fmt.Sprintf("%s_%s", appId, file.Filename)
+			filepath := "uploads/" + filename
+			if err := c.SaveUploadedFile(file, filepath); err == nil {
+				documents = append(documents, "/uploads/"+filename)
+			}
+		}
+	}
+
 	app := models.ServiceApplication{
 		PK:               "SERVICEAPP#" + appId,
 		SK:               "PROFILE",
@@ -144,6 +175,8 @@ func CreateServiceRequest(c *gin.Context) {
 		ServiceName:      req.ServiceName,
 		Cost:             req.Cost,
 		CustomerWhatsApp: req.CustomerWhatsApp,
+		FormData:         formData,
+		Documents:        documents,
 		Status:           "Pending",
 		CreatedDate:      now,
 		LastUpdated:      now,
@@ -160,6 +193,7 @@ func CreateServiceRequest(c *gin.Context) {
 		Type:      "info",
 		IsRead:    false,
 		CreatedAt: now,
+		Link:      "/status",
 	}
 
 	appItem, err := attributevalue.MarshalMap(app)
@@ -174,6 +208,20 @@ func CreateServiceRequest(c *gin.Context) {
 		return
 	}
 
+	txId := generateId("TX")
+	successTx := models.WalletTransaction{
+		PK:         walletPK,
+		SK:         "TX#" + now + "#" + txId,
+		Id:         txId,
+		WalletType: req.WalletType,
+		Amount:     req.Cost,
+		Type:       "Debit",
+		Status:     "Success",
+		Reference:  req.ServiceId,
+		CreatedAt:  now,
+	}
+	successTxItem, _ := attributevalue.MarshalMap(successTx)
+
 	_, err = db.DynamoClient.TransactWriteItems(context.TODO(), &dynamodb.TransactWriteItemsInput{
 		TransactItems: []types.TransactWriteItem{
 			{
@@ -186,6 +234,38 @@ func CreateServiceRequest(c *gin.Context) {
 				Put: &types.Put{
 					TableName: aws.String("Notifications"),
 					Item:      notifItem,
+				},
+			},
+			{
+				Put: &types.Put{
+					TableName: aws.String("WalletTransactions"),
+					Item:      successTxItem,
+				},
+			},
+			{
+				Update: &types.Update{
+					TableName: aws.String("Wallets"),
+					Key: map[string]types.AttributeValue{
+						"PK": &types.AttributeValueMemberS{Value: walletPK},
+						"SK": &types.AttributeValueMemberS{Value: "TYPE#Main"},
+					},
+					UpdateExpression: aws.String("SET balance = balance - :cost"),
+					ExpressionAttributeValues: map[string]types.AttributeValue{
+						":cost": &types.AttributeValueMemberN{Value: fmt.Sprintf("%f", req.Cost)},
+					},
+				},
+			},
+			{
+				Update: &types.Update{
+					TableName: aws.String("Users"),
+					Key: map[string]types.AttributeValue{
+						"PK": &types.AttributeValueMemberS{Value: "USER#" + req.RetailerId},
+						"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+					},
+					UpdateExpression: aws.String("SET walletBalance = walletBalance - :cost"),
+					ExpressionAttributeValues: map[string]types.AttributeValue{
+						":cost": &types.AttributeValueMemberN{Value: fmt.Sprintf("%f", req.Cost)},
+					},
 				},
 			},
 		},
@@ -204,13 +284,33 @@ func CreateServiceRequest(c *gin.Context) {
 
 func UpdateServiceRequestStatus(c *gin.Context) {
 	appId := c.Param("id")
-	var req UpdateServiceStatusReq
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	// Handle Form Data instead of JSON to support file uploads
+	status := c.PostForm("status")
+	adminRemarks := c.PostForm("adminRemarks")
+
+	if status == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Status is required"})
 		return
 	}
 
-	if req.Status != "Approved" && req.Status != "Rejected" && req.Status != "Completed" {
+	var ackFiles []string
+	form, err := c.MultipartForm()
+	if err == nil {
+		files := form.File["ackFiles"]
+		for _, file := range files {
+			filename := fmt.Sprintf("ack_%s_%s", appId, file.Filename)
+			filepath := "uploads/" + filename
+			if err := c.SaveUploadedFile(file, filepath); err == nil {
+				ackFiles = append(ackFiles, "/uploads/"+filename)
+			}
+		}
+	}
+
+
+	validStatuses := map[string]bool{
+		"Approved": true, "Rejected": true,
+	}
+	if !validStatuses[status] {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid status"})
 		return
 	}
@@ -230,55 +330,110 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 	var app models.ServiceApplication
 	attributevalue.UnmarshalMap(out.Item, &app)
 
-	if app.Status == "Completed" || app.Status == "Rejected" {
+	if app.Status == "Approved" || app.Status == "Completed" || app.Status == "Rejected" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Request is already in a final state"})
 		return
 	}
 
 	now := time.Now().UTC().Format(time.RFC3339)
 
-	if req.Status == "Approved" {
-		walletPK := "WALLET#" + app.RetailerId
-		outWallet, err := db.DynamoClient.GetItem(context.TODO(), &dynamodb.GetItemInput{
-			TableName: aws.String("Wallets"),
-			Key: map[string]types.AttributeValue{
-				"PK": &types.AttributeValueMemberS{Value: walletPK},
-				"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
-			},
-		})
-		if err != nil || outWallet.Item == nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Wallet not found"})
-			return
-		}
+	if status == "Approved" {
+		crmId := generateId("CRM")
+		invoiceId := generateId("INV")
+			
+			crmCust := models.CRMCustomer{
+				PK:         "CUSTOMER#" + crmId,
+				SK:         "PROFILE",
+				Id:         crmId,
+				Name:       app.CustomerWhatsApp, // Mocked to WhatsApp or retrieve from FormData
+				ShopName:   "Unknown",
+				Email:      "unknown@example.com",
+				Phone:      app.CustomerWhatsApp,
+				City:       "Unknown",
+				Type:       "RetailerCustomer",
+				Status:     "Active",
+				JoinedDate: now,
+				CreatedAt:  now,
+				UpdatedAt:  now,
+			}
+			crmItem, _ := attributevalue.MarshalMap(crmCust)
 
-		var wallet models.Wallet
-		attributevalue.UnmarshalMap(outWallet.Item, &wallet)
+			invoice := models.Invoice{
+				PK:            "INVOICE#" + invoiceId,
+				SK:            "PROFILE",
+				Id:            invoiceId,
+				InvoiceNumber: "INV-" + invoiceId,
+				RetailerName:  app.RetailerId,
+				Amount:        app.Cost,
+				Date:          now,
+				DueDate:       now,
+				Status:        "Paid",
+				UtrNumber:     app.ServiceId,
+				Category:      app.ServiceName,
+				CreatedAt:     now,
+				UpdatedAt:     now,
+			}
+			invoiceItem, _ := attributevalue.MarshalMap(invoice)
 
-		if wallet.Balance < app.Cost {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Insufficient wallet balance to approve"})
-			return
-		}
-
-		newBalance := wallet.Balance - app.Cost
-
-		_, err = db.DynamoClient.TransactWriteItems(context.TODO(), &dynamodb.TransactWriteItemsInput{
-			TransactItems: []types.TransactWriteItem{
-				{
-					Update: &types.Update{
-						TableName: aws.String("Wallets"),
-						Key: map[string]types.AttributeValue{
-							"PK": &types.AttributeValueMemberS{Value: walletPK},
-							"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+			_, err = db.DynamoClient.TransactWriteItems(context.TODO(), &dynamodb.TransactWriteItemsInput{
+				TransactItems: []types.TransactWriteItem{
+					{
+						Update: &types.Update{
+							TableName: aws.String("ServiceApplications"),
+							Key: map[string]types.AttributeValue{
+								"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
+								"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+							},
+							UpdateExpression: aws.String("SET #s = :status, lastUpdated = :time, adminRemarks = :remarks"),
+							ExpressionAttributeNames: map[string]string{
+								"#s": "status",
+							},
+							ExpressionAttributeValues: map[string]types.AttributeValue{
+								":status":  &types.AttributeValueMemberS{Value: status},
+								":time":    &types.AttributeValueMemberS{Value: now},
+								":remarks": &types.AttributeValueMemberS{Value: adminRemarks},
+							},
 						},
-						UpdateExpression: aws.String("SET balance = :newBal, updatedAt = :time"),
-						ConditionExpression: aws.String("balance >= :cost"),
-						ExpressionAttributeValues: map[string]types.AttributeValue{
-							":newBal": &types.AttributeValueMemberN{Value: fmt.Sprintf("%f", newBalance)},
-							":time":   &types.AttributeValueMemberS{Value: now},
-							":cost":   &types.AttributeValueMemberN{Value: fmt.Sprintf("%f", app.Cost)},
+					},
+					{
+						Put: &types.Put{
+							TableName: aws.String("CRMCustomers"),
+							Item:      crmItem,
+						},
+					},
+					{
+						Put: &types.Put{
+							TableName: aws.String("Invoices"),
+							Item:      invoiceItem,
 						},
 					},
 				},
+			})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update request status"})
+			return
+		}
+
+		// WhatsApp message is handled at the end of the function
+
+	} else if status == "Rejected" {
+		walletPK := "WALLET#" + app.RetailerId
+		txId := generateId("TX")
+		refundTx := models.WalletTransaction{
+			PK:         walletPK,
+			SK:         "TX#" + now + "#" + txId,
+			Id:         txId,
+			WalletType: "Main",
+			Amount:     app.Cost,
+			Type:       "Credit",
+			Status:     "Success",
+			Reference:  app.ServiceId + "-REFUND",
+			CreatedAt:  now,
+		}
+		refundTxItem, _ := attributevalue.MarshalMap(refundTx)
+
+		_, err = db.DynamoClient.TransactWriteItems(context.TODO(), &dynamodb.TransactWriteItemsInput{
+			TransactItems: []types.TransactWriteItem{
 				{
 					Update: &types.Update{
 						TableName: aws.String("ServiceApplications"),
@@ -286,13 +441,46 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 							"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
 							"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
 						},
-						UpdateExpression: aws.String("SET #s = :status, lastUpdated = :time"),
+						UpdateExpression: aws.String("SET #s = :status, lastUpdated = :time, adminRemarks = :remarks"),
 						ExpressionAttributeNames: map[string]string{
 							"#s": "status",
 						},
 						ExpressionAttributeValues: map[string]types.AttributeValue{
-							":status": &types.AttributeValueMemberS{Value: "Approved"},
-							":time":   &types.AttributeValueMemberS{Value: now},
+							":status":  &types.AttributeValueMemberS{Value: "Rejected"},
+							":time":    &types.AttributeValueMemberS{Value: now},
+							":remarks": &types.AttributeValueMemberS{Value: adminRemarks},
+						},
+					},
+				},
+				{
+					Put: &types.Put{
+						TableName: aws.String("WalletTransactions"),
+						Item:      refundTxItem,
+					},
+				},
+				{
+					Update: &types.Update{
+						TableName: aws.String("Wallets"),
+						Key: map[string]types.AttributeValue{
+							"PK": &types.AttributeValueMemberS{Value: walletPK},
+							"SK": &types.AttributeValueMemberS{Value: "TYPE#Main"},
+						},
+						UpdateExpression: aws.String("SET balance = balance + :cost"),
+						ExpressionAttributeValues: map[string]types.AttributeValue{
+							":cost": &types.AttributeValueMemberN{Value: fmt.Sprintf("%f", app.Cost)},
+						},
+					},
+				},
+				{
+					Update: &types.Update{
+						TableName: aws.String("Users"),
+						Key: map[string]types.AttributeValue{
+							"PK": &types.AttributeValueMemberS{Value: "USER#" + app.RetailerId},
+							"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+						},
+						UpdateExpression: aws.String("SET walletBalance = walletBalance + :cost"),
+						ExpressionAttributeValues: map[string]types.AttributeValue{
+							":cost": &types.AttributeValueMemberN{Value: fmt.Sprintf("%f", app.Cost)},
 						},
 					},
 				},
@@ -300,99 +488,140 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 		})
 
 		if err != nil {
-			log.Printf("Transaction failed: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process approval"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process rejection and refund"})
 			return
 		}
-
-		// Also record the successful Wallet Transaction
-		txId := generateId("TX")
-		successTx := models.WalletTransaction{
-			PK:         walletPK,
-			SK:         "TX#" + now + "#" + txId,
-			Id:         txId,
-			WalletType: "General", // Ideally pass from frontend but we can default if not stored
-			Amount:     app.Cost,
-			Type:       "Debit",
-			Status:     "Success",
-			Reference:  app.ServiceId,
-			CreatedAt:  now,
-		}
-		successTxItem, _ := attributevalue.MarshalMap(successTx)
-		db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
-			TableName: aws.String("WalletTransactions"),
-			Item:      successTxItem,
-		})
-
-	} else if req.Status == "Completed" {
-		_, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
-			TableName: aws.String("ServiceApplications"),
-			Key: map[string]types.AttributeValue{
-				"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
-				"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
-			},
-			UpdateExpression: aws.String("SET #s = :status, lastUpdated = :time"),
-			ExpressionAttributeNames: map[string]string{
-				"#s": "status",
-			},
-			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":status": &types.AttributeValueMemberS{Value: "Completed"},
-				":time":   &types.AttributeValueMemberS{Value: now},
-			},
-		})
-
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to complete request"})
-			return
-		}
-
-		// Send Automated WhatsApp Message via Mugavai API
-		if app.CustomerWhatsApp != "" {
-			go sendWhatsAppMessage(app.CustomerWhatsApp, app.ServiceName)
-		}
-
-		// Send Notification to Retailer/Distributor
-		notifId := generateId("NOTIF")
-		notif := models.Notification{
-			PK:        "USER#" + app.RetailerId,
-			SK:        "NOTIF#" + now + "#" + notifId,
-			Id:        notifId,
-			UserId:    app.RetailerId,
-			Title:     "Service Request Completed",
-			Message:   fmt.Sprintf("Your request for %s has been completed by Admin.", app.ServiceName),
-			Type:      "success",
-			IsRead:    false,
-			CreatedAt: now,
-		}
-		notifItem, _ := attributevalue.MarshalMap(notif)
-		db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
-			TableName: aws.String("Notifications"),
-			Item:      notifItem,
-		})
 	} else {
+		// Processing, Resubmit — simple status update
 		_, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
 			TableName: aws.String("ServiceApplications"),
 			Key: map[string]types.AttributeValue{
 				"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
 				"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
 			},
-			UpdateExpression: aws.String("SET #s = :status, lastUpdated = :time"),
+			UpdateExpression: aws.String("SET #s = :status, lastUpdated = :time, adminRemarks = :remarks"),
 			ExpressionAttributeNames: map[string]string{
 				"#s": "status",
 			},
 			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":status": &types.AttributeValueMemberS{Value: "Rejected"},
-				":time":   &types.AttributeValueMemberS{Value: now},
+				":status":  &types.AttributeValueMemberS{Value: status},
+				":time":    &types.AttributeValueMemberS{Value: now},
+				":remarks": &types.AttributeValueMemberS{Value: adminRemarks},
 			},
 		})
-
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process rejection"})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update request status"})
 			return
 		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Request " + req.Status + " successfully"})
+	// Update ackFiles if any were uploaded
+	if len(ackFiles) > 0 {
+		ackFilesAttr, _ := attributevalue.MarshalList(ackFiles)
+		_, _ = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+			TableName: aws.String("ServiceApplications"),
+			Key: map[string]types.AttributeValue{
+				"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
+				"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+			},
+			UpdateExpression: aws.String("SET ackFiles = :ackFiles"),
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":ackFiles": &types.AttributeValueMemberL{Value: ackFilesAttr},
+			},
+		})
+	}
+
+	// Send Notification to Retailer/Distributor
+	notifId := generateId("NOTIF")
+	title := "Service Request " + status
+	notifType := "info"
+	if status == "Completed" || status == "Approved" {
+		notifType = "success"
+	} else if status == "Rejected" {
+		notifType = "error"
+	}
+
+	notif := models.Notification{
+		PK:        "USER#" + app.RetailerId,
+		SK:        "NOTIF#" + now + "#" + notifId,
+		Id:        notifId,
+		UserId:    app.RetailerId,
+		Title:     title,
+		Message:   fmt.Sprintf("Your request for %s has been %s by Admin.", app.ServiceName, status),
+		Type:      notifType,
+		IsRead:    false,
+		CreatedAt: now,
+		Link:      "/status",
+	}
+	notifItem, _ := attributevalue.MarshalMap(notif)
+	db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+		TableName: aws.String("Notifications"),
+		Item:      notifItem,
+	})
+
+	// Try to find the customer name and WhatsApp number from the application
+	var customerName string
+	if app.FormData != nil {
+		for key, val := range app.FormData {
+			lowerKey := strings.ToLower(key)
+			if strings.Contains(lowerKey, "name") && !strings.Contains(lowerKey, "father") && !strings.Contains(lowerKey, "mother") {
+				customerName = val
+				break
+			}
+		}
+	}
+	if customerName == "" {
+		customerName = "Customer"
+	}
+
+	if (status == "Approved" || status == "Completed") && app.CustomerWhatsApp != "" {
+		ackLinks := ""
+		if len(ackFiles) > 0 {
+			baseURL := os.Getenv("NEXT_PUBLIC_API_URL")
+			if baseURL == "" {
+				baseURL = "http://localhost:8080" // fallback
+			}
+			baseURL = strings.TrimSuffix(baseURL, "/api")
+			
+			ackLinks = "\n\nAcknowledgement Document(s):\n"
+			for i, file := range ackFiles {
+				ackLinks += fmt.Sprintf("%d. %s/api%s\n", i+1, baseURL, file)
+			}
+		}
+
+		message := fmt.Sprintf("Dear %s,\nYour service request for '%s' has been successfully %s by E-Seva.%s\nThank you for choosing E-Seva!", customerName, app.ServiceName, status, ackLinks)
+		
+		apiKey := os.Getenv("WHATSAPP_API_KEY")
+		senderDevice := os.Getenv("WHATSAPP_SENDER_DEVICE")
+
+		if apiKey != "" && senderDevice != "" {
+			url := "https://mugavaiwapp.in.net/api/send"
+						number := strings.ReplaceAll(app.CustomerWhatsApp, "+", "")
+			if len(number) == 10 {
+				number = "91" + number
+			}
+			payload := map[string]string{
+				"access_token": apiKey,
+				"instance_id":  senderDevice,
+				"number":       number,
+				"type":         "text",
+				"message":      message,
+			}
+			jsonValue, _ := json.Marshal(payload)
+			go func() {
+				resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonValue))
+				if err != nil {
+					log.Printf("WhatsApp API Error: %v", err)
+					return
+				}
+				defer resp.Body.Close()
+				bodyBytes, _ := io.ReadAll(resp.Body)
+				log.Printf("WhatsApp API Response for %s: %s", number, string(bodyBytes))
+			}()
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Request " + status + " successfully"})
 }
 
 func GetServiceRequests(c *gin.Context) {
@@ -442,6 +671,7 @@ type RechargeGatewayReq struct {
 	CustomerMobile string  `json:"customer_mobile"`
 	CustomerEmail  string  `json:"customer_email"`
 	RedirectURL    string  `json:"redirect_url"`
+	UserID         string  `json:"user_id"`
 }
 
 type MugavaiCreateOrderReq struct {
@@ -497,7 +727,7 @@ func RechargeGateway(c *gin.Context) {
 		username = "6380616163"
 	}
 	// Hardcoding API key because GitHub Secrets is overriding it with an old value
-	apiKey := "5f89c01e1d5be436659591de5c7d93d1bcd97c7091448f9e"
+	apiKey := "de84d65d816961eef8662345e4147587c38f2963ca480dbd"
 
 	apiURL := "https://mugavaipaymentgetway.in/api/v1/create_order.php"
 	
@@ -536,6 +766,22 @@ func RechargeGateway(c *gin.Context) {
 		return
 	}
 
+	// Store orderId → userId mapping in DynamoDB so webhook can credit the right wallet
+	if req.UserID != "" {
+		now := time.Now().UTC().Format(time.RFC3339)
+		_, _ = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+			TableName: aws.String("WalletTransactions"),
+			Item: map[string]types.AttributeValue{
+				"PK":        &types.AttributeValueMemberS{Value: "ORDER#" + orderId},
+				"SK":        &types.AttributeValueMemberS{Value: "META"},
+				"userId":    &types.AttributeValueMemberS{Value: req.UserID},
+				"amount":    &types.AttributeValueMemberN{Value: fmt.Sprintf("%.2f", req.Amount)},
+				"status":    &types.AttributeValueMemberS{Value: "Pending"},
+				"createdAt": &types.AttributeValueMemberS{Value: now},
+			},
+		})
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Payment gateway initialized successfully",
 		"data": map[string]interface{}{
@@ -546,29 +792,174 @@ func RechargeGateway(c *gin.Context) {
 }
 
 type RechargeWebhookReq struct {
-	OrderID string  `form:"order_id" json:"order_id"`
-	Status  string  `form:"status" json:"status"`
-	Amount  float64 `form:"amount" json:"amount"`
-	UTR     string  `form:"utr" json:"utr"`
+	OrderID      string      `form:"order_id" json:"order_id"`
+	ClientTxnID  string      `form:"client_txn_id" json:"client_txn_id"`
+	TxnID        string      `form:"txn_id" json:"txn_id"`
+	Status       string      `form:"status" json:"status"`
+	Amount       interface{} `form:"amount" json:"amount"`
+	UTR          string      `form:"utr" json:"utr"`
+	UpiTxnID     string      `form:"upi_txn_id" json:"upi_txn_id"`
 }
 
 // RechargeWebhook handles the callback from Mugavai payment gateway
 func RechargeWebhook(c *gin.Context) {
 	var req RechargeWebhookReq
 	if err := c.ShouldBind(&req); err != nil {
+		log.Printf("[Webhook] Error binding: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// For a real app, you'd look up the user/wallet associated with the order_id,
-	// verify the amount, and then update their balance in the "Wallets" DynamoDB table.
-	log.Printf("Received payment webhook: Order=%s Status=%s Amount=%.2f UTR=%s\n", req.OrderID, req.Status, req.Amount, req.UTR)
-
-	if req.Status == "SUCCESS" {
-		// Example: Mark wallet transaction as successful
-		log.Println("Payment was successful. You should update the wallet balance here.")
+	actualOrderID := req.OrderID
+	if actualOrderID == "" {
+		actualOrderID = req.ClientTxnID
 	}
 
-	// Just return success so the gateway knows we received it
-	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Webhook processed"})
+	actualUTR := req.UTR
+	if actualUTR == "" {
+		actualUTR = req.UpiTxnID
+	}
+
+	var parsedAmount float64
+	switch v := req.Amount.(type) {
+	case float64:
+		parsedAmount = v
+	case string:
+		fmt.Sscanf(v, "%f", &parsedAmount)
+	}
+
+	log.Printf("[Webhook] Order=%s Status=%s Amount=%.2f UTR=%s", actualOrderID, req.Status, parsedAmount, actualUTR)
+
+	if req.Status != "SUCCESS" && req.Status != "success" && req.Status != "COMPLETED" && req.Status != "Completed" {
+		c.JSON(http.StatusOK, gin.H{"status": "received"})
+		return
+	}
+
+	// Look up orderId → userId mapping
+	meta, err := db.DynamoClient.GetItem(context.TODO(), &dynamodb.GetItemInput{
+		TableName: aws.String("WalletTransactions"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: "ORDER#" + actualOrderID},
+			"SK": &types.AttributeValueMemberS{Value: "META"},
+		},
+	})
+	if err != nil || meta.Item == nil {
+		log.Printf("[Webhook] Order meta not found for %s", actualOrderID)
+		c.JSON(http.StatusOK, gin.H{"status": "order_not_found"})
+		return
+	}
+
+	userIdAttr, ok := meta.Item["userId"].(*types.AttributeValueMemberS)
+	if !ok || userIdAttr.Value == "" {
+		c.JSON(http.StatusOK, gin.H{"status": "user_not_found"})
+		return
+	}
+	userId := userIdAttr.Value
+
+	now := time.Now().UTC()
+	amountStr := fmt.Sprintf("%.2f", parsedAmount)
+
+	// Credit Wallets table
+	_, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+		TableName: aws.String("Wallets"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: "WALLET#" + userId},
+			"SK": &types.AttributeValueMemberS{Value: "TYPE#Main"},
+		},
+		UpdateExpression: aws.String("ADD balance :amt SET updatedAt = :ts"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":amt": &types.AttributeValueMemberN{Value: amountStr},
+			":ts":  &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
+		},
+	})
+	if err != nil {
+		log.Printf("[Webhook] Failed to credit Wallets for user %s: %v", userId, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "wallet credit failed"})
+		return
+	}
+
+	// Credit Users.walletBalance
+	_, _ = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+		TableName: aws.String("Users"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: "USER#" + userId},
+			"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+		},
+		UpdateExpression: aws.String("SET walletBalance = if_not_exists(walletBalance, :zero) + :amt, updatedAt = :ts"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":amt":  &types.AttributeValueMemberN{Value: amountStr},
+			":zero": &types.AttributeValueMemberN{Value: "0"},
+			":ts":   &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
+		},
+	})
+
+	// Write transaction record
+	txId := "TX#" + now.Format("20060102150405") + "#" + actualOrderID
+	_, _ = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+		TableName: aws.String("WalletTransactions"),
+		Item: map[string]types.AttributeValue{
+			"PK":          &types.AttributeValueMemberS{Value: "WALLET#" + userId},
+			"SK":          &types.AttributeValueMemberS{Value: txId},
+			"id":          &types.AttributeValueMemberS{Value: actualOrderID},
+			"type":        &types.AttributeValueMemberS{Value: "credit"},
+			"amount":      &types.AttributeValueMemberN{Value: amountStr},
+			"reference":   &types.AttributeValueMemberS{Value: actualUTR},
+			"description": &types.AttributeValueMemberS{Value: fmt.Sprintf("Wallet Recharge via Gateway (UTR: %s)", actualUTR)},
+			"status":      &types.AttributeValueMemberS{Value: "Success"},
+			"walletType":  &types.AttributeValueMemberS{Value: "Main"},
+			"createdAt":   &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
+		},
+	})
+
+	log.Printf("[Webhook] Successfully credited ₹%.2f to user %s", parsedAmount, userId)
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Wallet credited"})
+}
+
+
+func UpdateDynamicService(c *gin.Context) {
+	id := c.Param("id")
+	var req models.DynamicService
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	req.ID = id
+	req.CreatedDate = time.Now().UTC().Format(time.RFC3339)
+
+	item, err := attributevalue.MarshalMap(req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to marshal item"})
+		return
+	}
+
+	_, err = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+		TableName: aws.String("DynamicServices"),
+		Item:      item,
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update dynamic service"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Service updated successfully"})
+}
+
+func DeleteDynamicService(c *gin.Context) {
+	id := c.Param("id")
+
+	_, err := db.DynamoClient.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
+		TableName: aws.String("DynamicServices"),
+		Key: map[string]types.AttributeValue{
+			"id": &types.AttributeValueMemberS{Value: id},
+		},
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete dynamic service"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Service deleted successfully"})
 }

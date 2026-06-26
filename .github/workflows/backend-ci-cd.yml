@@ -31,23 +31,41 @@ jobs:
           cd backend
           GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -ldflags="-s -w" -o eservice-backend .
 
+      - name: Get EC2 IP
+        id: get-ip
+        run: |
+          IP=$(curl -s https://daqpqxq9zg.execute-api.ap-south-1.amazonaws.com/prod/ip | jq -r .public_ip)
+          echo "EC2_IP=$IP" >> $GITHUB_ENV
+
+      - name: Copy binary to EC2
+        continue-on-error: true
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ env.EC2_IP }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_SSH_PORT }}
+          source: "backend/eservice-backend"
+          target: "/opt/eservice/"
+
       - name: Deploy to EC2
         continue-on-error: true
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.EC2_HOST }}
+          host: ${{ env.EC2_IP }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_SSH_PORT }}
           script: |
             set -e
             cd /opt/eservice
-            git reset --hard HEAD
-            git pull origin main
+            git fetch --all
+            git reset --hard origin/main
             cd backend
             cat > .env <<EOF
             AWS_REGION=ap-south-1
             PORT=${{ secrets.PORT }}
+            MUGAVAI_USERNAME=${{ secrets.MUGAVAI_USERNAME }}
             MUGAVAI_API_KEY=${{ secrets.MUGAVAI_API_KEY }}
             EOF
             sudo systemctl restart eservice-backend

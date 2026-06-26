@@ -1,9 +1,7 @@
 export type TicketStatus =
   | "Pending"
-  | "Resubmit"
-  | "Processing"
-  | "Rejected"
-  | "Approved";
+  | "Approved"
+  | "Rejected";
 
 export interface StatusTicket {
   id: string;
@@ -16,6 +14,9 @@ export interface StatusTicket {
   lastUpdated: string;
   remarks?: string;
   userRole?: "Retailer" | "Distributor";
+  formData?: Record<string, string>;
+  documents?: string[];
+  ackFiles?: string[];
 }
 
 export interface StatusStatsData {

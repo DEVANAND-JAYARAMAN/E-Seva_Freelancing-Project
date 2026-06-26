@@ -11,21 +11,33 @@ export function BackendHealthChecker({ children }: { children: React.ReactNode }
 
     const checkHealth = async () => {
       try {
-        const apiUrl = `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api`;
+        const lambdaUrl = (process.env.NEXT_PUBLIC_LAMBDA_URL || "").replace(/\/+$/, "");
+        if (!lambdaUrl) return; // Fallback if no lambda url
+        
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-        const res = await fetch(`${apiUrl}/health`, {
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        const res = await fetch(`${lambdaUrl}/ip`, {
           signal: controller.signal,
         });
         clearTimeout(timeoutId);
-        setIsBackendUp(res.ok);
+        
+        if (res.ok) {
+          const data = await res.json();
+          // If public_ip is empty, the EC2 instance is off
+          if (!data.public_ip) {
+            setIsBackendUp(false);
+          } else {
+            setIsBackendUp(true);
+          }
+        }
       } catch {
-        setIsBackendUp(false);
+        // Ignore client-side network errors to prevent false positives
       }
     };
 
+    // Initial check
     checkHealth();
-    interval = setInterval(checkHealth, 30000);
+    interval = setInterval(checkHealth, 45000); // Check every 45s
     return () => clearInterval(interval);
   }, []);
 

@@ -20,7 +20,7 @@ export const LegalHeirCertNoForm: React.FC<LegalHeirCertNoFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
       if (errors[name]) {
@@ -129,7 +129,7 @@ export const LegalHeirCertNoForm: React.FC<LegalHeirCertNoFormProps> = ({
                   value={formData.applicantName}
                   error={errors.applicantName}
                   disabled={isSubmitting}
-                  onChange={(val) => handleFieldChange("applicantName", val)}
+                  onChange={(val, file) => handleFieldChange("applicantName", val, file)}
                 />
               </div>
 
@@ -141,7 +141,7 @@ export const LegalHeirCertNoForm: React.FC<LegalHeirCertNoFormProps> = ({
                   value={formData.aadhaarCard}
                   error={errors.aadhaarCard}
                   disabled={isSubmitting}
-                  onChange={(val) => handleFieldChange("aadhaarCard", val)}
+                  onChange={(val, file) => handleFieldChange("aadhaarCard", val, file)}
                 />
               </div>
 
@@ -154,7 +154,7 @@ export const LegalHeirCertNoForm: React.FC<LegalHeirCertNoFormProps> = ({
                   value={formData.canNumber}
                   error={errors.canNumber}
                   disabled={isSubmitting}
-                  onChange={(val) => handleFieldChange("canNumber", val)}
+                  onChange={(val, file) => handleFieldChange("canNumber", val, file)}
                 />
               </div>
 

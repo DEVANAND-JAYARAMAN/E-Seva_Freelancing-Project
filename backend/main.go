@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"eservice-backend/admin"
 	"eservice-backend/auth"
 	"eservice-backend/billing"
 	"eservice-backend/crm"
@@ -40,9 +41,15 @@ func main() {
 	config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
 	r.Use(cors.New(config))
 
+	// Ensure uploads directory exists
+	os.MkdirAll("uploads", os.ModePerm)
+
 	// Routes
 	api := r.Group("/api")
 	{
+		// Serve uploaded files under /api/uploads to be correctly proxied by Nginx
+		api.Static("/uploads", "./uploads")
+
 		api.GET("/health", func(c *gin.Context) {
 			c.JSON(200, gin.H{"status": "ok"})
 		})
@@ -52,6 +59,9 @@ func main() {
 			authGroup.POST("/signup", auth.Signup)
 			authGroup.POST("/login", auth.Login)
 		}
+
+		api.GET("/retailers", auth.GetRetailers)
+		api.GET("/distributors", auth.GetDistributors)
 
 		crmGroup := api.Group("/crm")
 		{
@@ -69,7 +79,9 @@ func main() {
 		{
 			notificationGroup.POST("/", notification.CreateNotification)
 			notificationGroup.GET("/", notification.GetNotifications)
+			notificationGroup.DELETE("/all", notification.ClearAllNotifications)
 			notificationGroup.PATCH("/:id/read", notification.MarkAsRead)
+			notificationGroup.DELETE("/:id", notification.DeleteNotification)
 		}
 
 		serviceGroup := api.Group("/services")
@@ -77,14 +89,24 @@ func main() {
 			serviceGroup.POST("/request", service.CreateServiceRequest)
 			serviceGroup.POST("/:id/status", service.UpdateServiceRequestStatus)
 			serviceGroup.GET("/requests", service.GetServiceRequests)
+			serviceGroup.POST("/dynamic", service.CreateDynamicService)
+			serviceGroup.GET("/dynamic", service.GetDynamicServices)
+			serviceGroup.PUT("/dynamic/:id", service.UpdateDynamicService)
+			serviceGroup.DELETE("/dynamic/:id", service.DeleteDynamicService)
 		}
 
 		walletGroup := api.Group("/wallet")
 		{
 			walletGroup.GET("/transactions", service.GetWalletTransactions)
 			walletGroup.POST("/recharge/gateway", wallet.InitiateGatewayRecharge)
+			walletGroup.POST("/recharge/manual", wallet.ManualRecharge)
 			walletGroup.POST("/payment/callback", wallet.HandlePaymentCallback)
 			walletGroup.GET("/recharge/status/:order_id", wallet.CheckGatewayRechargeStatus)
+		}
+
+		adminGroup := api.Group("/admin")
+		{
+			adminGroup.GET("/dashboard", admin.GetDashboardStats)
 		}
 
 		v1Group := api.Group("/v1")

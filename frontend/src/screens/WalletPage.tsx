@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   Wallet,
   Plus,
@@ -8,7 +8,7 @@ import {
   ArrowUpRight,
   ArrowDownLeft,
   History,
-  X as XIcon,
+  X,
   CheckCircle2,
   AlertCircle,
   Filter,
@@ -20,28 +20,43 @@ import { AppShell } from "../layouts/AppShell";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { useAuth } from "../store/context/AuthContext";
 import {
-  initialTransactions,
-  initialPaymentRequests,
   type WalletTransaction,
   type PaymentRequest,
 } from "../config/data";
 
 export function WalletPage() {
-  const { user, updateWallet } = useAuth();
+  const { user, updateWallet, refreshProfile } = useAuth();
+
+  useEffect(() => {
+    refreshProfile();
+  }, [refreshProfile]);
 
   // Balances
   const mainBalance = user?.walletBalance ?? 2895.0;
 
   // Transactions list via local storage
-  const [transactions, setTransactions] = useLocalStorage<WalletTransaction[]>(
-    "thuruvan_wallet_transactions",
-    initialTransactions,
-  );
+  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
+  
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const baseUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace(/(?:\/api|\/)+$/, '');
+        const res = await fetch(`${baseUrl}/api/wallet/transactions?userId=${user?.id}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+        });
+        if(res.ok) {
+          const data = await res.json();
+          setTransactions(data || []);
+        }
+      } catch(err) {
+        console.error(err);
+      }
+    };
+    if (user?.id) fetchTransactions();
+  }, [user?.id]);
 
   // Payment Requests list via local storage (to sync with Admin Verification panel)
-  const [paymentRequests, setPaymentRequests] = useLocalStorage<
-    PaymentRequest[]
-  >("thuruvan_payment_requests", initialPaymentRequests);
+  const [paymentRequests, setPaymentRequests] = useState<PaymentRequest[]>([]);
 
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState("");
@@ -93,11 +108,11 @@ export function WalletPage() {
   const filteredTransactions = useMemo(() => {
     return transactions.filter((t) => {
       const matchesSearch =
-        t.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        t.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (t.description || "").toLowerCase().includes((searchTerm || "").toLowerCase()) ||
+        (t.reference || "").toLowerCase().includes((searchTerm || "").toLowerCase()) ||
         t.amount.toString().includes(searchTerm);
 
-      const matchesType = typeFilter === "all" ? true : t.type === typeFilter;
+      const matchesType = typeFilter === "all" ? true : (t.type || "").toLowerCase() === typeFilter.toLowerCase();
       const matchesWallet = t.walletType === "Main";
 
       return matchesSearch && matchesType && matchesWallet;
@@ -135,17 +150,7 @@ export function WalletPage() {
       return;
     }
 
-    if (upiOption === "id") {
-      if (!upiId.trim()) {
-        setFormError("Please enter a UPI ID.");
-        return;
-      }
-      const upiRegex = /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/;
-      if (!upiRegex.test(upiId.trim())) {
-        setFormError("Please enter a valid UPI ID (e.g. yourname@bank).");
-        return;
-      }
-    } else {
+    if (upiOption === "qr") {
       if (!utrNumber.trim()) {
         setFormError("Transaction Reference/UTR Number is required.");
         return;
@@ -156,48 +161,54 @@ export function WalletPage() {
         );
         return;
       }
+
+      const isDuplicate =
+        paymentRequests.some(
+          (req) => (req.utrNumber || "").toLowerCase() === (utrNumber || "").trim().toLowerCase(),
+        ) ||
+        transactions.some(
+          (t) =>
+            (t.reference || "").toLowerCase() === (utrNumber || "").trim().toLowerCase(),
+        );
+
+      if (isDuplicate) {
+        setFormError(
+          "This UTR/Reference number is already added to the wallet. Duplicate entry is not allowed.",
+        );
+        return;
+      }
     }
 
-    if (upiOption === "qr") {
-      completeRequest(utrNumber.trim());
-      return;
-    }
-
-    setGatewayProcessing(true);
-
+    if (paymentMode === "UPI" && upiOption === "id") {
+      setGatewayProcessing(true);
       try {
-        const reqBody = {
-          amount: amtNum,
-          customer_mobile: mobileNumber.trim(),
-          customer_email: user?.email || "user@example.com",
-          redirect_url: window.location.origin,
-        };
-
-        // Calling our backend API instead of exposing Mugavai credentials
         const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(
           /(?:\/api|\/)+$/,
           "",
         );
-        const response = await fetch(`${baseUrl}/api/wallet/recharge/gateway`, {
+        const res = await fetch(`${baseUrl}/api/v1/wallet/recharge/gateway`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            // Include authorization token if your app uses one
-            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-          body: JSON.stringify(reqBody),
+          body: JSON.stringify({
+            amount: amtNum,
+            customer_mobile: mobileNumber,
+            customer_email: user?.email || "user@thuruvan.com",
+            redirect_url: window.location.origin + "/wallets",
+            user_id: user?.id || "",
+          }),
         });
-
-        const data = await response.json();
-
-        if (response.ok && data.data?.payment_url) {
-          const width = 500;
+        const data = await res.json();
+        if (res.ok && data.data?.payment_url) {
+          const width = 600;
           const height = 700;
           const left = window.screenX + (window.outerWidth - width) / 2;
           const top = window.screenY + (window.outerHeight - height) / 2;
           const popup = window.open(
             data.data.payment_url,
-            "Mugavai Payment",
+            "Payment Gateway",
             `width=${width},height=${height},left=${left},top=${top}`,
           );
 
@@ -220,12 +231,9 @@ export function WalletPage() {
 
               // Poll backend for final status
               try {
-                const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(
-                  /(?:\/api|\/)+$/,
-                  "",
-                );
                 const statusRes = await fetch(
                   `${baseUrl}/api/wallet/recharge/status/${data.data.order_id}`,
+                  { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } },
                 );
                 const statusData = await statusRes.json();
 
@@ -259,7 +267,7 @@ export function WalletPage() {
         }
       } catch (err) {
         setGatewayProcessing(false);
-        setFormError("Error connecting to Mugavai Payment Gateway.");
+        setFormError("Error connecting to Payment Gateway.");
       }
       return;
     }
@@ -291,11 +299,7 @@ export function WalletPage() {
     setTransactions((prev) => [newTransaction, ...prev]);
 
     // Update wallet balance locally
-    if (selectedWalletType === "Main") {
-      updateWallet(mainBalance + amtNum);
-    } else {
-      setApiBalance((prev) => prev + amtNum);
-    }
+    updateWallet(mainBalance + amtNum);
 
     setFormSuccess(true);
     setTimeout(() => {
@@ -304,60 +308,101 @@ export function WalletPage() {
     }, 2000);
   };
 
-  const completeRequest = (finalUtr: string) => {
+  const completeRequest = async (finalUtr: string) => {
     const amtNum = parseFloat(amount);
-    // Create a new Payment Request
-    const newRequest: PaymentRequest = {
-      id: `req-${Date.now()}`,
-      retailerId: user?.id ?? "usr_1001",
-      retailerName: user?.name ?? "Thuruvan Dev",
-      shopName: "Thuruvan Headquarters",
-      amount: amtNum,
-      paymentMode,
-      utrNumber: finalUtr,
-      status: "Pending",
-      requestDate: new Date().toLocaleString("en-US", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      }),
-      walletType: selectedWalletType,
-      remarks: remarks.trim() || undefined,
-    };
+    
+    setGatewayProcessing(true);
+    setFormError("");
 
-    // Save to payment requests list in local storage
-    setPaymentRequests((prev) => [newRequest, ...prev]);
+    try {
+      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "");
+      const res = await fetch(`${baseUrl}/api/wallet/recharge/manual`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          amount: amtNum,
+          utrNumber: finalUtr,
+          remarks: remarks.trim(),
+          userId: user?.id ?? "usr_1001",
+        }),
+      });
 
-    // Add a corresponding "Pending" transaction inside the user's ledger as well
-    const newTransaction: WalletTransaction = {
-      id: `tx-req-${Date.now()}`,
-      date: new Date().toLocaleString("en-US", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      }),
-      type: "credit",
-      description: `Pending Wallet Recharge Request (${paymentMode})`,
-      amount: amtNum,
-      reference: finalUtr,
-      status: "Pending",
-      walletType: selectedWalletType,
-    };
+      let data;
+      const contentType = res.headers.get("content-type");
+      if (contentType && contentType.indexOf("application/json") !== -1) {
+        data = await res.json();
+      } else {
+        const textData = await res.text();
+        throw new Error(`Server returned unexpected format (Status: ${res.status}). Server might be outdated or unreachable.`);
+      }
 
-    setTransactions((prev) => [newTransaction, ...prev]);
+      if (!res.ok) {
+        throw new Error(data.message || "Failed to recharge wallet");
+      }
 
-    // Success response
-    setFormSuccess(true);
-    setTimeout(() => {
-      setIsModalOpen(false);
-      setFormSuccess(false);
-    }, 1800);
+      // Create a new Payment Request locally
+      const newRequest: PaymentRequest = {
+        id: `req-${Date.now()}`,
+        retailerId: user?.id ?? "usr_1001",
+        retailerName: user?.name ?? "Thuruvan Dev",
+        shopName: "Thuruvan Headquarters",
+        amount: amtNum,
+        paymentMode,
+        utrNumber: finalUtr,
+        status: "Pending", // Or "Success" since we instantly credited
+        requestDate: new Date().toLocaleString("en-US", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        }),
+        walletType: selectedWalletType,
+        remarks: remarks.trim() || undefined,
+      };
+
+      // Save to payment requests list in local storage
+      setPaymentRequests((prev) => [newRequest, ...prev]);
+
+      // Add a corresponding "Success" transaction inside the user's ledger
+      const newTransaction: WalletTransaction = {
+        id: `tx-req-${Date.now()}`,
+        date: new Date().toLocaleString("en-US", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        }),
+        type: "credit",
+        description: `Wallet Recharge (${paymentMode})`,
+        amount: amtNum,
+        reference: finalUtr,
+        status: "Success",
+        walletType: selectedWalletType,
+      };
+
+      setTransactions((prev) => [newTransaction, ...prev]);
+
+      // Ensure balance updating correctly
+      updateWallet(mainBalance + amtNum);
+
+      // Success response
+      setGatewayProcessing(false);
+      setFormSuccess(true);
+      setTimeout(() => {
+        setIsModalOpen(false);
+        setFormSuccess(false);
+      }, 1800);
+    } catch (error: any) {
+      setGatewayProcessing(false);
+      setFormError(error.message || "Something went wrong while saving to database.");
+    }
   };
 
   // Reset to default seeds
@@ -367,8 +412,8 @@ export function WalletPage() {
         "Are you sure you want to reset all wallet transaction history and requests to defaults?",
       )
     ) {
-      setTransactions(initialTransactions);
-      setPaymentRequests(initialPaymentRequests);
+      setTransactions([]);
+      setPaymentRequests([]);
       updateWallet(2895.0);
     }
   };
@@ -710,7 +755,7 @@ export function WalletPage() {
                       onClick={() => setIsModalOpen(false)}
                       className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-750 dark:hover:text-slate-200 transition-colors"
                     >
-                      <XIcon size={14} />
+                      <X size={14} />
                     </button>
                   </div>
 
@@ -775,7 +820,7 @@ export function WalletPage() {
                               value="UPI_id"
                               className="dark:bg-[#090d16]"
                             >
-                              UPI ID Request
+                              UPI ID Request (Gateway)
                             </option>
                             <option
                               value="UPI_qr"
@@ -812,26 +857,7 @@ export function WalletPage() {
                         />
                       </div>
 
-                      {/* UPI ID Field */}
-                      {upiOption === "id" && (
-                        <div className="space-y-1.5 animate-in fade-in duration-200">
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
-                            Enter UPI ID
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="e.g. user@okicici or 9876543210@ybl"
-                            value={upiId}
-                            onChange={(e) => {
-                              setUpiId(e.target.value);
-                              setFormError("");
-                            }}
-                            className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
-                          />
-                        </div>
-                      )}
-
-                      {/* UTR reference (shown for QR scans) */}
+                      {/* UTR reference (shown only for QR) */}
                       {upiOption === "qr" && (
                         <div className="space-y-1.5 animate-in fade-in duration-200">
                           <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
@@ -874,7 +900,7 @@ export function WalletPage() {
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
                                 src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(
-                                  `upi://pay?pa=thuruvan@ybl&pn=Thuruvan&am=${amount || 0}&cu=INR`,
+                                  `upi://pay?pa=${process.env.NEXT_PUBLIC_UPI_ID || "mkksriptsami@oksbi"}&pn=Thuruvan%20Communications&am=${amount || 0}&cu=INR&tn=Wallet%20Recharge`,
                                 )}`}
                                 alt="Payment QR Code"
                                 className="w-28 h-28 object-contain"
@@ -899,12 +925,10 @@ export function WalletPage() {
                             </span>
                             <div className="space-y-1">
                               <h5 className="text-xs font-black text-slate-855 dark:text-slate-200 uppercase tracking-wider">
-                                UPI Request Mode
+                                Payment Gateway
                               </h5>
                               <p className="text-[10px] text-slate-450 dark:text-slate-500 max-w-[200px] leading-relaxed">
-                                A secure payment request will be sent to the
-                                entered UPI ID. Open your UPI app to complete
-                                the transaction.
+                                You will be redirected to the secure payment gateway to complete the payment via any UPI App.
                               </p>
                             </div>
                           </div>
@@ -932,9 +956,9 @@ export function WalletPage() {
                             Connecting to Gateway...
                           </>
                         ) : upiOption === "id" ? (
-                          "Pay Now"
+                          "Pay via Gateway"
                         ) : (
-                          "Submit Request"
+                          "Submit Details"
                         )}
                       </button>
                     </div>
