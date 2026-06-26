@@ -45,11 +45,8 @@ export function ServiceQueue() {
     <article className="bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
       <div className="flex items-center justify-between gap-4 mb-6">
         <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-          Live service queue
+          Recent Updates
         </h2>
-        <button className="text-[#005c3a] dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-300 font-extrabold text-xs transition-colors duration-200">
-          View all
-        </button>
       </div>
 
       <div className="space-y-4">

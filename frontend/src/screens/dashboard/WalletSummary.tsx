@@ -9,17 +9,22 @@ export function WalletSummary() {
     distributors: "Connected networks",
   };
 
-  const toneClasses: Record<string, string> = {
-    "main wallet":
-      "bg-[#e8f5e9] dark:bg-emerald-950/30 text-[#005c3a] dark:text-emerald-400",
-    "wallet request":
-      "bg-sky-50 dark:bg-sky-950/30 text-sky-600 dark:text-sky-400",
-    customers:
-      "bg-blue-50 dark:bg-blue-950/30 text-blue-650 dark:text-blue-400",
-    retailers:
-      "bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400",
-    distributors:
-      "bg-teal-50 dark:bg-teal-950/30 text-teal-600 dark:text-teal-400",
+  // Icon badge tone per card
+  const iconTone: Record<string, string> = {
+    "main wallet": "bg-emerald-100 text-emerald-700",
+    "wallet request": "bg-sky-100 text-sky-700",
+    customers: "bg-indigo-100 text-indigo-700",
+    retailers: "bg-orange-100 text-orange-700",
+    distributors: "bg-teal-100 text-teal-700",
+  };
+
+  // Unique card gradient backgrounds
+  const cardBg: Record<string, string> = {
+    "main wallet": "bg-gradient-to-br from-emerald-500 to-green-400",
+    "wallet request": "bg-gradient-to-br from-sky-500 to-cyan-400",
+    customers: "bg-gradient-to-br from-indigo-500 to-blue-400",
+    retailers: "bg-gradient-to-br from-orange-500 to-amber-400",
+    distributors: "bg-gradient-to-br from-teal-500 to-emerald-400",
   };
 
   return (
@@ -29,33 +34,33 @@ export function WalletSummary() {
         const labelLower = card.label.toLowerCase();
         const isMoney = labelLower.includes("wallet");
         const description = descMap[labelLower] || "Stat overview";
-        const toneStyle =
-          toneClasses[labelLower] ||
-          "bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-350";
+        const bgStyle =
+          cardBg[labelLower] || "bg-gradient-to-br from-slate-500 to-slate-400";
+        const iconStyle = iconTone[labelLower] || "bg-white/20 text-white";
 
         return (
           <article
-            className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-0.5"
+            className={`flex items-center justify-between ${bgStyle} rounded-3xl p-5 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}
             key={card.label}
           >
             <div className="space-y-1 min-w-0">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 truncate">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-white/70 truncate">
                 {card.label}
               </p>
-              <strong className="block text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+              <strong className="block text-2xl font-black text-white tracking-tight">
                 {isMoney && (
-                  <span className="text-sm font-semibold text-slate-450 mr-0.5">
+                  <span className="text-sm font-semibold text-white/80 mr-0.5">
                     ₹
                   </span>
                 )}
                 {card.value}
               </strong>
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block truncate">
+              <span className="text-[10px] text-white/70 font-semibold block truncate">
                 {description}
               </span>
             </div>
             <span
-              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${toneStyle}`}
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-white`}
             >
               <Icon size={18} />
             </span>

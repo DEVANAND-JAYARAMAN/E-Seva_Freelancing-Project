@@ -1,7 +1,6 @@
 "use client";
 
 import { AppShell } from "../../layouts/AppShell";
-import { DashboardOverview } from "./DashboardOverview";
 import { ServiceQueue } from "./ServiceQueue";
 import { StatsGrid } from "./StatsGrid";
 import { WalletHealth } from "./WalletHealth";
@@ -24,9 +23,6 @@ export function DashboardPage({
   return (
     <AppShell activePage="Dashboard">
       <section className="flex flex-col gap-6 w-full">
-        {/* Operations Overview and Today Collection */}
-        <DashboardOverview />
-
         {/* Combined Stats & Wallets Grid (3 rows, 4 columns on large screens) */}
         <section
           className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
