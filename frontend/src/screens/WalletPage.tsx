@@ -19,10 +19,7 @@ import {
 import { AppShell } from "../layouts/AppShell";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { useAuth } from "../store/context/AuthContext";
-import {
-  type WalletTransaction,
-  type PaymentRequest,
-} from "../config/data";
+import { type WalletTransaction, type PaymentRequest } from "../config/data";
 
 export function WalletPage() {
   const { user, updateWallet, refreshProfile } = useAuth();
@@ -36,19 +33,27 @@ export function WalletPage() {
 
   // Transactions list via local storage
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
-  
+
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        const baseUrl = (process.env.NEXT_PUBLIC_API_URL || '').replace(/(?:\/api|\/)+$/, '');
-        const res = await fetch(`${baseUrl}/api/wallet/transactions?userId=${user?.id}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-        });
-        if(res.ok) {
+        const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(
+          /(?:\/api|\/)+$/,
+          "",
+        );
+        const res = await fetch(
+          `${baseUrl}/api/wallet/transactions?userId=${user?.id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          },
+        );
+        if (res.ok) {
           const data = await res.json();
           setTransactions(data || []);
         }
-      } catch(err) {
+      } catch (err) {
         console.error(err);
       }
     };
@@ -108,11 +113,18 @@ export function WalletPage() {
   const filteredTransactions = useMemo(() => {
     return transactions.filter((t) => {
       const matchesSearch =
-        (t.description || "").toLowerCase().includes((searchTerm || "").toLowerCase()) ||
-        (t.reference || "").toLowerCase().includes((searchTerm || "").toLowerCase()) ||
+        (t.description || "")
+          .toLowerCase()
+          .includes((searchTerm || "").toLowerCase()) ||
+        (t.reference || "")
+          .toLowerCase()
+          .includes((searchTerm || "").toLowerCase()) ||
         t.amount.toString().includes(searchTerm);
 
-      const matchesType = typeFilter === "all" ? true : (t.type || "").toLowerCase() === typeFilter.toLowerCase();
+      const matchesType =
+        typeFilter === "all"
+          ? true
+          : (t.type || "").toLowerCase() === typeFilter.toLowerCase();
       const matchesWallet = t.walletType === "Main";
 
       return matchesSearch && matchesType && matchesWallet;
@@ -164,11 +176,14 @@ export function WalletPage() {
 
       const isDuplicate =
         paymentRequests.some(
-          (req) => (req.utrNumber || "").toLowerCase() === (utrNumber || "").trim().toLowerCase(),
+          (req) =>
+            (req.utrNumber || "").toLowerCase() ===
+            (utrNumber || "").trim().toLowerCase(),
         ) ||
         transactions.some(
           (t) =>
-            (t.reference || "").toLowerCase() === (utrNumber || "").trim().toLowerCase(),
+            (t.reference || "").toLowerCase() ===
+            (utrNumber || "").trim().toLowerCase(),
         );
 
       if (isDuplicate) {
@@ -233,7 +248,11 @@ export function WalletPage() {
               try {
                 const statusRes = await fetch(
                   `${baseUrl}/api/wallet/recharge/status/${data.data.order_id}`,
-                  { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } },
+                  {
+                    headers: {
+                      Authorization: `Bearer ${localStorage.getItem("token")}`,
+                    },
+                  },
                 );
                 const statusData = await statusRes.json();
 
@@ -310,12 +329,15 @@ export function WalletPage() {
 
   const completeRequest = async (finalUtr: string) => {
     const amtNum = parseFloat(amount);
-    
+
     setGatewayProcessing(true);
     setFormError("");
 
     try {
-      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "");
+      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(
+        /(?:\/api|\/)+$/,
+        "",
+      );
       const res = await fetch(`${baseUrl}/api/wallet/recharge/manual`, {
         method: "POST",
         headers: {
@@ -336,7 +358,9 @@ export function WalletPage() {
         data = await res.json();
       } else {
         const textData = await res.text();
-        throw new Error(`Server returned unexpected format (Status: ${res.status}). Server might be outdated or unreachable.`);
+        throw new Error(
+          `Server returned unexpected format (Status: ${res.status}). Server might be outdated or unreachable.`,
+        );
       }
 
       if (!res.ok) {
@@ -401,7 +425,9 @@ export function WalletPage() {
       }, 1800);
     } catch (error: any) {
       setGatewayProcessing(false);
-      setFormError(error.message || "Something went wrong while saving to database.");
+      setFormError(
+        error.message || "Something went wrong while saving to database.",
+      );
     }
   };
 
@@ -484,16 +510,16 @@ export function WalletPage() {
           </article>
 
           {/* Aggregate Total Credit Card */}
-          <article className="flex items-center gap-4 bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400">
+          <article className="flex items-center gap-4 bg-gradient-to-br from-emerald-500 to-green-400 rounded-3xl p-5 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-white">
               <ArrowUpRight size={22} className="stroke-[2.5]" />
             </span>
             <div className="min-w-0">
-              <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-white/70">
                 TOTAL CREDITS
               </p>
-              <strong className="block text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight mt-0.5">
-                <span className="text-sm font-semibold text-slate-400 dark:text-slate-650 mr-0.5">
+              <strong className="block text-xl sm:text-2xl font-extrabold text-white tracking-tight mt-0.5">
+                <span className="text-sm font-semibold text-white/70 mr-0.5">
                   ₹
                 </span>
                 {stats.totalCredits.toLocaleString("en-IN")}
@@ -502,16 +528,16 @@ export function WalletPage() {
           </article>
 
           {/* Aggregate Total Debit Card */}
-          <article className="flex items-center gap-4 bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-450">
+          <article className="flex items-center gap-4 bg-gradient-to-br from-rose-500 to-pink-400 rounded-3xl p-5 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-white">
               <ArrowDownLeft size={22} className="stroke-[2.5]" />
             </span>
             <div className="min-w-0">
-              <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+              <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-white/70">
                 TOTAL DEBITS
               </p>
-              <strong className="block text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight mt-0.5">
-                <span className="text-sm font-semibold text-slate-400 dark:text-slate-655 mr-0.5">
+              <strong className="block text-xl sm:text-2xl font-extrabold text-white tracking-tight mt-0.5">
+                <span className="text-sm font-semibold text-white/70 mr-0.5">
                   ₹
                 </span>
                 {stats.totalDebits.toLocaleString("en-IN")}
@@ -846,9 +872,7 @@ export function WalletPage() {
                           placeholder="Enter 10-digit mobile number"
                           value={mobileNumber}
                           onChange={(e) => {
-                            setMobileNumber(
-                              e.target.value.replace(/\D/g, ""),
-                            );
+                            setMobileNumber(e.target.value.replace(/\D/g, ""));
                             setFormError("");
                           }}
                           maxLength={10}
@@ -928,7 +952,8 @@ export function WalletPage() {
                                 Payment Gateway
                               </h5>
                               <p className="text-[10px] text-slate-450 dark:text-slate-500 max-w-[200px] leading-relaxed">
-                                You will be redirected to the secure payment gateway to complete the payment via any UPI App.
+                                You will be redirected to the secure payment
+                                gateway to complete the payment via any UPI App.
                               </p>
                             </div>
                           </div>
