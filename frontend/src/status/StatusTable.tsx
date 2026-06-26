@@ -3,6 +3,7 @@ import {
   Search,
   Eye,
   Edit2,
+  Trash2,
   AlertCircle,
   Phone,
   User,
@@ -16,12 +17,14 @@ type StatusTableProps = {
   tickets: StatusTicket[];
   activeFilter: TicketStatus | "All";
   onSelectTicket: (ticket: StatusTicket, editMode?: boolean) => void;
+  onDeleteTicket?: (ticket: StatusTicket) => void;
 };
 
 export function StatusTable({
   tickets,
   activeFilter,
   onSelectTicket,
+  onDeleteTicket,
 }: StatusTableProps) {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
@@ -187,6 +190,15 @@ export function StatusTable({
                             <Edit2 size={13} />
                           </button>
                         )}
+                      {isAdmin && (
+                        <button
+                          onClick={() => onDeleteTicket?.(ticket)}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-rose-200/60 dark:border-rose-900/40 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-rose-500 dark:text-rose-400 transition-colors"
+                          title="Delete ticket"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
