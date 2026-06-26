@@ -1312,6 +1312,94 @@ function renderServiceImage(id: string, className = "w-14 h-14") {
           />
         </svg>
       );
+    case "pancard":
+      return (
+        <svg
+          className={className}
+          viewBox="0 0 64 64"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <linearGradient id="panGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#2563EB" />
+              <stop offset="100%" stopColor="#1D4ED8" />
+            </linearGradient>
+          </defs>
+          {/* Card background */}
+          <rect
+            x="4"
+            y="14"
+            width="56"
+            height="36"
+            rx="5"
+            fill="url(#panGrad)"
+          />
+          {/* Chip */}
+          <rect
+            x="10"
+            y="22"
+            width="12"
+            height="10"
+            rx="2"
+            fill="#FBBF24"
+            opacity="0.9"
+          />
+          <line
+            x1="10"
+            y1="27"
+            x2="22"
+            y2="27"
+            stroke="#B45309"
+            strokeWidth="0.8"
+          />
+          <line
+            x1="16"
+            y1="22"
+            x2="16"
+            y2="32"
+            stroke="#B45309"
+            strokeWidth="0.8"
+          />
+          {/* PAN text */}
+          <text
+            x="32"
+            y="30"
+            fill="white"
+            fontSize="8"
+            fontWeight="bold"
+            textAnchor="middle"
+            fontFamily="Arial, Helvetica, sans-serif"
+            letterSpacing="2"
+          >
+            PAN
+          </text>
+          {/* Card number dots */}
+          <circle cx="12" cy="40" r="1.5" fill="white" opacity="0.6" />
+          <circle cx="17" cy="40" r="1.5" fill="white" opacity="0.6" />
+          <circle cx="22" cy="40" r="1.5" fill="white" opacity="0.6" />
+          <circle cx="27" cy="40" r="1.5" fill="white" opacity="0.6" />
+          {/* Name line */}
+          <rect
+            x="34"
+            y="38"
+            width="22"
+            height="2"
+            rx="1"
+            fill="white"
+            opacity="0.4"
+          />
+          <rect
+            x="34"
+            y="43"
+            width="14"
+            height="2"
+            rx="1"
+            fill="white"
+            opacity="0.3"
+          />
+        </svg>
+      );
     default:
       return null;
   }
@@ -1339,14 +1427,24 @@ export function ServicesPage() {
 
   const handleDeleteService = async () => {
     if (!editingService) return;
-    if (!window.confirm("Are you sure you want to delete this service? This action cannot be undone.")) return;
-    
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this service? This action cannot be undone.",
+      )
+    )
+      return;
+
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/dynamic/${editingService.id}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/dynamic/${editingService.id}`,
+        {
+          method: "DELETE",
+        },
+      );
       if (response.ok) {
-        setServicesList((prev) => prev.filter(s => s.id !== editingService.id));
+        setServicesList((prev) =>
+          prev.filter((s) => s.id !== editingService.id),
+        );
         setEditModalOpen(false);
         setEditingService(null);
         alert("Service deleted successfully.");
@@ -1408,7 +1506,7 @@ export function ServicesPage() {
         glowColor: "shadow-rose-500/10 dark:shadow-rose-950/20",
         category: "Top",
         formFields: ["pdfType", "fileUpload", "customerMobile", "remarks"],
-        price: { retailer: 150, distributor: 150 }
+        price: { retailer: 150, distributor: 150 },
       },
 
       // All Services Group
@@ -1526,7 +1624,7 @@ export function ServicesPage() {
         glowColor: "shadow-teal-500/10",
         category: "All",
         formFields: ["courseName", "studentName", "qualification", "mobile"],
-        price: { retailer: 150, distributor: 150 }
+        price: { retailer: 150, distributor: 150 },
       },
       {
         id: "employment-services",
@@ -1536,7 +1634,7 @@ export function ServicesPage() {
         glowColor: "shadow-slate-500/10",
         category: "All",
         formFields: ["registrationNo", "candidateName", "dob", "qualification"],
-        price: { retailer: 150, distributor: 150 }
+        price: { retailer: 150, distributor: 150 },
       },
       {
         id: "police-verification",
@@ -1546,7 +1644,7 @@ export function ServicesPage() {
         glowColor: "shadow-violet-500/10",
         category: "All",
         formFields: ["applicantName", "purpose", "aadhaarNo", "district"],
-        price: { retailer: 150, distributor: 150 }
+        price: { retailer: 150, distributor: 150 },
       },
       {
         id: "utisl-pan",
@@ -1571,7 +1669,7 @@ export function ServicesPage() {
           "customerMobile",
           "aadhaarUpload",
         ],
-        price: { retailer: 150, distributor: 150 }
+        price: { retailer: 150, distributor: 150 },
       },
       {
         id: "pvc-card-print",
@@ -1581,7 +1679,7 @@ export function ServicesPage() {
         glowColor: "shadow-amber-500/10",
         category: "All",
         formFields: ["pvcCardType", "fileUpload", "customerMobile"],
-        price: { retailer: 150, distributor: 150 }
+        price: { retailer: 150, distributor: 150 },
       },
       {
         id: "cm-health-card",
@@ -1597,7 +1695,7 @@ export function ServicesPage() {
           "customerMobile",
           "incomeCertificateUpload",
         ],
-        price: { retailer: 150, distributor: 150 }
+        price: { retailer: 150, distributor: 150 },
       },
       {
         id: "tnega",
@@ -1627,7 +1725,17 @@ export function ServicesPage() {
           "bookingDate",
           "customerMobile",
         ],
-        price: { retailer: 150, distributor: 150 }
+        price: { retailer: 150, distributor: 150 },
+      },
+      {
+        id: "pancard",
+        name: "PanCard",
+        color: "text-blue-600 dark:text-blue-400",
+        bgColor: "bg-blue-600",
+        glowColor: "shadow-blue-600/10",
+        category: "All",
+        formFields: ["panType", "applicantName", "dob", "mobile"],
+        price: { retailer: 120, distributor: 120 },
       },
     ],
   );
@@ -1636,7 +1744,9 @@ export function ServicesPage() {
 
   const fetchDynamicServices = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/dynamic`);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/dynamic`,
+      );
       if (response.ok) {
         const data = await response.json();
         if (Array.isArray(data) && data.length > 0) {
@@ -1648,12 +1758,17 @@ export function ServicesPage() {
             glowColor: "shadow-blue-500/10",
             category: "All",
             formFields: d.formFields,
-            price: { retailer: d.retailerCharge, distributor: d.distributorCharge },
+            price: {
+              retailer: d.retailerCharge,
+              distributor: d.distributorCharge,
+            },
           }));
 
           setServicesList((prev) => {
             const existingIds = new Set(prev.map((p) => p.id));
-            const newServices = dynamicServices.filter((d) => !existingIds.has(d.id));
+            const newServices = dynamicServices.filter(
+              (d) => !existingIds.has(d.id),
+            );
             return [...prev, ...newServices];
           });
         }
@@ -1669,18 +1784,21 @@ export function ServicesPage() {
 
   const handleAddService = async (newService: EService) => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/dynamic`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/dynamic`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: newService.name,
+            retailerCharge: Number(newService.price?.retailer) || 0,
+            distributorCharge: Number(newService.price?.distributor) || 0,
+            formFields: newService.formFields,
+          }),
         },
-        body: JSON.stringify({
-          name: newService.name,
-          retailerCharge: Number(newService.price?.retailer) || 0,
-          distributorCharge: Number(newService.price?.distributor) || 0,
-          formFields: newService.formFields,
-        }),
-      });
+      );
 
       if (response.ok) {
         setServicesList((prev) => [...prev, newService]);
@@ -1693,7 +1811,7 @@ export function ServicesPage() {
       console.error("Failed to call API, adding locally", error);
       setServicesList((prev) => [...prev, newService]);
     }
-    
+
     setIsAddModalOpen(false);
   };
 
@@ -1808,6 +1926,10 @@ export function ServicesPage() {
     }
     if (service.id === "tnega") {
       router.push(PATHS.TNEGA);
+      return;
+    }
+    if (service.id === "pancard") {
+      router.push(PATHS.PANCARD);
       return;
     }
     setSelectedService(service);
@@ -2322,10 +2444,10 @@ export function ServicesPage() {
           />
         )}
 
-        <AddServiceModal 
-          isOpen={isAddModalOpen} 
-          onClose={() => setIsAddModalOpen(false)} 
-          onAdd={handleAddService} 
+        <AddServiceModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          onAdd={handleAddService}
         />
       </section>
     </AppShell>

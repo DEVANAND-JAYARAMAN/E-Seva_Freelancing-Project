@@ -49,7 +49,6 @@ export const navItems: NavItem[] = [
   { label: "Our Service", href: "/services", icon: Cpu },
   { label: "Service Payment", href: "/payments", icon: CreditCard },
   { label: "PDF Services", href: "/pdf-service", icon: FileText },
-  { label: "PanCard Services", href: "/pancard", icon: Fingerprint },
   { label: "Distributors", href: "/distributors", icon: Building2 },
   { label: "Retailers", href: "/retailers", icon: Store },
   { label: "Billing", href: "/billing", icon: Receipt },
