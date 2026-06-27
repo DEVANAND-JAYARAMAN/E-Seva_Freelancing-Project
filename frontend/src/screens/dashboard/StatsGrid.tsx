@@ -6,6 +6,7 @@ import {
   CheckCircle,
   TrendingUp,
   Cpu,
+  XCircle,
 } from "lucide-react";
 
 export function StatsGrid({ stats }: { stats?: any }) {
@@ -16,6 +17,7 @@ export function StatsGrid({ stats }: { stats?: any }) {
     approved: CheckCircle,
     projected: TrendingUp,
     resubmit: RefreshCw,
+    rejected: XCircle,
   };
 
   const descMap: Record<string, string> = {
@@ -25,6 +27,7 @@ export function StatsGrid({ stats }: { stats?: any }) {
     approved: "Completed Requests",
     projected: "Estimated Margin",
     resubmit: "Needs Correction",
+    rejected: "Declined Requests",
   };
 
   // Unique gradient per card label
@@ -47,16 +50,24 @@ export function StatsGrid({ stats }: { stats?: any }) {
           cardBg[stat.tone] || "bg-gradient-to-br from-slate-500 to-slate-400";
         const isMoney =
           labelLower.includes("payment") || labelLower.includes("collection");
-          
+
         let dynamicValue = stat.value;
         if (stats) {
-          if (labelLower === "today payment") dynamicValue = stats.todayPayment?.toFixed(2) || "0.00";
-          if (labelLower === "pending") dynamicValue = String(stats.pending || 0);
-          if (labelLower === "approved") dynamicValue = String(stats.approved || 0);
-          if (labelLower === "projected") dynamicValue = stats.projected?.toFixed(2) || "0.00";
+          if (labelLower === "today payment")
+            dynamicValue = stats.todayPayment?.toFixed(2) || "0.00";
+          if (labelLower === "pending")
+            dynamicValue = String(stats.pending || 0);
+          if (labelLower === "approved")
+            dynamicValue = String(stats.approved || 0);
+          if (labelLower === "resubmit")
+            dynamicValue = String(stats.resubmit || 0);
+          if (labelLower === "in process")
+            dynamicValue = String(stats.inProcess || 0);
+          if (labelLower === "rejected")
+            dynamicValue = String(stats.rejected || 0);
         }
 
-        if (labelLower === "in process" || labelLower === "resubmit") {
+        if (labelLower === "projected") {
           return null;
         }
 

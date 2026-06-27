@@ -63,6 +63,7 @@ export const stats: StatCard[] = [
   { label: "Approved", value: "2575", change: "+34", tone: "green" },
   { label: "Projected", value: "215", change: "Review", tone: "rose" },
   { label: "Resubmit", value: "32", change: "Follow up", tone: "violet" },
+  { label: "Rejected", value: "0", change: "Declined", tone: "rose" },
 ];
 
 export const walletCards: WalletCard[] = [
