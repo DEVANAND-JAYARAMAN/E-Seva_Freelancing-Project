@@ -1612,6 +1612,16 @@ export function PaymentsPage() {
   // Active pricing rows in editing mode (full page config view)
   const [editingRows, setEditingRows] = useState<SubService[]>([]);
 
+  // Add Service custom modal states
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newServiceName, setNewServiceName] = useState("");
+  const [newAdminPrice, setNewAdminPrice] = useState("0");
+  const [newDistributorPrice, setNewDistributorPrice] = useState("0");
+  const [newRetailerPrice, setNewRetailerPrice] = useState("0");
+  const [newOthersiteAdminPrice, setNewOthersiteAdminPrice] = useState("0");
+  const [newCustomerPrice, setNewCustomerPrice] = useState("0");
+  const [newNeedCoordinator, setNewNeedCoordinator] = useState(false);
+
   // Search filter for service cards
   const filteredCatalog = useMemo(() => {
     return servicesCatalog.filter((item) => {
@@ -1672,24 +1682,39 @@ export function PaymentsPage() {
   };
 
   const handleAddService = () => {
-    const name = prompt("Enter the name of the new service:");
-    if (!name || !name.trim()) return;
+    setIsAddModalOpen(true);
+  };
+
+  const handleCreateServiceSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newServiceName.trim()) return;
 
     const newId = `${activeCatalogItem?.id || "custom"}-${Date.now()}`;
     const newService: SubService = {
       id: newId,
-      name: name.trim(),
-      adminPrice: 0,
-      distributorPrice: 0,
-      retailerPrice: 0,
-      needCoordinator: false,
+      name: newServiceName.trim(),
+      adminPrice: parseFloat(newAdminPrice) || 0,
+      distributorPrice: parseFloat(newDistributorPrice) || 0,
+      retailerPrice: parseFloat(newRetailerPrice) || 0,
+      needCoordinator:
+        activeCatalogItem?.id === "pancard" ? false : newNeedCoordinator,
     };
     if (activeCatalogItem?.id === "pancard") {
-      newService.othersiteAdminPrice = 0;
-      newService.customerPrice = 0;
+      newService.othersiteAdminPrice = parseFloat(newOthersiteAdminPrice) || 0;
+      newService.customerPrice = parseFloat(newCustomerPrice) || 0;
     }
 
     setEditingRows((prev) => [...prev, newService]);
+
+    // Reset states & close
+    setNewServiceName("");
+    setNewAdminPrice("0");
+    setNewDistributorPrice("0");
+    setNewRetailerPrice("0");
+    setNewOthersiteAdminPrice("0");
+    setNewCustomerPrice("0");
+    setNewNeedCoordinator(false);
+    setIsAddModalOpen(false);
   };
 
   // Submit and save configuration (returns back to card view)
@@ -2082,6 +2107,178 @@ export function PaymentsPage() {
                 Service pricing matrix and coordinator status updated
                 successfully.
               </p>
+            </div>
+          </div>
+        )}
+
+        {/* CUSTOM ADD NEW SERVICE POPUP MODAL */}
+        {isAddModalOpen && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm"
+              onClick={() => setIsAddModalOpen(false)}
+            />
+            <div className="relative w-full max-w-md bg-white dark:bg-[#090d16] border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden p-6 z-10 animate-in fade-in zoom-in-95 duration-200">
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
+                <h4 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
+                  ADD NEW SERVICE
+                </h4>
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-750 dark:hover:text-slate-200 transition-colors"
+                >
+                  <Plus size={14} className="rotate-45" />
+                </button>
+              </div>
+
+              {/* Form Content */}
+              <form onSubmit={handleCreateServiceSubmit} className="space-y-4">
+                {/* Service Name */}
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider">
+                    SERVICE NAME
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newServiceName}
+                    onChange={(e) => setNewServiceName(e.target.value)}
+                    placeholder="e.g. Passport Application"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+                  />
+                </div>
+
+                {/* Primary Prices Grid */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-555 uppercase tracking-wider">
+                      ADMIN PRICE (₹)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={newAdminPrice}
+                      onChange={(e) => setNewAdminPrice(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-555 uppercase tracking-wider">
+                      DISTRIBUTOR PRICE (₹)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={newDistributorPrice}
+                      onChange={(e) => setNewDistributorPrice(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+                    />
+                  </div>
+                </div>
+
+                {/* Secondary Prices Grid */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-555 uppercase tracking-wider">
+                      RETAILER PRICE (₹)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={newRetailerPrice}
+                      onChange={(e) => setNewRetailerPrice(e.target.value)}
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+                    />
+                  </div>
+
+                  {activeCatalogItem?.id === "pancard" ? (
+                    <div className="space-y-1">
+                      <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-555 uppercase tracking-wider">
+                        CUSTOMER PRICE (₹)
+                      </label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={newCustomerPrice}
+                        onChange={(e) => setNewCustomerPrice(e.target.value)}
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-1 flex flex-col justify-end pb-2">
+                      <label className="inline-flex items-center gap-2 cursor-pointer select-none text-[10px] font-extrabold text-slate-400 dark:text-slate-555 uppercase tracking-wider">
+                        <input
+                          type="checkbox"
+                          checked={newNeedCoordinator}
+                          onChange={(e) =>
+                            setNewNeedCoordinator(e.target.checked)
+                          }
+                          className="sr-only peer"
+                        />
+                        <div className="w-5 h-5 bg-slate-100 dark:bg-slate-800 border border-slate-350 dark:border-slate-700 rounded-md flex items-center justify-center transition-all peer-checked:bg-[#005c3a] peer-checked:border-[#005c3a] dark:peer-checked:bg-emerald-600 dark:peer-checked:border-emerald-600 peer-checked:shadow-sm">
+                          <svg
+                            className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="3.5"
+                            viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M4.5 12.75l6 6 9-13.5"
+                            />
+                          </svg>
+                        </div>
+                        <span>Need Coordinator</span>
+                      </label>
+                    </div>
+                  )}
+                </div>
+
+                {/* Othersite Admin Price (only if pancard) */}
+                {activeCatalogItem?.id === "pancard" && (
+                  <div className="space-y-1">
+                    <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-555 uppercase tracking-wider">
+                      OTHERSITE ADMIN PRICE (₹)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={newOthersiteAdminPrice}
+                      onChange={(e) =>
+                        setNewOthersiteAdminPrice(e.target.value)
+                      }
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+                    />
+                  </div>
+                )}
+
+                {/* Footer Buttons */}
+                <div className="flex items-center justify-end gap-3 border-t border-slate-100 dark:border-slate-850 pt-4 mt-6">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddModalOpen(false)}
+                    className="flex-1 px-4 py-2.5 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 rounded-xl text-xs font-bold text-slate-500 dark:text-slate-400 transition-colors"
+                  >
+                    CANCEL
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-colors"
+                  >
+                    CREATE SERVICE
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
