@@ -6,6 +6,7 @@ import {
   Home,
   Search,
   Plus,
+  Trash2,
   CheckCircle2,
   AlertCircle,
   Settings,
@@ -1670,6 +1671,27 @@ export function PaymentsPage() {
     );
   };
 
+  const handleAddService = () => {
+    const name = prompt("Enter the name of the new service:");
+    if (!name || !name.trim()) return;
+
+    const newId = `${activeCatalogItem?.id || "custom"}-${Date.now()}`;
+    const newService: SubService = {
+      id: newId,
+      name: name.trim(),
+      adminPrice: 0,
+      distributorPrice: 0,
+      retailerPrice: 0,
+      needCoordinator: false,
+    };
+    if (activeCatalogItem?.id === "pancard") {
+      newService.othersiteAdminPrice = 0;
+      newService.customerPrice = 0;
+    }
+
+    setEditingRows((prev) => [...prev, newService]);
+  };
+
   // Submit and save configuration (returns back to card view)
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1778,13 +1800,23 @@ export function PaymentsPage() {
                   Configure service commission prices & coordinator eligibility
                 </p>
               </div>
-              <button
-                onClick={() => setActiveCatalogItem(null)}
-                className="flex items-center justify-center gap-1.5 h-9 px-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-750 dark:hover:text-slate-200 transition-colors self-start sm:self-auto"
-              >
-                <ArrowLeft size={13} />
-                <span>Back</span>
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleAddService}
+                  className="flex items-center justify-center gap-1.5 h-9 px-4 rounded-xl bg-[#005c3a] hover:bg-[#004d30] dark:bg-emerald-600 dark:hover:bg-emerald-500 text-xs font-bold text-white shadow-sm transition-all"
+                >
+                  <Plus size={13} />
+                  <span>Add Service</span>
+                </button>
+                <button
+                  onClick={() => setActiveCatalogItem(null)}
+                  className="flex items-center justify-center gap-1.5 h-9 px-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-750 dark:hover:text-slate-200 transition-colors self-start sm:self-auto"
+                >
+                  <ArrowLeft size={13} />
+                  <span>Back</span>
+                </button>
+              </div>
             </div>
 
             {/* Configuration Pricing Form Table */}
@@ -1812,6 +1844,7 @@ export function PaymentsPage() {
                           Need Coordinator
                         </th>
                       )}
+                      <th className="py-4 px-5 text-center w-20">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 dark:divide-slate-900/60 text-xs font-semibold text-slate-700 dark:text-slate-350">
@@ -1999,6 +2032,22 @@ export function PaymentsPage() {
                               </label>
                             </td>
                           )}
+
+                          {/* Action (Delete Row) */}
+                          <td className="py-4 px-5 text-center">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingRows((prev) =>
+                                  prev.filter((r) => r.id !== row.id),
+                                );
+                              }}
+                              className="text-red-500 hover:text-red-700 p-1.5 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
+                              title="Delete service row"
+                            >
+                              <Trash2 size={14} className="stroke-[2.5]" />
+                            </button>
+                          </td>
                         </tr>
                       );
                     })}
