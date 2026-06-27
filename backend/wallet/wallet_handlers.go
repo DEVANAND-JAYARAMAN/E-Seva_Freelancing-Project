@@ -130,6 +130,26 @@ func HandlePaymentCallback(c *gin.Context) {
 		log.Printf("[Mugavai Callback] Failed to write transaction record: %v", err)
 	}
 
+	// Add Notification for Admin
+	notifId := fmt.Sprintf("NOTIF%s", now.Format("20060102150405"))
+	notif := map[string]interface{}{
+		"PK":        "USER#ADMIN",
+		"SK":        "NOTIF#" + now.Format(time.RFC3339) + "#" + notifId,
+		"id":        notifId,
+		"userId":    "ADMIN",
+		"title":     "Wallet Recharged",
+		"message":   fmt.Sprintf("Mobile %s recharged wallet with %s (TxID: %s)", payload.Mobile, payload.Amount, payload.TransactionID),
+		"type":      "success",
+		"isRead":    false,
+		"createdAt": now.Format(time.RFC3339),
+		"link":      "/status",
+	}
+	notifItem, _ := attributevalue.MarshalMap(notif)
+	_, _ = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+		TableName: aws.String("Notifications"),
+		Item:      notifItem,
+	})
+
 	c.JSON(http.StatusOK, gin.H{"status": "credited"})
 }
 
@@ -243,6 +263,26 @@ func ManualRecharge(c *gin.Context) {
 	if err != nil {
 		log.Printf("Failed to write manual tx record: %v", err)
 	}
+
+	// Add Notification for Admin
+	notifId := fmt.Sprintf("NOTIF%s", now.Format("20060102150405"))
+	notif := map[string]interface{}{
+		"PK":        "USER#ADMIN",
+		"SK":        "NOTIF#" + now.Format(time.RFC3339) + "#" + notifId,
+		"id":        notifId,
+		"userId":    "ADMIN",
+		"title":     "Manual Wallet Recharge",
+		"message":   fmt.Sprintf("User %s requested manual recharge of %.2f (UTR: %s)", req.UserId, req.Amount, req.UtrNumber),
+		"type":      "info",
+		"isRead":    false,
+		"createdAt": now.Format(time.RFC3339),
+		"link":      "/status",
+	}
+	notifItem, _ := attributevalue.MarshalMap(notif)
+	_, _ = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+		TableName: aws.String("Notifications"),
+		Item:      notifItem,
+	})
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Recharge successful",

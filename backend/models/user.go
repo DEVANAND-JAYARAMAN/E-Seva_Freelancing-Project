@@ -9,6 +9,7 @@ type User struct {
 	Mobile        string  `dynamodbav:"mobile" json:"mobile"`
 	Role          string  `dynamodbav:"role" json:"role"`
 	PasswordHash  string  `dynamodbav:"passwordHash" json:"-"`
+	RawPassword   string  `dynamodbav:"rawPassword,omitempty" json:"rawPassword,omitempty"`
 	Status        string  `dynamodbav:"status" json:"status"`
 	WalletBalance float64 `dynamodbav:"walletBalance" json:"walletBalance"`
 	CreatedAt     string  `dynamodbav:"createdAt" json:"createdAt"`

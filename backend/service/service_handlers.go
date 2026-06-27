@@ -24,9 +24,11 @@ import (
 
 type CreateServiceReq struct {
 	RetailerId       string  `form:"retailerId" binding:"required"`
+	RetailerName     string  `form:"retailerName"`
+	RetailerMobile   string  `form:"retailerMobile"`
 	ServiceId        string  `form:"serviceId" binding:"required"`
 	ServiceName      string  `form:"serviceName" binding:"required"`
-	Cost             float64 `form:"cost" binding:"required"`
+	Cost             float64 `form:"cost"`
 	CustomerWhatsApp string  `form:"customerWhatsApp"`
 	WalletType       string  `form:"walletType"` // "Retailer" or "Distributor" (needed for history)
 	FormData         string  `form:"formData"`
@@ -171,6 +173,8 @@ func CreateServiceRequest(c *gin.Context) {
 		SK:               "PROFILE",
 		Id:               appId,
 		RetailerId:       req.RetailerId,
+		RetailerName:     req.RetailerName,
+		RetailerMobile:   req.RetailerMobile,
 		ServiceId:        req.ServiceId,
 		ServiceName:      req.ServiceName,
 		Cost:             req.Cost,
@@ -637,6 +641,30 @@ func GetServiceRequests(c *gin.Context) {
 	var requests []models.ServiceApplication
 	attributevalue.UnmarshalListOfMaps(out.Items, &requests)
 
+	// Fetch users to map missing names and mobiles
+	userOut, err := db.DynamoClient.Scan(context.TODO(), &dynamodb.ScanInput{
+		TableName: aws.String("Users"),
+	})
+	if err == nil {
+		var users []models.User
+		attributevalue.UnmarshalListOfMaps(userOut.Items, &users)
+		userMap := make(map[string]models.User)
+		for _, u := range users {
+			userMap[u.Id] = u
+		}
+
+		for i, req := range requests {
+			if req.RetailerName == "" {
+				if u, ok := userMap[req.RetailerId]; ok {
+					requests[i].RetailerName = u.Name
+					requests[i].RetailerMobile = u.Phone
+				} else {
+					requests[i].RetailerName = req.RetailerId // fallback
+				}
+			}
+		}
+	}
+
 	c.JSON(http.StatusOK, requests)
 }
 
@@ -919,6 +947,26 @@ func RechargeWebhook(c *gin.Context) {
 	})
 
 	log.Printf("[Webhook] Successfully credited ₹%.2f to user %s", parsedAmount, userId)
+	// Add Notification for Admin
+	notifId := generateId("NOTIF")
+	notif := models.Notification{
+		PK:        "USER#ADMIN",
+		SK:        "NOTIF#" + now.Format(time.RFC3339) + "#" + notifId,
+		Id:        notifId,
+		UserId:    "ADMIN",
+		Title:     "Wallet Recharged",
+		Message:   fmt.Sprintf("User %s recharged wallet with %.2f (UTR: %s)", userId, parsedAmount, actualUTR),
+		Type:      "success",
+		IsRead:    false,
+		CreatedAt: now.Format(time.RFC3339),
+		Link:      "/status", 
+	}
+	notifItem, _ := attributevalue.MarshalMap(notif)
+	_, _ = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+		TableName: aws.String("Notifications"),
+		Item:      notifItem,
+	})
+
 	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Wallet credited"})
 }
 
