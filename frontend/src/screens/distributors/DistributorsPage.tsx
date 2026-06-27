@@ -33,6 +33,7 @@ export function DistributorsPage() {
           balance: user.WalletBalance || user.walletBalance || 0,
           status: user.Status || user.status || "Active",
           createdDate: (user.CreatedAt || user.createdAt || "").split("T")[0],
+          rawPassword: user.RawPassword || user.rawPassword || "N/A",
         }));
         setDistributors(mapped);
       }

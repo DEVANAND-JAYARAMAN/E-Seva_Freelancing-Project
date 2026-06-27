@@ -9,6 +9,7 @@ export interface Distributor {
   status: "Active" | "Suspended";
   createdDate: string;
   aadhaarNo?: string;
+  rawPassword?: string;
 }
 
 export interface DistributorStatsData {

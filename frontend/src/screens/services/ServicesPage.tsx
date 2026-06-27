@@ -1932,12 +1932,9 @@ export function ServicesPage() {
       router.push(PATHS.PANCARD);
       return;
     }
-    setSelectedService(service);
-    setFormData({});
-    setErrors({});
-    setSelectedFiles([]);
-    setPaymentPhase("form");
-    setIsModalOpen(true);
+
+    // Dynamic Services fallback
+    router.push(`/services/dynamic_service?id=${service.id}`);
   };
 
   // Form field value change

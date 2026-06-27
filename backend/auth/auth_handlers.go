@@ -115,6 +115,7 @@ func Signup(c *gin.Context) {
 		Mobile:       req.Mobile,
 		Role:         req.Role,
 		PasswordHash: hashedPassword,
+		RawPassword:  req.Password,
 		Status:       "Active",
 		CreatedAt:    now,
 		UpdatedAt:    now,
@@ -186,6 +187,26 @@ func Signup(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create account: " + err.Error()})
 		return
 	}
+
+	// Add Notification for Admin
+	notifId := "NOTIF" + time.Now().Format("20060102150405")
+	notif := map[string]interface{}{
+		"PK":        "USER#ADMIN",
+		"SK":        "NOTIF#" + now + "#" + notifId,
+		"id":        notifId,
+		"userId":    "ADMIN",
+		"title":     "New User Registration",
+		"message":   fmt.Sprintf("New %s registered: %s (%s)", req.Role, req.FullName, req.Email),
+		"type":      "info",
+		"isRead":    false,
+		"createdAt": now,
+		"link":      "/status",
+	}
+	notifItem, _ := attributevalue.MarshalMap(notif)
+	_, _ = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+		TableName: aws.String("Notifications"),
+		Item:      notifItem,
+	})
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Account created successfully",

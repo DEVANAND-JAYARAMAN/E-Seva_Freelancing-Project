@@ -919,6 +919,26 @@ func RechargeWebhook(c *gin.Context) {
 	})
 
 	log.Printf("[Webhook] Successfully credited ₹%.2f to user %s", parsedAmount, userId)
+	// Add Notification for Admin
+	notifId := generateId("NOTIF")
+	notif := models.Notification{
+		PK:        "USER#ADMIN",
+		SK:        "NOTIF#" + now.Format(time.RFC3339) + "#" + notifId,
+		Id:        notifId,
+		UserId:    "ADMIN",
+		Title:     "Wallet Recharged",
+		Message:   fmt.Sprintf("User %s recharged wallet with %.2f (UTR: %s)", userId, parsedAmount, actualUTR),
+		Type:      "success",
+		IsRead:    false,
+		CreatedAt: now.Format(time.RFC3339),
+		Link:      "/status", 
+	}
+	notifItem, _ := attributevalue.MarshalMap(notif)
+	_, _ = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+		TableName: aws.String("Notifications"),
+		Item:      notifItem,
+	})
+
 	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Wallet credited"})
 }
 

@@ -156,8 +156,14 @@ export function DistributorTable({
                           {distributor.aadhaarNo}
                         </span>
                       </div>
-                    )}
-                  </td>
+                      )}
+                      {distributor.rawPassword && (
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 mt-1">
+                          <span className="text-[10px] uppercase tracking-wider text-[#005c3a] dark:text-emerald-400">Pwd:</span>
+                          <span className="font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[10px]">{distributor.rawPassword}</span>
+                        </div>
+                      )}
+                    </td>
 
                   {/* Location */}
                   <td className="py-4 px-6">

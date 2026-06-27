@@ -51,6 +51,26 @@ func CreateCustomer(c *gin.Context) {
 		return
 	}
 
+	// Add Notification for Admin
+	notifId := "NOTIF" + time.Now().Format("20060102150405")
+	notif := map[string]interface{}{
+		"PK":        "USER#ADMIN",
+		"SK":        "NOTIF#" + now + "#" + notifId,
+		"id":        notifId,
+		"userId":    "ADMIN",
+		"title":     "New CRM Customer",
+		"message":   fmt.Sprintf("New customer created: %s (%s)", req.Name, req.Mobile),
+		"type":      "info",
+		"isRead":    false,
+		"createdAt": now,
+		"link":      "/status",
+	}
+	notifItem, _ := attributevalue.MarshalMap(notif)
+	_, _ = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+		TableName: aws.String("Notifications"),
+		Item:      notifItem,
+	})
+
 	c.JSON(http.StatusCreated, req)
 }
 
