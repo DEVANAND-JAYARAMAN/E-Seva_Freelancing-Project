@@ -438,4 +438,19 @@
   .dark form p[class*="text-slate-"] {
     color: #ffffff !important;
   }
+
+  /* ─────────────────────────────────────────────────────────
+     Global Form Control Borders (Light & Dark Mode)
+     ───────────────────────────────────────────────────────── */
+  input,
+  select,
+  textarea {
+    border: 1px solid #ced4da !important;
+  }
+
+  .dark input,
+  .dark select,
+  .dark textarea {
+    border: 1px solid #495057 !important;
+  }
 }
