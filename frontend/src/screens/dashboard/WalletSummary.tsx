@@ -4,7 +4,7 @@ import { useAuth } from "../../store/context/AuthContext";
 
 export function WalletSummary({ stats }: { stats?: any }) {
   const { user } = useAuth();
-  
+
   const descMap: Record<string, string> = {
     "main wallet": "Available balance",
     "wallet request": "Pending approvals",
@@ -41,6 +41,20 @@ export function WalletSummary({ stats }: { stats?: any }) {
         const bgStyle =
           cardBg[labelLower] || "bg-gradient-to-br from-slate-500 to-slate-400";
         const iconStyle = iconTone[labelLower] || "bg-white/20 text-white";
+
+        let dynamicValue = card.value;
+        if (stats) {
+          if (labelLower === "main wallet")
+            dynamicValue = stats.mainWallet?.toFixed(2) ?? card.value;
+          if (labelLower === "wallet request")
+            dynamicValue = String(stats.walletRequest ?? card.value);
+          if (labelLower === "customers")
+            dynamicValue = String(stats.customers ?? card.value);
+          if (labelLower === "retailers")
+            dynamicValue = String(stats.retailers ?? card.value);
+          if (labelLower === "distributors")
+            dynamicValue = String(stats.distributors ?? card.value);
+        }
 
         return (
           <article
