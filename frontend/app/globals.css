@@ -208,6 +208,35 @@
     background-color: #e9ecef !important;
   }
 
+  /* Light mode status badge overrides */
+  table td span[class*="bg-emerald"],
+  table td span[class*="bg-green"],
+  table td span[class*="bg-[#e8f5e9]"] {
+    background-color: rgba(25, 135, 84, 0.12) !important;
+    color: #198754 !important;
+    border: 1px solid rgba(25, 135, 84, 0.25) !important;
+  }
+
+  table td span[class*="bg-teal"] {
+    background-color: rgba(13, 202, 240, 0.12) !important;
+    color: #0b798a !important;
+    border: 1px solid rgba(13, 202, 240, 0.25) !important;
+  }
+
+  table td span[class*="bg-rose"],
+  table td span[class*="bg-red"] {
+    background-color: rgba(220, 53, 69, 0.12) !important;
+    color: #dc3545 !important;
+    border: 1px solid rgba(220, 53, 69, 0.25) !important;
+  }
+
+  table td span[class*="bg-amber"],
+  table td span[class*="bg-yellow"] {
+    background-color: rgba(255, 193, 7, 0.12) !important;
+    color: #a17000 !important;
+    border: 1px solid rgba(255, 193, 7, 0.25) !important;
+  }
+
   /* ─────────────────────────────────────────────────────────
      Global Table Styles — Dark Mode Override (.dark wrapper)
      ───────────────────────────────────────────────────────── */
@@ -285,6 +314,12 @@
     background-color: rgba(25, 135, 84, 0.2) !important;
     color: #2ec4b6 !important;
     border: 1px solid rgba(25, 135, 84, 0.3) !important;
+  }
+
+  .dark table td span[class*="bg-teal"] {
+    background-color: rgba(13, 202, 240, 0.2) !important;
+    color: #0dcaf0 !important;
+    border: 1px solid rgba(13, 202, 240, 0.3) !important;
   }
 
   .dark table td span[class*="bg-rose"],

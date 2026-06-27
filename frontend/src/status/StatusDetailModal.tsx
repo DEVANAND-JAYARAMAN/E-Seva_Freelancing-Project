@@ -185,11 +185,13 @@ export function StatusDetailModal({
                     className={`inline-flex items-center px-2.5 py-1 mt-1 rounded-lg text-[10px] font-extrabold tracking-wider uppercase ${
                       ticket.status === "Approved"
                         ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400"
-                        : ticket.status === "Pending"
-                          ? "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400"
-                          : ticket.status === "Rejected"
-                            ? "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400"
-                            : "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400"
+                        : ticket.status === "Completed"
+                          ? "bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400"
+                          : ticket.status === "Pending"
+                            ? "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400"
+                            : ticket.status === "Rejected"
+                              ? "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400"
+                              : "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400"
                     }`}
                   >
                     {ticket.status}
