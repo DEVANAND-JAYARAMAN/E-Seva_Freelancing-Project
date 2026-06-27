@@ -438,19 +438,41 @@
   .dark form p[class*="text-slate-"] {
     color: #ffffff !important;
   }
+}
 
-  /* ─────────────────────────────────────────────────────────
-     Global Form Control Borders (Light & Dark Mode)
-     ───────────────────────────────────────────────────────── */
-  input,
-  select,
-  textarea {
-    border: 1px solid #ced4da !important;
-  }
+/* ─────────────────────────────────────────────────────────
+   Global Form Control Borders & High Contrast Colors (Post-Tailwind Overrides)
+   ───────────────────────────────────────────────────────── */
+input,
+select,
+textarea {
+  border: 1px solid #707070 !important; /* Enforced solid dark-gray border for maximum visibility in light mode */
+}
 
-  .dark input,
-  .dark select,
-  .dark textarea {
-    border: 1px solid #495057 !important;
-  }
+.dark input,
+.dark select,
+.dark textarea {
+  border: 1px solid #505050 !important; /* Enforced solid dark-mode border */
+}
+
+/* Force all labels and form/modal descriptors to use solid black text color in light mode */
+label,
+form label,
+.animate-fadeIn label,
+.animate-fadeIn span[class*="text-slate-"],
+.animate-fadeIn div[class*="text-slate-"],
+form span[class*="text-slate-"],
+form p[class*="text-slate-"] {
+  color: #000000 !important;
+}
+
+/* Ensure dark mode still renders them in pure white */
+.dark label,
+.dark form label,
+.dark .animate-fadeIn label,
+.dark .animate-fadeIn span[class*="text-slate-"],
+.dark .animate-fadeIn div[class*="text-slate-"],
+.dark form span[class*="text-slate-"],
+.dark form p[class*="text-slate-"] {
+  color: #ffffff !important;
 }
