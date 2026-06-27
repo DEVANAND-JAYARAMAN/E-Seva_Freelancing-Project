@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import {
   Home,
   Search,
@@ -432,6 +433,25 @@ const DEFAULT_SUB_SERVICES: Record<string, SubService[]> = {
       adminPrice: 107.0,
       distributorPrice: 99.0,
       retailerPrice: 99.0,
+      needCoordinator: false,
+    },
+  ],
+
+  pancard: [
+    {
+      id: "pan-new",
+      name: "New Card",
+      adminPrice: 15.0,
+      distributorPrice: 30.0,
+      retailerPrice: 30.0,
+      needCoordinator: false,
+    },
+    {
+      id: "pan-correction",
+      name: "Correction Pan Card",
+      adminPrice: 10.0,
+      distributorPrice: 20.0,
+      retailerPrice: 20.0,
       needCoordinator: false,
     },
   ],
@@ -1288,6 +1308,55 @@ function renderServiceImage(id: string, className = "w-14 h-14") {
         </svg>
       );
 
+    case "pancard":
+      return (
+        <svg
+          className={className}
+          viewBox="0 0 64 64"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <linearGradient id="panGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#EF4444" />
+              <stop offset="100%" stopColor="#991B1B" />
+            </linearGradient>
+          </defs>
+          <rect
+            x="4"
+            y="14"
+            width="56"
+            height="36"
+            rx="4"
+            fill="url(#panGrad)"
+            stroke="#DC2626"
+            strokeWidth="1.5"
+          />
+          <rect x="8" y="20" width="11" height="13" rx="1.5" fill="#FFE4E6" />
+          <circle cx="13.5" cy="25" r="2.5" fill="#991B1B" />
+          <path
+            d="M9 31C9 28.5 12 28.5 13.5 29.5C15 28.5 18 28.5 18 31H9Z"
+            fill="#991B1B"
+          />
+          <circle cx="50" cy="24" r="4.5" fill="#FFE4E6" opacity="0.8" />
+          <text
+            x="50"
+            y="26.5"
+            fill="#991B1B"
+            fontSize="5.5"
+            fontWeight="black"
+            textAnchor="middle"
+            fontFamily="Impact"
+          >
+            PAN
+          </text>
+          <rect x="23" y="20" width="22" height="2" rx="0.5" fill="#FFE4E6" />
+          <rect x="23" y="25" width="18" height="2" rx="0.5" fill="#FFE4E6" />
+          <rect x="23" y="30" width="28" height="2" rx="0.5" fill="#FFE4E6" />
+          <rect x="23" y="35" width="20" height="4" rx="0.5" fill="white" />
+        </svg>
+      );
+
     case "agri-stack-pdf":
       return (
         <svg
@@ -1513,6 +1582,7 @@ const servicesCatalog: ServiceCatalogItem[] = [
     color: "text-violet-500",
   },
   { id: "utisl-pan", name: "Utisl Pan", color: "text-sky-500" },
+  { id: "pancard", name: "PAN Card", color: "text-red-500" },
   { id: "agri-stack-pdf", name: "Agri Stack PDF", color: "text-emerald-550" },
   { id: "pvc-card-print", name: "PVC Card Print", color: "text-amber-550" },
   { id: "cm-health-card", name: "CM Health Card", color: "text-lime-600" },
@@ -1520,6 +1590,7 @@ const servicesCatalog: ServiceCatalogItem[] = [
 
 export function PaymentsPage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState("");
   // View states: null for catalog view, item for full page service configuration view
   const [activeCatalogItem, setActiveCatalogItem] =
@@ -1548,6 +1619,10 @@ export function PaymentsPage() {
   }, [searchTerm]);
 
   const handleCardClick = (item: ServiceCatalogItem) => {
+    if (item.id === "pancard") {
+      router.push("/pancard");
+      return;
+    }
     setActiveCatalogItem(item);
     // Initialize editing rows from persistent storage or default
     const existing = pricingConfig[item.id] ||
@@ -1615,7 +1690,6 @@ export function PaymentsPage() {
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-50 dark:border-slate-900/40 pb-3 gap-3">
               <div className="flex items-center gap-2">
-                <span className="flex h-2 w-2 rounded-full bg-[#005c3a] dark:bg-emerald-500 animate-pulse" />
                 <h3 className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
                   Available E-Seva Utility Payments
                 </h3>
