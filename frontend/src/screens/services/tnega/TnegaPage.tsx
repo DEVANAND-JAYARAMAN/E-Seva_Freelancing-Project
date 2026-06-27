@@ -124,16 +124,6 @@ export function TnegaPage() {
               <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
                 TNEGA Customer Directory
               </h2>
-              <span className="text-slate-300 dark:text-slate-700 text-lg select-none">
-                |
-              </span>
-              <Link
-                href="/dashboard"
-                className="text-[#005c3a] dark:text-emerald-450 hover:text-[#004d30] dark:hover:text-emerald-350 transition-colors"
-                title="Home"
-              >
-                <Home size={18} />
-              </Link>
             </div>
             <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed max-w-2xl">
               Register, manage, and edit customer applications for TNEGA E-Seva
