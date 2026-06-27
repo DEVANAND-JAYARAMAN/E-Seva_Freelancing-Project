@@ -18,28 +18,32 @@ export function DistributorStats({ distributors }: DistributorStatsProps) {
       label: "Total Distributors",
       value: totalDistributors,
       icon: Users,
-      gradient: "bg-gradient-to-br from-emerald-500 to-green-400",
+      gradient:
+        "bg-gradient-to-br from-[#005c3a] to-[#004229] dark:from-[#08291c] dark:to-[#02150e]",
       indicator: "Onboarded Partners",
     },
     {
       label: "Active Distributors",
       value: activeDistributors,
       icon: UserCheck,
-      gradient: "bg-gradient-to-br from-sky-500 to-cyan-400",
+      gradient:
+        "bg-gradient-to-br from-[#005274] to-[#003850] dark:from-[#002e42] dark:to-[#001c29]",
       indicator: `${totalDistributors > 0 ? Math.round((activeDistributors / totalDistributors) * 100) : 0}% active rate`,
     },
     {
       label: "Suspended",
       value: suspendedDistributors,
       icon: UserX,
-      gradient: "bg-gradient-to-br from-rose-500 to-pink-400",
+      gradient:
+        "bg-gradient-to-br from-[#881337] to-[#4c0519] dark:from-[#4c0519] dark:to-[#2c030e]",
       indicator: "Requires review",
     },
     {
       label: "Total Wallet Float",
       value: `₹${totalBalance.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       icon: Wallet,
-      gradient: "bg-gradient-to-br from-violet-500 to-purple-400",
+      gradient:
+        "bg-gradient-to-br from-[#4c1d95] to-[#2e1065] dark:from-[#2e1065] dark:to-[#1e0b3e]",
       indicator: "Total reserves",
     },
   ];

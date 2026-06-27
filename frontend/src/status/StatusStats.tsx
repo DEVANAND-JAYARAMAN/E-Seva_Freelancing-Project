@@ -28,21 +28,24 @@ export function StatusStats({
       value: getCount("Pending"),
       icon: Clock,
       status: "Pending" as TicketStatus,
-      gradientClass: "bg-gradient-to-br from-amber-500 to-yellow-400",
+      gradientClass:
+        "bg-gradient-to-br from-[#7c2d12] to-[#451a03] dark:from-[#431407] dark:to-[#270b04]",
     },
     {
       label: "Rejected",
       value: getCount("Rejected"),
       icon: AlertTriangle,
       status: "Rejected" as TicketStatus,
-      gradientClass: "bg-gradient-to-br from-rose-500 to-pink-400",
+      gradientClass:
+        "bg-gradient-to-br from-[#881337] to-[#4c0519] dark:from-[#4c0519] dark:to-[#2c030e]",
     },
     {
       label: "Approved",
       value: getCount("Approved"),
       icon: CheckCircle2,
       status: "Approved" as TicketStatus,
-      gradientClass: "bg-gradient-to-br from-emerald-500 to-green-400",
+      gradientClass:
+        "bg-gradient-to-br from-[#005c3a] to-[#004229] dark:from-[#08291c] dark:to-[#02150e]",
     },
   ];
 
@@ -52,7 +55,7 @@ export function StatusStats({
       <button
         type="button"
         onClick={() => onFilterChange("All")}
-        className={`bg-gradient-to-br from-slate-600 to-indigo-500 rounded-2xl p-4 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 flex flex-col justify-between items-start text-left group col-span-2 md:col-span-1 ${
+        className={`bg-gradient-to-br from-[#312e81] to-[#1e1b4b] dark:from-[#1e1b4b] dark:to-[#0f0e26] rounded-2xl p-4 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-0.5 flex flex-col justify-between items-start text-left group col-span-2 md:col-span-1 ${
           activeFilter === "All" ? "ring-2 ring-white/40" : ""
         }`}
       >

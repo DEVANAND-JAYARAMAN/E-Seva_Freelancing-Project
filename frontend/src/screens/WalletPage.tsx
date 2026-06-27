@@ -211,7 +211,12 @@ export function WalletPage() {
             amount: amtNum,
             customer_mobile: mobileNumber,
             customer_email: user?.email || "user@thuruvan.com",
-            redirect_url: baseUrl + "/api/v1/wallet/recharge/return?redirect_url=" + encodeURIComponent(window.location.origin + window.location.pathname),
+            redirect_url:
+              baseUrl +
+              "/api/v1/wallet/recharge/return?redirect_url=" +
+              encodeURIComponent(
+                window.location.origin + window.location.pathname,
+              ),
             user_id: user?.id || "",
           }),
         });
@@ -510,7 +515,7 @@ export function WalletPage() {
           </article>
 
           {/* Aggregate Total Credit Card */}
-          <article className="flex items-center gap-4 bg-gradient-to-br from-emerald-500 to-green-400 rounded-3xl p-5 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+          <article className="flex items-center gap-4 bg-gradient-to-br from-[#005c3a] to-[#004229] dark:from-[#08291c] dark:to-[#02150e] rounded-3xl p-5 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-white">
               <ArrowUpRight size={22} className="stroke-[2.5]" />
             </span>
@@ -528,7 +533,7 @@ export function WalletPage() {
           </article>
 
           {/* Aggregate Total Debit Card */}
-          <article className="flex items-center gap-4 bg-gradient-to-br from-rose-500 to-pink-400 rounded-3xl p-5 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+          <article className="flex items-center gap-4 bg-gradient-to-br from-[#881337] to-[#4c0519] dark:from-[#4c0519] dark:to-[#2c030e] rounded-3xl p-5 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-white">
               <ArrowDownLeft size={22} className="stroke-[2.5]" />
             </span>
