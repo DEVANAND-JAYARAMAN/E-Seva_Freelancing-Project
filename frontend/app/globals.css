@@ -104,7 +104,7 @@
   table,
   div.overflow-x-auto:has(table) {
     background-color: #ffffff !important;
-    color: #000000 !important;
+    color: #2c3034 !important;
     border-color: #dee2e6 !important;
   }
 
@@ -124,7 +124,7 @@
   thead th,
   thead th * {
     @apply py-4 px-5 text-left;
-    color: #000000 !important;
+    color: #2c3034 !important;
     font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -159,34 +159,40 @@
     vertical-align: middle;
   }
 
-  /* Force all cell text (including subtext, dates, IDs, role labels, etc.) to be black in light mode */
+  /* General text colors inside cells in light mode */
   table td,
-  table td *,
-  table td div,
-  table td span {
-    color: #000000 !important;
-  }
-
-  /* Exclude status badges from being black so they keep their colors */
-  table td span[class*="bg-emerald"],
-  table td span[class*="bg-green"],
-  table td span[class*="bg-[#e8f5e9]"],
-  table td span[class*="bg-rose"],
-  table td span[class*="bg-red"],
-  table td span[class*="bg-amber"],
-  table td span[class*="bg-yellow"] {
-    color: inherit !important;
+  table
+    td
+    div:not([class*="text-emerald"]):not([class*="text-green"]):not(
+      [class*="text-rose"]
+    ):not([class*="text-red"]):not([class*="text-amber"]):not(
+      [class*="text-yellow"]
+    ):not([class*="bg-"]):not([class*="text-blue"]):not(
+      [class*="text-purple"]
+    ):not([class*="bg-green"]):not([class*="bg-rose"]):not([class*="bg-amber"]),
+  table
+    td
+    span:not([class*="text-emerald"]):not([class*="text-green"]):not(
+      [class*="text-rose"]
+    ):not([class*="text-red"]):not([class*="text-amber"]):not(
+      [class*="text-yellow"]
+    ):not([class*="bg-"]):not([class*="text-blue"]):not(
+      [class*="text-purple"]
+    ):not([class*="bg-green"]):not([class*="bg-rose"]):not(
+      [class*="bg-amber"]
+    ) {
+    color: #2c3034 !important;
   }
 
   /* SVG Icons inside table */
   table td svg {
-    color: #000000 !important;
+    color: #495057 !important;
   }
 
   /* Inputs in light mode */
   table input {
     background-color: #ffffff !important;
-    color: #000000 !important;
+    color: #2c3034 !important;
     border: 1px solid #dee2e6 !important;
   }
 
@@ -195,7 +201,7 @@
   table td button {
     background-color: #f8f9fa !important;
     border: 1px solid #dee2e6 !important;
-    color: #000000 !important;
+    color: #2c3034 !important;
   }
   table button:hover,
   table td button:hover {
@@ -407,5 +413,29 @@
     background-color: rgba(255, 193, 7, 0.2) !important;
     color: #ffd166 !important;
     border: 1px solid rgba(255, 193, 7, 0.3) !important;
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     Form Details & Labels High Contrast Color (Black in Light Mode)
+     ───────────────────────────────────────────────────────── */
+  label,
+  form label,
+  .animate-fadeIn label,
+  .animate-fadeIn span[class*="text-slate-"],
+  .animate-fadeIn div[class*="text-slate-"],
+  form span[class*="text-slate-"],
+  form p[class*="text-slate-"] {
+    color: #000000 !important;
+  }
+
+  /* Ensure dark mode still renders them in pure white */
+  .dark label,
+  .dark form label,
+  .dark .animate-fadeIn label,
+  .dark .animate-fadeIn span[class*="text-slate-"],
+  .dark .animate-fadeIn div[class*="text-slate-"],
+  .dark form span[class*="text-slate-"],
+  .dark form p[class*="text-slate-"] {
+    color: #ffffff !important;
   }
 }
