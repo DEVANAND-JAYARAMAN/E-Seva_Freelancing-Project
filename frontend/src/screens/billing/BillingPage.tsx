@@ -114,7 +114,7 @@ export function BillingPage() {
       }
 
       const serviceCharge = req.cost;
-      const officialCost = getOfficialCost(req);
+      const officialCost = officialCosts[req.id] || 0;
       const profit = serviceCharge - officialCost;
 
       if (!groupedByTime[timeKey]) {
@@ -245,7 +245,7 @@ export function BillingPage() {
                   </tr>
                 ) : filteredRequests.length > 0 ? (
                   filteredRequests.map((req) => {
-                    const offCost = getOfficialCost(req);
+                    const offCost = officialCosts[req.id] || 0;
                     const profit = req.cost - offCost;
                     return (
                       <tr key={req.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/20 transition-colors">
