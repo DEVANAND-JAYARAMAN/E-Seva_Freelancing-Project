@@ -134,6 +134,11 @@ export function StatusDetailModal({
               <span className="font-semibold text-slate-700 dark:text-slate-300 text-sm mt-0.5 block">
                 {ticket.retailerName}
               </span>
+              {ticket.retailerMobile && (
+                <span className="text-xs font-mono text-slate-500 block mt-1">
+                  {ticket.retailerMobile}
+                </span>
+              )}
             </div>
 
             {/* Role */}

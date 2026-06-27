@@ -127,6 +127,9 @@ export function DistributorTable({
                         <div className="text-xs font-semibold text-[#005c3a] dark:text-emerald-400/80">
                           {distributor.shopName}
                         </div>
+                        <div className="text-[10px] font-mono text-slate-500 mt-1 uppercase">
+                          ID: {distributor.id}
+                        </div>
                       </div>
                     </div>
                   </td>

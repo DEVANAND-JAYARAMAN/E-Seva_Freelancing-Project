@@ -5,6 +5,8 @@ type ServiceApplication struct {
 	SK               string            `dynamodbav:"SK" json:"SK"`
 	Id               string            `dynamodbav:"id" json:"id"`
 	RetailerId       string            `dynamodbav:"retailerId" json:"retailerId"`
+	RetailerName     string            `dynamodbav:"retailerName" json:"retailerName"`
+	RetailerMobile   string            `dynamodbav:"retailerMobile" json:"retailerMobile"`
 	ServiceId        string            `dynamodbav:"serviceId" json:"serviceId"`
 	ServiceName      string            `dynamodbav:"serviceName" json:"serviceName"`
 	Cost             float64           `dynamodbav:"cost" json:"cost"`
