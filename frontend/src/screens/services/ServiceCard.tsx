@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Pencil } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 
 interface ServiceCardProps {
   id: string;
@@ -17,6 +17,7 @@ interface ServiceCardProps {
   onToggleRole?: (role: "retailer" | "distributor") => void;
   isAdmin?: boolean;
   onEditClick?: () => void;
+  onDeleteClick?: () => void;
 }
 
 export function ServiceCard({
@@ -32,6 +33,7 @@ export function ServiceCard({
   onToggleRole,
   isAdmin = false,
   onEditClick,
+  onDeleteClick,
 }: ServiceCardProps) {
   if (layout === "horizontal") {
     return (
@@ -44,17 +46,30 @@ export function ServiceCard({
         }`}
       >
         {isAdmin && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onEditClick?.();
-            }}
-            style={{ position: "absolute", top: "12px", right: "12px" }}
-            className="z-10 p-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-150 dark:border-slate-800 text-slate-400 hover:text-[#005c3a] dark:hover:text-emerald-400 transition-all active:scale-[0.95]"
-            title="Edit card details"
-          >
-            <Pencil size={11} />
-          </button>
+          <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onEditClick?.();
+              }}
+              className="p-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-150 dark:border-slate-800 text-slate-400 hover:text-[#005c3a] dark:hover:text-emerald-400 transition-all active:scale-[0.95]"
+              title="Edit card details"
+            >
+              <Pencil size={11} />
+            </button>
+            {onDeleteClick && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteClick();
+                }}
+                className="p-1.5 rounded-xl bg-red-50/50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-900/40 border border-red-100/50 dark:border-red-900/30 text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-all active:scale-[0.95]"
+                title="Delete service"
+              >
+                <Trash2 size={11} />
+              </button>
+            )}
+          </div>
         )}
 
         <div className="flex flex-col items-center gap-2.5 shrink-0">
@@ -119,17 +134,30 @@ export function ServiceCard({
       <div className="absolute inset-0 bg-gradient-to-b from-slate-50/10 to-transparent dark:from-slate-900/5 dark:to-transparent pointer-events-none" />
 
       {isAdmin && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onEditClick?.();
-          }}
-          style={{ position: "absolute", top: "12px", right: "12px" }}
-          className="z-10 p-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-150 dark:border-slate-800 text-slate-400 hover:text-[#005c3a] dark:hover:text-emerald-400 transition-all active:scale-[0.95]"
-          title="Edit card details"
-        >
-          <Pencil size={11} />
-        </button>
+        <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onEditClick?.();
+            }}
+            className="p-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-150 dark:border-slate-800 text-slate-400 hover:text-[#005c3a] dark:hover:text-emerald-400 transition-all active:scale-[0.95]"
+            title="Edit card details"
+          >
+            <Pencil size={11} />
+          </button>
+          {onDeleteClick && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDeleteClick();
+              }}
+              className="p-1.5 rounded-xl bg-red-50/50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-900/40 border border-red-100/50 dark:border-red-900/30 text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-all active:scale-[0.95]"
+              title="Delete service"
+            >
+              <Trash2 size={11} />
+            </button>
+          )}
+        </div>
       )}
 
       <div className="h-20 w-20 flex items-center justify-center transition-transform duration-300 group-hover:scale-110">

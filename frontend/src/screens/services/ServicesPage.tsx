@@ -1425,8 +1425,9 @@ export function ServicesPage() {
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleDeleteService = async () => {
-    if (!editingService) return;
+  const handleDeleteService = async (serviceId?: string) => {
+    const idToDelete = serviceId || editingService?.id;
+    if (!idToDelete) return;
     if (
       !window.confirm(
         "Are you sure you want to delete this service? This action cannot be undone.",
@@ -1436,18 +1437,15 @@ export function ServicesPage() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/dynamic/${editingService.id}`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/dynamic/${idToDelete}`,
         {
           method: "DELETE",
         },
       );
       if (response.ok) {
-        setServicesList((prev) =>
-          prev.filter((s) => s.id !== editingService.id),
-        );
+        setServicesList((prev) => prev.filter((s) => s.id !== idToDelete));
         setEditModalOpen(false);
         setEditingService(null);
-        alert("Service deleted successfully.");
       } else {
         alert("Failed to delete service.");
       }
@@ -2082,6 +2080,7 @@ export function ServicesPage() {
                     setEditingService(service);
                     setEditModalOpen(true);
                   }}
+                  onDeleteClick={() => handleDeleteService(service.id)}
                 />
               ))}
             </div>
@@ -2127,6 +2126,7 @@ export function ServicesPage() {
                     setEditingService(service);
                     setEditModalOpen(true);
                   }}
+                  onDeleteClick={() => handleDeleteService(service.id)}
                 />
               ))}
             </div>
