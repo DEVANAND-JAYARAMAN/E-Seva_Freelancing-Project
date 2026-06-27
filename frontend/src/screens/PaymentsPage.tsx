@@ -29,6 +29,8 @@ interface SubService {
   id: string;
   name: string;
   adminPrice: number;
+  othersiteAdminPrice?: number;
+  customerPrice?: number;
   distributorPrice: number;
   retailerPrice: number;
   needCoordinator: boolean;
@@ -442,16 +444,20 @@ const DEFAULT_SUB_SERVICES: Record<string, SubService[]> = {
       id: "pan-new",
       name: "New Card",
       adminPrice: 15.0,
+      othersiteAdminPrice: 0.0,
       distributorPrice: 30.0,
       retailerPrice: 30.0,
+      customerPrice: 25.0,
       needCoordinator: false,
     },
     {
       id: "pan-correction",
       name: "Correction Pan Card",
       adminPrice: 10.0,
+      othersiteAdminPrice: 0.0,
       distributorPrice: 20.0,
       retailerPrice: 20.0,
+      customerPrice: 25.05,
       needCoordinator: false,
     },
   ],
@@ -1619,10 +1625,6 @@ export function PaymentsPage() {
   }, [searchTerm]);
 
   const handleCardClick = (item: ServiceCatalogItem) => {
-    if (item.id === "pancard") {
-      router.push("/pancard");
-      return;
-    }
     setActiveCatalogItem(item);
     // Initialize editing rows from persistent storage or default
     const existing = pricingConfig[item.id] ||
@@ -1642,7 +1644,12 @@ export function PaymentsPage() {
   // Modify individual rows inside pricing table
   const handlePriceChange = (
     subServiceId: string,
-    field: "adminPrice" | "distributorPrice" | "retailerPrice",
+    field:
+      | "adminPrice"
+      | "distributorPrice"
+      | "retailerPrice"
+      | "othersiteAdminPrice"
+      | "customerPrice",
     val: string,
   ) => {
     const numeric = parseFloat(val);
@@ -1788,14 +1795,23 @@ export function PaymentsPage() {
                     <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-[10px] font-extrabold uppercase tracking-widest bg-slate-50 dark:bg-slate-950/40">
                       <th className="py-4 px-5 text-center w-20">Sl No</th>
                       <th className="py-4 px-5">Service Name</th>
-                      <th className="py-4 px-5 text-center w-36">Admin</th>
-                      <th className="py-4 px-5 text-center w-36">
+                      <th className="py-4 px-5 text-center w-32">Admin</th>
+                      {activeCatalogItem?.id === "pancard" && (
+                        <th className="py-4 px-5 text-center w-36">
+                          Othersite Admin
+                        </th>
+                      )}
+                      <th className="py-4 px-5 text-center w-32">
                         Distributor
                       </th>
-                      <th className="py-4 px-5 text-center w-36">Retailer</th>
-                      <th className="py-4 px-5 text-center w-40">
-                        Need Coordinator
-                      </th>
+                      <th className="py-4 px-5 text-center w-32">Retailer</th>
+                      {activeCatalogItem?.id === "pancard" ? (
+                        <th className="py-4 px-5 text-center w-36">Customer</th>
+                      ) : (
+                        <th className="py-4 px-5 text-center w-40">
+                          Need Coordinator
+                        </th>
+                      )}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200 dark:divide-slate-900/60 text-xs font-semibold text-slate-700 dark:text-slate-350">
@@ -1867,6 +1883,35 @@ export function PaymentsPage() {
                             </div>
                           </td>
 
+                          {/* Othersite Admin Input (only for PAN Card) */}
+                          {activeCatalogItem?.id === "pancard" && (
+                            <td className="py-4 px-5 text-center">
+                              <div className="relative inline-block w-full">
+                                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 font-bold text-[10px]">
+                                  ₹
+                                </span>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  value={
+                                    row.othersiteAdminPrice === undefined
+                                      ? "0.00"
+                                      : row.othersiteAdminPrice
+                                  }
+                                  onChange={(e) =>
+                                    handlePriceChange(
+                                      row.id,
+                                      "othersiteAdminPrice",
+                                      e.target.value,
+                                    )
+                                  }
+                                  className="w-full pl-7 pr-3 py-1.5 text-center border border-slate-200 dark:border-slate-850 rounded-xl bg-slate-50 dark:bg-[#0a0f18]/30 font-extrabold text-slate-800 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a] dark:focus:border-emerald-500 outline-none transition-all"
+                                />
+                              </div>
+                            </td>
+                          )}
+
                           {/* Retailer Input */}
                           <td className="py-4 px-5 text-center">
                             <div className="relative inline-block w-full">
@@ -1894,38 +1939,66 @@ export function PaymentsPage() {
                             </div>
                           </td>
 
-                          {/* Need Coordinator Checkbox */}
-                          <td className="py-4 px-5 text-center">
-                            <label className="inline-flex items-center justify-center cursor-pointer select-none">
-                              <input
-                                type="checkbox"
-                                checked={row.needCoordinator}
-                                onChange={(e) =>
-                                  handleCoordinatorChange(
-                                    row.id,
-                                    e.target.checked,
-                                  )
-                                }
-                                className="sr-only peer"
-                              />
-                              <div className="w-5 h-5 bg-slate-100 dark:bg-slate-800 border border-slate-350 dark:border-slate-700 rounded-md flex items-center justify-center transition-all peer-checked:bg-[#005c3a] peer-checked:border-[#005c3a] dark:peer-checked:bg-emerald-600 dark:peer-checked:border-emerald-600 peer-checked:shadow-sm">
-                                <svg
-                                  className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="3.5"
-                                  viewBox="0 0 24 24"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    d="M4.5 12.75l6 6 9-13.5"
-                                  ></path>
-                                </svg>
+                          {/* Customer Input OR Need Coordinator */}
+                          {activeCatalogItem?.id === "pancard" ? (
+                            <td className="py-4 px-5 text-center">
+                              <div className="relative inline-block w-full">
+                                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 font-bold text-[10px]">
+                                  ₹
+                                </span>
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  value={
+                                    row.customerPrice === undefined
+                                      ? "0.00"
+                                      : row.customerPrice
+                                  }
+                                  onChange={(e) =>
+                                    handlePriceChange(
+                                      row.id,
+                                      "customerPrice",
+                                      e.target.value,
+                                    )
+                                  }
+                                  className="w-full pl-7 pr-3 py-1.5 text-center border border-slate-200 dark:border-slate-850 rounded-xl bg-slate-50 dark:bg-[#0a0f18]/30 font-extrabold text-slate-800 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a] dark:focus:border-emerald-500 outline-none transition-all"
+                                />
                               </div>
-                            </label>
-                          </td>
+                            </td>
+                          ) : (
+                            <td className="py-4 px-5 text-center">
+                              <label className="inline-flex items-center justify-center cursor-pointer select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={row.needCoordinator}
+                                  onChange={(e) =>
+                                    handleCoordinatorChange(
+                                      row.id,
+                                      e.target.checked,
+                                    )
+                                  }
+                                  className="sr-only peer"
+                                />
+                                <div className="w-5 h-5 bg-slate-100 dark:bg-slate-800 border border-slate-350 dark:border-slate-700 rounded-md flex items-center justify-center transition-all peer-checked:bg-[#005c3a] peer-checked:border-[#005c3a] dark:peer-checked:bg-emerald-600 dark:peer-checked:border-emerald-600 peer-checked:shadow-sm">
+                                  <svg
+                                    className="w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="3.5"
+                                    viewBox="0 0 24 24"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      d="M4.5 12.75l6 6 9-13.5"
+                                    ></path>
+                                  </svg>
+                                </div>
+                              </label>
+                            </td>
+                          )}
                         </tr>
                       );
                     })}
