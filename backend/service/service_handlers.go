@@ -803,35 +803,42 @@ type RechargeWebhookReq struct {
 
 // RechargeWebhook handles the callback from Mugavai payment gateway
 func RechargeWebhook(c *gin.Context) {
-	var req RechargeWebhookReq
-	if err := c.ShouldBind(&req); err != nil {
-		log.Printf("[Webhook] Error binding: %v", err)
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
+	// Parse form data and query params
+	_ = c.Request.ParseForm()
+	
+	// Fallback JSON binding if it's purely JSON
+	var jsonBody map[string]interface{}
+	c.ShouldBindJSON(&jsonBody)
+
+	getParam := func(keys ...string) string {
+		for _, k := range keys {
+			if v := c.Query(k); v != "" {
+				return v
+			}
+			if v := c.PostForm(k); v != "" {
+				return v
+			}
+			if jsonBody != nil {
+				if v, ok := jsonBody[k]; ok {
+					return fmt.Sprintf("%v", v)
+				}
+			}
+		}
+		return ""
 	}
 
-	actualOrderID := req.OrderID
-	if actualOrderID == "" {
-		actualOrderID = req.ClientTxnID
-	}
-
-	actualUTR := req.UTR
-	if actualUTR == "" {
-		actualUTR = req.UpiTxnID
-	}
+	actualOrderID := getParam("order_id", "client_txn_id", "txn_id")
+	actualUTR := getParam("utr", "upi_txn_id", "bank_txn_id")
+	status := getParam("status")
+	amountStr := getParam("amount")
 
 	var parsedAmount float64
-	switch v := req.Amount.(type) {
-	case float64:
-		parsedAmount = v
-	case string:
-		fmt.Sscanf(v, "%f", &parsedAmount)
-	}
+	fmt.Sscanf(amountStr, "%f", &parsedAmount)
 
-	log.Printf("[Webhook] Order=%s Status=%s Amount=%.2f UTR=%s", actualOrderID, req.Status, parsedAmount, actualUTR)
+	log.Printf("[Webhook] Parsed Form Data -> Order=%s Status=%s Amount=%.2f UTR=%s (RawAmount=%s)", actualOrderID, status, parsedAmount, actualUTR, amountStr)
 
-	if req.Status != "SUCCESS" && req.Status != "success" && req.Status != "COMPLETED" && req.Status != "Completed" {
-		c.JSON(http.StatusOK, gin.H{"status": "received"})
+	if status != "SUCCESS" && status != "success" && status != "COMPLETED" && status != "Completed" {
+		c.JSON(http.StatusOK, gin.H{"status": "received", "message": "Not a success status"})
 		return
 	}
 
@@ -857,7 +864,7 @@ func RechargeWebhook(c *gin.Context) {
 	userId := userIdAttr.Value
 
 	now := time.Now().UTC()
-	amountStr := fmt.Sprintf("%.2f", parsedAmount)
+	amountStr = fmt.Sprintf("%.2f", parsedAmount)
 
 	// Credit Wallets table
 	_, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
@@ -962,4 +969,14 @@ func DeleteDynamicService(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Service deleted successfully"})
+}
+
+// RechargeReturn handles the redirect from Mugavai payment gateway
+func RechargeReturn(c *gin.Context) {
+	// Redirect back to the wallet page
+	redirectUrl := c.Query("redirect_url")
+	if redirectUrl == "" {
+		redirectUrl = "https://thuruvancommunications.com/dashboard/wallet?payment_status=success"
+	}
+	c.Redirect(http.StatusFound, redirectUrl)
 }

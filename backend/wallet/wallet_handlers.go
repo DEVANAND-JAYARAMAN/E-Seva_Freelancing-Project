@@ -216,28 +216,8 @@ func ManualRecharge(c *gin.Context) {
 	}
 
 	now := time.Now().UTC()
-	ownerPK := "USER#" + req.UserId
-	walletSK := "PROFILE"
 
-	// Credit wallet balance directly to the User profile
-	_, err := db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
-		TableName: aws.String("Users"),
-		Key: map[string]types.AttributeValue{
-			"PK": &types.AttributeValueMemberS{Value: ownerPK},
-			"SK": &types.AttributeValueMemberS{Value: walletSK},
-		},
-		UpdateExpression: aws.String("SET walletBalance = if_not_exists(walletBalance, :zero) + :amt, updatedAt = :ts"),
-		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":amt":  &types.AttributeValueMemberN{Value: fmt.Sprintf("%f", req.Amount)},
-			":zero": &types.AttributeValueMemberN{Value: "0"},
-			":ts":   &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
-		},
-	})
-	if err != nil {
-		log.Printf("Failed to credit manual recharge: %v", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Wallet credit failed"})
-		return
-	}
+	// Do NOT credit the wallet balance directly. Set it to Pending.
 
 	// Write transaction record
 	txId := "TX#" + now.Format("20060102150405") + "#" + req.UtrNumber
@@ -250,13 +230,13 @@ func ManualRecharge(c *gin.Context) {
 		"description": fmt.Sprintf("Manual Recharge (UTR: %s)", req.UtrNumber),
 		"amount":      req.Amount,
 		"reference":   req.UtrNumber,
-		"status":      "Success",
+		"status":      "Pending", // Require Admin approval
 		"walletType":  "Main",
 		"createdAt":   now.Format(time.RFC3339),
 	}
 
 	item, _ := attributevalue.MarshalMap(txRecord)
-	_, err = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+	_, err := db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
 		TableName: aws.String("WalletTransactions"),
 		Item:      item,
 	})

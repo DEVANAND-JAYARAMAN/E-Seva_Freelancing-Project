@@ -8,6 +8,7 @@ export interface StatusTicket {
   transactionId: string;
   serviceName: string;
   retailerName: string;
+  retailerMobile?: string;
   amount: number;
   status: TicketStatus;
   createdDate: string;

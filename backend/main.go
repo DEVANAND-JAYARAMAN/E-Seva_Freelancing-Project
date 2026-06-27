@@ -115,6 +115,7 @@ func main() {
 			{
 				walletV1.POST("/recharge/gateway", service.RechargeGateway)
 				walletV1.POST("/recharge/webhook", service.RechargeWebhook)
+				walletV1.Any("/recharge/return", service.RechargeReturn)
 			}
 		}
 	}
