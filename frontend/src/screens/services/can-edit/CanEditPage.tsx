@@ -6,6 +6,8 @@ import { CheckCircle2 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { CanEditForms } from "./CanEditForms";
 import { ServiceCard } from "../ServiceCard";
+import { useAuth } from "../../../store/context/AuthContext";
+import Swal from "sweetalert2";
 
 interface CanEditService {
   id: string;
@@ -13,10 +15,14 @@ interface CanEditService {
 }
 
 export function CanEditPage() {
-  const [activeForm, setActiveForm] = useState<string | null>(null); // service ID or null
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+  const [activeForm, setActiveForm] = useState<string | null>(null);
   const [activeFormName, setActiveFormName] = useState<string>("");
 
-  const canEditServicesList: CanEditService[] = [
+  const [canEditServicesList, setCanEditServicesList] = useState<
+    CanEditService[]
+  >([
     { id: "new-can-reg", name: "New Can Registration" },
     { id: "name-correction", name: "Name Correction" },
     { id: "dob-correction", name: "DOB Correction" },
@@ -33,11 +39,53 @@ export function CanEditPage() {
     { id: "return-app-removed", name: "Return Application Removed" },
     { id: "father-name-correction", name: "Father Name Correction" },
     { id: "address-correction", name: "Adress Correction" },
-  ];
+  ]);
 
   const handleCardClick = (service: CanEditService) => {
     setActiveForm(service.id);
     setActiveFormName(service.name);
+  };
+
+  const handleEditCard = (id: string, currentName: string) => {
+    Swal.fire({
+      title: "Rename Service",
+      input: "text",
+      inputValue: currentName,
+      showCancelButton: true,
+      confirmButtonColor: "#005C3A",
+      confirmButtonText: "Save",
+    }).then((result) => {
+      if (result.isConfirmed && result.value?.trim()) {
+        setCanEditServicesList((prev) =>
+          prev.map((s) =>
+            s.id === id ? { ...s, name: result.value.trim() } : s,
+          ),
+        );
+      }
+    });
+  };
+
+  const handleDeleteCard = (id: string) => {
+    Swal.fire({
+      title: "Delete Service?",
+      text: "This will remove the card from view.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setCanEditServicesList((prev) => prev.filter((s) => s.id !== id));
+        Swal.fire({
+          title: "Deleted!",
+          icon: "success",
+          confirmButtonColor: "#005C3A",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      }
+    });
   };
 
   const renderServiceIcon = (id: string, className = "w-14 h-14") => {
@@ -504,6 +552,9 @@ export function CanEditPage() {
                   name={service.name}
                   icon={renderServiceIcon(service.id, "w-16 h-16")}
                   onClick={() => handleCardClick(service)}
+                  isAdmin={isAdmin}
+                  onEditClick={() => handleEditCard(service.id, service.name)}
+                  onDeleteClick={() => handleDeleteCard(service.id)}
                 />
               ))}
             </div>

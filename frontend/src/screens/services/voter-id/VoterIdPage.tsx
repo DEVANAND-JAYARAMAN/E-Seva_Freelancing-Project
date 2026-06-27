@@ -8,6 +8,8 @@ import { EpicVoterPdf } from "./EpicVoterPdf";
 import { UpdateCellNumberWithOtp } from "./UpdateCellNumberWithOtp";
 import { UpdateCellNumberWithoutOtp } from "./UpdateCellNumberWithoutOtp";
 import { ServiceCard } from "../ServiceCard";
+import { useAuth } from "../../../store/context/AuthContext";
+import Swal from "sweetalert2";
 
 interface VoterService {
   id: string;
@@ -15,24 +17,17 @@ interface VoterService {
 }
 
 export function VoterIdPage() {
-  const [activeForm, setActiveForm] = useState<string | null>(null); // "epic-voter-pdf" | "update-cell-one-otp" | "update-cell-no-otp" | null
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+  const [activeForm, setActiveForm] = useState<string | null>(null);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const voterServicesList: VoterService[] = [
-    {
-      id: "epic-voter-pdf",
-      name: "Epic Voter PDF (Without OTP)",
-    },
-    {
-      id: "update-cell-one-otp",
-      name: "Update Cell Number (With One OTP)",
-    },
-    {
-      id: "update-cell-no-otp",
-      name: "Update Cell Number (Without OTP)",
-    },
-  ];
+  const [voterServicesList, setVoterServicesList] = useState<VoterService[]>([
+    { id: "epic-voter-pdf", name: "Epic Voter PDF (Without OTP)" },
+    { id: "update-cell-one-otp", name: "Update Cell Number (With One OTP)" },
+    { id: "update-cell-no-otp", name: "Update Cell Number (Without OTP)" },
+  ]);
 
   const handleCardClick = (service: VoterService) => {
     setSubmissionSuccess(false);
@@ -43,6 +38,48 @@ export function VoterIdPage() {
     } else if (service.id === "update-cell-no-otp") {
       setActiveForm("update-cell-no-otp");
     }
+  };
+
+  const handleEditCard = (id: string, currentName: string) => {
+    Swal.fire({
+      title: "Rename Service",
+      input: "text",
+      inputValue: currentName,
+      showCancelButton: true,
+      confirmButtonColor: "#005C3A",
+      confirmButtonText: "Save",
+    }).then((result) => {
+      if (result.isConfirmed && result.value?.trim()) {
+        setVoterServicesList((prev) =>
+          prev.map((s) =>
+            s.id === id ? { ...s, name: result.value.trim() } : s,
+          ),
+        );
+      }
+    });
+  };
+
+  const handleDeleteCard = (id: string) => {
+    Swal.fire({
+      title: "Delete Service?",
+      text: "This will remove the card from view.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setVoterServicesList((prev) => prev.filter((s) => s.id !== id));
+        Swal.fire({
+          title: "Deleted!",
+          icon: "success",
+          confirmButtonColor: "#005C3A",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      }
+    });
   };
 
   const renderServiceIcon = (id: string, className = "w-14 h-14") => {
@@ -174,6 +211,9 @@ export function VoterIdPage() {
                   name={service.name}
                   icon={renderServiceIcon(service.id, "w-20 h-20")}
                   onClick={() => handleCardClick(service)}
+                  isAdmin={isAdmin}
+                  onEditClick={() => handleEditCard(service.id, service.name)}
+                  onDeleteClick={() => handleDeleteCard(service.id)}
                 />
               ))}
             </div>

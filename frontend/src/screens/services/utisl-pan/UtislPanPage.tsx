@@ -6,6 +6,8 @@ import { CheckCircle2 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { PanToAdhaarNumberFind } from "./PanToAdhaarNumberFind";
 import { ServiceCard } from "../ServiceCard";
+import { useAuth } from "../../../store/context/AuthContext";
+import Swal from "sweetalert2";
 
 interface UtislPanService {
   id: string;
@@ -13,22 +15,63 @@ interface UtislPanService {
 }
 
 export function UtislPanPage() {
-  const [activeForm, setActiveForm] = useState<string | null>(null); // "pan-to-adhaar" | null
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+  const [activeForm, setActiveForm] = useState<string | null>(null);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const utislPanServicesList: UtislPanService[] = [
-    {
-      id: "pan-to-adhaar",
-      name: "Pan To Adhaar Number Find",
-    },
-  ];
+  const [utislPanServicesList, setUtislPanServicesList] = useState<
+    UtislPanService[]
+  >([{ id: "pan-to-adhaar", name: "Pan To Adhaar Number Find" }]);
 
   const handleCardClick = (service: UtislPanService) => {
     setSubmissionSuccess(false);
     if (service.id === "pan-to-adhaar") {
       setActiveForm("pan-to-adhaar");
     }
+  };
+
+  const handleEditCard = (id: string, currentName: string) => {
+    Swal.fire({
+      title: "Rename Service",
+      input: "text",
+      inputValue: currentName,
+      showCancelButton: true,
+      confirmButtonColor: "#005C3A",
+      confirmButtonText: "Save",
+    }).then((result) => {
+      if (result.isConfirmed && result.value?.trim()) {
+        setUtislPanServicesList((prev) =>
+          prev.map((s) =>
+            s.id === id ? { ...s, name: result.value.trim() } : s,
+          ),
+        );
+      }
+    });
+  };
+
+  const handleDeleteCard = (id: string) => {
+    Swal.fire({
+      title: "Delete Service?",
+      text: "This will remove the card from view.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setUtislPanServicesList((prev) => prev.filter((s) => s.id !== id));
+        Swal.fire({
+          title: "Deleted!",
+          icon: "success",
+          confirmButtonColor: "#005C3A",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      }
+    });
   };
 
   const renderServiceIcon = (id: string, className = "w-14 h-14") => {
@@ -197,6 +240,9 @@ export function UtislPanPage() {
                   name={service.name}
                   icon={renderServiceIcon(service.id, "w-16 h-16")}
                   onClick={() => handleCardClick(service)}
+                  isAdmin={isAdmin}
+                  onEditClick={() => handleEditCard(service.id, service.name)}
+                  onDeleteClick={() => handleDeleteCard(service.id)}
                 />
               ))}
             </div>

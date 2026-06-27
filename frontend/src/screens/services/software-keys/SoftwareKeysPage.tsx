@@ -10,6 +10,8 @@ import {
   Upload,
   AlertCircle,
   CheckCircle2,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { PATHS } from "../../../routes/paths";
@@ -18,6 +20,8 @@ import {
   ServicePaymentScreen,
   ServiceSuccessScreen,
 } from "../../../components/ServicePaymentScreen";
+import { useAuth } from "../../../store/context/AuthContext";
+import Swal from "sweetalert2";
 import { TnHealthCardForm } from "./TnHealthCardForm";
 import { LongAadhaarForm } from "./LongAadhaarForm";
 import { TnpdsSmartCardForm } from "./TnpdsSmartCardForm";
@@ -41,6 +45,8 @@ interface SoftwareCardItem {
 
 export function SoftwareKeysPage() {
   const router = useRouter();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSoftware, setSelectedSoftware] =
     useState<SoftwareCardItem | null>(null);
@@ -52,95 +58,134 @@ export function SoftwareKeysPage() {
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const softwareList: SoftwareCardItem[] = useMemo(
-    () => [
-      {
-        id: "tn-health-qr",
-        name: "TN - Health Card Maker With QR",
-        price: 149.0,
-        iconBg: "bg-blue-50 dark:bg-blue-950/20",
-      },
-      {
-        id: "long-aadhaar",
-        name: "Long Adhaar Setup",
-        price: 400.0,
-        iconBg: "bg-sky-50 dark:bg-sky-950/20",
-      },
-      {
-        id: "tnpds-smart-pvc",
-        name: "TNPDS Smart Card PVC Maker",
-        price: 400.0,
-        iconBg: "bg-emerald-50 dark:bg-emerald-950/20",
-      },
-      {
-        id: "pan-nsdl-uti-manual",
-        name: "Pan Card NSDL and UTI Manual Maker",
-        price: 400.0,
-        iconBg: "bg-amber-50 dark:bg-amber-950/20",
-      },
-      {
-        id: "eshram-id",
-        name: "Eshram Id Maker",
-        price: 400.0,
-        iconBg: "bg-yellow-50 dark:bg-yellow-950/20",
-      },
-      {
-        id: "epic-voter-id",
-        name: "Epic Voter Id Maker",
-        price: 400.0,
-        iconBg: "bg-rose-50 dark:bg-rose-950/20",
-      },
-      {
-        id: "pahal-aadhaar-pdf",
-        name: "Pahal Aadhaar pdf Maker",
-        price: 400.0,
-        iconBg: "bg-orange-50 dark:bg-orange-950/20",
-      },
-      {
-        id: "passport-photo",
-        name: "Passport Size photo Maker",
-        price: 400.0,
-        iconBg: "bg-indigo-50 dark:bg-indigo-950/20",
-      },
-      {
-        id: "rc-pvc",
-        name: "RC PVC Maker",
-        price: 400.0,
-        iconBg: "bg-orange-100 dark:bg-orange-950/25",
-      },
-      {
-        id: "dl-pvc",
-        name: "DL PVC Maker",
-        price: 400.0,
-        iconBg: "bg-cyan-50 dark:bg-cyan-950/20",
-      },
-      {
-        id: "tamil-astrology",
-        name: "Tamil Astrology",
-        price: 400.0,
-        iconBg: "bg-amber-100 dark:bg-amber-950/25",
-      },
-      {
-        id: "fisherman-card",
-        name: "Fisherman Card",
-        price: 400.0,
-        iconBg: "bg-blue-100 dark:bg-blue-950/30",
-      },
-      {
-        id: "instant-pan",
-        name: "INSTANT PAN CARD",
-        price: 400.0,
-        iconBg: "bg-sky-100 dark:bg-sky-950/30",
-      },
-    ],
-    [],
-  );
+  const [softwareList, setSoftwareList] = useState<SoftwareCardItem[]>([
+    {
+      id: "tn-health-qr",
+      name: "TN - Health Card Maker With QR",
+      price: 149.0,
+      iconBg: "bg-blue-50 dark:bg-blue-950/20",
+    },
+    {
+      id: "long-aadhaar",
+      name: "Long Adhaar Setup",
+      price: 400.0,
+      iconBg: "bg-sky-50 dark:bg-sky-950/20",
+    },
+    {
+      id: "tnpds-smart-pvc",
+      name: "TNPDS Smart Card PVC Maker",
+      price: 400.0,
+      iconBg: "bg-emerald-50 dark:bg-emerald-950/20",
+    },
+    {
+      id: "pan-nsdl-uti-manual",
+      name: "Pan Card NSDL and UTI Manual Maker",
+      price: 400.0,
+      iconBg: "bg-amber-50 dark:bg-amber-950/20",
+    },
+    {
+      id: "eshram-id",
+      name: "Eshram Id Maker",
+      price: 400.0,
+      iconBg: "bg-yellow-50 dark:bg-yellow-950/20",
+    },
+    {
+      id: "epic-voter-id",
+      name: "Epic Voter Id Maker",
+      price: 400.0,
+      iconBg: "bg-rose-50 dark:bg-rose-950/20",
+    },
+    {
+      id: "pahal-aadhaar-pdf",
+      name: "Pahal Aadhaar pdf Maker",
+      price: 400.0,
+      iconBg: "bg-orange-50 dark:bg-orange-950/20",
+    },
+    {
+      id: "passport-photo",
+      name: "Passport Size photo Maker",
+      price: 400.0,
+      iconBg: "bg-indigo-50 dark:bg-indigo-950/20",
+    },
+    {
+      id: "rc-pvc",
+      name: "RC PVC Maker",
+      price: 400.0,
+      iconBg: "bg-orange-100 dark:bg-orange-950/25",
+    },
+    {
+      id: "dl-pvc",
+      name: "DL PVC Maker",
+      price: 400.0,
+      iconBg: "bg-cyan-50 dark:bg-cyan-950/20",
+    },
+    {
+      id: "tamil-astrology",
+      name: "Tamil Astrology",
+      price: 400.0,
+      iconBg: "bg-amber-100 dark:bg-amber-950/25",
+    },
+    {
+      id: "fisherman-card",
+      name: "Fisherman Card",
+      price: 400.0,
+      iconBg: "bg-blue-100 dark:bg-blue-950/30",
+    },
+    {
+      id: "instant-pan",
+      name: "INSTANT PAN CARD",
+      price: 400.0,
+      iconBg: "bg-sky-100 dark:bg-sky-950/30",
+    },
+  ]);
 
   const filteredSoftware = useMemo(() => {
     return softwareList.filter((s) =>
       s.name.toLowerCase().includes(searchTerm.toLowerCase()),
     );
   }, [searchTerm, softwareList]);
+
+  const handleEditCard = (id: string, currentName: string) => {
+    Swal.fire({
+      title: "Rename Service",
+      input: "text",
+      inputValue: currentName,
+      showCancelButton: true,
+      confirmButtonColor: "#005C3A",
+      confirmButtonText: "Save",
+    }).then((result) => {
+      if (result.isConfirmed && result.value?.trim()) {
+        setSoftwareList((prev) =>
+          prev.map((s) =>
+            s.id === id ? { ...s, name: result.value.trim() } : s,
+          ),
+        );
+      }
+    });
+  };
+
+  const handleDeleteCard = (id: string) => {
+    Swal.fire({
+      title: "Delete Service?",
+      text: "This will remove the card from view.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setSoftwareList((prev) => prev.filter((s) => s.id !== id));
+        Swal.fire({
+          title: "Deleted!",
+          icon: "success",
+          confirmButtonColor: "#005C3A",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      }
+    });
+  };
 
   const handleCardClick = (software: SoftwareCardItem) => {
     setSelectedSoftware(software);
@@ -1166,6 +1211,31 @@ export function SoftwareKeysPage() {
                   className="bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md cursor-pointer group transition-all duration-300 flex flex-col items-center justify-center text-center relative overflow-hidden hover:translate-y-[-4px]"
                 >
                   <div className="absolute inset-0 bg-gradient-to-b from-slate-50/10 to-transparent dark:from-slate-900/5 to-transparent pointer-events-none" />
+
+                  {/* Admin edit/delete buttons */}
+                  {isAdmin && (
+                    <div
+                      className="absolute top-2 right-2 flex gap-1 z-10"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        onClick={() =>
+                          handleEditCard(software.id, software.name)
+                        }
+                        className="p-1 rounded-full bg-white/80 dark:bg-slate-800/80 text-slate-500 hover:text-[#005C3A] hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors shadow-sm"
+                        title="Rename"
+                      >
+                        <Pencil size={12} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteCard(software.id)}
+                        className="p-1 rounded-full bg-white/80 dark:bg-slate-800/80 text-slate-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors shadow-sm"
+                        title="Delete"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  )}
 
                   <div
                     className={`h-24 w-24 rounded-full flex items-center justify-center ${software.iconBg} group-hover:scale-105 transition-transform duration-300 p-2 shadow-inner`}

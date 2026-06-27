@@ -7,6 +7,8 @@ import { AppShell } from "../../../layouts/AppShell";
 import { RationToAdhaar } from "./RationToAdhaar";
 import { AdhaarToRation } from "./AdhaarToRation";
 import { ServiceCard } from "../ServiceCard";
+import { useAuth } from "../../../store/context/AuthContext";
+import Swal from "sweetalert2";
 
 interface RationCardService {
   id: string;
@@ -14,18 +16,16 @@ interface RationCardService {
 }
 
 export function RationCardPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [activeForm, setActiveForm] = useState<string | null>(null);
 
-  const rationCardServicesList: RationCardService[] = [
-    {
-      id: "ration-to-adhaar",
-      name: "Ration Number To Adhaar Number Find",
-    },
-    {
-      id: "adhaar-to-ration",
-      name: "Adhaar To Ration Number Find",
-    },
-  ];
+  const [rationCardServicesList, setRationCardServicesList] = useState<
+    RationCardService[]
+  >([
+    { id: "ration-to-adhaar", name: "Ration Number To Adhaar Number Find" },
+    { id: "adhaar-to-ration", name: "Adhaar To Ration Number Find" },
+  ]);
 
   const handleCardClick = (service: RationCardService) => {
     if (service.id === "ration-to-adhaar") {
@@ -33,6 +33,48 @@ export function RationCardPage() {
     } else if (service.id === "adhaar-to-ration") {
       setActiveForm("adhaar-to-ration");
     }
+  };
+
+  const handleEditCard = (id: string, currentName: string) => {
+    Swal.fire({
+      title: "Rename Service",
+      input: "text",
+      inputValue: currentName,
+      showCancelButton: true,
+      confirmButtonColor: "#005C3A",
+      confirmButtonText: "Save",
+    }).then((result) => {
+      if (result.isConfirmed && result.value?.trim()) {
+        setRationCardServicesList((prev) =>
+          prev.map((s) =>
+            s.id === id ? { ...s, name: result.value.trim() } : s,
+          ),
+        );
+      }
+    });
+  };
+
+  const handleDeleteCard = (id: string) => {
+    Swal.fire({
+      title: "Delete Service?",
+      text: "This will remove the card from view.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setRationCardServicesList((prev) => prev.filter((s) => s.id !== id));
+        Swal.fire({
+          title: "Deleted!",
+          icon: "success",
+          confirmButtonColor: "#005C3A",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      }
+    });
   };
 
   const renderServiceIcon = (id: string, className = "w-14 h-14") => {
@@ -206,6 +248,9 @@ export function RationCardPage() {
                   name={service.name}
                   icon={renderServiceIcon(service.id, "w-16 h-16")}
                   onClick={() => handleCardClick(service)}
+                  isAdmin={isAdmin}
+                  onEditClick={() => handleEditCard(service.id, service.name)}
+                  onDeleteClick={() => handleDeleteCard(service.id)}
                 />
               ))}
             </div>

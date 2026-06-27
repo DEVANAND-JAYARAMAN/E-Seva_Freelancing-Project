@@ -9,6 +9,8 @@ import { AddressCorrectionBelow18 } from "./AddressCorrectionBelow18";
 import { EidToAadhaarPdf } from "./EidToAadhaarPdf";
 import { AadhaarToPdf } from "./AadhaarToPdf";
 import { ServiceCard } from "../ServiceCard";
+import { useAuth } from "../../../store/context/AuthContext";
+import Swal from "sweetalert2";
 
 interface AadhaarService {
   id: string;
@@ -16,28 +18,23 @@ interface AadhaarService {
 }
 
 export function AadhaarAddressPage() {
-  const [activeForm, setActiveForm] = useState<string | null>(null); // "address-correction-above-18" | "address-correction-below-18" | "eid-to-aadhaar-pdf" | "aadhaar-to-pdf" | null
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+  const [activeForm, setActiveForm] = useState<string | null>(null);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const aadhaarServicesList: AadhaarService[] = [
-    {
-      id: "address-correction-above-18",
-      name: "Adress Correction (above 18)",
-    },
+  const [aadhaarServicesList, setAadhaarServicesList] = useState<
+    AadhaarService[]
+  >([
+    { id: "address-correction-above-18", name: "Adress Correction (above 18)" },
     {
       id: "address-correction-below-18",
       name: "Adress Correction (Below 18-Minor)",
     },
-    {
-      id: "eid-to-aadhaar-pdf",
-      name: "EID to Adhaar PDF Apply",
-    },
-    {
-      id: "aadhaar-to-pdf",
-      name: "Adhaar Number to Adhaar PDF Apply",
-    },
-  ];
+    { id: "eid-to-aadhaar-pdf", name: "EID to Adhaar PDF Apply" },
+    { id: "aadhaar-to-pdf", name: "Adhaar Number to Adhaar PDF Apply" },
+  ]);
 
   const handleCardClick = (service: AadhaarService) => {
     setSubmissionSuccess(false);
@@ -50,6 +47,48 @@ export function AadhaarAddressPage() {
     } else if (service.id === "aadhaar-to-pdf") {
       setActiveForm("aadhaar-to-pdf");
     }
+  };
+
+  const handleEditCard = (id: string, currentName: string) => {
+    Swal.fire({
+      title: "Rename Service",
+      input: "text",
+      inputValue: currentName,
+      showCancelButton: true,
+      confirmButtonColor: "#005C3A",
+      confirmButtonText: "Save",
+    }).then((result) => {
+      if (result.isConfirmed && result.value?.trim()) {
+        setAadhaarServicesList((prev) =>
+          prev.map((s) =>
+            s.id === id ? { ...s, name: result.value.trim() } : s,
+          ),
+        );
+      }
+    });
+  };
+
+  const handleDeleteCard = (id: string) => {
+    Swal.fire({
+      title: "Delete Service?",
+      text: "This will remove the card from view.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setAadhaarServicesList((prev) => prev.filter((s) => s.id !== id));
+        Swal.fire({
+          title: "Deleted!",
+          icon: "success",
+          confirmButtonColor: "#005C3A",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      }
+    });
   };
 
   const renderServiceIcon = (id: string, className = "w-14 h-14") => {
@@ -356,6 +395,9 @@ export function AadhaarAddressPage() {
                   name={service.name}
                   icon={renderServiceIcon(service.id, "w-16 h-16")}
                   onClick={() => handleCardClick(service)}
+                  isAdmin={isAdmin}
+                  onEditClick={() => handleEditCard(service.id, service.name)}
+                  onDeleteClick={() => handleDeleteCard(service.id)}
                 />
               ))}
             </div>

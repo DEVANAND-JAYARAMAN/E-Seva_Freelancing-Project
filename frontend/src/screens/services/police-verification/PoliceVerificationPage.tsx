@@ -6,6 +6,8 @@ import { CheckCircle2 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { PoliceVerificationForm } from "./PoliceVerificationForm";
 import { ServiceCard } from "../ServiceCard";
+import { useAuth } from "../../../store/context/AuthContext";
+import Swal from "sweetalert2";
 
 interface PoliceVerificationService {
   id: string;
@@ -14,19 +16,23 @@ interface PoliceVerificationService {
 }
 
 export function PoliceVerificationPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [activeForm, setActiveForm] = useState<string | null>(null);
   const [selectedService, setSelectedService] =
     useState<PoliceVerificationService | null>(null);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const servicesList: PoliceVerificationService[] = [
-    {
-      id: "police-verification-request",
-      name: "Police Verification Request",
-      price: 500.0,
-    },
-  ];
+  const [servicesList, setServicesList] = useState<PoliceVerificationService[]>(
+    [
+      {
+        id: "police-verification-request",
+        name: "Police Verification Request",
+        price: 500.0,
+      },
+    ],
+  );
 
   const handleCardClick = (service: PoliceVerificationService) => {
     setSelectedService(service);
@@ -34,6 +40,48 @@ export function PoliceVerificationPage() {
     if (service.id === "police-verification-request") {
       setActiveForm("police-verification-request");
     }
+  };
+
+  const handleEditCard = (id: string, currentName: string) => {
+    Swal.fire({
+      title: "Rename Service",
+      input: "text",
+      inputValue: currentName,
+      showCancelButton: true,
+      confirmButtonColor: "#005C3A",
+      confirmButtonText: "Save",
+    }).then((result) => {
+      if (result.isConfirmed && result.value?.trim()) {
+        setServicesList((prev) =>
+          prev.map((s) =>
+            s.id === id ? { ...s, name: result.value.trim() } : s,
+          ),
+        );
+      }
+    });
+  };
+
+  const handleDeleteCard = (id: string) => {
+    Swal.fire({
+      title: "Delete Service?",
+      text: "This will remove the card from view.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setServicesList((prev) => prev.filter((s) => s.id !== id));
+        Swal.fire({
+          title: "Deleted!",
+          icon: "success",
+          confirmButtonColor: "#005C3A",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      }
+    });
   };
 
   const handleFormSubmit = (data: any) => {
@@ -177,6 +225,9 @@ export function PoliceVerificationPage() {
                   name={service.name}
                   icon={renderServiceIcon(service.id, "w-24 h-24")}
                   onClick={() => handleCardClick(service)}
+                  isAdmin={isAdmin}
+                  onEditClick={() => handleEditCard(service.id, service.name)}
+                  onDeleteClick={() => handleDeleteCard(service.id)}
                 />
               ))}
             </div>

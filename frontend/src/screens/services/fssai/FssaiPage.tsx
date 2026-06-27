@@ -6,6 +6,8 @@ import { CheckCircle2 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { NewFssaiRegistration } from "./NewFssaiRegistration";
 import { ServiceCard } from "../ServiceCard";
+import { useAuth } from "../../../store/context/AuthContext";
+import Swal from "sweetalert2";
 
 interface FssaiService {
   id: string;
@@ -13,22 +15,66 @@ interface FssaiService {
 }
 
 export function FssaiPage() {
-  const [activeForm, setActiveForm] = useState<string | null>(null); // "new-registration" | null
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+  const [activeForm, setActiveForm] = useState<string | null>(null);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const fssaiServicesList: FssaiService[] = [
+  const [fssaiServicesList, setFssaiServicesList] = useState<FssaiService[]>([
     {
       id: "new-registration",
       name: "New FSSAI Registration (Food service)",
     },
-  ];
+  ]);
 
   const handleCardClick = (service: FssaiService) => {
     setSubmissionSuccess(false);
     if (service.id === "new-registration") {
       setActiveForm("new-registration");
     }
+  };
+
+  const handleEditCard = (id: string, currentName: string) => {
+    Swal.fire({
+      title: "Rename Service",
+      input: "text",
+      inputValue: currentName,
+      showCancelButton: true,
+      confirmButtonColor: "#005C3A",
+      confirmButtonText: "Save",
+    }).then((result) => {
+      if (result.isConfirmed && result.value?.trim()) {
+        setFssaiServicesList((prev) =>
+          prev.map((s) =>
+            s.id === id ? { ...s, name: result.value.trim() } : s,
+          ),
+        );
+      }
+    });
+  };
+
+  const handleDeleteCard = (id: string) => {
+    Swal.fire({
+      title: "Delete Service?",
+      text: "This will remove the card from view.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setFssaiServicesList((prev) => prev.filter((s) => s.id !== id));
+        Swal.fire({
+          title: "Deleted!",
+          icon: "success",
+          confirmButtonColor: "#005C3A",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      }
+    });
   };
 
   const renderServiceIcon = (id: string, className = "w-14 h-14") => {
@@ -150,6 +196,9 @@ export function FssaiPage() {
                   name={service.name}
                   icon={renderServiceIcon(service.id, "w-16 h-16")}
                   onClick={() => handleCardClick(service)}
+                  isAdmin={isAdmin}
+                  onEditClick={() => handleEditCard(service.id, service.name)}
+                  onDeleteClick={() => handleDeleteCard(service.id)}
                 />
               ))}
             </div>

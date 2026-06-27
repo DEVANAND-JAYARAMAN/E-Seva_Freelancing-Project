@@ -10,6 +10,8 @@ import { FormSchema } from "../form/types";
 import { PanToMsmeUdhayamFind } from "./PanToMsmeUdhayamFind";
 import { MobileToMsmeUdhayamFind } from "./MobileToMsmeUdhayamFind";
 import { ServiceCard } from "../ServiceCard";
+import { useAuth } from "../../../store/context/AuthContext";
+import Swal from "sweetalert2";
 
 interface MsmeService {
   id: string;
@@ -18,11 +20,13 @@ interface MsmeService {
 }
 
 export function MsmePage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [activeForm, setActiveForm] = useState<string | null>(null); // "msme-main" | "msme-pan" | "msme-mobile" | null
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const msmeServicesList: MsmeService[] = [
+  const [msmeServicesList, setMsmeServicesList] = useState<MsmeService[]>([
     {
       id: "msme-main",
       name: "MSME",
@@ -36,7 +40,7 @@ export function MsmePage() {
       id: "msme-mobile",
       name: "Mobile To Msme Udhayam Find",
     },
-  ];
+  ]);
 
   const handleCardClick = (service: MsmeService) => {
     setSubmissionSuccess(false);
@@ -47,6 +51,48 @@ export function MsmePage() {
     } else if (service.id === "msme-mobile") {
       setActiveForm("msme-mobile");
     }
+  };
+
+  const handleEditCard = (id: string, currentName: string) => {
+    Swal.fire({
+      title: "Rename Service",
+      input: "text",
+      inputValue: currentName,
+      showCancelButton: true,
+      confirmButtonColor: "#005C3A",
+      confirmButtonText: "Save",
+    }).then((result) => {
+      if (result.isConfirmed && result.value?.trim()) {
+        setMsmeServicesList((prev) =>
+          prev.map((s) =>
+            s.id === id ? { ...s, name: result.value.trim() } : s,
+          ),
+        );
+      }
+    });
+  };
+
+  const handleDeleteCard = (id: string) => {
+    Swal.fire({
+      title: "Delete Service?",
+      text: "This will remove the card from view.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setMsmeServicesList((prev) => prev.filter((s) => s.id !== id));
+        Swal.fire({
+          title: "Deleted!",
+          icon: "success",
+          confirmButtonColor: "#005C3A",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      }
+    });
   };
 
   const handleFormSubmit = (data: Record<string, string>) => {
@@ -269,6 +315,9 @@ export function MsmePage() {
                   name={service.name}
                   icon={renderServiceIcon(service.id, "w-16 h-16")}
                   onClick={() => handleCardClick(service)}
+                  isAdmin={isAdmin}
+                  onEditClick={() => handleEditCard(service.id, service.name)}
+                  onDeleteClick={() => handleDeleteCard(service.id)}
                 />
               ))}
             </div>

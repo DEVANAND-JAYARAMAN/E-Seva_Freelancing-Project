@@ -9,6 +9,8 @@ import { PvcCardPrintForm } from "./PvcCardPrintForm";
 import { useLocalStorage } from "../../../hooks/useLocalStorage";
 import { ServiceCard } from "../ServiceCard";
 import { PATHS } from "../../../routes/paths";
+import { useAuth } from "../../../store/context/AuthContext";
+import Swal from "sweetalert2";
 
 interface PvcService {
   id: string;
@@ -17,19 +19,62 @@ interface PvcService {
 
 export function PvcCardPrintPage() {
   const router = useRouter();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [activeForm, setActiveForm] = useState<string | null>(null);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Read pricing matrix from localStorage
   const [pricingConfig] = useLocalStorage<Record<string, any[]>>(
     "thuruvan_service_pricing_matrix_v2",
     {},
   );
 
-  const servicesList: PvcService[] = [
+  const [servicesList, setServicesList] = useState<PvcService[]>([
     { id: "pvc-card-print", name: "PVC CARD PRINT(ALL TYPE)" },
-  ];
+  ]);
+
+  const handleEditCard = (id: string, currentName: string) => {
+    Swal.fire({
+      title: "Rename Service",
+      input: "text",
+      inputValue: currentName,
+      showCancelButton: true,
+      confirmButtonColor: "#005C3A",
+      confirmButtonText: "Save",
+    }).then((result) => {
+      if (result.isConfirmed && result.value?.trim()) {
+        setServicesList((prev) =>
+          prev.map((s) =>
+            s.id === id ? { ...s, name: result.value.trim() } : s,
+          ),
+        );
+      }
+    });
+  };
+
+  const handleDeleteCard = (id: string) => {
+    Swal.fire({
+      title: "Delete Service?",
+      text: "This will remove the card from view.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setServicesList((prev) => prev.filter((s) => s.id !== id));
+        Swal.fire({
+          title: "Deleted!",
+          icon: "success",
+          confirmButtonColor: "#005C3A",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      }
+    });
+  };
 
   // Helper to resolve dynamic price from admin pricing matrix
   const getServicePrice = () => {
@@ -140,6 +185,9 @@ export function PvcCardPrintPage() {
                   name={service.name}
                   icon={renderServiceIcon(service.id, "w-16 h-16")}
                   onClick={() => setActiveForm(service.name)}
+                  isAdmin={isAdmin}
+                  onEditClick={() => handleEditCard(service.id, service.name)}
+                  onDeleteClick={() => handleDeleteCard(service.id)}
                 />
               ))}
             </div>

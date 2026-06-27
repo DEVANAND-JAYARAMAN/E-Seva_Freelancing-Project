@@ -7,6 +7,8 @@ import { AppShell } from "../../../layouts/AppShell";
 import { CertificateCoursesForm } from "./CertificateCoursesForm";
 import { ServiceCard } from "../ServiceCard";
 import { useLocalStorage } from "../../../hooks/useLocalStorage";
+import { useAuth } from "../../../store/context/AuthContext";
+import Swal from "sweetalert2";
 
 interface CertificateService {
   id: string;
@@ -16,6 +18,8 @@ interface CertificateService {
 }
 
 export function CertificateCoursesPage() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [activeForm, setActiveForm] = useState<string | null>(null);
   const [selectedService, setSelectedService] =
     useState<CertificateService | null>(null);
@@ -28,7 +32,7 @@ export function CertificateCoursesPage() {
     {},
   );
 
-  const servicesList: CertificateService[] = [
+  const [servicesList, setServicesList] = useState<CertificateService[]>([
     {
       id: "course-tailoring",
       name: "Tailoring Certificate",
@@ -47,7 +51,49 @@ export function CertificateCoursesPage() {
       priceKey: "course-beautician",
       defaultPrice: 300.0,
     },
-  ];
+  ]);
+
+  const handleEditCard = (id: string, currentName: string) => {
+    Swal.fire({
+      title: "Rename Service",
+      input: "text",
+      inputValue: currentName,
+      showCancelButton: true,
+      confirmButtonColor: "#005C3A",
+      confirmButtonText: "Save",
+    }).then((result) => {
+      if (result.isConfirmed && result.value?.trim()) {
+        setServicesList((prev) =>
+          prev.map((s) =>
+            s.id === id ? { ...s, name: result.value.trim() } : s,
+          ),
+        );
+      }
+    });
+  };
+
+  const handleDeleteCard = (id: string) => {
+    Swal.fire({
+      title: "Delete Service?",
+      text: "This will remove the card from view.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setServicesList((prev) => prev.filter((s) => s.id !== id));
+        Swal.fire({
+          title: "Deleted!",
+          icon: "success",
+          confirmButtonColor: "#005C3A",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      }
+    });
+  };
 
   // Helper to resolve dynamic price from admin pricing matrix
   const getServicePrice = (service: CertificateService) => {
@@ -624,6 +670,9 @@ export function CertificateCoursesPage() {
                   name={service.name}
                   icon={renderServiceIcon(service.id, "w-24 h-24")}
                   onClick={() => handleCardClick(service)}
+                  isAdmin={isAdmin}
+                  onEditClick={() => handleEditCard(service.id, service.name)}
+                  onDeleteClick={() => handleDeleteCard(service.id)}
                 />
               ))}
             </div>

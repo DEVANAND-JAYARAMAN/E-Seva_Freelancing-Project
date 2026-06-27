@@ -11,6 +11,8 @@ import {
   ServicePaymentScreen,
   ServiceSuccessScreen,
 } from "../../../components/ServicePaymentScreen";
+import { useAuth } from "../../../store/context/AuthContext";
+import Swal from "sweetalert2";
 
 interface DharsanSubService {
   id: string;
@@ -32,7 +34,9 @@ const routeOptions = [
 ];
 
 export function DharsanPage() {
-  const [activeForm, setActiveForm] = useState<string | null>(null); // "sabarimala" | null
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+  const [activeForm, setActiveForm] = useState<string | null>(null);
   const [paymentPhase, setPaymentPhase] = useState<
     "form" | "payment" | "success"
   >("form");
@@ -41,14 +45,58 @@ export function DharsanPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
-  const dharsanServicesList: DharsanSubService[] = [
+  const [dharsanServicesList, setDharsanServicesList] = useState<
+    DharsanSubService[]
+  >([
     {
       id: "sabarimala",
       name: "சபரிமலை",
       subName: "Sabarimala Dharsan",
       price: { retailer: 150, distributor: 150 },
     },
-  ];
+  ]);
+
+  const handleEditCard = (id: string, currentName: string) => {
+    Swal.fire({
+      title: "Rename Service",
+      input: "text",
+      inputValue: currentName,
+      showCancelButton: true,
+      confirmButtonColor: "#005C3A",
+      confirmButtonText: "Save",
+    }).then((result) => {
+      if (result.isConfirmed && result.value?.trim()) {
+        setDharsanServicesList((prev) =>
+          prev.map((s) =>
+            s.id === id ? { ...s, name: result.value.trim() } : s,
+          ),
+        );
+      }
+    });
+  };
+
+  const handleDeleteCard = (id: string) => {
+    Swal.fire({
+      title: "Delete Service?",
+      text: "This will remove the card from view.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setDharsanServicesList((prev) => prev.filter((s) => s.id !== id));
+        Swal.fire({
+          title: "Deleted!",
+          icon: "success",
+          confirmButtonColor: "#005C3A",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      }
+    });
+  };
 
   const handleCardClick = (service: DharsanSubService) => {
     setFormData({});
@@ -253,6 +301,9 @@ export function DharsanPage() {
                   subName={service.subName}
                   icon={renderServiceIcon(service.id, "w-16 h-16")}
                   onClick={() => handleCardClick(service)}
+                  isAdmin={isAdmin}
+                  onEditClick={() => handleEditCard(service.id, service.name)}
+                  onDeleteClick={() => handleDeleteCard(service.id)}
                 />
               ))}
             </div>
@@ -380,7 +431,9 @@ export function DharsanPage() {
                           label="Route"
                           options={routeOptions}
                           value={formData.route || ""}
-                          onChange={(val, file) => handleFieldChange("route", val, file)}
+                          onChange={(val, file) =>
+                            handleFieldChange("route", val, file)
+                          }
                           error={errors.route}
                           disabled={isSubmitting}
                         />

@@ -6,6 +6,8 @@ import { CheckCircle2 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { LapsedRegistrationRenewal } from "./LapsedRegistrationRenewal";
 import { ServiceCard } from "../ServiceCard";
+import { useAuth } from "../../../store/context/AuthContext";
+import Swal from "sweetalert2";
 
 interface EmploymentService {
   id: string;
@@ -13,22 +15,63 @@ interface EmploymentService {
 }
 
 export function EmploymentServicesPage() {
-  const [activeForm, setActiveForm] = useState<string | null>(null); // "lapsed-renewal" | null
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+  const [activeForm, setActiveForm] = useState<string | null>(null);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const employmentServicesList: EmploymentService[] = [
-    {
-      id: "lapsed-renewal",
-      name: "Lapsed Registration Renewal",
-    },
-  ];
+  const [employmentServicesList, setEmploymentServicesList] = useState<
+    EmploymentService[]
+  >([{ id: "lapsed-renewal", name: "Lapsed Registration Renewal" }]);
 
   const handleCardClick = (service: EmploymentService) => {
     setSubmissionSuccess(false);
     if (service.id === "lapsed-renewal") {
       setActiveForm("lapsed-renewal");
     }
+  };
+
+  const handleEditCard = (id: string, currentName: string) => {
+    Swal.fire({
+      title: "Rename Service",
+      input: "text",
+      inputValue: currentName,
+      showCancelButton: true,
+      confirmButtonColor: "#005C3A",
+      confirmButtonText: "Save",
+    }).then((result) => {
+      if (result.isConfirmed && result.value?.trim()) {
+        setEmploymentServicesList((prev) =>
+          prev.map((s) =>
+            s.id === id ? { ...s, name: result.value.trim() } : s,
+          ),
+        );
+      }
+    });
+  };
+
+  const handleDeleteCard = (id: string) => {
+    Swal.fire({
+      title: "Delete Service?",
+      text: "This will remove the card from view.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setEmploymentServicesList((prev) => prev.filter((s) => s.id !== id));
+        Swal.fire({
+          title: "Deleted!",
+          icon: "success",
+          confirmButtonColor: "#005C3A",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      }
+    });
   };
 
   const renderServiceIcon = (id: string, className = "w-14 h-14") => {
@@ -184,6 +227,9 @@ export function EmploymentServicesPage() {
                   name={service.name}
                   icon={renderServiceIcon(service.id, "w-16 h-16")}
                   onClick={() => handleCardClick(service)}
+                  isAdmin={isAdmin}
+                  onEditClick={() => handleEditCard(service.id, service.name)}
+                  onDeleteClick={() => handleDeleteCard(service.id)}
                 />
               ))}
             </div>
