@@ -99,26 +99,32 @@
   }
 
   /* ─────────────────────────────────────────────────────────
-     Global Table Styles — Dark Striped + Hover (all tables)
+     Global Table Styles — Light Mode (Default)
      ───────────────────────────────────────────────────────── */
+  table,
+  div.overflow-x-auto:has(table) {
+    background-color: #ffffff !important;
+    color: #2c3034 !important;
+    border-color: #dee2e6 !important;
+  }
+
   table {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.875rem;
-    background-color: #212529 !important;
-    border: 1px solid #373b3e !important;
+    border: 1px solid #dee2e6 !important;
   }
 
   /* Table Header */
   thead tr {
-    background-color: #1c1e22 !important;
-    border-bottom: 2px solid #373b3e !important;
+    background-color: #f8f9fa !important;
+    border-bottom: 2px solid #dee2e6 !important;
   }
 
   thead th,
   thead th * {
     @apply py-4 px-5 text-left;
-    color: #ffffff !important;
+    color: #2c3034 !important;
     font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -128,23 +134,23 @@
 
   /* Table Body */
   tbody {
-    border-color: #373b3e !important;
+    border-color: #dee2e6 !important;
   }
 
   tbody tr {
-    background-color: #212529 !important;
-    border-bottom: 1px solid #373b3e !important;
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #dee2e6 !important;
     transition: background-color 0.15s ease;
   }
 
-  /* Striped rows — every even row slightly lighter */
+  /* Striped rows — every even row slightly darker */
   tbody tr:nth-child(even) {
-    background-color: #2c3034 !important;
+    background-color: #f8f9fa !important;
   }
 
   /* Row hover effect */
   tbody tr:hover {
-    background-color: #323539 !important;
+    background-color: #e9ecef !important;
   }
 
   /* Table Cells & Text Colors */
@@ -153,7 +159,7 @@
     vertical-align: middle;
   }
 
-  /* Force high contrast light text for general content, ignoring specific colorful badges and icons */
+  /* General text colors inside cells in light mode */
   table td,
   table
     td
@@ -161,7 +167,9 @@
       [class*="text-rose"]
     ):not([class*="text-red"]):not([class*="text-amber"]):not(
       [class*="text-yellow"]
-    ):not([class*="bg-"]):not([class*="text-blue"]):not([class*="text-purple"]),
+    ):not([class*="bg-"]):not([class*="text-blue"]):not(
+      [class*="text-purple"]
+    ):not([class*="bg-green"]):not([class*="bg-rose"]):not([class*="bg-amber"]),
   table
     td
     span:not([class*="text-emerald"]):not([class*="text-green"]):not(
@@ -170,12 +178,240 @@
       [class*="text-yellow"]
     ):not([class*="bg-"]):not([class*="text-blue"]):not(
       [class*="text-purple"]
+    ):not([class*="bg-green"]):not([class*="bg-rose"]):not(
+      [class*="bg-amber"]
     ) {
-    color: #e9ecef !important;
+    color: #2c3034 !important;
+  }
+
+  /* SVG Icons inside table */
+  table td svg {
+    color: #495057 !important;
+  }
+
+  /* Inputs in light mode */
+  table input {
+    background-color: #ffffff !important;
+    color: #2c3034 !important;
+    border: 1px solid #dee2e6 !important;
+  }
+
+  /* Action buttons in light mode */
+  table button,
+  table td button {
+    background-color: #f8f9fa !important;
+    border: 1px solid #dee2e6 !important;
+    color: #2c3034 !important;
+  }
+  table button:hover,
+  table td button:hover {
+    background-color: #e9ecef !important;
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     Global Table Styles — Dark Mode Override (.dark wrapper)
+     ───────────────────────────────────────────────────────── */
+  .dark table,
+  .dark div.overflow-x-auto:has(table) {
+    background-color: #212529 !important;
+    color: #f8f9fa !important;
+    border-color: #373b3e !important;
+  }
+
+  .dark table {
+    border: 1px solid #373b3e !important;
+  }
+
+  .dark thead tr {
+    background-color: #1c1e22 !important;
+    border-bottom: 2px solid #373b3e !important;
+  }
+
+  .dark thead th,
+  .dark thead th * {
+    color: #ffffff !important;
+  }
+
+  .dark tbody {
+    border-color: #373b3e !important;
+  }
+
+  .dark tbody tr {
+    background-color: #212529 !important;
+    border-bottom: 1px solid #373b3e !important;
+  }
+
+  /* Dark mode striped rows */
+  .dark tbody tr:nth-child(even) {
+    background-color: #2c3034 !important;
+  }
+
+  /* Dark mode row hover */
+  .dark tbody tr:hover {
+    background-color: #323539 !important;
+  }
+
+  /* Force high contrast light text in dark mode */
+  .dark table td,
+  .dark
+    table
+    td
+    div:not([class*="text-emerald"]):not([class*="text-green"]):not(
+      [class*="text-rose"]
+    ):not([class*="text-red"]):not([class*="text-amber"]):not(
+      [class*="text-yellow"]
+    ):not([class*="bg-"]):not([class*="text-blue"]):not(
+      [class*="text-purple"]
+    ):not([class*="bg-green"]):not([class*="bg-rose"]):not([class*="bg-amber"]),
+  .dark
+    table
+    td
+    span:not([class*="text-emerald"]):not([class*="text-green"]):not(
+      [class*="text-rose"]
+    ):not([class*="text-red"]):not([class*="text-amber"]):not(
+      [class*="text-yellow"]
+    ):not([class*="bg-"]):not([class*="text-blue"]):not(
+      [class*="text-purple"]
+    ):not([class*="bg-green"]):not([class*="bg-rose"]):not(
+      [class*="bg-amber"]
+    ) {
+    color: #f8f9fa !important;
+  }
+
+  /* Dark mode badge colors */
+  .dark table td span[class*="bg-emerald"],
+  .dark table td span[class*="bg-green"],
+  .dark table td span[class*="bg-[#e8f5e9]"] {
+    background-color: rgba(25, 135, 84, 0.2) !important;
+    color: #2ec4b6 !important;
+    border: 1px solid rgba(25, 135, 84, 0.3) !important;
+  }
+
+  .dark table td span[class*="bg-rose"],
+  .dark table td span[class*="bg-red"] {
+    background-color: rgba(220, 53, 69, 0.2) !important;
+    color: #ff6b6b !important;
+    border: 1px solid rgba(220, 53, 69, 0.3) !important;
+  }
+
+  .dark table td span[class*="bg-amber"],
+  .dark table td span[class*="bg-yellow"] {
+    background-color: rgba(255, 193, 7, 0.2) !important;
+    color: #ffd166 !important;
+    border: 1px solid rgba(255, 193, 7, 0.3) !important;
+  }
+
+  .dark table td svg {
+    color: #adb5bd !important;
+  }
+
+  .dark table input {
+    background-color: #1c1e22 !important;
+    color: #ffffff !important;
+    border: 1px solid #373b3e !important;
+  }
+
+  .dark table button,
+  .dark table td button {
+    background-color: #2c3034 !important;
+    border: 1px solid #373b3e !important;
+    color: #ffffff !important;
+  }
+  .dark table button:hover,
+  .dark table td button:hover {
+    background-color: #373b3e !important;
   }
 
   /* Simple styling for generic child borders */
   table * {
     border-color: #373b3e !important;
+  }
+
+  /* ─────────────────────────────────────────────────────────
+     Recent Updates Card Styling (Light & Dark Mode)
+     ───────────────────────────────────────────────────────── */
+  .recent-updates-card {
+    background-color: #ffffff !important;
+    border-color: #dee2e6 !important;
+    color: #2c3034 !important;
+  }
+
+  .recent-updates-card h2,
+  .recent-updates-card strong {
+    color: #2c3034 !important;
+  }
+
+  .recent-updates-card div {
+    border-color: #dee2e6 !important;
+  }
+
+  .recent-updates-card span:not([class*="bg-"]):not([class*="text-"]) {
+    color: #495057 !important;
+  }
+
+  /* Specific status badge styles for Recent Updates in Light Mode */
+  .recent-updates-card span[class*="bg-emerald"],
+  .recent-updates-card span[class*="bg-green"],
+  .recent-updates-card span[class*="bg-[#e8f5e9]"] {
+    background-color: rgba(25, 135, 84, 0.15) !important;
+    color: #198754 !important;
+    border: 1px solid rgba(25, 135, 84, 0.25) !important;
+  }
+
+  .recent-updates-card span[class*="bg-rose"],
+  .recent-updates-card span[class*="bg-red"] {
+    background-color: rgba(220, 53, 69, 0.15) !important;
+    color: #dc3545 !important;
+    border: 1px solid rgba(220, 53, 69, 0.25) !important;
+  }
+
+  .recent-updates-card span[class*="bg-amber"],
+  .recent-updates-card span[class*="bg-yellow"] {
+    background-color: rgba(255, 193, 7, 0.15) !important;
+    color: #b58100 !important;
+    border: 1px solid rgba(255, 193, 7, 0.25) !important;
+  }
+
+  /* Dark Mode Override for Recent Updates Card */
+  .dark .recent-updates-card {
+    background-color: #212529 !important;
+    border-color: #373b3e !important;
+    color: #f8f9fa !important;
+  }
+
+  .dark .recent-updates-card h2,
+  .dark .recent-updates-card strong {
+    color: #f8f9fa !important;
+  }
+
+  .dark .recent-updates-card div {
+    border-color: #373b3e !important;
+  }
+
+  .dark .recent-updates-card span:not([class*="bg-"]):not([class*="text-"]) {
+    color: #adb5bd !important;
+  }
+
+  /* Specific status badge styles for Recent Updates in Dark Mode */
+  .dark .recent-updates-card span[class*="bg-emerald"],
+  .dark .recent-updates-card span[class*="bg-green"],
+  .dark .recent-updates-card span[class*="bg-[#e8f5e9]"] {
+    background-color: rgba(25, 135, 84, 0.2) !important;
+    color: #2ec4b6 !important;
+    border: 1px solid rgba(25, 135, 84, 0.3) !important;
+  }
+
+  .dark .recent-updates-card span[class*="bg-rose"],
+  .dark .recent-updates-card span[class*="bg-red"] {
+    background-color: rgba(220, 53, 69, 0.2) !important;
+    color: #ff6b6b !important;
+    border: 1px solid rgba(220, 53, 69, 0.3) !important;
+  }
+
+  .dark .recent-updates-card span[class*="bg-amber"],
+  .dark .recent-updates-card span[class*="bg-yellow"] {
+    background-color: rgba(255, 193, 7, 0.2) !important;
+    color: #ffd166 !important;
+    border: 1px solid rgba(255, 193, 7, 0.3) !important;
   }
 }
