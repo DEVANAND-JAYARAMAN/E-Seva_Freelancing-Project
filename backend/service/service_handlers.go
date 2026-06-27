@@ -864,7 +864,7 @@ func RechargeWebhook(c *gin.Context) {
 	userId := userIdAttr.Value
 
 	now := time.Now().UTC()
-	amountStr := fmt.Sprintf("%.2f", parsedAmount)
+	amountStr = fmt.Sprintf("%.2f", parsedAmount)
 
 	// Credit Wallets table
 	_, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
@@ -969,4 +969,14 @@ func DeleteDynamicService(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Service deleted successfully"})
+}
+
+// RechargeReturn handles the redirect from Mugavai payment gateway
+func RechargeReturn(c *gin.Context) {
+	// Redirect back to the wallet page
+	redirectUrl := c.Query("redirect_url")
+	if redirectUrl == "" {
+		redirectUrl = "https://thuruvancommunications.com/dashboard/wallet?payment_status=success"
+	}
+	c.Redirect(http.StatusFound, redirectUrl)
 }
