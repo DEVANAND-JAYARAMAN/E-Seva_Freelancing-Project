@@ -332,7 +332,7 @@
      ───────────────────────────────────────────────────────── */
   .recent-updates-card {
     background-color: #ffffff !important;
-    border-color: #dee2e6 !important;
+    border-color: #2c3034 !important;
     color: #2c3034 !important;
   }
 
@@ -342,11 +342,11 @@
   }
 
   .recent-updates-card div {
-    border-color: #dee2e6 !important;
+    border-color: #2c3034 !important;
   }
 
   .recent-updates-card span:not([class*="bg-"]):not([class*="text-"]) {
-    color: #495057 !important;
+    color: #2c3034 !important;
   }
 
   /* Specific status badge styles for Recent Updates in Light Mode */
@@ -375,7 +375,7 @@
   /* Dark Mode Override for Recent Updates Card */
   .dark .recent-updates-card {
     background-color: #212529 !important;
-    border-color: #373b3e !important;
+    border-color: #2c3034 !important;
     color: #f8f9fa !important;
   }
 
@@ -385,7 +385,7 @@
   }
 
   .dark .recent-updates-card div {
-    border-color: #373b3e !important;
+    border-color: #2c3034 !important;
   }
 
   .dark .recent-updates-card span:not([class*="bg-"]):not([class*="text-"]) {

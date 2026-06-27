@@ -24,11 +24,16 @@ export function WalletSummary({ stats }: { stats?: any }) {
 
   // Unique card gradient backgrounds
   const cardBg: Record<string, string> = {
-    "main wallet": "bg-gradient-to-br from-emerald-500 to-green-400",
-    "wallet request": "bg-gradient-to-br from-sky-500 to-cyan-400",
-    customers: "bg-gradient-to-br from-indigo-500 to-blue-400",
-    retailers: "bg-gradient-to-br from-orange-500 to-amber-400",
-    distributors: "bg-gradient-to-br from-teal-500 to-emerald-400",
+    "main wallet":
+      "bg-gradient-to-br from-[#005c3a] to-[#004229] dark:from-[#08291c] dark:to-[#02150e]",
+    "wallet request":
+      "bg-gradient-to-br from-[#005274] to-[#003850] dark:from-[#002e42] dark:to-[#001c29]",
+    customers:
+      "bg-gradient-to-br from-[#312e81] to-[#1e1b4b] dark:from-[#1e1b4b] dark:to-[#0f0e26]",
+    retailers:
+      "bg-gradient-to-br from-[#7c2d12] to-[#451a03] dark:from-[#431407] dark:to-[#270b04]",
+    distributors:
+      "bg-gradient-to-br from-[#047857] to-[#064e3b] dark:from-[#064e3b] dark:to-[#022c22]",
   };
 
   return (

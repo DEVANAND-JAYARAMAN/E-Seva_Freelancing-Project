@@ -32,12 +32,15 @@ export function StatsGrid({ stats }: { stats?: any }) {
 
   // Unique gradient per card label
   const cardBg: Record<string, string> = {
-    mint: "bg-gradient-to-br from-emerald-500 to-green-400",
-    amber: "bg-gradient-to-br from-amber-500 to-yellow-400",
-    sky: "bg-gradient-to-br from-sky-500 to-blue-400",
-    green: "bg-gradient-to-br from-green-500 to-teal-400",
-    rose: "bg-gradient-to-br from-rose-500 to-pink-400",
-    violet: "bg-gradient-to-br from-violet-500 to-purple-400",
+    mint: "bg-gradient-to-br from-[#005c3a] to-[#004229] dark:from-[#08291c] dark:to-[#02150e]",
+    amber:
+      "bg-gradient-to-br from-[#7c2d12] to-[#451a03] dark:from-[#431407] dark:to-[#270b04]",
+    sky: "bg-gradient-to-br from-[#005274] to-[#003850] dark:from-[#002e42] dark:to-[#001c29]",
+    green:
+      "bg-gradient-to-br from-[#047857] to-[#064e3b] dark:from-[#064e3b] dark:to-[#022c22]",
+    rose: "bg-gradient-to-br from-[#881337] to-[#4c0519] dark:from-[#4c0519] dark:to-[#2c030e]",
+    violet:
+      "bg-gradient-to-br from-[#4c1d95] to-[#2e1065] dark:from-[#2e1065] dark:to-[#1e0b3e]",
   };
 
   return (
