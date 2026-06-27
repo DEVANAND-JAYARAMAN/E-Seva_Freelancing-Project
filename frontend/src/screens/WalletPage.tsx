@@ -211,7 +211,7 @@ export function WalletPage() {
             amount: amtNum,
             customer_mobile: mobileNumber,
             customer_email: user?.email || "user@thuruvan.com",
-            redirect_url: window.location.origin + "/wallets",
+            redirect_url: window.location.origin + window.location.pathname,
             user_id: user?.id || "",
           }),
         });
