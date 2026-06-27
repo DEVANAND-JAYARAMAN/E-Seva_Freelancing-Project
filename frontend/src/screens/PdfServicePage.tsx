@@ -504,7 +504,7 @@ export function PdfServicePage() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 dark:bg-emerald-600 dark:hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-colors"
+                  className="flex-1 px-4 py-2.5 bg-[#005C3A] hover:bg-[#004d30] dark:bg-[#005C3A] dark:hover:bg-[#004d30] text-white rounded-xl text-xs font-bold transition-colors"
                 >
                   CREATE SERVICE
                 </button>
