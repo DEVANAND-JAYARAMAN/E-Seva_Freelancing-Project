@@ -43,6 +43,8 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
       
       const submitData = new FormData();
       submitData.append("retailerId", user?.id || "unknown_retailer");
+      submitData.append("retailerName", user?.name || "");
+      submitData.append("retailerMobile", user?.phone || "");
       submitData.append("serviceId", serviceId || serviceName.toLowerCase().replace(/\s+/g, "_"));
       submitData.append("serviceName", serviceName);
       submitData.append("cost", String(retailerCharge));

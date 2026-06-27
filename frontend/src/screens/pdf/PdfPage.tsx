@@ -14,6 +14,7 @@ import {
   CreditCard,
   Pencil,
   Upload,
+  Trash,
 } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
 import { InputField, SubmitButton } from "../services/form/FormFields";
@@ -98,14 +99,31 @@ export function PdfPage() {
   const [editingService, setEditingService] = useState<PdfService | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
 
-  const handleSaveService = (name: string, customImage: string | null) => {
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  const handleSaveService = (name: string, customImage: string | null, amount: number = 0) => {
     setServicesList((prev) =>
       prev.map((s) =>
-        s.id === editingService?.id ? { ...s, name, customImage } : s,
+        s.id === editingService?.id ? { ...s, name, customImage, amount: amount || s.amount } : s,
       ),
     );
     setEditModalOpen(false);
     setEditingService(null);
+  };
+
+  const handleAddService = (name: string, customImage: string | null, amount: number) => {
+    const id = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    setServicesList((prev) => [
+      ...prev,
+      { id, name, customImage, amount },
+    ]);
+    setIsAddModalOpen(false);
+  };
+
+  const handleDeleteService = (id: string) => {
+    if (confirm("Are you sure you want to delete this PDF service?")) {
+      setServicesList((prev) => prev.filter((s) => s.id !== id));
+    }
   };
 
   // Tab/Screen navigation states
@@ -633,11 +651,22 @@ export function PdfPage() {
         {!activeForm && !activeListView ? (
           /* RENDER DIRECTORY CARDS GRID */
           <div className="space-y-4">
-            <div className="flex items-center gap-2 border-b border-slate-50 dark:border-slate-900/40 pb-3">
-              <span className="flex h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
-              <h3 className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                Print & Verification Service Directory
-              </h3>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-50 dark:border-slate-900/40 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="flex h-2 w-2 rounded-full bg-rose-500 animate-pulse" />
+                <h3 className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                  Print & Verification Service Directory
+                </h3>
+              </div>
+              {isAdmin && (
+                <button
+                  onClick={() => setIsAddModalOpen(true)}
+                  className="flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] dark:hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-sm active:scale-95"
+                >
+                  <Plus size={14} />
+                  <span>Add Option</span>
+                </button>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -647,22 +676,29 @@ export function PdfPage() {
                   className="bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl overflow-hidden shadow-sm hover:shadow-md hover:border-slate-200 dark:hover:border-slate-800/80 transition-all flex flex-col group relative"
                 >
                   {isAdmin && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingService(service);
-                        setEditModalOpen(true);
-                      }}
-                      style={{
-                        position: "absolute",
-                        top: "12px",
-                        right: "12px",
-                      }}
-                      className="z-10 p-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-150 dark:border-slate-800 text-slate-400 hover:text-[#005c3a] dark:hover:text-emerald-400 transition-all active:scale-[0.95]"
-                      title="Edit card details"
-                    >
-                      <Pencil size={11} />
-                    </button>
+                    <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingService(service);
+                          setEditModalOpen(true);
+                        }}
+                        className="p-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-150 dark:border-slate-800 text-slate-400 hover:text-[#005c3a] dark:hover:text-emerald-400 transition-all active:scale-[0.95]"
+                        title="Edit card details"
+                      >
+                        <Pencil size={11} />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteService(service.id);
+                        }}
+                        className="p-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-slate-150 dark:border-slate-800 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-all active:scale-[0.95]"
+                        title="Delete card"
+                      >
+                        <Trash size={11} />
+                      </button>
+                    </div>
                   )}
 
                   {/* Card realistic image preview */}
@@ -1126,6 +1162,11 @@ export function PdfPage() {
           onSave={handleSaveService}
         />
       )}
+      <AddServiceModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSave={handleAddService}
+      />
     </AppShell>
   );
 }
@@ -1144,6 +1185,7 @@ function EditServiceModal({
   onSave,
 }: EditServiceModalProps) {
   const [name, setName] = useState(service.name);
+  const [amount, setAmount] = useState(service.amount || 0);
   const [customImage, setCustomImage] = useState<string | null>(
     service.customImage || null,
   );
@@ -1160,7 +1202,7 @@ function EditServiceModal({
   };
 
   const handleSaveClick = () => {
-    onSave(name, customImage);
+    onSave(name, customImage, amount);
   };
 
   return (
@@ -1191,6 +1233,18 @@ function EditServiceModal({
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider">
+              Amount (₹)
+            </label>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(Number(e.target.value))}
               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
             />
           </div>
@@ -1242,6 +1296,139 @@ function EditServiceModal({
             className="flex-1 px-4 py-2.5 rounded-xl bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] dark:hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider shadow-sm transition-all"
           >
             Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+type AddServiceModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (name: string, customImage: string | null, amount: number) => void;
+};
+
+function AddServiceModal({
+  isOpen,
+  onClose,
+  onSave,
+}: AddServiceModalProps) {
+  const [name, setName] = useState("");
+  const [amount, setAmount] = useState(0);
+  const [customImage, setCustomImage] = useState<string | null>(null);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCustomImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSaveClick = () => {
+    if (!name.trim()) return;
+    onSave(name, customImage, amount);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div className="relative w-full max-w-md bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl shadow-xl overflow-hidden p-6 flex flex-col gap-5 z-10 animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between border-b border-slate-50 dark:border-slate-900/50 pb-4">
+          <h4 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wide">
+            Add PDF Service
+          </h4>
+          <button
+            onClick={onClose}
+            className="p-1 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+          >
+            <Plus size={14} className="rotate-45" />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider">
+              Service Name
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+              placeholder="e.g. New PDF Extract"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider">
+              Amount (₹)
+            </label>
+            <input
+              type="number"
+              value={amount}
+              onChange={(e) => setAmount(Number(e.target.value))}
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-555 uppercase tracking-wider">
+              Service Image / Icon
+            </label>
+            <div className="flex items-center gap-4">
+              <div className="h-16 w-16 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center overflow-hidden shrink-0">
+                {customImage ? (
+                  <img
+                    src={customImage}
+                    className="h-full w-full object-contain"
+                  />
+                ) : (
+                  <div className="text-[10px] font-bold text-slate-350">
+                    Default
+                  </div>
+                )}
+              </div>
+              <label className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-4 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-950/20 transition-all">
+                <Upload size={16} className="text-slate-400" />
+                <span className="text-[10px] font-bold text-slate-400 mt-1">
+                  Upload Image
+                </span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 border-t border-slate-50 dark:border-slate-900/50 pt-4 mt-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 px-4 py-2.5 border border-slate-200 dark:border-slate-855 rounded-xl text-slate-550 hover:bg-slate-50 dark:hover:bg-slate-900/40 text-xs font-bold uppercase tracking-wider transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleSaveClick}
+            disabled={!name.trim()}
+            className="flex-1 px-4 py-2.5 rounded-xl bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] dark:hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider shadow-sm transition-all disabled:opacity-50"
+          >
+            Add Service
           </button>
         </div>
       </div>
