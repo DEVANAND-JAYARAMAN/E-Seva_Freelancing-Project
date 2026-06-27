@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Swal from "sweetalert2";
 import { PATHS } from "../../routes/paths";
 import {
   Plus,
@@ -1428,31 +1429,53 @@ export function ServicesPage() {
   const handleDeleteService = async (serviceId?: string) => {
     const idToDelete = serviceId || editingService?.id;
     if (!idToDelete) return;
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this service? This action cannot be undone.",
-      )
-    )
-      return;
 
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/dynamic/${idToDelete}`,
-        {
-          method: "DELETE",
-        },
-      );
-      if (response.ok) {
-        setServicesList((prev) => prev.filter((s) => s.id !== idToDelete));
-        setEditModalOpen(false);
-        setEditingService(null);
-      } else {
-        alert("Failed to delete service.");
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You want to delete this service? This action cannot be undone.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/dynamic/${idToDelete}`,
+            {
+              method: "DELETE",
+            },
+          );
+          if (response.ok) {
+            setServicesList((prev) => prev.filter((s) => s.id !== idToDelete));
+            setEditModalOpen(false);
+            setEditingService(null);
+            Swal.fire({
+              title: "Deleted!",
+              text: "Service has been deleted successfully.",
+              icon: "success",
+              confirmButtonColor: "#005C3A",
+            });
+          } else {
+            Swal.fire({
+              title: "Failed!",
+              text: "Failed to delete service.",
+              icon: "error",
+              confirmButtonColor: "#005C3A",
+            });
+          }
+        } catch (e) {
+          console.error(e);
+          Swal.fire({
+            title: "Error!",
+            text: "Error deleting service.",
+            icon: "error",
+            confirmButtonColor: "#005C3A",
+          });
+        }
       }
-    } catch (e) {
-      console.error(e);
-      alert("Error deleting service.");
-    }
+    });
   };
 
   const handleSaveService = (
