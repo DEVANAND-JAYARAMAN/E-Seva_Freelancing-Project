@@ -127,9 +127,6 @@ export function RetailerTable({
                         <div className="text-xs font-semibold text-[#005c3a] dark:text-emerald-400/80">
                           {retailer.shopName}
                         </div>
-                        <div className="text-[10px] font-mono text-slate-500 mt-1 uppercase">
-                          ID: {retailer.id}
-                        </div>
                       </div>
                     </div>
                   </td>
@@ -153,12 +150,6 @@ export function RetailerTable({
                           className="text-[#005c3a] dark:text-emerald-400 shrink-0"
                         />
                         <span className="font-mono">{retailer.aadhaarNo}</span>
-                      </div>
-                    )}
-                    {retailer.rawPassword && (
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 mt-1">
-                        <span className="text-[10px] uppercase tracking-wider text-[#005c3a] dark:text-emerald-400">Pwd:</span>
-                        <span className="font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-[10px]">{retailer.rawPassword}</span>
                       </div>
                     )}
                   </td>

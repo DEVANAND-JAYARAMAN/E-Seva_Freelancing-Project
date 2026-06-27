@@ -15,18 +15,20 @@ const initialDistributorsList: Distributor[] = [];
 export function DistributorsPage() {
   const [distributors, setDistributors] = useState<Distributor[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [selectedDistributor, setSelectedDistributor] = useState<Distributor | null>(null);
+  const [selectedDistributor, setSelectedDistributor] =
+    useState<Distributor | null>(null);
 
   // Fetch real data from backend
   const fetchDistributors = async () => {
     try {
-      const res = await fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/distributors`);
+      const res = await fetch(
+        `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/distributors`,
+      );
       if (res.ok) {
         const data = await res.json();
         const mapped = (data || []).map((user: any) => ({
           id: user.UserId || user.userId,
           name: user.FullName || user.name || "Unknown",
-          shopName: "E-Seva Center", // Backend doesn't store this yet
           email: user.Email || user.email,
           phone: user.Mobile || user.mobile,
           city: "Tamil Nadu", // Default
@@ -53,11 +55,7 @@ export function DistributorsPage() {
     if (data.id) {
       // Edit mode
       setDistributors((prev) =>
-        prev.map((item) =>
-          item.id === data.id
-            ? { ...item, ...data }
-            : item,
-        ),
+        prev.map((item) => (item.id === data.id ? { ...item, ...data } : item)),
       );
     } else {
       // Add mode
