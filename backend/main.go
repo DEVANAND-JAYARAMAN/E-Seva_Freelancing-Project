@@ -93,6 +93,8 @@ func main() {
 			serviceGroup.GET("/dynamic", service.GetDynamicServices)
 			serviceGroup.PUT("/dynamic/:id", service.UpdateDynamicService)
 			serviceGroup.DELETE("/dynamic/:id", service.DeleteDynamicService)
+			serviceGroup.GET("/pricing", service.GetPricingConfig)
+			serviceGroup.PUT("/pricing", service.UpdatePricingConfig)
 		}
 
 		walletGroup := api.Group("/wallet")
