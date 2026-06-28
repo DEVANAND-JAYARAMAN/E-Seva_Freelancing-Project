@@ -114,6 +114,12 @@ export function ServiceQueue() {
                   <strong className="block font-bold text-slate-900 dark:text-slate-100 text-sm tracking-tight truncate">
                     {service.serviceName || service.name || "Unknown Service"}
                   </strong>
+                  <span className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mt-1 truncate">
+                    {service.retailerName || service.RetailerName || service.retailerId || service.RetailerId || "Unknown"}
+                    <span className="text-slate-400 dark:text-slate-500 font-normal ml-1">
+                      ({service.retailerMobile || service.RetailerMobile || "-"})
+                    </span>
+                  </span>
                   <span className="block text-[11px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5">
                     {service.createdDate
                       ? new Date(service.createdDate).toLocaleDateString()

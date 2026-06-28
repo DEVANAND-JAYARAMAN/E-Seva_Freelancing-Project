@@ -112,6 +112,8 @@ export function StatusPage() {
           formData: typeof (app.formData || app.FormData) === "string" ? JSON.parse(app.formData || app.FormData || "{}") : (app.formData || app.FormData || {}),
           documents: typeof (app.documents || app.Documents) === "string" ? JSON.parse(app.documents || app.Documents || "[]") : (app.documents || app.Documents || []),
           ackFiles: typeof (app.ackFiles || app.AckFiles) === "string" ? JSON.parse(app.ackFiles || app.AckFiles || "[]") : (app.ackFiles || app.AckFiles || []),
+          customerName: app.retailerName || app.RetailerName || app.retailerId || app.RetailerId || "Unknown",
+          mobileNumber: app.retailerMobile || app.RetailerMobile || "-",
         }));
         setTickets(mapped);
       }

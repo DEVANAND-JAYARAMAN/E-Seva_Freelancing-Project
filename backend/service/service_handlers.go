@@ -650,14 +650,14 @@ func GetServiceRequests(c *gin.Context) {
 		attributevalue.UnmarshalListOfMaps(userOut.Items, &users)
 		userMap := make(map[string]models.User)
 		for _, u := range users {
-			userMap[u.Id] = u
+			userMap[u.UserId] = u
 		}
 
 		for i, req := range requests {
 			if req.RetailerName == "" {
 				if u, ok := userMap[req.RetailerId]; ok {
-					requests[i].RetailerName = u.Name
-					requests[i].RetailerMobile = u.Phone
+					requests[i].RetailerName = u.FullName
+					requests[i].RetailerMobile = u.Mobile
 				} else {
 					requests[i].RetailerName = req.RetailerId // fallback
 				}

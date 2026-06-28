@@ -2,6 +2,7 @@ package crm
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -59,7 +60,7 @@ func CreateCustomer(c *gin.Context) {
 		"id":        notifId,
 		"userId":    "ADMIN",
 		"title":     "New CRM Customer",
-		"message":   fmt.Sprintf("New customer created: %s (%s)", req.Name, req.Mobile),
+		"message":   fmt.Sprintf("New customer created: %s (%s)", req.Name, req.Phone),
 		"type":      "info",
 		"isRead":    false,
 		"createdAt": now,
