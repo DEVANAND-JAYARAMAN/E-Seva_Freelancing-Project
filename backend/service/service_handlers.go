@@ -988,6 +988,9 @@ func UpdateDynamicService(c *gin.Context) {
 		return
 	}
 
+	item["PK"] = &types.AttributeValueMemberS{Value: "DYNAMIC_SERVICE#" + req.ID}
+	item["SK"] = &types.AttributeValueMemberS{Value: "META"}
+
 	_, err = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
 		TableName: aws.String("DynamicServices"),
 		Item:      item,
@@ -1012,8 +1015,19 @@ func DeleteDynamicService(c *gin.Context) {
 	})
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete dynamic service"})
-		return
+		// Fallback to PK and SK in case the table schema uses them instead of 'id'
+		_, err = db.DynamoClient.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
+			TableName: aws.String("DynamicServices"),
+			Key: map[string]types.AttributeValue{
+				"PK": &types.AttributeValueMemberS{Value: "DYNAMIC_SERVICE#" + id},
+				"SK": &types.AttributeValueMemberS{Value: "META"},
+			},
+		})
+		
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete dynamic service"})
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Service deleted successfully"})

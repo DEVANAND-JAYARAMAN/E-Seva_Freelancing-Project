@@ -1478,22 +1478,60 @@ export function ServicesPage() {
     });
   };
 
-  const handleSaveService = (
+  const handleSaveService = async (
     updatedName: string,
     customImage: string | null,
   ) => {
     if (!editingService) return;
-    setServicesList((prev) =>
-      prev.map((s) =>
-        s.id === editingService.id
-          ? {
-              ...s,
-              name: updatedName,
-              customImage: customImage || s.customImage,
-            }
-          : s,
-      ),
-    );
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/dynamic/${editingService.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: updatedName,
+            retailerCharge: Number(editingService.price?.retailer) || 0,
+            distributorCharge: Number(editingService.price?.distributor) || 0,
+            formFields: editingService.formFields,
+          }),
+        },
+      );
+
+      if (response.ok) {
+        setServicesList((prev) =>
+          prev.map((s) =>
+            s.id === editingService.id
+              ? {
+                  ...s,
+                  name: updatedName,
+                  customImage: customImage || s.customImage,
+                }
+              : s,
+          ),
+        );
+      } else {
+        console.error("Failed to update service in backend");
+        Swal.fire({
+          title: "Error!",
+          text: "Failed to update service.",
+          icon: "error",
+          confirmButtonColor: "#005C3A",
+        });
+      }
+    } catch (e) {
+      console.error(e);
+      Swal.fire({
+        title: "Error!",
+        text: "Error connecting to backend.",
+        icon: "error",
+        confirmButtonColor: "#005C3A",
+      });
+    }
+
     setEditModalOpen(false);
     setEditingService(null);
   };
@@ -1822,7 +1860,8 @@ export function ServicesPage() {
       );
 
       if (response.ok) {
-        setServicesList((prev) => [...prev, newService]);
+        const createdData = await response.json();
+        setServicesList((prev) => [...prev, { ...newService, id: createdData.id || newService.id }]);
       } else {
         console.error("Failed to add dynamic service via API");
         // Fallback to local storage only if API fails, or just show error. Let's add it anyway.

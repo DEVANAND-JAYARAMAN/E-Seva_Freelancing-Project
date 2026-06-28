@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AppShell } from "../layouts/AppShell";
 import { CheckCircle2, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -122,6 +122,25 @@ export function PdfServicePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  useEffect(() => {
+    const fetchPrices = async () => {
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/pdf-pricing`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          if (data && Array.isArray(data) && data.length > 0) {
+            setPrices(data);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch PDF pricing", error);
+      }
+    };
+    fetchPrices();
+  }, []);
+
   // Add Service custom modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newServiceName, setNewServiceName] = useState("");
@@ -170,14 +189,33 @@ export function PdfServicePage() {
     setIsAddModalOpen(false);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setTimeout(() => {
+    
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/pdf-pricing`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(prices),
+        }
+      );
+
+      if (response.ok) {
+        setSuccess(true);
+        setTimeout(() => setSuccess(false), 3000);
+      } else {
+        console.error("Failed to update PDF pricing config");
+      }
+    } catch (error) {
+      console.error("Error updating PDF pricing config", error);
+    } finally {
       setIsSubmitting(false);
-      setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
-    }, 1200);
+    }
   };
 
   return (

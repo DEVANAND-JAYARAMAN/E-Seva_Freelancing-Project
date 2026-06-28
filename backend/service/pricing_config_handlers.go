@@ -80,3 +80,64 @@ func UpdatePricingConfig(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Pricing configuration saved successfully"})
 }
+
+func GetPdfPricingConfig(c *gin.Context) {
+	out, err := db.DynamoClient.GetItem(context.TODO(), &dynamodb.GetItemInput{
+		TableName: aws.String("Settings"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: "SETTING#pdfPricingConfig"},
+			"SK": &types.AttributeValueMemberS{Value: "META"},
+		},
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch pdf pricing config", "details": err.Error()})
+		return
+	}
+
+	if out.Item == nil {
+		c.JSON(http.StatusOK, gin.H{}) // Empty object if not found
+		return
+	}
+
+	var data PricingConfigStore
+	err = attributevalue.UnmarshalMap(out.Item, &data)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode config"})
+		return
+	}
+
+	c.JSON(http.StatusOK, data.Config)
+}
+
+func UpdatePdfPricingConfig(c *gin.Context) {
+	var req interface{}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	store := PricingConfigStore{
+		PK:     "SETTING#pdfPricingConfig",
+		SK:     "META",
+		Config: req,
+	}
+
+	av, err := attributevalue.MarshalMap(store)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to marshal config data"})
+		return
+	}
+
+	_, err = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+		TableName: aws.String("Settings"),
+		Item:      av,
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save config", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "PDF Pricing configuration saved successfully"})
+}

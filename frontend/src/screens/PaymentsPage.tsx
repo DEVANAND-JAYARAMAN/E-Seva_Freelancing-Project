@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Home,
@@ -1624,7 +1624,7 @@ export function PaymentsPage() {
   const [addError, setAddError] = useState("");
 
   // Load config from backend
-  import { useEffect } from "react";
+  // Load config from backend
   
   useEffect(() => {
     fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/pricing`)
