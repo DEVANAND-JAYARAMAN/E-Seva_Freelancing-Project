@@ -53,7 +53,7 @@ func sendSignupWhatsAppMessage(mobile, role, userId, rawPassword string) {
 		return
 	}
 
-	url := "https://mugavaiwapp.in.net/api/send"
+	url := "https://mugavaiwapp.in.net/send-message"
 	message := fmt.Sprintf("Welcome to Thuruvancommunications, you are successfully signed up as %s.\nYour ID: %s\nPassword: %s", role, userId, rawPassword)
 
 	number := strings.ReplaceAll(mobile, "+", "")
@@ -61,11 +61,10 @@ func sendSignupWhatsAppMessage(mobile, role, userId, rawPassword string) {
 		number = "91" + number
 	}
 	payload := map[string]string{
-		"access_token": apiKey,
-		"instance_id":  senderDevice,
-		"number":       number,
-		"type":         "text",
-		"message":      message,
+		"api_key": apiKey,
+		"sender":  senderDevice,
+		"number":  number,
+		"message": message,
 	}
 	jsonValue, _ := json.Marshal(payload)
 	go func() {
