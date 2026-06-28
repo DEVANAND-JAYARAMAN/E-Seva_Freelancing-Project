@@ -1175,7 +1175,7 @@ type EditServiceModalProps = {
   isOpen: boolean;
   onClose: () => void;
   service: PdfService;
-  onSave: (name: string, customImage: string | null) => void;
+  onSave: (name: string, customImage: string | null, amount: number) => void;
 };
 
 function EditServiceModal({

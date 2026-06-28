@@ -75,7 +75,7 @@ export function DashboardPage2({
       .catch(console.error);
   }, [user]);
 
-    const pendingCount = allRequests.filter(r => r.status === "Pending").length;
+  const resubmitCount = allRequests.filter(r => r.status === "Resubmit").length;
   const rejectedCount = allRequests.filter(r => r.status === "Rejected").length;
   const approvedCount = allRequests.filter(r => r.status === "Approved" || r.status === "Completed").length;
   const totalCount = allRequests.length;
@@ -126,21 +126,21 @@ export function DashboardPage2({
           className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 animate-in fade-in duration-300"
           aria-label="Partner stats"
         >
-          {/* Card 1: PENDING */}
+          {/* Card 1: RESUBMIT */}
           <article className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
             <div className="space-y-1">
               <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                Pending
+                Resubmit
               </p>
               <strong className="block text-2xl font-black text-slate-900 dark:text-white">
-                {pendingCount}
+                {resubmitCount}
               </strong>
               <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
-                Awaiting Verification
+                Needs Attention
               </span>
             </div>
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400">
-              <Clock size={18} />
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-purple-50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400">
+              <RefreshCw size={18} />
             </span>
           </article>
 

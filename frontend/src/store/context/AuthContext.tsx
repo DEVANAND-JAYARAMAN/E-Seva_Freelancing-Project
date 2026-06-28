@@ -16,6 +16,7 @@ export type User = {
   email: string;
   role: "admin" | "retailer" | "distributor" | "customer";
   walletBalance: number;
+  phone?: string;
 };
 
 type AuthContextType = {

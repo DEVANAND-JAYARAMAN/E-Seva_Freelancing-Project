@@ -58,8 +58,6 @@ export const navItems: NavItem[] = [
 
 export const stats: StatCard[] = [
   { label: "Today Payment", value: "50.00", change: "+12%", tone: "mint" },
-  { label: "Pending", value: "20", change: "8 urgent", tone: "amber" },
-  { label: "In Process", value: "0", change: "Clear", tone: "sky" },
   { label: "Approved", value: "2575", change: "+34", tone: "green" },
   { label: "Projected", value: "215", change: "Review", tone: "rose" },
   { label: "Resubmit", value: "32", change: "Follow up", tone: "violet" },
