@@ -51,7 +51,7 @@ func sendWhatsAppMessage(customerNumber string, serviceName string) {
 
 	url := "https://mugavaiwapp.in.net/api/send"
 
-	message := fmt.Sprintf("Dear Customer,\nYour service request for '%s' has been successfully completed. Thank you for choosing E-Seva!", serviceName)
+	message := fmt.Sprintf("Your service '%s' is successfully completed.", serviceName)
 
 		number := customerNumber
 	if len(number) == 10 {
@@ -593,7 +593,7 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 			}
 		}
 
-		message := fmt.Sprintf("Dear %s,\nYour service request for '%s' has been successfully %s by E-Seva.%s\nThank you for choosing E-Seva!", customerName, app.ServiceName, status, ackLinks)
+		message := fmt.Sprintf("Your service '%s' is successfully %s.%s", app.ServiceName, strings.ToLower(status), ackLinks)
 		
 		apiKey := os.Getenv("WHATSAPP_API_KEY")
 		senderDevice := os.Getenv("WHATSAPP_SENDER_DEVICE")
