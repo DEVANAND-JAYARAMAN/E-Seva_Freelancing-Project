@@ -629,6 +629,8 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 }
 
 func GetServiceRequests(c *gin.Context) {
+	userId := c.Query("userId")
+
 	out, err := db.DynamoClient.Scan(context.TODO(), &dynamodb.ScanInput{
 		TableName: aws.String("ServiceApplications"),
 	})
@@ -665,7 +667,18 @@ func GetServiceRequests(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, requests)
+	var filteredRequests []models.ServiceApplication
+	if userId != "" {
+		for _, req := range requests {
+			if req.RetailerId == userId {
+				filteredRequests = append(filteredRequests, req)
+			}
+		}
+	} else {
+		filteredRequests = requests
+	}
+
+	c.JSON(http.StatusOK, filteredRequests)
 }
 
 func GetWalletTransactions(c *gin.Context) {
