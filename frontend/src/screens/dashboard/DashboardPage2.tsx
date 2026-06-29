@@ -35,22 +35,48 @@ export function DashboardPage2({
     "System Alert: PAN Card verification server speed optimized.",
   ]);
 
-  const handleWalletRequest = (e: React.FormEvent) => {
+  const handleWalletRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!requestAmount || isNaN(Number(requestAmount))) return;
 
-    // Simulate updating wallet balance immediately for seamless demo
-    const newBalance = (user?.walletBalance || 0) + Number(requestAmount);
-    updateWallet(newBalance);
+    const amtNum = Number(requestAmount);
 
-    setNotifications((prev) => [
-      `Successfully loaded ₹${requestAmount} via UTR ${requestUtr || "MOCK-UTR-9092"}`,
-      ...prev,
-    ]);
+    try {
+      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "");
+      const res = await fetch(`${baseUrl}/api/wallet/recharge/manual`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          amount: amtNum,
+          utrNumber: requestUtr.trim(),
+          remarks: "Recharge from Dashboard",
+          userId: user?.id,
+        }),
+      });
 
-    setShowRequestModal(false);
-    setRequestAmount("");
-    setRequestUtr("");
+      if (res.ok) {
+        const newBalance = (user?.walletBalance || 0) + amtNum;
+        updateWallet(newBalance);
+
+        setNotifications((prev) => [
+          `Successfully loaded ₹${requestAmount} via UTR ${requestUtr}`,
+          ...prev,
+        ]);
+
+        setShowRequestModal(false);
+        setRequestAmount("");
+        setRequestUtr("");
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(err.error || err.message || "Failed to submit wallet request");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to connect to backend");
+    }
   };
 
   const [allRequests, setAllRequests] = useState<any[]>([]);

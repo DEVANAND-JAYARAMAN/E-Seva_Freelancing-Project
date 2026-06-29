@@ -91,10 +91,7 @@ export function PdfPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
 
-  const [servicesList, setServicesList] = useLocalStorage<PdfService[]>(
-    "thuruvan_pdf_services_list_v2",
-    pdfServicesList,
-  );
+  const [servicesList, setServicesList] = useState<PdfService[]>(pdfServicesList);
 
   const [editingService, setEditingService] = useState<PdfService | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -450,7 +447,7 @@ export function PdfPage() {
     });
   };
 
-  const handleFormSubmit = (e: React.FormEvent, service: PdfService) => {
+  const handleFormSubmit = async (e: React.FormEvent, service: PdfService) => {
     e.preventDefault();
 
     const newErrors: Record<string, string> = {};
@@ -574,40 +571,72 @@ export function PdfPage() {
     }
 
     setIsSubmitting(true);
+    
+    if (user && service) {
+      try {
+        const payload = new FormData();
+        payload.append("retailerId", user.id);
+        payload.append("retailerName", user.name || "Unknown");
+        payload.append("retailerMobile", user.phone || "");
+        payload.append("serviceId", service.id);
+        payload.append("serviceName", service.name);
+        payload.append("cost", String(service.amount || 0));
+        payload.append("customerWhatsApp", formData.mobileNo || formData.mobile || "");
+        payload.append("walletType", user.role === "distributor" ? "Distributor" : "Retailer");
+        payload.append("formData", JSON.stringify(formData));
+
+        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
+        const res = await fetch(`${apiUrl}/api/services/request`, {
+          method: "POST",
+          body: payload,
+        });
+
+        if (!res.ok) {
+           const errData = await res.json().catch(() => ({}));
+           alert(errData.error || "Failed to submit request");
+           setIsSubmitting(false);
+           return;
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Failed to connect to backend");
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
+    setIsSubmitting(false);
+    setSubmissionSuccess(true);
+
+    // Construct look up info summary
+    let infoSummary = "";
+    if (formData.aadhaarNo)
+      infoSummary = `Aadhaar: XXXXXXXX${formData.aadhaarNo.slice(-4)}`;
+    else if (formData.panNo)
+      infoSummary = `PAN: XXXXX${formData.panNo.slice(-5)}`;
+    else if (formData.dlNo) infoSummary = `DL No: ${formData.dlNo}`;
+    else if (formData.regNo) infoSummary = `Vehicle: ${formData.regNo}`;
+    else if (formData.uanNo)
+      infoSummary = `UAN: XXXXXXXX${formData.uanNo.slice(-4)}`;
+
+    // Save a new record in our mock requests log database
+    const newRequest: PdfRequestLog = {
+      id: `REQ-PDF-${Math.floor(1000 + Math.random() * 9000)}`,
+      serviceId: service.id,
+      serviceName: service.name,
+      details: infoSummary || "Request registered",
+      amount: service.amount,
+      date: new Date().toISOString().replace("T", " ").substring(0, 19),
+      status: "In Process",
+    };
+
+    setRequestLogs((prev) => [newRequest, ...prev]);
+
     setTimeout(() => {
-      setIsSubmitting(false);
-      setSubmissionSuccess(true);
-
-      // Construct look up info summary
-      let infoSummary = "";
-      if (formData.aadhaarNo)
-        infoSummary = `Aadhaar: XXXXXXXX${formData.aadhaarNo.slice(-4)}`;
-      else if (formData.panNo)
-        infoSummary = `PAN: XXXXX${formData.panNo.slice(-5)}`;
-      else if (formData.dlNo) infoSummary = `DL No: ${formData.dlNo}`;
-      else if (formData.regNo) infoSummary = `Vehicle: ${formData.regNo}`;
-      else if (formData.uanNo)
-        infoSummary = `UAN: XXXXXXXX${formData.uanNo.slice(-4)}`;
-
-      // Save a new record in our mock requests log database
-      const newRequest: PdfRequestLog = {
-        id: `REQ-PDF-${Math.floor(1000 + Math.random() * 9000)}`,
-        serviceId: service.id,
-        serviceName: service.name,
-        details: infoSummary || "Request registered",
-        amount: service.amount,
-        date: new Date().toISOString().replace("T", " ").substring(0, 19),
-        status: "In Process",
-      };
-
-      setRequestLogs((prev) => [newRequest, ...prev]);
-
-      setTimeout(() => {
-        setSubmissionSuccess(false);
-        setActiveForm(null);
-        setFormData({});
-      }, 2500);
-    }, 1500);
+      setSubmissionSuccess(false);
+      setActiveForm(null);
+      setFormData({});
+    }, 2500);
   };
 
   const getBreadcrumbLabel = () => {

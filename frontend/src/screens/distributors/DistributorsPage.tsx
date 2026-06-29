@@ -48,8 +48,8 @@ export function DistributorsPage() {
     fetchDistributors();
   }, []);
 
-  // Add / Edit submission handler
-  const handleFormSubmit = (
+  // Add / Edit submission handler (Backend save implemented for Add)
+  const handleFormSubmit = async (
     data: Omit<Distributor, "id" | "createdDate"> & { id?: string },
   ) => {
     if (data.id) {
@@ -58,13 +58,39 @@ export function DistributorsPage() {
         prev.map((item) => (item.id === data.id ? { ...item, ...data } : item)),
       );
     } else {
-      // Add mode
-      const newDistributor: Distributor = {
-        ...data,
-        id: `dist-${Date.now()}`,
-        createdDate: new Date().toISOString().split("T")[0],
-      };
-      setDistributors((prev) => [newDistributor, ...prev]);
+      // Add mode (API Call)
+      try {
+        const payload = {
+          fullName: data.name,
+          email: data.email,
+          mobile: data.phone,
+          role: "distributor",
+          password: "password123", // default password
+        };
+        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
+        const res = await fetch(`${apiUrl}/api/auth/signup`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        
+        if (res.ok) {
+          const result = await res.json();
+          const newDistributor: Distributor = {
+            ...data,
+            id: result.userId || `dist-${Date.now()}`,
+            createdDate: new Date().toISOString().split("T")[0],
+          };
+          setDistributors((prev) => [newDistributor, ...prev]);
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          console.error("Failed to add distributor:", errData);
+          alert(errData.error || "Failed to add distributor");
+        }
+      } catch (err) {
+        console.error("Failed to add distributor", err);
+        alert("Failed to connect to backend");
+      }
     }
   };
 

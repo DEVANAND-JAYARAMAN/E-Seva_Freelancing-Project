@@ -1409,9 +1409,7 @@ function renderServiceImage(id: string, className = "w-14 h-14") {
 export function ServicesPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const [permissions, setPermissions] = useLocalStorage<
-    Record<string, string[]>
-  >("thuruvan_service_permissions_matrix", {});
+  const [permissions, setPermissions] = useState<Record<string, string[]>>({});
   const [editingService, setEditingService] = useState<EService | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [isManageMode, setIsManageMode] = useState(false);
@@ -1553,9 +1551,7 @@ export function ServicesPage() {
   };
 
   // List of all 19 services customizer from localStorage
-  const [servicesList, setServicesList] = useLocalStorage<EService[]>(
-    "eseva_services_directory",
-    [
+  const [servicesList, setServicesList] = useState<EService[]>([
       // Top Services Group
       {
         id: "pdf-services",
@@ -2038,6 +2034,43 @@ export function ServicesPage() {
   };
 
   const handlePaymentSuccess = async (customerWhatsApp?: string) => {
+    if (user && selectedService) {
+      try {
+        const payload = new FormData();
+        payload.append("retailerId", user.id);
+        payload.append("retailerName", user.name || "Unknown");
+        payload.append("retailerMobile", user.phone || "");
+        payload.append("serviceId", selectedService.id);
+        payload.append("serviceName", selectedService.name);
+        payload.append("cost", String(selectedService.price?.retailer || 0));
+        payload.append("customerWhatsApp", customerWhatsApp || "");
+        payload.append("walletType", user.role === "distributor" ? "Distributor" : "Retailer");
+        payload.append("formData", JSON.stringify(formData));
+
+        if (typeof selectedFiles !== 'undefined') {
+          selectedFiles.forEach((file: File) => {
+            payload.append("documents", file);
+          });
+        }
+
+        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
+        const res = await fetch(`${apiUrl}/api/services/request`, {
+          method: "POST",
+          body: payload,
+        });
+
+        if (!res.ok) {
+           const errData = await res.json().catch(() => ({}));
+           Swal.fire("Error", errData.error || "Failed to submit request", "error");
+           return;
+        }
+      } catch (err) {
+        console.error(err);
+        Swal.fire("Error", "Failed to connect to backend", "error");
+        return;
+      }
+    }
+
     setPaymentPhase("success");
     setTimeout(() => {
       setIsModalOpen(false);

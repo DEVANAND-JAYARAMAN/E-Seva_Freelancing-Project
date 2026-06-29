@@ -171,39 +171,9 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
           }
         }
 
-        let loggedInRole: "admin" | "retailer" | "distributor" | "customer" =
-          "retailer";
-        let loggedInName = "Thuruvan Dev";
-        try {
-          const registeredUsersStr =
-            localStorage.getItem("e_seva_registered_users") || "[]";
-          const registeredUsers = JSON.parse(registeredUsersStr);
-          const matchedUser = registeredUsers.find(
-            (u: any) => u.email.toLowerCase() === formData.email?.toLowerCase(),
-          );
-          if (matchedUser) {
-            loggedInRole = matchedUser.role;
-            loggedInName = matchedUser.name;
-          } else {
-            // Default rules based on email string
-            if (formData.email?.toLowerCase().includes("admin")) {
-              loggedInRole = "admin";
-            } else if (formData.email?.toLowerCase().includes("distributor")) {
-              loggedInRole = "distributor";
-            }
-          }
-          if (formData.fullName) {
-            loggedInName = formData.fullName;
-          }
-        } catch (err) {
-          console.error("Failed to read user from localStorage mockup db", err);
-        }
-
         login(
           formData.email || "",
-          formData.password || "",
-          loggedInRole,
-          loggedInName,
+          formData.password || ""
         ).then(() => {
           router.push("/dashboard");
         }).catch(err => {
