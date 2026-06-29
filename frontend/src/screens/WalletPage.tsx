@@ -253,7 +253,7 @@ export function WalletPage() {
           }, 1000);
         } else {
           setGatewayProcessing(false);
-          setFormError(data.message || "Failed to initiate payment gateway.");
+          setFormError(data.error || data.message || "Failed to initiate payment gateway.");
         }
       } catch (err) {
         setGatewayProcessing(false);
