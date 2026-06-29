@@ -24,7 +24,13 @@ interface AuthPageProps {
 
 export function AuthPage({ initialMode = "login" }: AuthPageProps) {
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, isAuthenticated, isLoading } = useAuth();
+
+  React.useEffect(() => {
+    if (!isLoading && isAuthenticated && initialMode === "login") {
+      router.push("/dashboard");
+    }
+  }, [isLoading, isAuthenticated, initialMode, router]);
 
   // Navigation & transition state
   const [mode, setMode] = useState<AuthMode>(initialMode);
