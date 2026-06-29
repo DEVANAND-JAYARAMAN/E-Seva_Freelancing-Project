@@ -878,10 +878,8 @@ export function WalletPage() {
                             <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                             Connecting to Gateway...
                           </>
-                        ) : upiOption === "id" ? (
-                          "Pay via Gateway"
                         ) : (
-                          "Submit Details"
+                          "Pay via Gateway"
                         )}
                       </button>
                     </div>
