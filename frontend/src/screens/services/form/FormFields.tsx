@@ -28,9 +28,11 @@ export const FieldWrapper: React.FC<FieldWrapperProps> = ({
   const [tempPlaceholder, setTempPlaceholder] = useState("");
 
   const isDeleted = !disableEdit && overrides.deletedFields.includes(name);
-  const label = (!disableEdit && overrides.fieldOverrides[name]?.label) || defaultLabel;
+  const label =
+    (!disableEdit && overrides.fieldOverrides[name]?.label) || defaultLabel;
   const placeholder =
-    (!disableEdit && overrides.fieldOverrides[name]?.placeholder) || defaultPlaceholder;
+    (!disableEdit && overrides.fieldOverrides[name]?.placeholder) ||
+    defaultPlaceholder;
 
   useEffect(() => {
     setTempLabel(label);
@@ -42,12 +44,12 @@ export const FieldWrapper: React.FC<FieldWrapperProps> = ({
   return (
     <div
       className={`flex flex-col gap-1.5 w-full transition-all ${
-        (isEditMode && !disableEdit)
+        isEditMode && !disableEdit
           ? "p-2.5 rounded-2xl border border-amber-400/50 dark:border-amber-500/30 bg-amber-500/[0.02] dark:bg-amber-500/[0.01]"
           : "p-0 border border-transparent"
       }`}
     >
-      {(isEditMode && !disableEdit) && (
+      {isEditMode && !disableEdit && (
         <div className="flex items-center justify-between mb-1 pb-1 border-b border-dashed border-amber-400/20">
           <span className="text-[9px] font-extrabold text-amber-500 dark:text-amber-400 uppercase tracking-widest select-none">
             Field: {name}
@@ -336,7 +338,11 @@ export const SelectField: React.FC<SelectFieldProps> = ({
   disableEdit,
 }) => {
   return (
-    <FieldWrapper name={name} defaultLabel={defaultLabel} disableEdit={disableEdit}>
+    <FieldWrapper
+      name={name}
+      defaultLabel={defaultLabel}
+      disableEdit={disableEdit}
+    >
       {(label) => (
         <div className="flex flex-col gap-1.5 w-full">
           <label className="text-[11px] font-extrabold text-slate-400 dark:text-slate-555 uppercase tracking-wider">
@@ -442,7 +448,11 @@ export const CheckboxField: React.FC<CheckboxFieldProps> = ({
   disableEdit,
 }) => {
   return (
-    <FieldWrapper name={name} defaultLabel={defaultLabel} disableEdit={disableEdit}>
+    <FieldWrapper
+      name={name}
+      defaultLabel={defaultLabel}
+      disableEdit={disableEdit}
+    >
       {(label) => (
         <div className="flex flex-col gap-1.5 w-full">
           <label className="inline-flex items-center gap-2 cursor-pointer select-none">
@@ -536,7 +546,78 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
   hideEditButton,
   onClick,
 }) => {
-  const { isAdmin, isEditMode, setIsEditMode, resetFormConfig } = useFormEdit();
+  const { isAdmin, isEditMode, setIsEditMode, resetFormConfig, addField } =
+    useFormEdit();
+
+  const handleAddFieldClick = () => {
+    import("sweetalert2").then((Swal) => {
+      Swal.default
+        .fire({
+          title: "Add Extra Form Field",
+          html: `
+          <div style="display: flex; flex-direction: column; gap: 15px; text-align: left; padding: 10px;">
+            <div>
+              <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #64748b;">Field Label</label>
+              <input id="swal-field-label" class="swal2-input" placeholder="e.g. Father's Name" style="margin: 5px 0 0 0; width: 100%; height: 38px; font-size: 14px; border-radius: 10px; box-sizing: border-box;">
+            </div>
+            <div>
+              <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #64748b;">Placeholder</label>
+              <input id="swal-field-placeholder" class="swal2-input" placeholder="e.g. Enter father's name" style="margin: 5px 0 0 0; width: 100%; height: 38px; font-size: 14px; border-radius: 10px; box-sizing: border-box;">
+            </div>
+            <div>
+              <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #64748b;">Field Type</label>
+              <select id="swal-field-type" class="swal2-select" style="margin: 5px 0 0 0; width: 100%; height: 38px; font-size: 14px; border-radius: 10px; border: 1px solid #d9d9d9; box-sizing: border-box;">
+                <option value="text">Text Input</option>
+                <option value="number">Number Input</option>
+                <option value="phone">Phone Input</option>
+                <option value="textarea">Textarea (Multi-line)</option>
+                <option value="file">File Upload</option>
+              </select>
+            </div>
+          </div>
+        `,
+          focusConfirm: false,
+          showCancelButton: true,
+          confirmButtonText: "Add Field",
+          confirmButtonColor: "#005c3a",
+          cancelButtonColor: "#6c757d",
+          preConfirm: () => {
+            const label = (
+              document.getElementById("swal-field-label") as HTMLInputElement
+            ).value;
+            const placeholder = (
+              document.getElementById(
+                "swal-field-placeholder",
+              ) as HTMLInputElement
+            ).value;
+            const type = (
+              document.getElementById("swal-field-type") as HTMLSelectElement
+            ).value;
+            if (!label.trim()) {
+              Swal.default.showValidationMessage("Field label is required");
+              return false;
+            }
+            return { label, placeholder, type };
+          },
+        })
+        .then((result) => {
+          if (result.isConfirmed && result.value) {
+            addField(
+              result.value.label,
+              result.value.placeholder,
+              result.value.type,
+            );
+            Swal.default.fire({
+              title: "Field Added",
+              text: `Field "${result.value.label}" was added successfully!`,
+              icon: "success",
+              timer: 1500,
+              showConfirmButton: false,
+            });
+          }
+        });
+    });
+  };
 
   useEffect(() => {
     const handleGlobalClick = (e: MouseEvent) => {
@@ -547,10 +628,11 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
       const btn = target.closest("button");
       const span = target.closest("span");
 
-      // Skip if clicking edit/save buttons inside the form edit fields
+      // Skip if clicking edit/save/add buttons inside the form edit fields
       if (
         btn?.textContent?.includes("Save Editing") ||
-        btn?.textContent?.includes("Edit Form Fields")
+        btn?.textContent?.includes("Edit Form Fields") ||
+        btn?.textContent?.includes("Add Field")
       ) {
         return;
       }
@@ -623,19 +705,29 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
 
   return (
     <React.Fragment>
-      {(isAdmin && !hideEditButton) && (
-        <button
-          type="button"
-          onClick={() => setIsEditMode(!isEditMode)}
-          style={{ order: -1, marginRight: "auto" }}
-          className={`inline-flex items-center justify-center gap-1.5 px-6 py-2.5 rounded-xl font-extrabold text-xs uppercase tracking-wider shadow-sm active:scale-[0.98] transition-all duration-200 border border-transparent select-none ${
-            isEditMode
-              ? "bg-amber-500 hover:bg-amber-600 text-white"
-              : "bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] dark:hover:bg-emerald-500 text-white"
-          }`}
-        >
-          {isEditMode ? "Save Editing" : "Edit Form Fields"}
-        </button>
+      {isAdmin && !hideEditButton && (
+        <div className="flex gap-2" style={{ order: -1, marginRight: "auto" }}>
+          <button
+            type="button"
+            onClick={() => setIsEditMode(!isEditMode)}
+            className={`inline-flex items-center justify-center gap-1.5 px-6 py-2.5 rounded-xl font-extrabold text-xs uppercase tracking-wider shadow-sm active:scale-[0.98] transition-all duration-200 border border-transparent select-none ${
+              isEditMode
+                ? "bg-amber-500 hover:bg-amber-600 text-white"
+                : "bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] dark:hover:bg-emerald-500 text-white"
+            }`}
+          >
+            {isEditMode ? "Save Editing" : "Edit Form Fields"}
+          </button>
+          {isEditMode && (
+            <button
+              type="button"
+              onClick={handleAddFieldClick}
+              className="inline-flex items-center justify-center gap-1.5 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-750 text-white font-extrabold text-xs uppercase tracking-wider shadow-sm active:scale-[0.98] transition-all duration-200 border border-transparent select-none"
+            >
+              Add Field
+            </button>
+          )}
+        </div>
       )}
 
       <button

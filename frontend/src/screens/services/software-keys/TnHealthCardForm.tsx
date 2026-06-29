@@ -1,10 +1,20 @@
 import React, { useState } from "react";
 import { CreditCard, Download } from "lucide-react";
-import { InputField } from "../form/FormFields";
+import {
+  InputField,
+  SubmitButton,
+  TextAreaField,
+  PhoneField,
+} from "../form/FormFields";
+import { useFormEdit } from "../../../store/context/FormEditContext";
 
 interface TnHealthCardFormProps {
   price: number;
-  onSubmit: (data: { mobileNumber: string; deviceName: string }) => void;
+  onSubmit: (data: {
+    mobileNumber: string;
+    deviceName: string;
+    [key: string]: any;
+  }) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -15,8 +25,10 @@ export const TnHealthCardForm: React.FC<TnHealthCardFormProps> = ({
   onCancel,
   isLoading = false,
 }) => {
+  const { overrides } = useFormEdit();
   const [mobileNumber, setMobileNumber] = useState("");
   const [deviceName, setDeviceName] = useState("");
+  const [customValues, setCustomValues] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -38,7 +50,7 @@ export const TnHealthCardForm: React.FC<TnHealthCardFormProps> = ({
       return;
     }
 
-    onSubmit({ mobileNumber, deviceName });
+    onSubmit({ mobileNumber, deviceName, ...customValues });
   };
 
   return (
@@ -81,7 +93,7 @@ export const TnHealthCardForm: React.FC<TnHealthCardFormProps> = ({
                 placeholder="Mobile Number"
                 value={mobileNumber}
                 onChange={(val) => {
-                  const num = val.replace(/D/g, "").substring(0, 10);
+                  const num = val.replace(/\D/g, "").substring(0, 10);
                   setMobileNumber(num);
                   if (errors.mobileNumber) {
                     setErrors((prev) => {
@@ -117,10 +129,60 @@ export const TnHealthCardForm: React.FC<TnHealthCardFormProps> = ({
               />
             </div>
           </div>
+
+          {/* Dynamic Added Fields */}
+          {overrides.addedFields && overrides.addedFields.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-5 border-t border-dashed border-slate-200 dark:border-slate-800/80">
+              {overrides.addedFields.map((field) => (
+                <div key={field.name} className="col-span-1">
+                  {field.type === "textarea" ? (
+                    <TextAreaField
+                      name={field.name}
+                      label={field.label}
+                      placeholder={field.placeholder}
+                      value={customValues[field.name] || ""}
+                      onChange={(val) =>
+                        setCustomValues({ ...customValues, [field.name]: val })
+                      }
+                      disabled={isLoading}
+                    />
+                  ) : field.type === "phone" ? (
+                    <PhoneField
+                      name={field.name}
+                      label={field.label}
+                      placeholder={field.placeholder}
+                      value={customValues[field.name] || ""}
+                      onChange={(val) =>
+                        setCustomValues({ ...customValues, [field.name]: val })
+                      }
+                      disabled={isLoading}
+                    />
+                  ) : (
+                    <InputField
+                      name={field.name}
+                      label={field.label}
+                      type={field.type as any}
+                      placeholder={field.placeholder}
+                      value={customValues[field.name] || ""}
+                      onChange={(val) =>
+                        setCustomValues({ ...customValues, [field.name]: val })
+                      }
+                      disabled={isLoading}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-900/60 mt-8">
+        <div className="flex items-center gap-3 pt-6 border-t border-slate-100 dark:border-slate-900/60 mt-8">
+          <SubmitButton
+            text={isLoading ? "Processing..." : "Apply"}
+            loading={isLoading}
+            disabled={isLoading}
+          />
           <button
             type="button"
             onClick={onCancel}
@@ -128,17 +190,6 @@ export const TnHealthCardForm: React.FC<TnHealthCardFormProps> = ({
             className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-850 bg-white dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
           >
             Cancel
-          </button>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="inline-flex items-center justify-center gap-1.5 px-6 py-2.5 rounded-xl bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] dark:hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider shadow-sm active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed select-none"
-          >
-            {isLoading ? (
-              <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1" />
-            ) : null}
-            Apply
           </button>
         </div>
       </form>

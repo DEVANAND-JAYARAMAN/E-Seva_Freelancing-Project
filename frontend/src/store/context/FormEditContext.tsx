@@ -9,9 +9,17 @@ export interface FieldOverride {
   placeholder?: string;
 }
 
+export interface AddedField {
+  name: string;
+  label: string;
+  placeholder?: string;
+  type: string;
+}
+
 export interface FormOverrides {
   deletedFields: string[];
   fieldOverrides: Record<string, FieldOverride>;
+  addedFields?: AddedField[];
 }
 
 interface FormEditContextType {
@@ -23,15 +31,22 @@ interface FormEditContextType {
   restoreField: (fieldName: string) => void;
   editField: (fieldName: string, label: string, placeholder: string) => void;
   resetFormConfig: () => void;
+  addField: (label: string, placeholder: string, type: string) => void;
 }
 
-const FormEditContext = createContext<FormEditContextType | undefined>(undefined);
+const FormEditContext = createContext<FormEditContextType | undefined>(
+  undefined,
+);
 
-export const FormEditProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const FormEditProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const { user } = useAuth();
   const pathname = usePathname();
   const [isEditMode, setIsEditMode] = useState(false);
-  const [allOverrides, setAllOverrides] = useState<Record<string, FormOverrides>>({});
+  const [allOverrides, setAllOverrides] = useState<
+    Record<string, FormOverrides>
+  >({});
   const [prevPath, setPrevPath] = useState(pathname);
 
   const isAdmin = user?.role === "admin";
@@ -83,22 +98,37 @@ export const FormEditProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const currentOverrides: FormOverrides = allOverrides[formId] || {
     deletedFields: [],
     fieldOverrides: {},
+    addedFields: [],
   };
 
   const deleteField = (fieldName: string) => {
     const formConfig = { ...currentOverrides };
-    if (!formConfig.deletedFields.includes(fieldName)) {
-      formConfig.deletedFields = [...formConfig.deletedFields, fieldName];
-      saveOverrides({
-        ...allOverrides,
-        [formId]: formConfig,
-      });
+    if (fieldName.startsWith("custom_")) {
+      if (formConfig.addedFields) {
+        formConfig.addedFields = formConfig.addedFields.filter(
+          (f) => f.name !== fieldName,
+        );
+        saveOverrides({
+          ...allOverrides,
+          [formId]: formConfig,
+        });
+      }
+    } else {
+      if (!formConfig.deletedFields.includes(fieldName)) {
+        formConfig.deletedFields = [...formConfig.deletedFields, fieldName];
+        saveOverrides({
+          ...allOverrides,
+          [formId]: formConfig,
+        });
+      }
     }
   };
 
   const restoreField = (fieldName: string) => {
     const formConfig = { ...currentOverrides };
-    formConfig.deletedFields = formConfig.deletedFields.filter((name) => name !== fieldName);
+    formConfig.deletedFields = formConfig.deletedFields.filter(
+      (name) => name !== fieldName,
+    );
     saveOverrides({
       ...allOverrides,
       [formId]: formConfig,
@@ -107,10 +137,38 @@ export const FormEditProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const editField = (fieldName: string, label: string, placeholder: string) => {
     const formConfig = { ...currentOverrides };
-    formConfig.fieldOverrides = {
-      ...formConfig.fieldOverrides,
-      [fieldName]: { label, placeholder },
-    };
+    if (fieldName.startsWith("custom_")) {
+      if (formConfig.addedFields) {
+        formConfig.addedFields = formConfig.addedFields.map((f) =>
+          f.name === fieldName ? { ...f, label, placeholder } : f,
+        );
+        saveOverrides({
+          ...allOverrides,
+          [formId]: formConfig,
+        });
+      }
+    } else {
+      formConfig.fieldOverrides = {
+        ...formConfig.fieldOverrides,
+        [fieldName]: { label, placeholder },
+      };
+      saveOverrides({
+        ...allOverrides,
+        [formId]: formConfig,
+      });
+    }
+  };
+
+  const addField = (label: string, placeholder: string, type: string) => {
+    const formConfig = { ...currentOverrides };
+    if (!formConfig.addedFields) {
+      formConfig.addedFields = [];
+    }
+    const name = `custom_${type}_${Date.now()}`;
+    formConfig.addedFields = [
+      ...formConfig.addedFields,
+      { name, label, placeholder, type },
+    ];
     saveOverrides({
       ...allOverrides,
       [formId]: formConfig,
@@ -141,6 +199,7 @@ export const FormEditProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         restoreField,
         editField,
         resetFormConfig,
+        addField,
       }}
     >
       {children}
