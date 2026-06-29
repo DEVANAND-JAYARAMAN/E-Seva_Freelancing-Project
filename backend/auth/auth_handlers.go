@@ -1,10 +1,15 @@
 package auth
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"strings"
 	"time"
 
 	"eservice-backend/db"
@@ -37,6 +42,40 @@ type LoginRequest struct {
 
 func generateUserId() string {
 	return "USR" + time.Now().Format("20060102150405")
+}
+
+func sendSignupWhatsAppMessage(mobile, role, userId, rawPassword string) {
+	apiKey := os.Getenv("WHATSAPP_API_KEY")
+	senderDevice := os.Getenv("WHATSAPP_SENDER_DEVICE")
+
+	if apiKey == "" || senderDevice == "" {
+		log.Println("Skipping WhatsApp API call: WHATSAPP_API_KEY or WHATSAPP_SENDER_DEVICE is missing in .env")
+		return
+	}
+
+	url := "https://mugavaiwapp.in.net/send-message"
+	message := fmt.Sprintf("Welcome to Thuruvancommunications, you are successfully signed up as %s.\nYour ID: %s\nPassword: %s", role, userId, rawPassword)
+
+	number := strings.ReplaceAll(mobile, "+", "")
+	if len(number) == 10 {
+		number = "91" + number
+	}
+	payload := map[string]string{
+		"api_key": apiKey,
+		"sender":  senderDevice,
+		"number":  number,
+		"message": message,
+	}
+	jsonValue, _ := json.Marshal(payload)
+	go func() {
+		resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonValue))
+		if err != nil {
+			log.Printf("WhatsApp API Error on signup: %v", err)
+			return
+		}
+		defer resp.Body.Close()
+		log.Printf("WhatsApp signup message sent to %s, status: %s", number, resp.Status)
+	}()
 }
 
 func HashPassword(password string) (string, error) {
@@ -207,6 +246,8 @@ func Signup(c *gin.Context) {
 		TableName: aws.String("Notifications"),
 		Item:      notifItem,
 	})
+
+	sendSignupWhatsAppMessage(req.Mobile, req.Role, userId, req.Password)
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Account created successfully",

@@ -32,14 +32,12 @@ export function StatusTable({
 
   const getStatusColor = (status: TicketStatus) => {
     switch (status) {
-      case "Pending":
-        return "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400";
+      case "Resubmit":
+        return "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400";
       case "Rejected":
         return "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400";
       case "Approved":
         return "bg-[#e8f5e9] dark:bg-emerald-950/40 text-[#005c3a] dark:text-emerald-400";
-      case "Completed":
-        return "bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-400";
       default:
         return "bg-slate-50 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400";
     }

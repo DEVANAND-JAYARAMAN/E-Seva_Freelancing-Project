@@ -49,20 +49,19 @@ func sendWhatsAppMessage(customerNumber string, serviceName string) {
 		return
 	}
 
-	url := "https://mugavaiwapp.in.net/api/send"
+	url := "https://mugavaiwapp.in.net/send-message"
 
-	message := fmt.Sprintf("Dear Customer,\nYour service request for '%s' has been successfully completed. Thank you for choosing E-Seva!", serviceName)
+	message := fmt.Sprintf("Your service '%s' is successfully completed.", serviceName)
 
 		number := customerNumber
 	if len(number) == 10 {
 		number = "91" + number
 	}
 	payload := map[string]string{
-		"access_token": apiKey,
-		"instance_id":  senderDevice,
-		"number":       number,
-		"type":         "text",
-		"message":      message,
+		"api_key": apiKey,
+		"sender":  senderDevice,
+		"number":  number,
+		"message": message,
 	}
 
 	jsonValue, _ := json.Marshal(payload)
@@ -593,23 +592,22 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 			}
 		}
 
-		message := fmt.Sprintf("Dear %s,\nYour service request for '%s' has been successfully %s by E-Seva.%s\nThank you for choosing E-Seva!", customerName, app.ServiceName, status, ackLinks)
+		message := fmt.Sprintf("Your service '%s' is successfully %s.%s", app.ServiceName, strings.ToLower(status), ackLinks)
 		
 		apiKey := os.Getenv("WHATSAPP_API_KEY")
 		senderDevice := os.Getenv("WHATSAPP_SENDER_DEVICE")
 
 		if apiKey != "" && senderDevice != "" {
-			url := "https://mugavaiwapp.in.net/api/send"
+			url := "https://mugavaiwapp.in.net/send-message"
 						number := strings.ReplaceAll(app.CustomerWhatsApp, "+", "")
 			if len(number) == 10 {
 				number = "91" + number
 			}
 			payload := map[string]string{
-				"access_token": apiKey,
-				"instance_id":  senderDevice,
-				"number":       number,
-				"type":         "text",
-				"message":      message,
+				"api_key": apiKey,
+				"sender":  senderDevice,
+				"number":  number,
+				"message": message,
 			}
 			jsonValue, _ := json.Marshal(payload)
 			go func() {
@@ -629,6 +627,8 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 }
 
 func GetServiceRequests(c *gin.Context) {
+	userId := c.Query("userId")
+
 	out, err := db.DynamoClient.Scan(context.TODO(), &dynamodb.ScanInput{
 		TableName: aws.String("ServiceApplications"),
 	})
@@ -650,14 +650,14 @@ func GetServiceRequests(c *gin.Context) {
 		attributevalue.UnmarshalListOfMaps(userOut.Items, &users)
 		userMap := make(map[string]models.User)
 		for _, u := range users {
-			userMap[u.Id] = u
+			userMap[u.UserId] = u
 		}
 
 		for i, req := range requests {
 			if req.RetailerName == "" {
 				if u, ok := userMap[req.RetailerId]; ok {
-					requests[i].RetailerName = u.Name
-					requests[i].RetailerMobile = u.Phone
+					requests[i].RetailerName = u.FullName
+					requests[i].RetailerMobile = u.Mobile
 				} else {
 					requests[i].RetailerName = req.RetailerId // fallback
 				}
@@ -665,7 +665,18 @@ func GetServiceRequests(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, requests)
+	var filteredRequests []models.ServiceApplication
+	if userId != "" {
+		for _, req := range requests {
+			if req.RetailerId == userId {
+				filteredRequests = append(filteredRequests, req)
+			}
+		}
+	} else {
+		filteredRequests = requests
+	}
+
+	c.JSON(http.StatusOK, filteredRequests)
 }
 
 func GetWalletTransactions(c *gin.Context) {
@@ -988,6 +999,9 @@ func UpdateDynamicService(c *gin.Context) {
 		return
 	}
 
+	item["PK"] = &types.AttributeValueMemberS{Value: "DYNAMIC_SERVICE#" + req.ID}
+	item["SK"] = &types.AttributeValueMemberS{Value: "META"}
+
 	_, err = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
 		TableName: aws.String("DynamicServices"),
 		Item:      item,
@@ -1012,8 +1026,19 @@ func DeleteDynamicService(c *gin.Context) {
 	})
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete dynamic service"})
-		return
+		// Fallback to PK and SK in case the table schema uses them instead of 'id'
+		_, err = db.DynamoClient.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
+			TableName: aws.String("DynamicServices"),
+			Key: map[string]types.AttributeValue{
+				"PK": &types.AttributeValueMemberS{Value: "DYNAMIC_SERVICE#" + id},
+				"SK": &types.AttributeValueMemberS{Value: "META"},
+			},
+		})
+		
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete dynamic service"})
+			return
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Service deleted successfully"})

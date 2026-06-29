@@ -49,8 +49,8 @@ export function RetailersPage() {
     fetchRetailers();
   }, []);
 
-  // Add / Edit submission handler (Local state for now, backend save not fully implemented for editing)
-  const handleFormSubmit = (
+  // Add / Edit submission handler (Backend save implemented for Add)
+  const handleFormSubmit = async (
     data: Omit<Retailer, "id" | "createdDate"> & { id?: string },
   ) => {
     if (data.id) {
@@ -59,13 +59,39 @@ export function RetailersPage() {
         prev.map((item) => (item.id === data.id ? { ...item, ...data } : item)),
       );
     } else {
-      // Add mode (Mocked)
-      const newRetailer: Retailer = {
-        ...data,
-        id: `ret-${Date.now()}`,
-        createdDate: new Date().toISOString().split("T")[0],
-      };
-      setRetailers((prev) => [newRetailer, ...prev]);
+      // Add mode (API Call)
+      try {
+        const payload = {
+          fullName: data.name,
+          email: data.email,
+          mobile: data.phone,
+          role: "retailer",
+          password: "password123", // default password
+        };
+        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
+        const res = await fetch(`${apiUrl}/api/auth/signup`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        
+        if (res.ok) {
+          const result = await res.json();
+          const newRetailer: Retailer = {
+            ...data,
+            id: result.userId || `ret-${Date.now()}`,
+            createdDate: new Date().toISOString().split("T")[0],
+          };
+          setRetailers((prev) => [newRetailer, ...prev]);
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          console.error("Failed to add retailer:", errData);
+          alert(errData.error || "Failed to add retailer");
+        }
+      } catch (err) {
+        console.error("Failed to add retailer", err);
+        alert("Failed to connect to backend");
+      }
     }
   };
 

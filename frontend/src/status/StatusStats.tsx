@@ -24,12 +24,12 @@ export function StatusStats({
 
   const stats = [
     {
-      label: "Pending",
-      value: getCount("Pending"),
-      icon: Clock,
-      status: "Pending" as TicketStatus,
+      label: "Resubmit",
+      value: getCount("Resubmit"),
+      icon: RefreshCw,
+      status: "Resubmit" as TicketStatus,
       gradientClass:
-        "bg-gradient-to-br from-[#7c2d12] to-[#451a03] dark:from-[#431407] dark:to-[#270b04]",
+        "bg-gradient-to-br from-[#7e22ce] to-[#581c87] dark:from-[#3b0764] dark:to-[#2e1065]",
     },
     {
       label: "Rejected",

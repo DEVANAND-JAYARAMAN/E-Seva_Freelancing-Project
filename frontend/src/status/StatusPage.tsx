@@ -35,7 +35,7 @@ const seedTickets: StatusTicket[] = [
     serviceName: "PAN Card Application",
     retailerName: "Alam",
     amount: 120.0,
-    status: "Pending",
+    status: "Resubmit",
     createdDate: "2026-05-22",
     lastUpdated: "2026-05-22",
     remarks: "Awaiting physical scan validation of PAN application form.",
@@ -47,7 +47,7 @@ const seedTickets: StatusTicket[] = [
     serviceName: "Voter Card Correction",
     retailerName: "Priya Sharma",
     amount: 80.0,
-    status: "Pending",
+    status: "Resubmit",
     createdDate: "2026-05-21",
     lastUpdated: "2026-05-22",
     remarks:
@@ -60,7 +60,7 @@ const seedTickets: StatusTicket[] = [
     serviceName: "Income Certificate E-Seva",
     retailerName: "Deva",
     amount: 150.0,
-    status: "Pending",
+    status: "Resubmit",
     createdDate: "2026-05-22",
     lastUpdated: "2026-05-22",
     remarks: "Sent to local Tahsildar department for verifying signatures.",
@@ -105,13 +105,15 @@ export function StatusPage() {
           retailerName: app.retailerName || app.RetailerName || app.retailerId || app.RetailerId || "Unknown", 
           retailerMobile: app.retailerMobile || app.RetailerMobile || "-",
           amount: app.cost || app.Cost || 0,
-          status: (app.status || app.Status || "Pending") as TicketStatus,
+          status: (app.status || app.Status || "Resubmit") as TicketStatus,
           createdDate: (app.createdDate || app.CreatedDate || "").split("T")[0],
           lastUpdated: (app.lastUpdated || app.LastUpdated || "").split("T")[0],
           remarks: app.adminRemarks || app.AdminRemarks || "No remarks.",
           formData: typeof (app.formData || app.FormData) === "string" ? JSON.parse(app.formData || app.FormData || "{}") : (app.formData || app.FormData || {}),
           documents: typeof (app.documents || app.Documents) === "string" ? JSON.parse(app.documents || app.Documents || "[]") : (app.documents || app.Documents || []),
           ackFiles: typeof (app.ackFiles || app.AckFiles) === "string" ? JSON.parse(app.ackFiles || app.AckFiles || "[]") : (app.ackFiles || app.AckFiles || []),
+          customerName: app.retailerName || app.RetailerName || app.retailerId || app.RetailerId || "Unknown",
+          mobileNumber: app.retailerMobile || app.RetailerMobile || "-",
         }));
         setTickets(mapped);
       }
@@ -178,7 +180,7 @@ export function StatusPage() {
               Seamlessly track, manage, and transition the operational lifecycle
               of service requests across standard stages:{" "}
               <strong className="font-extrabold text-slate-700 dark:text-slate-300">
-                Pending
+                Resubmit
               </strong>{" "}
               review,{" "}
               <strong className="font-extrabold text-slate-700 dark:text-slate-300">

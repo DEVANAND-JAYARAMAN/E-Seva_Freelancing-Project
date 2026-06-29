@@ -185,13 +185,11 @@ export function StatusDetailModal({
                     className={`inline-flex items-center px-2.5 py-1 mt-1 rounded-lg text-[10px] font-extrabold tracking-wider uppercase ${
                       ticket.status === "Approved"
                         ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400"
-                        : ticket.status === "Completed"
-                          ? "bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400"
-                          : ticket.status === "Pending"
-                            ? "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400"
-                            : ticket.status === "Rejected"
-                              ? "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400"
-                              : "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400"
+                        : ticket.status === "Resubmit"
+                          ? "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400"
+                          : ticket.status === "Rejected"
+                            ? "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400"
+                            : "bg-slate-50 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400"
                     }`}
                   >
                     {ticket.status}
@@ -516,7 +514,7 @@ export function StatusDetailModal({
                   <span className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mt-4">
                     Workflow Status Actions
                   </span>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-3 gap-3">
                     {/* Approve */}
                     <button
                       type="button"
@@ -535,6 +533,16 @@ export function StatusDetailModal({
                     >
                       <AlertOctagon size={13} />
                       <span>Reject</span>
+                    </button>
+
+                    {/* Resubmit */}
+                    <button
+                      type="button"
+                      onClick={() => handleStatusClick("Resubmit")}
+                      className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-purple-600 hover:bg-purple-500 text-white shadow-sm active:scale-[0.98]`}
+                    >
+                      <RefreshCw size={13} />
+                      <span>Resubmit</span>
                     </button>
                   </div>
                 </div>

@@ -29,12 +29,6 @@ export function ServiceQueue() {
   const statusClasses: Record<string, string> = {
     Approved:
       "bg-[#e8f5e9] dark:bg-emerald-950/30 text-[#005c3a] dark:text-emerald-400",
-    Pending:
-      "bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400",
-    Inprocess:
-      "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400",
-    Processing:
-      "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400",
     Resubmit:
       "bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400",
     Completed:
@@ -55,21 +49,6 @@ export function ServiceQueue() {
       icon: FileText,
       bg: "bg-teal-50 dark:bg-teal-950/30",
       text: "text-teal-600 dark:text-teal-400",
-    },
-    Pending: {
-      icon: FileText,
-      bg: "bg-amber-50 dark:bg-amber-950/30",
-      text: "text-amber-600 dark:text-amber-400",
-    },
-    Inprocess: {
-      icon: User,
-      bg: "bg-blue-50 dark:bg-blue-950/30",
-      text: "text-blue-600 dark:text-blue-400",
-    },
-    Processing: {
-      icon: User,
-      bg: "bg-blue-50 dark:bg-blue-950/30",
-      text: "text-blue-600 dark:text-blue-400",
     },
     Resubmit: {
       icon: Wallet,
@@ -114,6 +93,12 @@ export function ServiceQueue() {
                   <strong className="block font-bold text-slate-900 dark:text-slate-100 text-sm tracking-tight truncate">
                     {service.serviceName || service.name || "Unknown Service"}
                   </strong>
+                  <span className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mt-1 truncate">
+                    {service.retailerName || service.RetailerName || service.retailerId || service.RetailerId || "Unknown"}
+                    <span className="text-slate-400 dark:text-slate-500 font-normal ml-1">
+                      ({service.retailerMobile || service.RetailerMobile || "-"})
+                    </span>
+                  </span>
                   <span className="block text-[11px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5">
                     {service.createdDate
                       ? new Date(service.createdDate).toLocaleDateString()

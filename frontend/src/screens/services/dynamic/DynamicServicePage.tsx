@@ -82,8 +82,51 @@ export function DynamicServicePage({ serviceId }: { serviceId: string }) {
     setPaymentPhase("payment");
   };
 
-  const handlePaymentSuccess = () => {
+  const handlePaymentSuccess = async (customerWhatsApp?: string) => {
+    if (user && service) {
+      try {
+        const payload = new FormData();
+        payload.append("retailerId", user.id);
+        payload.append("retailerName", user.name || "Unknown");
+        payload.append("retailerMobile", user.phone || "");
+        payload.append("serviceId", service.id);
+        payload.append("serviceName", service.name);
+        payload.append("cost", String(service.price?.retailer || 0));
+        payload.append("customerWhatsApp", customerWhatsApp || "");
+        payload.append("walletType", user.role === "distributor" ? "Distributor" : "Retailer");
+        payload.append("formData", JSON.stringify(formData));
+
+        if (typeof selectedFiles !== 'undefined') {
+          selectedFiles.forEach((file: File) => {
+            payload.append("documents", file);
+          });
+        }
+
+        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
+        const res = await fetch(`${apiUrl}/api/services/request`, {
+          method: "POST",
+          body: payload,
+        });
+
+        if (!res.ok) {
+           const errData = await res.json().catch(() => ({}));
+           alert(errData.error || "Failed to submit request");
+           return;
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Failed to connect to backend");
+        return;
+      }
+    }
+
     setPaymentPhase("success");
+    setTimeout(() => {
+      setPaymentPhase("form");
+      setFormData({});
+      setSelectedFiles([]);
+      router.push("/services");
+    }, 3000);
   };
 
   if (isLoading) {

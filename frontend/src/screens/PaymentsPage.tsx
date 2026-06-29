@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Home,
@@ -1621,6 +1621,21 @@ export function PaymentsPage() {
   const [newOthersiteAdminPrice, setNewOthersiteAdminPrice] = useState("0");
   const [newCustomerPrice, setNewCustomerPrice] = useState("0");
   const [newNeedCoordinator, setNewNeedCoordinator] = useState(false);
+  const [addError, setAddError] = useState("");
+
+  // Load config from backend
+  // Load config from backend
+  
+  useEffect(() => {
+    fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/pricing`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && Object.keys(data).length > 0) {
+          setPricingConfig(data);
+        }
+      })
+      .catch((err) => console.error("Failed to load pricing config:", err));
+  }, []);
 
   // Search filter for service cards
   const filteredCatalog = useMemo(() => {
@@ -1687,7 +1702,17 @@ export function PaymentsPage() {
 
   const handleCreateServiceSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setAddError("");
     if (!newServiceName.trim()) return;
+
+    // Check for duplicate service name globally
+    const isDuplicate = Object.values(pricingConfig).flat().some(
+      (s) => s.name.toLowerCase() === newServiceName.trim().toLowerCase()
+    );
+    if (isDuplicate) {
+      setAddError("A service with this name already exists!");
+      return;
+    }
 
     const newId = `${activeCatalogItem?.id || "custom"}-${Date.now()}`;
     const newService: SubService = {
@@ -1722,11 +1747,22 @@ export function PaymentsPage() {
     e.preventDefault();
     if (!activeCatalogItem) return;
 
-    // Save back to persistent storage
-    setPricingConfig((prev) => ({
-      ...prev,
+    const updatedConfig = {
+      ...pricingConfig,
       [activeCatalogItem.id]: editingRows,
-    }));
+    };
+
+    // Save back to persistent storage
+    setPricingConfig(updatedConfig);
+
+    // Save to backend
+    fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/pricing`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updatedConfig),
+    }).catch((err) => console.error("Failed to save pricing config:", err));
 
     setActiveCatalogItem(null); // Return back to cards grid view
     setShowSuccessToast(true);
@@ -2144,10 +2180,14 @@ export function PaymentsPage() {
                     type="text"
                     required
                     value={newServiceName}
-                    onChange={(e) => setNewServiceName(e.target.value)}
+                    onChange={(e) => {
+                      setNewServiceName(e.target.value);
+                      setAddError("");
+                    }}
                     placeholder="e.g. Passport Application"
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+                    className={`w-full px-4 py-2.5 rounded-xl border ${addError ? 'border-red-500 focus:ring-red-500/25 focus:border-red-500' : 'border-slate-200 dark:border-slate-800 focus:ring-[#005c3a]/25 focus:border-[#005c3a]'} bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 text-xs font-semibold text-slate-800 dark:text-slate-200`}
                   />
+                  {addError && <p className="text-[10px] text-red-500 font-bold mt-1">{addError}</p>}
                 </div>
 
                 {/* Primary Prices Grid */}
