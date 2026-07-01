@@ -765,8 +765,7 @@ func RechargeGateway(c *gin.Context) {
 	if username == "" {
 		username = "6380616163"
 	}
-	// Hardcoding API key because GitHub Secrets is overriding it with an old value
-	apiKey := "de84d65d816961eef8662345e4147587c38f2963ca480dbd"
+	apiKey := os.Getenv("MUGAVAI_API_KEY")
 
 	apiURL := "https://mugavaipaymentgetway.in/api/v1/create_order.php"
 	
@@ -1046,10 +1045,7 @@ func DeleteDynamicService(c *gin.Context) {
 
 // RechargeReturn handles the redirect from Mugavai payment gateway
 func RechargeReturn(c *gin.Context) {
-	// Redirect back to the wallet page
-	redirectUrl := c.Query("redirect_url")
-	if redirectUrl == "" {
-		redirectUrl = "https://thuruvancommunications.com/dashboard/wallet?payment_status=success"
-	}
-	c.Redirect(http.StatusFound, redirectUrl)
+	// Close the popup window after payment
+	c.Header("Content-Type", "text/html")
+	c.String(http.StatusOK, `<html><body><script>window.close();</script><p>Payment complete. You may close this window.</p></body></html>`)
 }
