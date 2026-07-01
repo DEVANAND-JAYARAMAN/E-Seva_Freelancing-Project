@@ -236,13 +236,32 @@ func ManualRecharge(c *gin.Context) {
 	}
 
 	now := time.Now().UTC()
+	ownerPK := "WALLET#" + req.UserId
+	walletSK := "TYPE#Main"
 
-	// Do NOT credit the wallet balance directly. Set it to Pending.
+	// Credit the wallet balance directly
+	_, err := db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+		TableName: aws.String("Wallets"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: ownerPK},
+			"SK": &types.AttributeValueMemberS{Value: walletSK},
+		},
+		UpdateExpression: aws.String("ADD balance :amt, totalCredits :amt SET updatedAt = :ts"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":amt": &types.AttributeValueMemberN{Value: strconv.FormatFloat(req.Amount, 'f', 2, 64)},
+			":ts":  &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
+		},
+	})
+	if err != nil {
+		log.Printf("Failed to credit wallet for manual recharge %s: %v", req.UserId, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Wallet credit failed"})
+		return
+	}
 
 	// Write transaction record
 	txId := "TX#" + now.Format("20060102150405") + "#" + req.UtrNumber
 	txRecord := map[string]interface{}{
-		"PK":          "WALLET#" + req.UserId,
+		"PK":          ownerPK,
 		"SK":          txId,
 		"id":          txId,
 		"date":        now.Format("01/02/2006, 03:04 PM"),
@@ -250,39 +269,19 @@ func ManualRecharge(c *gin.Context) {
 		"description": fmt.Sprintf("Manual Recharge (UTR: %s)", req.UtrNumber),
 		"amount":      req.Amount,
 		"reference":   req.UtrNumber,
-		"status":      "Pending", // Require Admin approval
+		"status":      "Success",
 		"walletType":  "Main",
 		"createdAt":   now.Format(time.RFC3339),
 	}
 
 	item, _ := attributevalue.MarshalMap(txRecord)
-	_, err := db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+	_, err = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
 		TableName: aws.String("WalletTransactions"),
 		Item:      item,
 	})
 	if err != nil {
 		log.Printf("Failed to write manual tx record: %v", err)
 	}
-
-	// Add Notification for Admin
-	notifId := fmt.Sprintf("NOTIF%s", now.Format("20060102150405"))
-	notif := map[string]interface{}{
-		"PK":        "USER#ADMIN",
-		"SK":        "NOTIF#" + now.Format(time.RFC3339) + "#" + notifId,
-		"id":        notifId,
-		"userId":    "ADMIN",
-		"title":     "Manual Wallet Recharge",
-		"message":   fmt.Sprintf("User %s requested manual recharge of %.2f (UTR: %s)", req.UserId, req.Amount, req.UtrNumber),
-		"type":      "info",
-		"isRead":    false,
-		"createdAt": now.Format(time.RFC3339),
-		"link":      "/status",
-	}
-	notifItem, _ := attributevalue.MarshalMap(notif)
-	_, _ = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
-		TableName: aws.String("Notifications"),
-		Item:      notifItem,
-	})
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Recharge successful",

@@ -135,7 +135,10 @@ export function AddServiceModal({ isOpen, onClose, onAdd }: AddServiceModalProps
             <div className="flex items-center gap-4">
               <div className="h-16 w-16 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center overflow-hidden shrink-0">
                 {customImage ? (
-                  <img src={customImage} className="h-full w-full object-contain" />
+                  <>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={customImage} alt="" className="h-full w-full object-contain" />
+                  </>
                 ) : (
                   <div className="text-[10px] font-bold text-slate-350">Upload</div>
                 )}

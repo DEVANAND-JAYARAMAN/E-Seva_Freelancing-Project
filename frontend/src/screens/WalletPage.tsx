@@ -237,6 +237,7 @@ export function WalletPage() {
                     "Payment is pending or canceled. If deducted, it will be credited soon."
                   );
                 } else {
+                  handleGatewayFailed(data.data.order_id, statusData.status);
                   setFormError(
                     `Payment failed or canceled (Status: ${statusData.status})`
                   );
@@ -269,6 +270,28 @@ export function WalletPage() {
     }
 
     completeRequest(cleanUtr);
+  };
+
+  const handleGatewayFailed = (orderId: string, status: string) => {
+    const amtNum = parseFloat(amount);
+    const newTransaction: WalletTransaction = {
+      id: `tx-gw-fail-${Date.now()}`,
+      date: new Date().toLocaleString("en-US", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      }),
+      type: "credit",
+      description: `Wallet Recharge via Gateway (${status})`,
+      amount: amtNum,
+      reference: orderId,
+      status: "Failed",
+      walletType: selectedWalletType,
+    };
+    setTransactions((prev) => [newTransaction, ...prev]);
   };
 
   const handleGatewaySuccess = (orderId: string) => {
@@ -353,7 +376,7 @@ export function WalletPage() {
         amount: amtNum,
         paymentMode,
         utrNumber: finalUtr,
-        status: "Pending", // Or "Success" since we instantly credited
+        status: "Success",
         requestDate: new Date().toLocaleString("en-US", {
           year: "numeric",
           month: "2-digit",
@@ -405,6 +428,25 @@ export function WalletPage() {
       setFormError(
         error.message || "Something went wrong while saving to database.",
       );
+      
+      const newTransaction: WalletTransaction = {
+        id: `tx-fail-${Date.now()}`,
+        date: new Date().toLocaleString("en-US", {
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        }),
+        type: "credit",
+        description: `Wallet Recharge QR (Failed/Invalid)`,
+        amount: parseFloat(amount),
+        reference: finalUtr,
+        status: "Failed",
+        walletType: selectedWalletType,
+      };
+      setTransactions((prev) => [newTransaction, ...prev]);
     }
   };
 
