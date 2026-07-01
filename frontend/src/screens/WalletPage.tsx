@@ -76,6 +76,7 @@ export function WalletPage() {
   const [paymentMode, setPaymentMode] = useState<"UPI" | "QR">("UPI");
   const [upiId, setUpiId] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
+  const [utrNumber, setUtrNumber] = useState("");
   const [gatewayProcessing, setGatewayProcessing] = useState(false);
   const [remarks, setRemarks] = useState("");
   const [formError, setFormError] = useState("");
