@@ -763,10 +763,9 @@ func RechargeGateway(c *gin.Context) {
 	// Read credentials from env or fallback to provided ones
 	username := os.Getenv("MUGAVAI_USERNAME")
 	if username == "" {
-		username = "6380616163"
+		username = "6380616163" // Default fallback if not in .env
 	}
-	// Hardcoding API key because GitHub Secrets is overriding it with an old value
-	apiKey := "de84d65d816961eef8662345e4147587c38f2963ca480dbd"
+	apiKey := os.Getenv("MUGAVAI_API_KEY")
 
 	apiURL := "https://mugavaipaymentgetway.in/api/v1/create_order.php"
 	
