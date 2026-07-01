@@ -679,7 +679,8 @@ export function WalletPage() {
                           placeholder="e.g. 1500"
                           value={amount}
                           onChange={(e) => setAmount(e.target.value)}
-                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
+                          disabled={utrNumber.trim().length > 0}
+                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                           required
                           min="1"
                         />
@@ -702,21 +703,6 @@ export function WalletPage() {
                         />
                       </div>
 
-
-
-                      {/* Remarks */}
-                      <div className="space-y-1.5">
-                        <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
-                          Add Remarks (Optional)
-                        </label>
-                        <textarea
-                          placeholder="e.g. Urgent add, UPI paid from retail counter GPay"
-                          value={remarks}
-                          onChange={(e) => setRemarks(e.target.value)}
-                          rows={2}
-                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all resize-none"
-                        />
-                      </div>
                     </div>
 
                     {/* Right Column: Dynamic Info / QR details / Bank Details Card */}
