@@ -89,7 +89,7 @@ export function ProfilePage() {
                     Main Wallet
                   </p>
                   <p className="text-lg font-black text-slate-800 dark:text-white">
-                    ₹{user?.walletBalance.toFixed(2) || "2895.00"}
+                    ₹{(user?.walletBalance || 0).toFixed(2)}
                   </p>
                 </div>
               </div>

@@ -763,7 +763,7 @@ func RechargeGateway(c *gin.Context) {
 	// Read credentials from env or fallback to provided ones
 	username := os.Getenv("MUGAVAI_USERNAME")
 	if username == "" {
-		username = "6380616163"
+		username = "6380616163" // Default fallback if not in .env
 	}
 	apiKey := os.Getenv("MUGAVAI_API_KEY")
 

@@ -65,7 +65,7 @@ export const stats: StatCard[] = [
 ];
 
 export const walletCards: WalletCard[] = [
-  { label: "Main Wallet", value: "2895.00", icon: Wallet },
+  { label: "Main Wallet", value: "0.00", icon: Wallet },
   { label: "Wallet Request", value: "0", icon: UserCheck },
   { label: "Customers", value: "0", icon: Users },
   { label: "Retailers", value: "0", icon: Store },

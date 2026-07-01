@@ -29,7 +29,7 @@ export function WalletPage() {
   }, [refreshProfile]);
 
   // Balances
-  const mainBalance = user?.walletBalance ?? 2895.0;
+  const [mainBalance, setMainBalance] = useState<number>(user?.walletBalance || 0);
 
   // Transactions list via local storage
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
@@ -348,6 +348,7 @@ export function WalletPage() {
         body: JSON.stringify({
           amount: amtNum,
           utrNumber: finalUtr,
+          mobileNumber: mobileNumber,
           remarks: remarks.trim(),
           userId: user?.id ?? "usr_1001",
         }),
@@ -852,26 +853,24 @@ export function WalletPage() {
                         </select>
                       </div>
 
-                      {/* Mobile Number (shown for UPI modes) */}
-                      {paymentMode === "UPI" && (
-                        <div className="space-y-1.5 animate-in fade-in duration-200">
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
-                            Mobile Number
-                          </label>
-                          <input
-                            type="tel"
-                            placeholder="Enter 10-digit mobile number"
-                            value={mobileNumber}
-                            onChange={(e) => {
-                              setMobileNumber(e.target.value.replace(/\D/g, ""));
-                              setFormError("");
-                            }}
-                            maxLength={10}
-                            className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
-                            required={paymentMode === "UPI"}
-                          />
-                        </div>
-                      )}
+                      {/* Mobile Number (shown for both modes) */}
+                      <div className="space-y-1.5 animate-in fade-in duration-200">
+                        <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+                          Mobile Number
+                        </label>
+                        <input
+                          type="tel"
+                          placeholder="Enter 10-digit mobile number"
+                          value={mobileNumber}
+                          onChange={(e) => {
+                            setMobileNumber(e.target.value.replace(/\D/g, ""));
+                            setFormError("");
+                          }}
+                          maxLength={10}
+                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
+                          required
+                        />
+                      </div>
 
                       {/* UTR reference */}
                       {paymentMode === "QR" && (

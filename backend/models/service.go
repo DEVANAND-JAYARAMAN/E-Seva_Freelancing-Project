@@ -29,13 +29,15 @@ type Wallet struct {
 }
 
 type WalletTransaction struct {
-	PK         string  `dynamodbav:"PK" json:"PK"`
-	SK         string  `dynamodbav:"SK" json:"SK"`
-	Id         string  `dynamodbav:"id" json:"id"`
-	WalletType string  `dynamodbav:"walletType" json:"walletType"` // Retailer or Distributor
-	Amount     float64 `dynamodbav:"amount" json:"amount"`
-	Type       string  `dynamodbav:"type" json:"type"`           // Debit or Credit
-	Status     string  `dynamodbav:"status" json:"status"`       // Success or Failure
-	Reference  string  `dynamodbav:"reference" json:"reference"` // ServiceApp ID
-	CreatedAt  string  `dynamodbav:"createdAt" json:"createdAt"`
+	PK          string  `dynamodbav:"PK" json:"PK"`
+	SK          string  `dynamodbav:"SK" json:"SK"`
+	Id          string  `dynamodbav:"id" json:"id"`
+	WalletType  string  `dynamodbav:"walletType" json:"walletType"` // Retailer or Distributor
+	Amount      float64 `dynamodbav:"amount" json:"amount"`
+	Type        string  `dynamodbav:"type" json:"type"`           // Debit or Credit
+	Status      string  `dynamodbav:"status" json:"status"`       // Success or Failure
+	Reference   string  `dynamodbav:"reference" json:"reference"` // ServiceApp ID
+	CreatedAt   string  `dynamodbav:"createdAt" json:"createdAt"`
+	Date        string  `dynamodbav:"date" json:"date"`
+	Description string  `dynamodbav:"description" json:"description"`
 }

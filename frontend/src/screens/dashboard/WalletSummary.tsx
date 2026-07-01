@@ -48,17 +48,17 @@ export function WalletSummary({ stats }: { stats?: any }) {
         const iconStyle = iconTone[labelLower] || "bg-white/20 text-white";
 
         let dynamicValue = card.value;
-        if (stats) {
-          if (labelLower === "main wallet")
-            dynamicValue = stats.mainWallet?.toFixed(2) ?? card.value;
+        if (labelLower === "main wallet") {
+          dynamicValue = user?.walletBalance !== undefined ? user.walletBalance.toFixed(2) : "0.00";
+        } else if (stats) {
           if (labelLower === "wallet request")
-            dynamicValue = String(stats.walletRequest ?? card.value);
+            dynamicValue = String(stats.walletRequest ?? "0");
           if (labelLower === "customers")
-            dynamicValue = String(stats.customers ?? card.value);
+            dynamicValue = String(stats.customers ?? "0");
           if (labelLower === "retailers")
-            dynamicValue = String(stats.retailers ?? card.value);
+            dynamicValue = String(stats.retailers ?? "0");
           if (labelLower === "distributors")
-            dynamicValue = String(stats.distributors ?? card.value);
+            dynamicValue = String(stats.distributors ?? "0");
         }
 
         return (
