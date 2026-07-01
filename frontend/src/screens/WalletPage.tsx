@@ -73,8 +73,7 @@ export function WalletPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const selectedWalletType = "Main";
   const [amount, setAmount] = useState("");
-  const [paymentMode, setPaymentMode] = useState<"UPI">("UPI");
-  const [utrNumber, setUtrNumber] = useState("");
+  const [paymentMode, setPaymentMode] = useState<"UPI" | "QR">("UPI");
   const [upiId, setUpiId] = useState("");
   const [mobileNumber, setMobileNumber] = useState("");
   const [gatewayProcessing, setGatewayProcessing] = useState(false);
@@ -152,6 +151,114 @@ export function WalletPage() {
     const amtNum = parseFloat(amount);
     if (isNaN(amtNum) || amtNum <= 0) {
       setFormError("Please enter a valid recharge amount greater than ₹0.");
+      return;
+    }
+
+    if (paymentMode === "UPI") {
+      if (!mobileNumber.trim() || mobileNumber.trim().length !== 10) {
+        setFormError("Please enter a valid 10-digit mobile number.");
+        return;
+      }
+      setGatewayProcessing(true);
+      try {
+        const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(
+          /(?:\/api|\/)+$/,
+          ""
+        );
+        const res = await fetch(`${baseUrl}/api/v1/wallet/recharge/gateway`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({
+            amount: amtNum,
+            customer_mobile: mobileNumber,
+            customer_email: user?.email || "user@thuruvan.com",
+            redirect_url:
+              baseUrl +
+              "/api/v1/wallet/recharge/return?redirect_url=" +
+              encodeURIComponent(
+                window.location.origin + window.location.pathname
+              ),
+            user_id: user?.id || "",
+          }),
+        });
+        const data = await res.json();
+        if (res.ok && data.data?.payment_url) {
+          const width = 600;
+          const height = 700;
+          const left = window.screenX + (window.outerWidth - width) / 2;
+          const top = window.screenY + (window.outerHeight - height) / 2;
+          const popup = window.open(
+            data.data.payment_url,
+            "Payment Gateway",
+            `width=${width},height=${height},left=${left},top=${top}`
+          );
+
+          const pollTimer = setInterval(async () => {
+            try {
+              if (
+                popup &&
+                !popup.closed &&
+                popup.location.href.includes(window.location.origin)
+              ) {
+                popup.close();
+              }
+            } catch (e) {
+              // Ignore cross-origin error
+            }
+
+            if (!popup || popup.closed) {
+              clearInterval(pollTimer);
+              setGatewayProcessing(true);
+
+              // Poll backend for final status
+              try {
+                const statusRes = await fetch(
+                  `${baseUrl}/api/wallet/recharge/status/${data.data.order_id}`,
+                  {
+                    headers: {
+                      Authorization: `Bearer ${localStorage.getItem("token")}`,
+                    },
+                  }
+                );
+                const statusData = await statusRes.json();
+
+                setGatewayProcessing(false);
+                if (
+                  statusData.status === "Success" ||
+                  statusData.status === "SUCCESS" ||
+                  statusData.status === "success"
+                ) {
+                  handleGatewaySuccess(data.data.order_id);
+                } else if (statusData.status === "Pending") {
+                  setFormError(
+                    "Payment is pending or canceled. If deducted, it will be credited soon."
+                  );
+                } else {
+                  setFormError(
+                    `Payment failed or canceled (Status: ${statusData.status})`
+                  );
+                }
+              } catch (err) {
+                setGatewayProcessing(false);
+                setFormError(
+                  "Could not verify payment status. Please check transaction history."
+                );
+              }
+            }
+          }, 1000);
+        } else {
+          setGatewayProcessing(false);
+          setFormError(
+            data.error || data.message || "Failed to initiate payment gateway."
+          );
+        }
+      } catch (err) {
+        setGatewayProcessing(false);
+        setFormError("Error connecting to Payment Gateway.");
+      }
       return;
     }
 
@@ -686,35 +793,76 @@ export function WalletPage() {
                         />
                       </div>
 
-                      {/* UTR reference */}
-                      <div className="space-y-1.5 animate-in fade-in duration-200">
+                      {/* Payment Mode */}
+                      <div className="space-y-1.5">
                         <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
-                          Transaction UTR / Ref ID
+                          Payment Mode / channel
                         </label>
-                        <input
-                          type="text"
-                          placeholder="Enter 12-digit UTR/Ref No."
-                          value={utrNumber}
+                        <select
+                          value={paymentMode}
                           onChange={(e) => {
-                            setUtrNumber(e.target.value);
+                            setPaymentMode(e.target.value as "UPI" | "QR");
                             setFormError("");
                           }}
-                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
-                        />
+                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all appearance-none cursor-pointer"
+                        >
+                          <option value="UPI">UPI ID Request (Gateway)</option>
+                          <option value="QR">Manual QR Scan</option>
+                        </select>
                       </div>
+
+                      {/* Mobile Number (shown for UPI modes) */}
+                      {paymentMode === "UPI" && (
+                        <div className="space-y-1.5 animate-in fade-in duration-200">
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+                            Mobile Number
+                          </label>
+                          <input
+                            type="tel"
+                            placeholder="Enter 10-digit mobile number"
+                            value={mobileNumber}
+                            onChange={(e) => {
+                              setMobileNumber(e.target.value.replace(/\D/g, ""));
+                              setFormError("");
+                            }}
+                            maxLength={10}
+                            className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
+                            required={paymentMode === "UPI"}
+                          />
+                        </div>
+                      )}
+
+                      {/* UTR reference */}
+                      {paymentMode === "QR" && (
+                        <div className="space-y-1.5 animate-in fade-in duration-200">
+                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+                            Transaction UTR / Ref ID
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="Enter 12-digit UTR/Ref No."
+                            value={utrNumber}
+                            onChange={(e) => {
+                              setUtrNumber(e.target.value);
+                              setFormError("");
+                            }}
+                            className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
+                          />
+                        </div>
+                      )}
 
                     </div>
 
                     {/* Right Column: Dynamic Info / QR details / Bank Details Card */}
                     <div className="flex flex-col justify-center h-full">
                       <div className="bg-slate-50/50 dark:bg-slate-950/25 border border-slate-100 dark:border-slate-900/60 rounded-2xl p-4 flex flex-col items-center justify-center min-h-[280px] text-center">
-                        {true && (
+                        {paymentMode === "QR" && (
                           <div className="flex flex-col items-center gap-3.5 animate-in fade-in duration-200">
                             <div className="p-2.5 bg-white rounded-xl shadow-sm border border-slate-100">
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
                                 src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(
-                                  `upi://pay?pa=${process.env.NEXT_PUBLIC_UPI_ID || "mkksriptsami@oksbi"}&pn=Thuruvan%20Communications&am=${amount || 0}&cu=INR&tn=Wallet%20Recharge`,
+                                  `upi://pay?pa=${process.env.NEXT_PUBLIC_UPI_ID || "mkksriptsami@oksbi"}&pn=Thuruvan%20Communications&am=${amount || 0}&cu=INR&tn=Wallet%20Recharge`
                                 )}`}
                                 alt="Payment QR Code"
                                 className="w-28 h-28 object-contain"
@@ -723,6 +871,23 @@ export function WalletPage() {
                             <div className="space-y-1">
                               <p className="text-xs font-black text-slate-800 dark:text-slate-200">
                                 Scan & Pay ₹{amount || "0.00"}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {paymentMode === "UPI" && (
+                          <div className="flex flex-col items-center gap-3 text-slate-500 dark:text-slate-400 p-2 animate-in fade-in duration-200">
+                            <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-450 shadow-sm">
+                              <Wallet size={20} />
+                            </span>
+                            <div className="space-y-1">
+                              <h5 className="text-xs font-black text-slate-855 dark:text-slate-200 uppercase tracking-wider">
+                                Payment Gateway
+                              </h5>
+                              <p className="text-[10px] text-slate-450 dark:text-slate-500 max-w-[200px] leading-relaxed">
+                                You will be redirected to the secure payment
+                                gateway to complete the payment via any UPI App.
                               </p>
                             </div>
                           </div>
@@ -747,10 +912,10 @@ export function WalletPage() {
                         {gatewayProcessing ? (
                           <>
                             <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            Submitting...
+                            {paymentMode === "UPI" ? "Connecting to Gateway..." : "Submitting..."}
                           </>
                         ) : (
-                          "Submit Request"
+                          paymentMode === "UPI" ? "Pay via Gateway" : "Submit Request"
                         )}
                       </button>
                     </div>
