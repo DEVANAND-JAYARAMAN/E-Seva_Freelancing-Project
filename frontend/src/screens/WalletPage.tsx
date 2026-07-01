@@ -776,12 +776,10 @@ export function WalletPage() {
                   </span>
                   <div>
                     <h5 className="text-xl font-extrabold text-slate-900 dark:text-white">
-                      Request Submitted!
+                      Recharge Successful!
                     </h5>
                     <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-xs leading-relaxed">
-                      Your recharge request has been recorded. Our
-                      administrators will verify the UTR reference number
-                      shortly.
+                      Your recharge was successful and the amount has been credited directly to your wallet.
                     </p>
                   </div>
                 </div>
