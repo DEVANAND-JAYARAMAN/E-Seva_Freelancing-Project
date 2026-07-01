@@ -23,7 +23,10 @@ export function DashboardPage2({
   forceRole?: "retailer" | "distributor";
 }) {
   const { user: contextUser, updateWallet, refreshProfile } = useAuth();
-  const user = forceRole ? { ...contextUser, role: forceRole } : contextUser;
+  const user = React.useMemo(
+    () => (forceRole ? { ...contextUser, role: forceRole } : contextUser),
+    [contextUser, forceRole]
+  );
 
   // State for wallet request popup
   const [showRequestModal, setShowRequestModal] = useState(false);

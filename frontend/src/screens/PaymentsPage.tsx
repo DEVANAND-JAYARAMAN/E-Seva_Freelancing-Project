@@ -1635,6 +1635,7 @@ export function PaymentsPage() {
         }
       })
       .catch((err) => console.error("Failed to load pricing config:", err));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Search filter for service cards

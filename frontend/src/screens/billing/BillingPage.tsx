@@ -74,6 +74,7 @@ export function BillingPage() {
         console.error(e);
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleOfficialCostChange = (id: string, value: string) => {

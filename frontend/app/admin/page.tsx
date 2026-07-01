@@ -37,6 +37,7 @@ export default function AdminPage() {
         fetchStatus();
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isLoading, isAuthenticated, user, router]);
 
   // Prevent rendering while loading auth state or if not admin
