@@ -32,7 +32,7 @@ func main() {
 	// CORS configuration
 	config := cors.DefaultConfig()
 	ec2IP := os.Getenv("EC2_PUBLIC_IP")
-	allowOrigins := []string{"http://localhost:3000", "http://localhost:3001", "https://main.dft1zhsxacjk.amplifyapp.com", "https://thuruvancommunications.com"}
+	allowOrigins := []string{"http://localhost:3000", "http://localhost:3001", "https://main.dft1zhsxacjk.amplifyapp.com", "https://thuruvancommunications.com", "https://mugavaipaymentgetway.in", "http://mugavaipaymentgetway.in"}
 	if ec2IP != "" {
 		allowOrigins = append(allowOrigins, "http://"+ec2IP, "http://"+ec2IP+":3000")
 	}
