@@ -692,6 +692,7 @@ func GetWalletTransactions(c *gin.Context) {
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":pk": &types.AttributeValueMemberS{Value: "WALLET#" + userId},
 		},
+		ScanIndexForward: aws.Bool(false),
 	})
 
 	if err != nil {
@@ -866,7 +867,7 @@ func RechargeWebhook(c *gin.Context) {
 	}
 
 	actualOrderID := getParam("order_id", "client_txn_id", "txn_id")
-	actualUTR := getParam("utr", "upi_txn_id", "bank_txn_id")
+	actualUTR := getParam("utr", "upi_txn_id", "bank_txn_id", "transaction_id")
 	status := getParam("status")
 	amountStr := getParam("amount")
 
@@ -953,6 +954,7 @@ func RechargeWebhook(c *gin.Context) {
 			"status":      &types.AttributeValueMemberS{Value: "Success"},
 			"walletType":  &types.AttributeValueMemberS{Value: "Main"},
 			"createdAt":   &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
+			"date":        &types.AttributeValueMemberS{Value: now.Format("01/02/2006, 03:04 PM")},
 		},
 	})
 
