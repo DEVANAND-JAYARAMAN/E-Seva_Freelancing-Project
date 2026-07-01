@@ -68,6 +68,8 @@ jobs:
             MUGAVAI_USERNAME=${{ secrets.MUGAVAI_USERNAME }}
             MUGAVAI_API_KEY=${{ secrets.MUGAVAI_API_KEY }}
             EOF
-            sudo systemctl restart eservice-backend
+            sudo fuser -k 8080/tcp || true
+            sleep 2
+            nohup /opt/eservice/backend/eservice-backend > /tmp/eservice.log 2>&1 &
             sleep 3
-            sudo systemctl is-active --quiet eservice-backend && echo "Service is running"
+            pgrep -f eservice-backend && echo "Service is running"
