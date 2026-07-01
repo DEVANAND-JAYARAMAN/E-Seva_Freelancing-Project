@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"eservice-backend/db"
+	"eservice-backend/service"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
@@ -61,96 +62,12 @@ type MugavaiCallbackPayload struct {
 // HandlePaymentCallback receives POST from Mugavai after payment completes
 // and credits the Wallets table + writes a WalletTransactions record.
 func HandlePaymentCallback(c *gin.Context) {
-	var payload MugavaiCallbackPayload
-	if err := c.ShouldBindJSON(&payload); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
-		return
+	success, msg := service.ProcessMugavaiPayment(c)
+	if success {
+		c.JSON(http.StatusOK, gin.H{"status": "success", "message": msg})
+	} else {
+		c.JSON(http.StatusOK, gin.H{"status": "failed", "message": msg})
 	}
-
-	log.Printf("[Mugavai Callback] OrderID=%s TxID=%s Status=%s Amount=%s Mobile=%s",
-		payload.OrderID, payload.TransactionID, payload.Status, payload.Amount, payload.Mobile)
-
-	if payload.Status != "success" && payload.Status != "SUCCESS" {
-		// Not a success — just acknowledge, no credit
-		c.JSON(http.StatusOK, gin.H{"status": "received"})
-		return
-	}
-
-	amount, err := strconv.ParseFloat(payload.Amount, 64)
-	if err != nil || amount <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid amount"})
-		return
-	}
-
-	now := time.Now().UTC()
-	ownerPK := "WALLET#" + payload.Mobile
-	walletSK := "TYPE#Main"
-
-	// 1. Credit balance in Wallets table using atomic ADD
-	_, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
-		TableName: aws.String("Wallets"),
-		Key: map[string]types.AttributeValue{
-			"PK": &types.AttributeValueMemberS{Value: ownerPK},
-			"SK": &types.AttributeValueMemberS{Value: walletSK},
-		},
-		UpdateExpression: aws.String("ADD balance :amt, totalCredits :amt SET updatedAt = :ts"),
-		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":amt": &types.AttributeValueMemberN{Value: payload.Amount},
-			":ts":  &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
-		},
-	})
-	if err != nil {
-		log.Printf("[Mugavai Callback] Failed to credit wallet for %s: %v", payload.Mobile, err)
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "Wallet credit failed"})
-		return
-	}
-
-	// 2. Write transaction record to WalletTransactions table
-	txId := "TX#" + now.Format("20060102150405") + "#" + payload.OrderID
-	txRecord := map[string]interface{}{
-		"PK":          ownerPK,
-		"SK":          txId,
-		"id":          payload.OrderID,
-		"date":        now.Format("01/02/2006, 03:04 PM"),
-		"type":        "credit",
-		"description": fmt.Sprintf("Wallet Recharge via Mugavai Gateway (TxID: %s)", payload.TransactionID),
-		"amount":      amount,
-		"reference":   payload.TransactionID,
-		"status":      "Success",
-		"walletType":  "Main",
-		"createdAt":   now.Format(time.RFC3339),
-	}
-
-	item, _ := attributevalue.MarshalMap(txRecord)
-	_, err = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
-		TableName: aws.String("WalletTransactions"),
-		Item:      item,
-	})
-	if err != nil {
-		log.Printf("[Mugavai Callback] Failed to write transaction record: %v", err)
-	}
-
-	// Add Notification for Admin
-	notifId := fmt.Sprintf("NOTIF%s", now.Format("20060102150405"))
-	notif := map[string]interface{}{
-		"PK":        "USER#ADMIN",
-		"SK":        "NOTIF#" + now.Format(time.RFC3339) + "#" + notifId,
-		"id":        notifId,
-		"userId":    "ADMIN",
-		"title":     "Wallet Recharged",
-		"message":   fmt.Sprintf("Mobile %s recharged wallet with %s (TxID: %s)", payload.Mobile, payload.Amount, payload.TransactionID),
-		"type":      "success",
-		"isRead":    false,
-		"createdAt": now.Format(time.RFC3339),
-		"link":      "/status",
-	}
-	notifItem, _ := attributevalue.MarshalMap(notif)
-	_, _ = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
-		TableName: aws.String("Notifications"),
-		Item:      notifItem,
-	})
-
-	c.JSON(http.StatusOK, gin.H{"status": "credited"})
 }
 
 func InitiateGatewayRecharge(c *gin.Context) {

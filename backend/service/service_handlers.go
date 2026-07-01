@@ -840,12 +840,9 @@ type RechargeWebhookReq struct {
 	UpiTxnID     string      `form:"upi_txn_id" json:"upi_txn_id"`
 }
 
-// RechargeWebhook handles the callback from Mugavai payment gateway
-func RechargeWebhook(c *gin.Context) {
-	// Parse form data and query params
+// ProcessMugavaiPayment extracts parameters from the request, verifies idempotency, and credits the wallet
+func ProcessMugavaiPayment(c *gin.Context) (bool, string) {
 	_ = c.Request.ParseForm()
-	
-	// Fallback JSON binding if it's purely JSON
 	var jsonBody map[string]interface{}
 	c.ShouldBindJSON(&jsonBody)
 
@@ -871,17 +868,19 @@ func RechargeWebhook(c *gin.Context) {
 	status := getParam("status")
 	amountStr := getParam("amount")
 
+	if actualOrderID == "" {
+		return false, "missing order_id"
+	}
+
 	var parsedAmount float64
 	fmt.Sscanf(amountStr, "%f", &parsedAmount)
 
-	log.Printf("[Webhook] Parsed Form Data -> Order=%s Status=%s Amount=%.2f UTR=%s (RawAmount=%s)", actualOrderID, status, parsedAmount, actualUTR, amountStr)
+	log.Printf("[Payment Processing] Order=%s Status=%s Amount=%.2f UTR=%s", actualOrderID, status, parsedAmount, actualUTR)
 
 	if status != "SUCCESS" && status != "success" && status != "COMPLETED" && status != "Completed" {
-		c.JSON(http.StatusOK, gin.H{"status": "received", "message": "Not a success status"})
-		return
+		return false, "not a success status"
 	}
 
-	// Look up orderId → userId mapping
 	meta, err := db.DynamoClient.GetItem(context.TODO(), &dynamodb.GetItemInput{
 		TableName: aws.String("WalletTransactions"),
 		Key: map[string]types.AttributeValue{
@@ -890,20 +889,40 @@ func RechargeWebhook(c *gin.Context) {
 		},
 	})
 	if err != nil || meta.Item == nil {
-		log.Printf("[Webhook] Order meta not found for %s", actualOrderID)
-		c.JSON(http.StatusOK, gin.H{"status": "order_not_found"})
-		return
+		log.Printf("[Payment Processing] Order meta not found for %s", actualOrderID)
+		return false, "order_not_found"
+	}
+
+	// Idempotency check: Don't process if already processed!
+	if s, ok := meta.Item["status"].(*types.AttributeValueMemberS); ok {
+		if s.Value == "Success" || s.Value == "SUCCESS" {
+			log.Printf("[Payment Processing] Order %s already processed", actualOrderID)
+			return true, "already processed"
+		}
 	}
 
 	userIdAttr, ok := meta.Item["userId"].(*types.AttributeValueMemberS)
 	if !ok || userIdAttr.Value == "" {
-		c.JSON(http.StatusOK, gin.H{"status": "user_not_found"})
-		return
+		return false, "user_not_found"
 	}
 	userId := userIdAttr.Value
 
 	now := time.Now().UTC()
 	amountStr = fmt.Sprintf("%.2f", parsedAmount)
+
+	// Update META status to Success to prevent duplicate processing
+	_, _ = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+		TableName: aws.String("WalletTransactions"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: "ORDER#" + actualOrderID},
+			"SK": &types.AttributeValueMemberS{Value: "META"},
+		},
+		UpdateExpression: aws.String("SET #s = :status"),
+		ExpressionAttributeNames: map[string]string{"#s": "status"},
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":status": &types.AttributeValueMemberS{Value: "Success"},
+		},
+	})
 
 	// Credit Wallets table
 	_, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
@@ -919,9 +938,8 @@ func RechargeWebhook(c *gin.Context) {
 		},
 	})
 	if err != nil {
-		log.Printf("[Webhook] Failed to credit Wallets for user %s: %v", userId, err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "wallet credit failed"})
-		return
+		log.Printf("[Payment Processing] Failed to credit Wallets for user %s: %v", userId, err)
+		return false, "wallet credit failed"
 	}
 
 	// Credit Users.walletBalance
@@ -958,8 +976,8 @@ func RechargeWebhook(c *gin.Context) {
 		},
 	})
 
-	log.Printf("[Webhook] Successfully credited ₹%.2f to user %s", parsedAmount, userId)
-	// Add Notification for Admin
+	log.Printf("[Payment Processing] Successfully credited ₹%.2f to user %s", parsedAmount, userId)
+	
 	notifId := generateId("NOTIF")
 	notif := models.Notification{
 		PK:        "USER#ADMIN",
@@ -979,9 +997,18 @@ func RechargeWebhook(c *gin.Context) {
 		Item:      notifItem,
 	})
 
-	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Wallet credited"})
+	return true, "success"
 }
 
+// RechargeWebhook handles the callback from Mugavai payment gateway
+func RechargeWebhook(c *gin.Context) {
+	success, msg := ProcessMugavaiPayment(c)
+	if success {
+		c.JSON(http.StatusOK, gin.H{"status": "success", "message": msg})
+	} else {
+		c.JSON(http.StatusOK, gin.H{"status": "failed", "message": msg}) // 200 OK so gateway doesn't retry infinitely on some errors
+	}
+}
 
 func UpdateDynamicService(c *gin.Context) {
 	id := c.Param("id")
@@ -1027,7 +1054,6 @@ func DeleteDynamicService(c *gin.Context) {
 	})
 
 	if err != nil {
-		// Fallback to PK and SK in case the table schema uses them instead of 'id'
 		_, err = db.DynamoClient.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
 			TableName: aws.String("DynamicServices"),
 			Key: map[string]types.AttributeValue{
@@ -1047,6 +1073,9 @@ func DeleteDynamicService(c *gin.Context) {
 
 // RechargeReturn handles the redirect from Mugavai payment gateway
 func RechargeReturn(c *gin.Context) {
+	// Attempt to process payment if gateway passes params in the redirect
+	ProcessMugavaiPayment(c)
+
 	// Close the popup window after payment
 	c.Header("Content-Type", "text/html")
 	c.String(http.StatusOK, `<html><body><script>window.close();</script><p>Payment complete. You may close this window.</p></body></html>`)
