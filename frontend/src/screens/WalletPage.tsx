@@ -29,7 +29,7 @@ export function WalletPage() {
   }, [refreshProfile]);
 
   // Balances
-  const mainBalance = user?.walletBalance ?? 2895.0;
+  const [mainBalance, setMainBalance] = useState<number>(user?.walletBalance || 0);
 
   // Transactions list via local storage
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);

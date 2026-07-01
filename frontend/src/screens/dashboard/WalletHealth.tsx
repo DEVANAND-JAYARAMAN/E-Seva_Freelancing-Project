@@ -1,7 +1,11 @@
 import { useRouter } from "next/navigation";
+import { useAuth } from "../../store/context/AuthContext";
 
 export function WalletHealth() {
   const router = useRouter();
+  const { user } = useAuth();
+  
+  const balance = user?.walletBalance || 0;
 
   return (
     <article className="bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between h-full">
@@ -15,7 +19,7 @@ export function WalletHealth() {
             Ready for today
           </h2>
           <div className="text-4xl sm:text-5xl font-extrabold text-[#005c3a] dark:text-emerald-400 tracking-tight mt-4 mb-4">
-            2895.00
+            ₹{balance.toFixed(2)}
           </div>
           <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed max-w-[240px]">
             Main wallet has enough balance for current service flow.
