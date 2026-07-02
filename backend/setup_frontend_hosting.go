@@ -131,7 +131,12 @@ func runDeploy(ctx context.Context, distID string) {
 // ── S3 ────────────────────────────────────────────────────────────────────────
 
 func createBucket(ctx context.Context) {
-	_, err := s3c.CreateBucket(ctx, &s3.CreateBucketInput{
+	_, err := s3c.HeadBucket(ctx, &s3.HeadBucketInput{Bucket: aws.String(bucketName)})
+	if err == nil {
+		fmt.Println("✅ S3 bucket already exists:", bucketName)
+		return
+	}
+	_, err = s3c.CreateBucket(ctx, &s3.CreateBucketInput{
 		Bucket: aws.String(bucketName),
 		CreateBucketConfiguration: &s3types.CreateBucketConfiguration{
 			LocationConstraint: s3types.BucketLocationConstraint(region),
