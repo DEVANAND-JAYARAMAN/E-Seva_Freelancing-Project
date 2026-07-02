@@ -273,6 +273,11 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	if user.Status == "Suspended" || user.Status == "Inactive" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Your account has been suspended. Please contact the administrator."})
+		return
+	}
+
 	token, err := generateToken(user.UserId, user.Role)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to generate token"})

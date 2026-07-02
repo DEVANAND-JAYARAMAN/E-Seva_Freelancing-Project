@@ -53,11 +53,36 @@ export function RetailersPage() {
   const handleFormSubmit = async (
     data: Omit<Retailer, "id" | "createdDate"> & { id?: string },
   ) => {
+    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
     if (data.id) {
-      // Edit mode (Mocked)
-      setRetailers((prev) =>
-        prev.map((item) => (item.id === data.id ? { ...item, ...data } : item)),
-      );
+      // Edit mode (API Call)
+      try {
+        const payload = {
+          fullName: data.name,
+          email: data.email,
+          mobile: data.phone,
+          status: data.status,
+          rawPassword: data.rawPassword,
+          role: "retailer",
+        };
+        const res = await fetch(`${apiUrl}/api/users/${data.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          setRetailers((prev) =>
+            prev.map((item) => (item.id === data.id ? { ...item, ...data } : item)),
+          );
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          console.error("Failed to edit retailer:", errData);
+          alert(errData.error || "Failed to edit retailer");
+        }
+      } catch (err) {
+        console.error("Failed to edit retailer", err);
+        alert("Failed to connect to backend");
+      }
     } else {
       // Add mode (API Call)
       try {
@@ -68,7 +93,6 @@ export function RetailersPage() {
           role: "retailer",
           password: "password123", // default password
         };
-        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
         const res = await fetch(`${apiUrl}/api/auth/signup`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -96,17 +120,33 @@ export function RetailersPage() {
   };
 
   // Toggle status quick-action handler
-  const handleToggleStatus = (id: string) => {
-    setRetailers((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              status: item.status === "Active" ? "Suspended" : "Active",
-            }
-          : item,
-      ),
-    );
+  const handleToggleStatus = async (id: string) => {
+    const retailer = retailers.find((r) => r.id === id);
+    if (!retailer) return;
+
+    const newStatus = retailer.status === "Active" ? "Suspended" : "Active";
+    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
+
+    try {
+      const res = await fetch(`${apiUrl}/api/users/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus, role: "retailer" }),
+      });
+
+      if (res.ok) {
+        setRetailers((prev) =>
+          prev.map((item) =>
+            item.id === id ? { ...item, status: newStatus } : item,
+          ),
+        );
+      } else {
+        alert("Failed to update status");
+      }
+    } catch (err) {
+      console.error("Failed to update status", err);
+      alert("Failed to connect to backend");
+    }
   };
 
   // Trigger form for Edit

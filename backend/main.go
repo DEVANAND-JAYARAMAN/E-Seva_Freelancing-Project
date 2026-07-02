@@ -62,6 +62,7 @@ func main() {
 
 		api.GET("/retailers", auth.GetRetailers)
 		api.GET("/distributors", auth.GetDistributors)
+		api.PUT("/users/:id", auth.UpdateUser)
 
 		crmGroup := api.Group("/crm")
 		{

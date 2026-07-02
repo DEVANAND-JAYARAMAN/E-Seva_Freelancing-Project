@@ -52,11 +52,36 @@ export function DistributorsPage() {
   const handleFormSubmit = async (
     data: Omit<Distributor, "id" | "createdDate"> & { id?: string },
   ) => {
+    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
     if (data.id) {
-      // Edit mode
-      setDistributors((prev) =>
-        prev.map((item) => (item.id === data.id ? { ...item, ...data } : item)),
-      );
+      // Edit mode (API Call)
+      try {
+        const payload = {
+          fullName: data.name,
+          email: data.email,
+          mobile: data.phone,
+          status: data.status,
+          rawPassword: data.rawPassword,
+          role: "distributor",
+        };
+        const res = await fetch(`${apiUrl}/api/users/${data.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (res.ok) {
+          setDistributors((prev) =>
+            prev.map((item) => (item.id === data.id ? { ...item, ...data } : item)),
+          );
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          console.error("Failed to edit distributor:", errData);
+          alert(errData.error || "Failed to edit distributor");
+        }
+      } catch (err) {
+        console.error("Failed to edit distributor", err);
+        alert("Failed to connect to backend");
+      }
     } else {
       // Add mode (API Call)
       try {
@@ -67,7 +92,6 @@ export function DistributorsPage() {
           role: "distributor",
           password: "password123", // default password
         };
-        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
         const res = await fetch(`${apiUrl}/api/auth/signup`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -95,17 +119,33 @@ export function DistributorsPage() {
   };
 
   // Toggle status quick-action handler
-  const handleToggleStatus = (id: string) => {
-    setDistributors((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              status: item.status === "Active" ? "Suspended" : "Active",
-            }
-          : item,
-      ),
-    );
+  const handleToggleStatus = async (id: string) => {
+    const distributor = distributors.find((d) => d.id === id);
+    if (!distributor) return;
+
+    const newStatus = distributor.status === "Active" ? "Suspended" : "Active";
+    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
+
+    try {
+      const res = await fetch(`${apiUrl}/api/users/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus, role: "distributor" }),
+      });
+
+      if (res.ok) {
+        setDistributors((prev) =>
+          prev.map((item) =>
+            item.id === id ? { ...item, status: newStatus } : item,
+          ),
+        );
+      } else {
+        alert("Failed to update status");
+      }
+    } catch (err) {
+      console.error("Failed to update status", err);
+      alert("Failed to connect to backend");
+    }
   };
 
   // Trigger form for Edit
