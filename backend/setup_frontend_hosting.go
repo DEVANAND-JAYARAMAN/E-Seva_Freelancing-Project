@@ -34,7 +34,7 @@ const (
 	//   2. Request a public certificate for your domain
 	//   3. Validate via DNS (add the CNAME record your registrar)
 	//   4. Paste the ARN below
-	acmCertARN = "arn:aws:acm:us-east-1:483528440028:certificate/d5ec52a1-d0f9-490c-a67e-f67ceaad6943"
+	acmCertARN = "arn:aws:acm:us-east-1:ACCOUNT_ID:certificate/CERT_ID"
 
 	// Path to the Next.js static export folder (relative to where you run this)
 	// After `npm run build` inside frontend/, the output is frontend/out/
@@ -272,13 +272,13 @@ func createDistribution(ctx context.Context) (distID, distDomain string) {
 				Items: []cftypes.CustomErrorResponse{
 					{
 						ErrorCode:          aws.Int32(403),
-						ResponseCode:       aws.Int32(200),
+						ResponseCode:       aws.String("200"),
 						ResponsePagePath:   aws.String("/index.html"),
 						ErrorCachingMinTTL: aws.Int64(0),
 					},
 					{
 						ErrorCode:          aws.Int32(404),
-						ResponseCode:       aws.Int32(200),
+						ResponseCode:       aws.String("200"),
 						ResponsePagePath:   aws.String("/index.html"),
 						ErrorCachingMinTTL: aws.Int64(0),
 					},
