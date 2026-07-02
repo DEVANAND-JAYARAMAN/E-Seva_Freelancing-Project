@@ -56,7 +56,14 @@ func init() {
 		os.Exit(1)
 	}
 	s3c = s3.NewFromConfig(cfg)
-	cfc = cloudfront.NewFromConfig(cfg)
+
+	// CloudFront API must be called against us-east-1 regardless of bucket region
+	cfgUSE1, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion("us-east-1"))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "❌ Failed to load us-east-1 config: %v\n", err)
+		os.Exit(1)
+	}
+	cfc = cloudfront.NewFromConfig(cfgUSE1)
 }
 
 func main() {
