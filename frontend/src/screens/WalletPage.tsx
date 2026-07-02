@@ -29,7 +29,7 @@ export function WalletPage() {
   }, [refreshProfile]);
 
   // Balances
-  const [mainBalance, setMainBalance] = useState<number>(user?.walletBalance || 0);
+  const mainBalance = user?.walletBalance || 0;
 
   // Transactions list via local storage
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
@@ -320,6 +320,9 @@ export function WalletPage() {
 
     // Update wallet balance locally
     updateWallet(mainBalance + amtNum);
+
+    // Sync with server as source of truth
+    refreshProfile();
 
     setFormSuccess(true);
     setTimeout(() => {
