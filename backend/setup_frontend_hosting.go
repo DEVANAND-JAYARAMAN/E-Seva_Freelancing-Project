@@ -34,7 +34,7 @@ const (
 	//   2. Request a public certificate for your domain
 	//   3. Validate via DNS (add the CNAME record your registrar)
 	//   4. Paste the ARN below
-	acmCertARN = "arn:aws:acm:us-east-1:ACCOUNT_ID:certificate/CERT_ID"
+	acmCertARN = "arn:aws:acm:us-east-1:483528440028:certificate/c83e44b0-1b0e-4037-932d-881724bc03f3"
 
 	// Path to the Next.js static export folder (relative to where you run this)
 	// After `npm run build` inside frontend/, the output is frontend/out/
