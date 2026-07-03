@@ -78,8 +78,8 @@ func main() {
 
 		notificationGroup := api.Group("/notifications")
 		{
-			notificationGroup.POST("/", notification.CreateNotification)
-			notificationGroup.GET("/", notification.GetNotifications)
+			notificationGroup.POST("", notification.CreateNotification)
+			notificationGroup.GET("", notification.GetNotifications)
 			notificationGroup.DELETE("/all", notification.ClearAllNotifications)
 			notificationGroup.PATCH("/:id/read", notification.MarkAsRead)
 			notificationGroup.DELETE("/:id", notification.DeleteNotification)
