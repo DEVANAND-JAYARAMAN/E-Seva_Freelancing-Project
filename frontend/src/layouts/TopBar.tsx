@@ -41,10 +41,18 @@ export function TopBar({ onMenuClick }: TopBarProps) {
     if (!user) return;
     try {
       const targetUserId = user.role === "admin" ? "ADMIN" : user.id;
-      const res = await fetch(
-        `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/notifications?userId=${targetUserId}`,
-      );
-      if (res.ok) {
+      let res;
+      try {
+        res = await fetch(
+          `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/notifications?userId=${targetUserId}`,
+        );
+      } catch (e) {
+        // Fallback for trailing slash redirect CORS issue
+        res = await fetch(
+          `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/notifications/?userId=${targetUserId}`,
+        );
+      }
+      if (res && res.ok) {
         const data = await res.json();
         const mapped = (data || []).map((n: any) => ({
           id: n.Id || n.id,
