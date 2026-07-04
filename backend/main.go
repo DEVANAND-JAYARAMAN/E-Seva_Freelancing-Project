@@ -31,12 +31,7 @@ func main() {
 
 	// CORS configuration
 	config := cors.DefaultConfig()
-	ec2IP := os.Getenv("EC2_PUBLIC_IP")
-	allowOrigins := []string{"http://localhost:3000", "http://localhost:3001", "https://main.dft1zhsxacjk.amplifyapp.com", "https://thuruvancommunications.com", "https://mugavaipaymentgetway.in", "http://mugavaipaymentgetway.in"}
-	if ec2IP != "" {
-		allowOrigins = append(allowOrigins, "http://"+ec2IP, "http://"+ec2IP+":3000")
-	}
-	config.AllowOrigins = allowOrigins
+	config.AllowAllOrigins = true
 	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
 	config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
 	r.Use(cors.New(config))
@@ -76,14 +71,12 @@ func main() {
 			billingGroup.GET("/invoices", billing.GetInvoices)
 		}
 
-		notificationGroup := api.Group("/notifications")
-		{
-			notificationGroup.POST("", notification.CreateNotification)
-			notificationGroup.GET("", notification.GetNotifications)
-			notificationGroup.DELETE("/all", notification.ClearAllNotifications)
-			notificationGroup.PATCH("/:id/read", notification.MarkAsRead)
-			notificationGroup.DELETE("/:id", notification.DeleteNotification)
-		}
+		// Notifications
+		api.POST("/notifications", notification.CreateNotification)
+		api.GET("/notifications", notification.GetNotifications)
+		api.DELETE("/notifications/all", notification.ClearAllNotifications)
+		api.PATCH("/notifications/:id/read", notification.MarkAsRead)
+		api.DELETE("/notifications/:id", notification.DeleteNotification)
 
 		serviceGroup := api.Group("/services")
 		{
