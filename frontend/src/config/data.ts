@@ -117,9 +117,9 @@ export type PaymentRequest = {
   retailerName: string;
   shopName: string;
   amount: number;
-  paymentMode: "UPI";
+  paymentMode: "UPI" | "QR" | "Gateway";
   utrNumber: string;
-  status: "Pending" | "Approved" | "Resubmit" | "Rejected";
+  status: "Pending" | "Approved" | "Resubmit" | "Rejected" | "Success";
   requestDate: string;
   walletType: "Main" | "API";
   remarks?: string;

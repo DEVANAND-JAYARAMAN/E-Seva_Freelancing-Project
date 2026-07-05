@@ -1088,7 +1088,8 @@ func UpdateOfficialCost(c *gin.Context) {
 	_, err := db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
 		TableName: aws.String("DynamicServices"),
 		Key: map[string]types.AttributeValue{
-			"id": &types.AttributeValueMemberS{Value: id},
+			"PK": &types.AttributeValueMemberS{Value: "DYNAMIC_SERVICE#" + id},
+			"SK": &types.AttributeValueMemberS{Value: "META"},
 		},
 		UpdateExpression: aws.String("SET #n = :n, officialCost = :c"),
 		ExpressionAttributeNames: map[string]string{
@@ -1114,7 +1115,8 @@ func DeleteDynamicService(c *gin.Context) {
 	_, err := db.DynamoClient.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
 		TableName: aws.String("DynamicServices"),
 		Key: map[string]types.AttributeValue{
-			"id": &types.AttributeValueMemberS{Value: id},
+			"PK": &types.AttributeValueMemberS{Value: "DYNAMIC_SERVICE#" + id},
+			"SK": &types.AttributeValueMemberS{Value: "META"},
 		},
 	})
 

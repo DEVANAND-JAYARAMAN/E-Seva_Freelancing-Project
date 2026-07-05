@@ -27,7 +27,7 @@ export function ProfitAnalysisChart({ profitByDate = [], profitByService = [] }:
   const [chartType, setChartType] = useState<'bar' | 'line' | 'pie'>('bar');
   const [chartData, setChartData] = useState<'date' | 'service'>('date');
 
-  const data = chartData === 'date' ? profitByDate : profitByService;
+  const data = (chartData === 'date' ? profitByDate : profitByService) as any[];
 
   const renderChart = () => {
     if (!data || data.length === 0) {
@@ -79,7 +79,7 @@ export function ProfitAnalysisChart({ profitByDate = [], profitByService = [] }:
               outerRadius={80}
               innerRadius={50}
               paddingAngle={5}
-              label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+              label={({ name, percent }) => `${name} ${((percent || 0) * 100).toFixed(0)}%`}
               labelLine={false}
             >
               {data.map((entry, index) => (

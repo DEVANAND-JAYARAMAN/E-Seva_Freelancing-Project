@@ -522,7 +522,7 @@ export function BillingPage() {
                       cx="50%"
                       cy="50%"
                       outerRadius={100}
-                      label={({ date, percent }) => `${date} (${(percent * 100).toFixed(0)}%)`}
+                      label={({ name, percent }) => `${name} (${((percent || 0) * 100).toFixed(0)}%)`}
                     >
                       {chartData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444'][index % 5]} />
