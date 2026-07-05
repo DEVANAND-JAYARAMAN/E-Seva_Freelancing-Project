@@ -7,7 +7,6 @@ import { StatsGrid } from "./StatsGrid";
 import { WalletSummary } from "./WalletSummary";
 import { useAuth } from "../../store/context/AuthContext";
 import { DashboardPage2 } from "./DashboardPage2";
-import { ProfitAnalysisChart } from "../../components/charts/ProfitAnalysisChart";
 
 export function DashboardPage({
   forceRole,
@@ -43,16 +42,10 @@ export function DashboardPage({
           <StatsGrid stats={stats} />
         </section>
 
-        {/* Live Queues & Profit Analysis */}
+        {/* Live Queues */}
         <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3">
             <ServiceQueue />
-          </div>
-          <div className="lg:col-span-1 bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-800 rounded-3xl p-5 shadow-sm h-full min-h-[350px]">
-            <ProfitAnalysisChart 
-              profitByDate={stats?.profitByDate ? Object.entries(stats.profitByDate).map(([date, profit]) => ({ date, profit: Number(profit) })) : []} 
-              profitByService={stats?.profitByService ? Object.entries(stats.profitByService).map(([serviceName, profit]) => ({ serviceId: serviceName, serviceName, profit: Number(profit) })) : []} 
-            />
           </div>
         </section>
       </section>

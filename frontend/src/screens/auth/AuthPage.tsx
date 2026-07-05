@@ -180,9 +180,7 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
         login(
           formData.email || "",
           formData.password || ""
-        ).then(() => {
-          router.push("/dashboard");
-        }).catch(err => {
+        ).catch(err => {
           console.error(err);
           setErrors({ email: err.message || "Login failed" });
         }).finally(() => {
@@ -476,15 +474,6 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
                     />
                     <span>Remember me</span>
                   </label>
-                  <span
-                    onClick={() => {
-                      setErrors({});
-                      setMode("forgot");
-                    }}
-                    className="text-[#005c3a] dark:text-emerald-400 hover:text-emerald-600 cursor-pointer select-none transition-colors"
-                  >
-                    Forgot Password?
-                  </span>
                 </div>
               )}
 

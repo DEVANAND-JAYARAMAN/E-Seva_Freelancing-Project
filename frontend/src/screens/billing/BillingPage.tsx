@@ -23,7 +23,12 @@ import {
   Legend,
   ResponsiveContainer,
   AreaChart,
-  Area
+  Area,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell
 } from "recharts";
 
 export interface ServiceRequest {
@@ -52,6 +57,7 @@ export function BillingPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [timeFilter, setTimeFilter] = useState<"day" | "month" | "year">("day");
+  const [chartType, setChartType] = useState<"area" | "bar" | "line" | "pie">("area");
 
   const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "");
 
@@ -446,32 +452,86 @@ export function BillingPage() {
                   Year
                 </button>
               </div>
+              <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900/50 p-1 rounded-xl">
+                {["area", "bar", "line", "pie"].map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => setChartType(type as any)}
+                    className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all capitalize ${
+                      chartType === type
+                        ? "bg-white dark:bg-slate-800 shadow-sm text-[#005c3a] dark:text-emerald-500"
+                        : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                    }`}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="w-full h-80 mt-4">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.3} />
-                  <XAxis dataKey="date" tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: "#0f172a", border: "none", borderRadius: "12px", color: "#fff" }}
-                    itemStyle={{ fontWeight: "bold" }}
-                  />
-                  <Legend wrapperStyle={{ paddingTop: "20px" }} />
-                  <Area type="monotone" dataKey="Service Charge" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
-                  <Line type="monotone" dataKey="Official Cost" stroke="#ef4444" strokeWidth={2} strokeDasharray="5 5" dot={false} />
-                  <Area type="monotone" dataKey="Net Profit" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorProfit)" />
-                </AreaChart>
+                {chartType === "area" ? (
+                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.3} />
+                    <XAxis dataKey="date" tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={{ backgroundColor: "#0f172a", border: "none", borderRadius: "12px", color: "#fff" }} />
+                    <Legend wrapperStyle={{ paddingTop: "20px" }} />
+                    <Area type="monotone" dataKey="Service Charge" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
+                    <Line type="monotone" dataKey="Official Cost" stroke="#ef4444" strokeWidth={2} strokeDasharray="5 5" dot={false} />
+                    <Area type="monotone" dataKey="Net Profit" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorProfit)" />
+                  </AreaChart>
+                ) : chartType === "bar" ? (
+                  <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.3} />
+                    <XAxis dataKey="date" tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={{ backgroundColor: "#0f172a", border: "none", borderRadius: "12px", color: "#fff" }} />
+                    <Legend wrapperStyle={{ paddingTop: "20px" }} />
+                    <Bar dataKey="Service Charge" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Official Cost" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="Net Profit" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                ) : chartType === "line" ? (
+                  <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.3} />
+                    <XAxis dataKey="date" tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
+                    <Tooltip contentStyle={{ backgroundColor: "#0f172a", border: "none", borderRadius: "12px", color: "#fff" }} />
+                    <Legend wrapperStyle={{ paddingTop: "20px" }} />
+                    <Line type="monotone" dataKey="Service Charge" stroke="#3b82f6" strokeWidth={3} />
+                    <Line type="monotone" dataKey="Official Cost" stroke="#ef4444" strokeWidth={3} />
+                    <Line type="monotone" dataKey="Net Profit" stroke="#10b981" strokeWidth={3} />
+                  </LineChart>
+                ) : (
+                  <PieChart>
+                    <Pie
+                      data={chartData.filter(d => d["Net Profit"] > 0)}
+                      dataKey="Net Profit"
+                      nameKey="date"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      label={({ date, percent }) => `${date} (${(percent * 100).toFixed(0)}%)`}
+                    >
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444'][index % 5]} />
+                      ))}
+                    </Pie>
+                    <Tooltip contentStyle={{ backgroundColor: "#0f172a", border: "none", borderRadius: "12px", color: "#fff" }} />
+                    <Legend wrapperStyle={{ paddingTop: "20px" }} />
+                  </PieChart>
+                )}
               </ResponsiveContainer>
             </div>
           </div>

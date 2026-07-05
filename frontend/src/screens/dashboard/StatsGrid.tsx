@@ -60,8 +60,6 @@ export function StatsGrid({ stats }: { stats?: any }) {
         if (stats) {
           if (labelLower === "today payment")
             dynamicValue = stats.todayPayment?.toFixed(2) || "0.00";
-          if (labelLower === "total profit")
-            dynamicValue = stats.totalProfit?.toFixed(2) || "0.00";
           if (labelLower === "pending")
             dynamicValue = String(stats.pending || 0);
           if (labelLower === "approved")
