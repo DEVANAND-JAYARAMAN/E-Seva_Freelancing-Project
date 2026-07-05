@@ -8,6 +8,8 @@ import {
   Activity,
   CreditCard,
   Search,
+  Save,
+  Settings
 } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
 import { useAuth } from "../../store/context/AuthContext";
@@ -28,60 +30,125 @@ export interface ServiceRequest {
   id: string;
   serviceName: string;
   cost: number;
+  officialCost: number;
+  profit: number;
   status: string;
   createdDate: string;
+}
+
+import { defaultStaticServices } from "../../config/servicesData";
+
+interface ConfigService {
+  id: string;
+  name: string;
+  officialCost: number;
 }
 
 export function BillingPage() {
   const { user } = useAuth();
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
-  const [officialCosts, setOfficialCosts] = useState<Record<string, number>>({});
+  const [configServices, setConfigServices] = useState<ConfigService[]>([]);
+  const [editingCosts, setEditingCosts] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [timeFilter, setTimeFilter] = useState<"day" | "month" | "year">("day");
 
   const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "");
 
-  const fetchRequests = async () => {
+  const fetchData = async () => {
     try {
-      const res = await fetch(`${baseUrl}/api/services/requests`);
-      if (res.ok) {
-        const data = await res.json();
+      // Fetch Requests
+      const resReq = await fetch(`${baseUrl}/api/services/requests`);
+      if (resReq.ok) {
+        const data = await resReq.json();
         const mapped = (data || []).map((app: any) => ({
           id: app.id || app.Id,
           serviceName: app.serviceName || app.ServiceName || "Unknown Service",
           cost: parseFloat(app.cost || app.Cost || "0"),
+          officialCost: parseFloat(app.officialCost || app.OfficialCost || "0"),
+          profit: parseFloat(app.profit || app.Profit || "0"),
           status: app.status || app.Status || "Pending",
           createdDate: (app.createdDate || app.CreatedDate || "").split("T")[0],
         }));
         setRequests(mapped);
       }
+
+      // Fetch Dynamic Services for Config Table
+      const resDyn = await fetch(`${baseUrl}/api/services/dynamic`);
+      let dynServices: any[] = [];
+      if (resDyn.ok) {
+        dynServices = await resDyn.json();
+      }
+
+      const dynMap = new Map();
+      dynServices.forEach((s) => {
+        dynMap.set(s.id, s.officialCost || 0);
+      });
+
+      // Combine Static + Dynamic
+      const combined: ConfigService[] = [];
+      const seenIds = new Set();
+
+      // Add statics
+      defaultStaticServices.forEach(s => {
+        combined.push({
+          id: s.id,
+          name: s.name,
+          officialCost: dynMap.get(s.id) || 0
+        });
+        seenIds.add(s.id);
+      });
+
+      // Add remaining dynamics
+      dynServices.forEach((s) => {
+        if (!seenIds.has(s.id)) {
+          combined.push({
+            id: s.id,
+            name: s.name,
+            officialCost: s.officialCost || 0
+          });
+        }
+      });
+
+      setConfigServices(combined);
+      
+      const initCosts: Record<string, string> = {};
+      combined.forEach(s => {
+        initCosts[s.id] = String(s.officialCost || 0);
+      });
+      setEditingCosts(initCosts);
+
     } catch (err) {
-      console.error("Failed to fetch requests", err);
+      console.error("Failed to fetch data", err);
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchRequests();
-    // Load saved official costs from local storage
-    const saved = localStorage.getItem("eseva_official_costs");
-    if (saved) {
-      try {
-        setOfficialCosts(JSON.parse(saved));
-      } catch (e) {
-        console.error(e);
-      }
-    }
+    fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleOfficialCostChange = (id: string, value: string) => {
-    const numericValue = parseFloat(value) || 0;
-    const newCosts = { ...officialCosts, [id]: numericValue };
-    setOfficialCosts(newCosts);
-    localStorage.setItem("eseva_official_costs", JSON.stringify(newCosts));
+  const handleSaveOfficialCost = async (id: string, name: string) => {
+    try {
+      const val = parseFloat(editingCosts[id] || "0");
+      const res = await fetch(`${baseUrl}/api/services/dynamic/${id}/cost`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, officialCost: val })
+      });
+      if (res.ok) {
+        // Refresh data to update profits in table and chart
+        fetchData();
+        alert("Official cost updated successfully!");
+      } else {
+        alert("Failed to update official cost.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error saving official cost.");
+    }
   };
 
   const filteredRequests = useMemo(() => {
@@ -90,16 +157,18 @@ export function BillingPage() {
       .filter((r) => r.serviceName.toLowerCase().includes(searchTerm.toLowerCase()));
   }, [requests, searchTerm]);
 
-  // Calculations
   const totalServiceCharge = useMemo(() => {
     return filteredRequests.reduce((sum, r) => sum + r.cost, 0);
   }, [filteredRequests]);
 
   const totalOfficialCost = useMemo(() => {
-    return filteredRequests.reduce((sum, r) => sum + (officialCosts[r.id] || 0), 0);
-  }, [filteredRequests, officialCosts]);
+    return filteredRequests.reduce((sum, r) => sum + r.officialCost, 0);
+  }, [filteredRequests]);
 
-  const netProfit = totalServiceCharge - totalOfficialCost;
+  const netProfit = useMemo(() => {
+    return filteredRequests.reduce((sum, r) => sum + r.profit, 0);
+  }, [filteredRequests]);
+  
   const isProfitPositive = netProfit >= 0;
 
   // Chart Data preparation
@@ -115,8 +184,8 @@ export function BillingPage() {
       }
 
       const serviceCharge = req.cost;
-      const officialCost = officialCosts[req.id] || 0;
-      const profit = serviceCharge - officialCost;
+      const officialCost = req.officialCost;
+      const profit = req.profit;
 
       if (!groupedByTime[timeKey]) {
         groupedByTime[timeKey] = { serviceCharge: 0, officialCost: 0, profit: 0 };
@@ -135,7 +204,7 @@ export function BillingPage() {
         "Official Cost": groupedByTime[key].officialCost,
         "Net Profit": groupedByTime[key].profit,
       }));
-  }, [filteredRequests, officialCosts, timeFilter]);
+  }, [filteredRequests, timeFilter]);
 
   return (
     <AppShell activePage="Billing">
@@ -207,6 +276,65 @@ export function BillingPage() {
           </div>
         </div>
 
+        {/* Official Costs Configuration Section */}
+        <div className="flex flex-col gap-6 bg-white dark:bg-[#0b101e] border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+              <Settings size={20} className="text-[#005c3a] dark:text-emerald-500" />
+              Official Costs Configuration
+            </h3>
+            <p className="text-sm text-slate-500 max-w-sm">
+              Configure the exact official processing cost for each service here. This is subtracted from the user charge to calculate real profit.
+            </p>
+          </div>
+          <div className="overflow-x-auto max-h-96 rounded-2xl border border-slate-100 dark:border-slate-800">
+            <table className="w-full text-left border-collapse">
+              <thead className="sticky top-0 bg-slate-50 dark:bg-slate-900 z-10 shadow-sm">
+                <tr className="border-b border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <th className="py-4 px-4 w-1/2">Service Name</th>
+                  <th className="py-4 px-4 text-center">Official Cost (₹)</th>
+                  <th className="py-4 px-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={3} className="py-8 text-center text-slate-400 font-semibold">Loading data...</td>
+                  </tr>
+                ) : configServices.map((svc) => (
+                  <tr key={svc.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/20 transition-colors">
+                    <td className="py-4 px-4 font-bold text-slate-800 dark:text-white">
+                      {svc.name}
+                    </td>
+                    <td className="py-4 px-4 text-center">
+                      <div className="flex items-center justify-center">
+                        <span className="text-slate-400 mr-2 font-bold">₹</span>
+                        <input
+                          type="number"
+                          min="0"
+                          value={editingCosts[svc.id] || ""}
+                          onChange={(e) => setEditingCosts(prev => ({ ...prev, [svc.id]: e.target.value }))}
+                          placeholder="0"
+                          className="w-24 px-3 py-1.5 text-center font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0a0f18] text-slate-800 dark:text-white focus:outline-none focus:border-[#005c3a] dark:focus:border-emerald-500 shadow-sm"
+                        />
+                      </div>
+                    </td>
+                    <td className="py-4 px-4 text-right">
+                      <button
+                        onClick={() => handleSaveOfficialCost(svc.id, svc.name)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-[#005c3a] hover:bg-[#004a2e] dark:bg-emerald-600 dark:hover:bg-emerald-700 rounded-lg transition-colors shadow-sm"
+                      >
+                        <Save size={14} />
+                        Save
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         {/* Table Section */}
         <div className="flex flex-col gap-6 bg-white dark:bg-[#0b101e] border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -246,8 +374,6 @@ export function BillingPage() {
                   </tr>
                 ) : filteredRequests.length > 0 ? (
                   filteredRequests.map((req) => {
-                    const offCost = officialCosts[req.id] || 0;
-                    const profit = req.cost - offCost;
                     return (
                       <tr key={req.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/20 transition-colors">
                         <td className="py-4 px-4 font-semibold text-slate-500">{req.createdDate}</td>
@@ -257,22 +383,12 @@ export function BillingPage() {
                         <td className="py-4 px-4 text-center font-bold text-slate-600 dark:text-slate-300">
                           ₹{req.cost.toLocaleString()}
                         </td>
-                        <td className="py-4 px-4">
-                          <div className="flex items-center justify-center">
-                            <span className="text-slate-400 mr-2 font-bold">₹</span>
-                            <input
-                              type="number"
-                              min="0"
-                              value={officialCosts[req.id] || ""}
-                              onChange={(e) => handleOfficialCostChange(req.id, e.target.value)}
-                              placeholder="0"
-                              className="w-24 px-3 py-1.5 text-center font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0a0f18] text-slate-800 dark:text-white focus:outline-none focus:border-[#005c3a] dark:focus:border-emerald-500 shadow-sm"
-                            />
-                          </div>
+                        <td className="py-4 px-4 text-center font-bold text-rose-500 dark:text-rose-400">
+                          ₹{req.officialCost.toLocaleString()}
                         </td>
                         <td className="py-4 px-4 text-right font-black">
-                          <span className={profit >= 0 ? "text-emerald-500" : "text-rose-500"}>
-                            {profit > 0 ? "+" : ""}₹{profit.toLocaleString()}
+                          <span className={req.profit >= 0 ? "text-emerald-500" : "text-rose-500"}>
+                            {req.profit > 0 ? "+" : ""}₹{req.profit.toLocaleString()}
                           </span>
                         </td>
                       </tr>

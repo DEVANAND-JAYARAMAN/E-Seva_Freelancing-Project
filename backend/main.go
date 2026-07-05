@@ -86,6 +86,7 @@ func main() {
 			serviceGroup.POST("/dynamic", service.CreateDynamicService)
 			serviceGroup.GET("/dynamic", service.GetDynamicServices)
 			serviceGroup.PUT("/dynamic/:id", service.UpdateDynamicService)
+			serviceGroup.PUT("/dynamic/:id/cost", service.UpdateOfficialCost)
 			serviceGroup.DELETE("/dynamic/:id", service.DeleteDynamicService)
 			serviceGroup.GET("/pricing", service.GetPricingConfig)
 			serviceGroup.PUT("/pricing", service.UpdatePricingConfig)

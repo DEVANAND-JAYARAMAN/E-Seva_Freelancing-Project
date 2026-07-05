@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -1070,6 +1071,41 @@ func UpdateDynamicService(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Service updated successfully"})
+}
+
+func UpdateOfficialCost(c *gin.Context) {
+	id := c.Param("id")
+	var req struct {
+		Name         string  `json:"name"`
+		OfficialCost float64 `json:"officialCost"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Update only OfficialCost (and Name if it's newly created)
+	_, err := db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+		TableName: aws.String("DynamicServices"),
+		Key: map[string]types.AttributeValue{
+			"id": &types.AttributeValueMemberS{Value: id},
+		},
+		UpdateExpression: aws.String("SET #n = :n, officialCost = :c"),
+		ExpressionAttributeNames: map[string]string{
+			"#n": "name",
+		},
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":n": &types.AttributeValueMemberS{Value: req.Name},
+			":c": &types.AttributeValueMemberN{Value: strconv.FormatFloat(req.OfficialCost, 'f', -1, 64)},
+		},
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update official cost", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Official cost updated successfully"})
 }
 
 func DeleteDynamicService(c *gin.Context) {
