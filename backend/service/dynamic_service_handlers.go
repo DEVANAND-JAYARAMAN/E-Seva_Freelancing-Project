@@ -21,6 +21,7 @@ func CreateDynamicService(c *gin.Context) {
 		Name              string   `json:"name"`
 		RetailerCharge    float64  `json:"retailerCharge"`
 		DistributorCharge float64  `json:"distributorCharge"`
+		OfficialCost      float64  `json:"officialCost"`
 		FormFields        []string `json:"formFields"`
 	}
 
@@ -39,6 +40,7 @@ func CreateDynamicService(c *gin.Context) {
 		Name:              req.Name,
 		RetailerCharge:    req.RetailerCharge,
 		DistributorCharge: req.DistributorCharge,
+		OfficialCost:      req.OfficialCost,
 		FormFields:        req.FormFields,
 		CreatedDate:       time.Now().Format(time.RFC3339),
 	}

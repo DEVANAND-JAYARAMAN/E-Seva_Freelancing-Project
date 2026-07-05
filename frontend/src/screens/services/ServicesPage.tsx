@@ -37,6 +37,7 @@ export interface EService {
   price?: {
     retailer: string | number;
     distributor: string | number;
+    officialCost?: string | number;
   };
   customImage?: string;
 }
@@ -1494,6 +1495,7 @@ export function ServicesPage() {
             name: updatedName,
             retailerCharge: Number(editingService.price?.retailer) || 0,
             distributorCharge: Number(editingService.price?.distributor) || 0,
+            officialCost: Number(editingService.price?.officialCost) || 0,
             formFields: editingService.formFields,
           }),
         },
@@ -2565,6 +2567,7 @@ function EditServiceModal({
   onSave,
 }: EditServiceModalProps) {
   const [name, setName] = useState(service.name);
+  const [officialCost, setOfficialCost] = useState(String(service.price?.officialCost || "0"));
   const [customImage, setCustomImage] = useState<string | null>(
     service.customImage || null,
   );
@@ -2608,6 +2611,18 @@ function EditServiceModal({
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+            />
+          </div>
+          
+          <div className="space-y-1.5">
+            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider">
+              Official Cost (₹)
+            </label>
+            <input
+              type="number"
+              value={officialCost}
+              onChange={(e) => setOfficialCost(e.target.value)}
               className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
             />
           </div>
@@ -2659,7 +2674,11 @@ function EditServiceModal({
           </button>
           <button
             type="button"
-            onClick={() => onSave(name, customImage)}
+            onClick={() => {
+              const prevPrice = service.price || { retailer: 0, distributor: 0 };
+              service.price = { ...prevPrice, officialCost: Number(officialCost) };
+              onSave(name, customImage);
+            }}
             className="flex-1 px-4 py-2.5 rounded-xl bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] dark:hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider shadow-sm transition-all"
           >
             Save Changes

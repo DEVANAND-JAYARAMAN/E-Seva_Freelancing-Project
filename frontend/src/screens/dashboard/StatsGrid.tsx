@@ -12,6 +12,7 @@ import {
 export function StatsGrid({ stats }: { stats?: any }) {
   const iconMap: Record<string, any> = {
     "today payment": Zap,
+    "total profit": TrendingUp,
     pending: Clock,
     "in process": Cpu,
     approved: CheckCircle,
@@ -22,6 +23,7 @@ export function StatsGrid({ stats }: { stats?: any }) {
 
   const descMap: Record<string, string> = {
     "today payment": "Daily collection",
+    "total profit": "Overall Earnings",
     pending: "Awaiting Verification",
     "in process": "Currently Processing",
     approved: "Completed Requests",
@@ -52,12 +54,14 @@ export function StatsGrid({ stats }: { stats?: any }) {
         const bgStyle =
           cardBg[stat.tone] || "bg-gradient-to-br from-slate-500 to-slate-400";
         const isMoney =
-          labelLower.includes("payment") || labelLower.includes("collection");
+          labelLower.includes("payment") || labelLower.includes("collection") || labelLower.includes("profit");
 
         let dynamicValue = stat.value;
         if (stats) {
           if (labelLower === "today payment")
             dynamicValue = stats.todayPayment?.toFixed(2) || "0.00";
+          if (labelLower === "total profit")
+            dynamicValue = stats.totalProfit?.toFixed(2) || "0.00";
           if (labelLower === "pending")
             dynamicValue = String(stats.pending || 0);
           if (labelLower === "approved")

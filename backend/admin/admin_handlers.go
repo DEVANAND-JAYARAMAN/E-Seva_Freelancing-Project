@@ -25,6 +25,9 @@ type DashboardStats struct {
 	Customers    int     `json:"customers"`
 	Retailers    int     `json:"retailers"`
 	Distributors int     `json:"distributors"`
+	TotalProfit  float64 `json:"totalProfit"`
+	ProfitByDate map[string]float64 `json:"profitByDate"`
+	ProfitByService map[string]float64 `json:"profitByService"`
 }
 
 func GetDashboardStats(c *gin.Context) {
@@ -38,8 +41,33 @@ func GetDashboardStats(c *gin.Context) {
 		return
 	}
 
-	stats := DashboardStats{}
+	stats := DashboardStats{
+		ProfitByDate:    make(map[string]float64),
+		ProfitByService: make(map[string]float64),
+	}
 	todayStr := time.Now().Format("2006-01-02")
+
+	// Fetch dynamic services for profit calculation
+	dsOut, err := db.DynamoClient.Scan(context.TODO(), &dynamodb.ScanInput{
+		TableName: aws.String("DynamicServices"),
+	})
+	dsMap := make(map[string]float64)
+	if err == nil {
+		for _, item := range dsOut.Items {
+			idVal, okID := item["id"].(*types.AttributeValueMemberS)
+			nameVal, okName := item["name"].(*types.AttributeValueMemberS)
+			costVal, okCost := item["officialCost"].(*types.AttributeValueMemberN)
+			if okCost {
+				cost, _ := strconv.ParseFloat(costVal.Value, 64)
+				if okID {
+					dsMap[idVal.Value] = cost
+				}
+				if okName {
+					dsMap[nameVal.Value] = cost
+				}
+			}
+		}
+	}
 
 	for _, item := range outApps.Items {
 		status := ""
@@ -60,15 +88,45 @@ func GetDashboardStats(c *gin.Context) {
 			}
 		}
 
+		serviceId := ""
+		if val, ok := item["serviceId"].(*types.AttributeValueMemberS); ok {
+			serviceId = val.Value
+		}
+		serviceName := ""
+		if val, ok := item["serviceName"].(*types.AttributeValueMemberS); ok {
+			serviceName = val.Value
+		}
+
 		if status == "Pending" {
 			stats.Pending++
 			stats.Projected += cost
-		} else if status == "Approved" {
+		} else if status == "Approved" || status == "Completed" {
 			stats.Approved++
 			// if created/updated today, add to todayPayment
 			if len(createdDate) >= 10 && createdDate[:10] == todayStr {
 				stats.TodayPayment += cost
 			}
+			
+			// Calculate profit
+			officialCost := dsMap[serviceId]
+			if officialCost == 0 {
+				officialCost = dsMap[serviceName]
+			}
+			profit := cost - officialCost
+			stats.TotalProfit += profit
+			
+			dateKey := "Unknown"
+			if len(createdDate) >= 10 {
+				dateKey = createdDate[:10]
+			}
+			stats.ProfitByDate[dateKey] += profit
+			
+			svcKey := serviceName
+			if svcKey == "" {
+				svcKey = "Unknown"
+			}
+			stats.ProfitByService[svcKey] += profit
+			
 		} else if status == "Resubmit" {
 			stats.Resubmit++
 		} else if status == "In Process" || status == "InProcess" || status == "Processing" {

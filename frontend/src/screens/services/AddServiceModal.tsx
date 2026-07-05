@@ -12,6 +12,7 @@ export function AddServiceModal({ isOpen, onClose, onAdd }: AddServiceModalProps
   const [name, setName] = useState("");
   const [retailerPrice, setRetailerPrice] = useState("0");
   const [distributorPrice, setDistributorPrice] = useState("0");
+  const [officialCost, setOfficialCost] = useState("0");
   const [formFieldsInput, setFormFieldsInput] = useState("");
   const [customImage, setCustomImage] = useState<string | null>(null);
 
@@ -47,6 +48,7 @@ export function AddServiceModal({ isOpen, onClose, onAdd }: AddServiceModalProps
       price: {
         retailer: Number(retailerPrice) || 0,
         distributor: Number(distributorPrice) || 0,
+        officialCost: Number(officialCost) || 0,
       },
       customImage: customImage || undefined,
     };
@@ -107,6 +109,17 @@ export function AddServiceModal({ isOpen, onClose, onAdd }: AddServiceModalProps
                 type="number"
                 value={distributorPrice}
                 onChange={(e) => setDistributorPrice(e.target.value)}
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+              />
+            </div>
+            <div className="space-y-1.5 col-span-2">
+              <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider">
+                Official Cost (₹)
+              </label>
+              <input
+                type="number"
+                value={officialCost}
+                onChange={(e) => setOfficialCost(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
               />
             </div>

@@ -665,6 +665,21 @@ func GetServiceRequests(c *gin.Context) {
 		}
 	}
 
+	// Fetch dynamic services to calculate dynamic Profit
+	dsOut, err := db.DynamoClient.Scan(context.TODO(), &dynamodb.ScanInput{
+		TableName: aws.String("DynamicServices"),
+	})
+	dsMap := make(map[string]float64)
+	if err == nil {
+		var dServices []models.DynamicService
+		attributevalue.UnmarshalListOfMaps(dsOut.Items, &dServices)
+		for _, ds := range dServices {
+			dsMap[ds.ID] = ds.OfficialCost
+			// Also support mapping by name just in case
+			dsMap[ds.Name] = ds.OfficialCost
+		}
+	}
+
 	var filteredRequests []models.ServiceApplication
 	if userId != "" {
 		for _, req := range requests {
@@ -674,6 +689,20 @@ func GetServiceRequests(c *gin.Context) {
 		}
 	} else {
 		filteredRequests = requests
+	}
+
+	// Calculate Profit dynamically
+	for i, req := range filteredRequests {
+		officialCost := dsMap[req.ServiceId]
+		if officialCost == 0 {
+			officialCost = dsMap[req.ServiceName]
+		}
+		filteredRequests[i].OfficialCost = officialCost
+		if req.Status == "Approved" || req.Status == "Completed" {
+			filteredRequests[i].Profit = req.Cost - officialCost
+		} else {
+			filteredRequests[i].Profit = 0
+		}
 	}
 
 	c.JSON(http.StatusOK, filteredRequests)

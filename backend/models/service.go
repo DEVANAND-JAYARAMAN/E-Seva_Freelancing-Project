@@ -10,6 +10,8 @@ type ServiceApplication struct {
 	ServiceId        string            `dynamodbav:"serviceId" json:"serviceId"`
 	ServiceName      string            `dynamodbav:"serviceName" json:"serviceName"`
 	Cost             float64           `dynamodbav:"cost" json:"cost"`
+	OfficialCost     float64           `dynamodbav:"officialCost" json:"officialCost"`
+	Profit           float64           `dynamodbav:"profit" json:"profit"`
 	CustomerWhatsApp string            `dynamodbav:"customerWhatsApp" json:"customerWhatsApp"`
 	FormData         map[string]string `dynamodbav:"formData" json:"formData"`
 	Documents        []string          `dynamodbav:"documents" json:"documents"`
