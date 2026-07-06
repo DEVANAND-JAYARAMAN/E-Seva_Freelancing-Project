@@ -73,6 +73,7 @@ export function BillingPage() {
       const dynMap = new Map();
       dynServices.forEach((s) => {
         if (s.id) dynMap.set(s.id, s.officialCost || 0);
+        if (s.name) dynMap.set(s.name.toLowerCase(), s.officialCost || 0);
       });
 
       // Combine Static + Dynamic
@@ -81,10 +82,13 @@ export function BillingPage() {
 
       // Add statics
       defaultStaticServices.forEach(s => {
+        let cost = dynMap.get(s.id);
+        if (cost === undefined) cost = dynMap.get(s.name.toLowerCase());
+        
         combined.push({
           id: s.id,
           name: s.name,
-          officialCost: dynMap.get(s.id) || 0
+          officialCost: cost || 0
         });
         seenIds.add(s.id);
       });
@@ -97,6 +101,18 @@ export function BillingPage() {
             name: s.name,
             officialCost: s.officialCost || 0
           });
+        } else if (!s.id && s.name && !seenIds.has(s.name.toLowerCase())) {
+          // If it's a dynamic service that lost its ID but we haven't seen it yet
+          // Generate a temporary ID so it doesn't break the UI
+          const tempId = s.name.toLowerCase().replace(/\s+/g, '-');
+          if (!seenIds.has(tempId)) {
+             combined.push({
+               id: tempId,
+               name: s.name,
+               officialCost: s.officialCost || 0
+             });
+             seenIds.add(tempId);
+          }
         }
       });
 
@@ -114,10 +130,16 @@ export function BillingPage() {
         const data = await resReq.json();
         const mapped = (data || []).map((app: any) => {
           const sId = app.serviceId || app.ServiceId || "";
-          // Check if we have an updated official cost for this service
-          const currentOfficialCost = dynMap.has(sId) 
-            ? dynMap.get(sId) 
-            : parseFloat(app.officialCost || app.OfficialCost || "0");
+          const sName = (app.serviceName || app.ServiceName || "").toLowerCase();
+          
+          // Check if we have an updated official cost for this service (try ID first, then Name)
+          let currentOfficialCost = dynMap.get(sId);
+          if (currentOfficialCost === undefined) {
+             currentOfficialCost = dynMap.get(sName);
+          }
+          if (currentOfficialCost === undefined) {
+             currentOfficialCost = parseFloat(app.officialCost || app.OfficialCost || "0");
+          }
             
           const cost = parseFloat(app.cost || app.Cost || "0");
           const calculatedProfit = cost - currentOfficialCost;
