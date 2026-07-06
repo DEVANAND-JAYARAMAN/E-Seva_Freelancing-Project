@@ -562,7 +562,7 @@ export function BillingPage() {
                       data={[
                         { name: "Service Charge", value: totalServiceCharge, fill: "#3b82f6" },
                         { name: "Official Cost", value: totalOfficialCost, fill: "#ef4444" },
-                        { name: "Net Profit", value: netProfit > 0 ? netProfit : 0, fill: "#10b981" }
+                        { name: netProfit >= 0 ? "Net Profit" : "Net Loss", value: Math.abs(netProfit), fill: netProfit >= 0 ? "#10b981" : "#f43f5e" }
                       ].filter(d => d.value > 0)}
                       dataKey="value"
                       nameKey="name"
@@ -575,7 +575,7 @@ export function BillingPage() {
                         [
                           { name: "Service Charge", value: totalServiceCharge, fill: "#3b82f6" },
                           { name: "Official Cost", value: totalOfficialCost, fill: "#ef4444" },
-                          { name: "Net Profit", value: netProfit > 0 ? netProfit : 0, fill: "#10b981" }
+                          { name: netProfit >= 0 ? "Net Profit" : "Net Loss", value: Math.abs(netProfit), fill: netProfit >= 0 ? "#10b981" : "#f43f5e" }
                         ].filter(d => d.value > 0).map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.fill} />
                         ))
