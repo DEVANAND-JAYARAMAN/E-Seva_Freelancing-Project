@@ -1091,13 +1091,14 @@ func UpdateOfficialCost(c *gin.Context) {
 			"PK": &types.AttributeValueMemberS{Value: "DYNAMIC_SERVICE#" + id},
 			"SK": &types.AttributeValueMemberS{Value: "META"},
 		},
-		UpdateExpression: aws.String("SET #n = :n, officialCost = :c"),
+		UpdateExpression: aws.String("SET #n = :n, officialCost = :c, id = :id"),
 		ExpressionAttributeNames: map[string]string{
 			"#n": "name",
 		},
 		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":n": &types.AttributeValueMemberS{Value: req.Name},
-			":c": &types.AttributeValueMemberN{Value: strconv.FormatFloat(req.OfficialCost, 'f', -1, 64)},
+			":n":  &types.AttributeValueMemberS{Value: req.Name},
+			":c":  &types.AttributeValueMemberN{Value: strconv.FormatFloat(req.OfficialCost, 'f', -1, 64)},
+			":id": &types.AttributeValueMemberS{Value: id},
 		},
 	})
 

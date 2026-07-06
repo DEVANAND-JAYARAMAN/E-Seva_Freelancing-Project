@@ -63,23 +63,7 @@ export function BillingPage() {
 
   const fetchData = async () => {
     try {
-      // Fetch Requests
-      const resReq = await fetch(`${baseUrl}/api/services/requests`);
-      if (resReq.ok) {
-        const data = await resReq.json();
-        const mapped = (data || []).map((app: any) => ({
-          id: app.id || app.Id,
-          serviceName: app.serviceName || app.ServiceName || "Unknown Service",
-          cost: parseFloat(app.cost || app.Cost || "0"),
-          officialCost: parseFloat(app.officialCost || app.OfficialCost || "0"),
-          profit: parseFloat(app.profit || app.Profit || "0"),
-          status: app.status || app.Status || "Pending",
-          createdDate: (app.createdDate || app.CreatedDate || "").split("T")[0],
-        }));
-        setRequests(mapped);
-      }
-
-      // Fetch Dynamic Services for Config Table
+      // Fetch Dynamic Services for Config Table First
       const resDyn = await fetch(`${baseUrl}/api/services/dynamic`);
       let dynServices: any[] = [];
       if (resDyn.ok) {
@@ -88,7 +72,7 @@ export function BillingPage() {
 
       const dynMap = new Map();
       dynServices.forEach((s) => {
-        dynMap.set(s.id, s.officialCost || 0);
+        if (s.id) dynMap.set(s.id, s.officialCost || 0);
       });
 
       // Combine Static + Dynamic
@@ -107,7 +91,7 @@ export function BillingPage() {
 
       // Add remaining dynamics
       dynServices.forEach((s) => {
-        if (!seenIds.has(s.id)) {
+        if (s.id && !seenIds.has(s.id)) {
           combined.push({
             id: s.id,
             name: s.name,
@@ -123,6 +107,33 @@ export function BillingPage() {
         initCosts[s.id] = String(s.officialCost || 0);
       });
       setEditingCosts(initCosts);
+
+      // Fetch Requests and Retroactively Apply Official Cost
+      const resReq = await fetch(`${baseUrl}/api/services/requests`);
+      if (resReq.ok) {
+        const data = await resReq.json();
+        const mapped = (data || []).map((app: any) => {
+          const sId = app.serviceId || app.ServiceId || "";
+          // Check if we have an updated official cost for this service
+          const currentOfficialCost = dynMap.has(sId) 
+            ? dynMap.get(sId) 
+            : parseFloat(app.officialCost || app.OfficialCost || "0");
+            
+          const cost = parseFloat(app.cost || app.Cost || "0");
+          const calculatedProfit = cost - currentOfficialCost;
+
+          return {
+            id: app.id || app.Id,
+            serviceName: app.serviceName || app.ServiceName || "Unknown Service",
+            cost: cost,
+            officialCost: currentOfficialCost,
+            profit: calculatedProfit,
+            status: app.status || app.Status || "Pending",
+            createdDate: (app.createdDate || app.CreatedDate || "").split("T")[0],
+          };
+        });
+        setRequests(mapped);
+      }
 
     } catch (err) {
       console.error("Failed to fetch data", err);
