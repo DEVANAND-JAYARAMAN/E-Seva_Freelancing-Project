@@ -552,24 +552,34 @@ export function BillingPage() {
                     <YAxis tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
                     <Tooltip contentStyle={{ backgroundColor: "#0f172a", border: "none", borderRadius: "12px", color: "#fff" }} />
                     <Legend wrapperStyle={{ paddingTop: "20px" }} />
-                    <Line type="monotone" dataKey="Service Charge" stroke="#3b82f6" strokeWidth={3} />
-                    <Line type="monotone" dataKey="Official Cost" stroke="#ef4444" strokeWidth={3} />
-                    <Line type="monotone" dataKey="Net Profit" stroke="#10b981" strokeWidth={3} />
+                    <Line type="linear" dataKey="Service Charge" stroke="#3b82f6" strokeWidth={3} activeDot={{ r: 8 }} dot={{ r: 4, strokeWidth: 2 }} />
+                    <Line type="linear" dataKey="Official Cost" stroke="#ef4444" strokeWidth={3} activeDot={{ r: 8 }} dot={{ r: 4, strokeWidth: 2 }} />
+                    <Line type="linear" dataKey="Net Profit" stroke="#10b981" strokeWidth={3} activeDot={{ r: 8 }} dot={{ r: 4, strokeWidth: 2 }} />
                   </LineChart>
                 ) : (
                   <PieChart>
                     <Pie
-                      data={chartData.filter(d => d["Net Profit"] > 0)}
-                      dataKey="Net Profit"
-                      nameKey="date"
+                      data={[
+                        { name: "Service Charge", value: totalServiceCharge, fill: "#3b82f6" },
+                        { name: "Official Cost", value: totalOfficialCost, fill: "#ef4444" },
+                        { name: "Net Profit", value: netProfit > 0 ? netProfit : 0, fill: "#10b981" }
+                      ].filter(d => d.value > 0)}
+                      dataKey="value"
+                      nameKey="name"
                       cx="50%"
                       cy="50%"
                       outerRadius={100}
                       label={({ name, percent }) => `${name} (${((percent || 0) * 100).toFixed(0)}%)`}
                     >
-                      {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444'][index % 5]} />
-                      ))}
+                      {
+                        [
+                          { name: "Service Charge", value: totalServiceCharge, fill: "#3b82f6" },
+                          { name: "Official Cost", value: totalOfficialCost, fill: "#ef4444" },
+                          { name: "Net Profit", value: netProfit > 0 ? netProfit : 0, fill: "#10b981" }
+                        ].filter(d => d.value > 0).map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))
+                      }
                     </Pie>
                     <Tooltip contentStyle={{ backgroundColor: "#0f172a", border: "none", borderRadius: "12px", color: "#fff" }} />
                     <Legend wrapperStyle={{ paddingTop: "20px" }} />
