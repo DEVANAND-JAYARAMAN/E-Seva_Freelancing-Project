@@ -129,10 +129,20 @@ export function BillingPage() {
       if (resReq.ok) {
         const data = await resReq.json();
         const mapped = (data || []).map((app: any) => {
-          const sId = app.serviceId || app.ServiceId || "";
+          const rawSId = app.serviceId || app.ServiceId || "";
           const sName = (app.serviceName || app.ServiceName || "").toLowerCase();
           
-          // Check if we have an updated official cost for this service (try ID first, then Name)
+          // Map older legacy IDs to the new standard IDs used in configServices
+          const legacyIdMap: Record<string, string> = {
+            "sabarimala_dharsan_booking": "dharsan",
+            "sabarimala": "dharsan",
+            "aadhaar_address_update": "aadhaar-card-address",
+            "long_adhaar_setup": "pdf-services", // Fallback for old PDF/Print services if any
+          };
+
+          const sId = legacyIdMap[rawSId] || rawSId;
+          
+          // Check if we have an updated official cost for this service (try mapped ID first, then Name)
           let currentOfficialCost = dynMap.get(sId);
           if (currentOfficialCost === undefined) {
              currentOfficialCost = dynMap.get(sName);
