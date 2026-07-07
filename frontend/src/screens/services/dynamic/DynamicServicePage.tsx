@@ -9,6 +9,7 @@ import {
   ServicePaymentScreen,
   ServiceSuccessScreen,
 } from "../../../components/ServicePaymentScreen";
+import { ServiceMessageManager } from "../../../components/ServiceMessageManager";
 import { EService } from "../ServicesPage";
 
 export function DynamicServicePage({ serviceId }: { serviceId: string }) {
@@ -171,6 +172,8 @@ export function DynamicServicePage({ serviceId }: { serviceId: string }) {
         </div>
 
         <div className="bg-white dark:bg-[#0b101e] border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
+          <ServiceMessageManager serviceId={service.id} serviceName={service.name} />
+          
           {paymentPhase === "success" ? (
             <ServiceSuccessScreen serviceName={service.name} />
           ) : paymentPhase === "payment" ? (

@@ -113,6 +113,12 @@ export function DashboardPage2({
       .catch(console.error);
   }, [user]);
 
+  const pendingCount = allRequests.filter(
+    (r) => r.status === "Pending",
+  ).length;
+  const processCount = allRequests.filter(
+    (r) => r.status === "Process" || r.status === "InProcess" || r.status === "Processing",
+  ).length;
   const resubmitCount = allRequests.filter(
     (r) => r.status === "Resubmit",
   ).length;
@@ -192,7 +198,43 @@ export function DashboardPage2({
             </span>
           </article>
 
-          {/* Card 4: REJECTED */}
+          {/* Card: PENDING */}
+          <article className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="space-y-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                Pending
+              </p>
+              <strong className="block text-2xl font-black text-slate-900 dark:text-white">
+                {pendingCount}
+              </strong>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
+                Awaiting Review
+              </span>
+            </div>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400">
+              <Clock size={18} />
+            </span>
+          </article>
+
+          {/* Card: PROCESS */}
+          <article className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
+            <div className="space-y-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                In Process
+              </p>
+              <strong className="block text-2xl font-black text-slate-900 dark:text-white">
+                {processCount}
+              </strong>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
+                Currently Processing
+              </span>
+            </div>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400">
+              <Zap size={18} />
+            </span>
+          </article>
+
+          {/* Card: REJECTED */}
           <article className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
             <div className="space-y-1">
               <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">

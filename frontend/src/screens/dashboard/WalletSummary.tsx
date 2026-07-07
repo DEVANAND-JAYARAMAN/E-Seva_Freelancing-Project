@@ -38,7 +38,9 @@ export function WalletSummary({ stats }: { stats?: any }) {
 
   return (
     <>
-      {walletCards.map((card) => {
+      {walletCards
+        .filter(card => !['wallet request', 'customers'].includes(card.label.toLowerCase()))
+        .map((card) => {
         const Icon = card.icon;
         const labelLower = card.label.toLowerCase();
         const isMoney = labelLower.includes("wallet");

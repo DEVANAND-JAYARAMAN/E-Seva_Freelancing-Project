@@ -12,3 +12,18 @@ type Notification struct {
 	CreatedAt string `dynamodbav:"createdAt" json:"createdAt"`
 	Link      string `dynamodbav:"link" json:"link"`
 }
+
+type GlobalAlert struct {
+	ID        string `dynamodbav:"ID" json:"id"`
+	Message   string `dynamodbav:"Message" json:"message"`
+	Status    string `dynamodbav:"Status" json:"status"` // "Active" or "Inactive"
+	CreatedAt string `dynamodbav:"CreatedAt" json:"createdAt"`
+}
+
+type ServiceMessage struct {
+	ID        string `dynamodbav:"ID" json:"id"`
+	ServiceID string `dynamodbav:"ServiceID" json:"serviceId"`
+	Message   string `dynamodbav:"Message" json:"message"`
+	Status    string `dynamodbav:"Status" json:"status"` // "Active" or "Inactive"
+	CreatedAt string `dynamodbav:"CreatedAt" json:"createdAt"`
+}

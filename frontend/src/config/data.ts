@@ -13,6 +13,7 @@ import {
   Store,
   Receipt,
   Server,
+  Bell,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -53,6 +54,7 @@ export const navItems: NavItem[] = [
   { label: "Retailers", href: "/retailers", icon: Store },
   { label: "Billing", href: "/billing", icon: Receipt },
   { label: "Wallet", href: "/wallets", icon: Wallet },
+  { label: "Notifications", href: "/admin/notifications", icon: Bell },
   { label: "Server Control", href: "/admin", icon: Server },
 ];
 

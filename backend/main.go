@@ -78,6 +78,17 @@ func main() {
 		api.PATCH("/notifications/:id/read", notification.MarkAsRead)
 		api.DELETE("/notifications/:id", notification.DeleteNotification)
 
+		// Global Alerts & Service Messages
+		api.GET("/alerts", notification.GetGlobalAlerts)
+		api.POST("/alerts", notification.CreateGlobalAlert)
+		api.PUT("/alerts/:id", notification.ToggleGlobalAlert)
+		api.DELETE("/alerts/:id", notification.DeleteGlobalAlert)
+
+		api.GET("/service-messages/:serviceId", notification.GetServiceMessages)
+		api.POST("/service-messages", notification.CreateServiceMessage)
+		api.PUT("/service-messages/:id", notification.ToggleServiceMessage)
+		api.DELETE("/service-messages/:id", notification.DeleteServiceMessage)
+
 		serviceGroup := api.Group("/services")
 		{
 			serviceGroup.POST("/request", service.CreateServiceRequest)
