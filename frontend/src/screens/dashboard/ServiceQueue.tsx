@@ -11,7 +11,7 @@ export function ServiceQueue() {
   useEffect(() => {
     let url = `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/requests`;
     if (user?.role && user.role !== "admin") {
-      url += `?userId=${user.userId}`;
+      url += `?userId=${user.id}`;
     }
     
     fetch(url)
@@ -28,7 +28,7 @@ export function ServiceQueue() {
         setServicesData(sorted);
       })
       .catch(console.error);
-  }, [user?.userId, user?.role]);
+  }, [user?.id, user?.role]);
 
   // Map status styles using tailwind
   const statusClasses: Record<string, string> = {

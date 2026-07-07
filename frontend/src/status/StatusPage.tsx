@@ -96,7 +96,7 @@ export function StatusPage() {
       const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "");
       let url = `${baseUrl}/api/services/requests`;
       if (user?.role && user.role !== "admin") {
-        url += `?userId=${user.userId}`;
+        url += `?userId=${user.id}`;
       }
       const res = await fetch(url);
       if (res.ok) {
@@ -132,10 +132,10 @@ export function StatusPage() {
   };
 
   useEffect(() => {
-    if (user?.userId) {
+    if (user?.id) {
       fetchTickets();
     }
-  }, [user?.userId]);
+  }, [user?.id]);
 
   // Update status and remarks via API
   const handleUpdateStatus = async (
