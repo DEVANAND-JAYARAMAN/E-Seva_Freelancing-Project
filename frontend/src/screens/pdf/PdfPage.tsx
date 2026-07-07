@@ -91,29 +91,37 @@ export function PdfPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
 
-  const [servicesList, setServicesList] = useState<PdfService[]>(pdfServicesList);
+  const [servicesList, setServicesList] =
+    useState<PdfService[]>(pdfServicesList);
 
   const [editingService, setEditingService] = useState<PdfService | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  const handleSaveService = (name: string, customImage: string | null, amount: number = 0) => {
+  const handleSaveService = (
+    name: string,
+    customImage: string | null,
+    amount: number = 0,
+  ) => {
     setServicesList((prev) =>
       prev.map((s) =>
-        s.id === editingService?.id ? { ...s, name, customImage, amount: amount || s.amount } : s,
+        s.id === editingService?.id
+          ? { ...s, name, customImage, amount: amount || s.amount }
+          : s,
       ),
     );
     setEditModalOpen(false);
     setEditingService(null);
   };
 
-  const handleAddService = (name: string, customImage: string | null, amount: number) => {
+  const handleAddService = (
+    name: string,
+    customImage: string | null,
+    amount: number,
+  ) => {
     const id = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    setServicesList((prev) => [
-      ...prev,
-      { id, name, customImage, amount },
-    ]);
+    setServicesList((prev) => [...prev, { id, name, customImage, amount }]);
     setIsAddModalOpen(false);
   };
 
@@ -571,7 +579,7 @@ export function PdfPage() {
     }
 
     setIsSubmitting(true);
-    
+
     if (user && service) {
       try {
         const payload = new FormData();
@@ -581,21 +589,31 @@ export function PdfPage() {
         payload.append("serviceId", service.id);
         payload.append("serviceName", service.name);
         payload.append("cost", String(service.amount || 0));
-        payload.append("customerWhatsApp", formData.mobileNo || formData.mobile || "");
-        payload.append("walletType", user.role === "distributor" ? "Distributor" : "Retailer");
+        payload.append(
+          "customerWhatsApp",
+          formData.mobileNo || formData.mobile || "",
+        );
+        payload.append(
+          "walletType",
+          user.role === "distributor" ? "Distributor" : "Retailer",
+        );
         payload.append("formData", JSON.stringify(formData));
 
-        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
+        const apiUrl =
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(
+            /\/api$/,
+            "",
+          );
         const res = await fetch(`${apiUrl}/api/services/request`, {
           method: "POST",
           body: payload,
         });
 
         if (!res.ok) {
-           const errData = await res.json().catch(() => ({}));
-           alert(errData.error || "Failed to submit request");
-           setIsSubmitting(false);
-           return;
+          const errData = await res.json().catch(() => ({}));
+          alert(errData.error || "Failed to submit request");
+          setIsSubmitting(false);
+          return;
         }
       } catch (err) {
         console.error(err);
@@ -702,7 +720,7 @@ export function PdfPage() {
               {servicesList.map((service) => (
                 <div
                   key={service.id}
-                  className="bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl overflow-hidden shadow-sm hover:shadow-md hover:border-slate-200 dark:hover:border-slate-800/80 transition-all flex flex-col group relative"
+                  className="bg-white dark:bg-[#090d16] border-2 border-black rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col group relative"
                 >
                   {isAdmin && (
                     <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
@@ -1344,11 +1362,7 @@ type AddServiceModalProps = {
   onSave: (name: string, customImage: string | null, amount: number) => void;
 };
 
-function AddServiceModal({
-  isOpen,
-  onClose,
-  onSave,
-}: AddServiceModalProps) {
+function AddServiceModal({ isOpen, onClose, onSave }: AddServiceModalProps) {
   const [name, setName] = useState("");
   const [amount, setAmount] = useState(0);
   const [customImage, setCustomImage] = useState<string | null>(null);
