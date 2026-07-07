@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { AppShell } from "../../layouts/AppShell";
 import { useAuth } from "../../store/context/AuthContext";
+import { useRouter } from "next/navigation";
 import {
   Wallet,
   CircleDollarSign,
@@ -22,6 +23,7 @@ export function DashboardPage2({
 }: {
   forceRole?: "retailer" | "distributor";
 }) {
+  const router = useRouter();
   const { user: contextUser, updateWallet, refreshProfile } = useAuth();
   const user = React.useMemo(
     () => (forceRole ? { ...contextUser, role: forceRole } : contextUser),
@@ -178,8 +180,12 @@ export function DashboardPage2({
           className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 animate-in fade-in duration-300"
           aria-label="Partner stats"
         >
+
           {/* Card 1: RESUBMIT */}
-          <article className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
+          <article
+            className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+            onClick={() => router.push("/status")}
+          >
             <div className="space-y-1">
               <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 Resubmit
@@ -197,7 +203,10 @@ export function DashboardPage2({
           </article>
 
           {/* Card: PENDING */}
-          <article className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
+          <article
+            className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+            onClick={() => router.push("/status")}
+          >
             <div className="space-y-1">
               <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 Pending
@@ -215,7 +224,10 @@ export function DashboardPage2({
           </article>
 
           {/* Card: PROCESS */}
-          <article className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
+          <article
+            className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+            onClick={() => router.push("/status")}
+          >
             <div className="space-y-1">
               <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 In Process
@@ -233,7 +245,10 @@ export function DashboardPage2({
           </article>
 
           {/* Card: REJECTED */}
-          <article className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
+          <article
+            className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+            onClick={() => router.push("/status")}
+          >
             <div className="space-y-1">
               <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 Rejected
@@ -251,7 +266,10 @@ export function DashboardPage2({
           </article>
 
           {/* Card 5: APPROVED */}
-          <article className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
+          <article
+            className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+            onClick={() => router.push("/status")}
+          >
             <div className="space-y-1">
               <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 Approved
@@ -269,7 +287,10 @@ export function DashboardPage2({
           </article>
 
           {/* Card 6: WALLET */}
-          <article className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
+          <article
+            className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+            onClick={() => router.push("/wallets")}
+          >
             <div className="space-y-1">
               <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 Wallet
@@ -309,7 +330,10 @@ export function DashboardPage2({
 
           {/* Card 9: RETAILERS (Only for Distributor) */}
           {user?.role === "distributor" && (
-            <article className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
+            <article
+              className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+              onClick={() => router.push("/retailers")}
+            >
               <div className="space-y-1">
                 <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                   Retailers
