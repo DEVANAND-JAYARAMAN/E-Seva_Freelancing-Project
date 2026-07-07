@@ -130,9 +130,9 @@ export function StatusDetailModal({
             {/* Left Column: Details */}
             <div className="space-y-6 lg:col-span-2">
               {/* Core Details Grid */}
-              <div className="grid grid-cols-2 gap-4 bg-slate-50/50 dark:bg-[#0a0f18]/10 p-5 rounded-2xl border border-slate-100 dark:border-slate-900/40">
+              <div className="grid grid-cols-2 gap-4 bg-slate-50/50 dark:bg-[#0a0f18]/10 p-5 rounded-2xl border-2 border-black dark:border-white">
                 {/* Service Name */}
-                <div className="col-span-2">
+                <div className="col-span-2 bg-white dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                   <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                     Requested Service
                   </span>
@@ -142,7 +142,7 @@ export function StatusDetailModal({
                 </div>
 
                 {/* Retailer */}
-                <div>
+                <div className="bg-white dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                   <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                     Retailer / Distributor
                   </span>
@@ -157,7 +157,7 @@ export function StatusDetailModal({
                 </div>
 
                 {/* Role */}
-                <div>
+                <div className="bg-white dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                   <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                     User Role
                   </span>
@@ -167,7 +167,7 @@ export function StatusDetailModal({
                 </div>
 
                 {/* Charge */}
-                <div>
+                <div className="bg-white dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                   <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                     Processing Charge
                   </span>
@@ -177,7 +177,7 @@ export function StatusDetailModal({
                 </div>
 
                 {/* Current Status */}
-                <div>
+                <div className="bg-white dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                   <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                     Current Status
                   </span>
@@ -201,7 +201,7 @@ export function StatusDetailModal({
                 </div>
 
                 {/* Created At */}
-                <div>
+                <div className="bg-white dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                   <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                     Submission Date
                   </span>
@@ -211,7 +211,7 @@ export function StatusDetailModal({
                 </div>
 
                 {/* Last Updated */}
-                <div>
+                <div className="bg-white dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                   <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                     Last Status Update
                   </span>
@@ -427,11 +427,11 @@ export function StatusDetailModal({
             <div className="space-y-6 lg:col-span-1">
               {/* Remarks Section */}
               {ticket.remarks && (
-                <div className="space-y-2">
-                  <span className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
+                <div className="bg-slate-50/50 dark:bg-[#0a0f18]/10 p-5 rounded-2xl border-2 border-black dark:border-white space-y-3">
+                  <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                     Admin Remarks
                   </span>
-                  <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-[#0a0f18]/30 p-4 rounded-xl border border-slate-100 dark:border-slate-800/50">
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 bg-white dark:bg-[#090d16] p-4 rounded-xl border border-slate-200 dark:border-slate-800">
                     {ticket.remarks}
                   </p>
                 </div>
