@@ -20,4 +20,17 @@ export const defaultStaticServices = [
   { id: "tnega", name: "TNEGA" },
   { id: "dharsan", name: "Dharsan" },
   { id: "pancard", name: "PanCard" },
+  
+  // Sub-services that need official costs before requests are made
+  { id: "new-pan-card-form-49a", name: "New PAN Card (Form 49A)" },
+  { id: "pan-correction-update", name: "PAN Correction / Update" },
+  { id: "duplicate-pan-card", name: "Duplicate PAN Card" },
+  { id: "passport-new", name: "New Passport" },
+  { id: "passport-renewal", name: "Passport Renewal" },
+  { id: "aadhaar-address-update", name: "Aadhaar Address Update" },
+  { id: "aadhaar-mobile-update", name: "Aadhaar Mobile Update" },
+  { id: "voter-id-new", name: "New Voter ID" },
+  { id: "voter-id-correction", name: "Voter ID Correction" },
+  { id: "ration-card-new", name: "New Ration Card" },
+  { id: "ration-card-correction", name: "Ration Card Correction" },
 ];

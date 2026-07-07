@@ -2,12 +2,14 @@
 
 import React, { useState } from "react";
 import { AppShell } from "../layouts/AppShell";
-import { CheckCircle2, CreditCard } from "lucide-react";
+import { CheckCircle2, CreditCard, ArrowLeft } from "lucide-react";
 import { InputField, SubmitButton, SelectField } from "./services/form/FormFields";
 import { useAuth } from "../store/context/AuthContext";
+import { useRouter } from "next/navigation";
 
 export function PanCardServicePage() {
   const { user } = useAuth();
+  const router = useRouter();
   const [formData, setFormData] = useState<Record<string, string>>({
     applicationType: "New PAN Card (Form 49A)",
   });
@@ -123,13 +125,22 @@ export function PanCardServicePage() {
         <form onSubmit={handleSubmit} className="space-y-8 w-full">
           {/* Form Header */}
           <div className="flex flex-col sm:flex-row sm:items-start justify-between border-b border-slate-100 dark:border-slate-900/50 pb-4 gap-4">
-            <div>
-              <h2 className="text-xl font-extrabold text-slate-900 dark:text-white uppercase tracking-tight">
-                PAN Card Application
-              </h2>
-              <p className="text-xs text-slate-450 dark:text-slate-500 mt-1">
-                Apply for a New PAN Card or submit correction requests.
-              </p>
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => router.push("/services")}
+                className="flex items-center justify-center p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/50 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors shrink-0"
+              >
+                <ArrowLeft size={18} strokeWidth={2.5} />
+              </button>
+              <div>
+                <h2 className="text-xl font-extrabold text-slate-900 dark:text-white uppercase tracking-tight">
+                  PAN Card Application
+                </h2>
+                <p className="text-xs text-slate-450 dark:text-slate-500 mt-1">
+                  Apply for a New PAN Card or submit correction requests.
+                </p>
+              </div>
             </div>
             <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 flex items-center gap-1.5 select-none bg-slate-100 dark:bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
               <CreditCard size={14} className="text-[#005c3a] dark:text-emerald-400" />

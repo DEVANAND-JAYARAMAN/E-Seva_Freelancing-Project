@@ -44,7 +44,7 @@ export const GlobalAlertsDisplay = () => {
           100% { transform: translateX(-100%); }
         }
         .animate-marquee {
-          animation: marquee 40s linear infinite;
+          animation: marquee 15s linear infinite;
         }
       `}</style>
       
