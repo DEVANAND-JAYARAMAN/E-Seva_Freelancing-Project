@@ -9,7 +9,7 @@ import {
   CreditCard,
   Search,
   Save,
-  Settings
+  Settings,
 } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
 import { useAuth } from "../../store/context/AuthContext";
@@ -28,7 +28,7 @@ import {
   Bar,
   PieChart,
   Pie,
-  Cell
+  Cell,
 } from "recharts";
 
 export interface ServiceRequest {
@@ -57,9 +57,14 @@ export function BillingPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [timeFilter, setTimeFilter] = useState<"day" | "month" | "year">("day");
-  const [chartType, setChartType] = useState<"area" | "bar" | "line" | "pie">("area");
+  const [chartType, setChartType] = useState<"area" | "bar" | "line" | "pie">(
+    "area",
+  );
 
-  const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "");
+  const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(
+    /(?:\/api|\/)+$/,
+    "",
+  );
 
   const fetchData = async () => {
     try {
@@ -81,14 +86,14 @@ export function BillingPage() {
       const seenIds = new Set();
 
       // Add statics
-      defaultStaticServices.forEach(s => {
+      defaultStaticServices.forEach((s) => {
         let cost = dynMap.get(s.id);
         if (cost === undefined) cost = dynMap.get(s.name.toLowerCase());
-        
+
         combined.push({
           id: s.id,
           name: s.name,
-          officialCost: cost || 0
+          officialCost: cost || 0,
         });
         seenIds.add(s.id);
       });
@@ -99,27 +104,27 @@ export function BillingPage() {
           combined.push({
             id: s.id,
             name: s.name,
-            officialCost: s.officialCost || 0
+            officialCost: s.officialCost || 0,
           });
         } else if (!s.id && s.name && !seenIds.has(s.name.toLowerCase())) {
           // If it's a dynamic service that lost its ID but we haven't seen it yet
           // Generate a temporary ID so it doesn't break the UI
-          const tempId = s.name.toLowerCase().replace(/\s+/g, '-');
+          const tempId = s.name.toLowerCase().replace(/\s+/g, "-");
           if (!seenIds.has(tempId)) {
-             combined.push({
-               id: tempId,
-               name: s.name,
-               officialCost: s.officialCost || 0
-             });
-             seenIds.add(tempId);
+            combined.push({
+              id: tempId,
+              name: s.name,
+              officialCost: s.officialCost || 0,
+            });
+            seenIds.add(tempId);
           }
         }
       });
 
       setConfigServices(combined);
-      
+
       const initCosts: Record<string, string> = {};
-      combined.forEach(s => {
+      combined.forEach((s) => {
         initCosts[s.id] = String(s.officialCost || 0);
       });
       setEditingCosts(initCosts);
@@ -130,43 +135,51 @@ export function BillingPage() {
         const data = await resReq.json();
         const mapped = (data || []).map((app: any) => {
           const rawSId = app.serviceId || app.ServiceId || "";
-          const sName = (app.serviceName || app.ServiceName || "").toLowerCase();
-          
+          const sName = (
+            app.serviceName ||
+            app.ServiceName ||
+            ""
+          ).toLowerCase();
+
           // Map older legacy IDs to the new standard IDs used in configServices
           const legacyIdMap: Record<string, string> = {
-            "sabarimala_dharsan_booking": "dharsan",
-            "sabarimala": "dharsan",
-            "aadhaar_address_update": "aadhaar-card-address",
-            "long_adhaar_setup": "pdf-services", // Fallback for old PDF/Print services if any
+            sabarimala_dharsan_booking: "dharsan",
+            sabarimala: "dharsan",
+            aadhaar_address_update: "aadhaar-card-address",
+            long_adhaar_setup: "pdf-services", // Fallback for old PDF/Print services if any
           };
 
           const sId = legacyIdMap[rawSId] || rawSId;
-          
+
           // Check if we have an updated official cost for this service (try mapped ID first, then Name)
           let currentOfficialCost = dynMap.get(sId);
           if (currentOfficialCost === undefined) {
-             currentOfficialCost = dynMap.get(sName);
+            currentOfficialCost = dynMap.get(sName);
           }
           if (currentOfficialCost === undefined) {
-             currentOfficialCost = parseFloat(app.officialCost || app.OfficialCost || "0");
+            currentOfficialCost = parseFloat(
+              app.officialCost || app.OfficialCost || "0",
+            );
           }
-            
+
           const cost = parseFloat(app.cost || app.Cost || "0");
           const calculatedProfit = cost - currentOfficialCost;
 
           return {
             id: app.id || app.Id,
-            serviceName: app.serviceName || app.ServiceName || "Unknown Service",
+            serviceName:
+              app.serviceName || app.ServiceName || "Unknown Service",
             cost: cost,
             officialCost: currentOfficialCost,
             profit: calculatedProfit,
             status: app.status || app.Status || "Pending",
-            createdDate: (app.createdDate || app.CreatedDate || "").split("T")[0],
+            createdDate: (app.createdDate || app.CreatedDate || "").split(
+              "T",
+            )[0],
           };
         });
         setRequests(mapped);
       }
-
     } catch (err) {
       console.error("Failed to fetch data", err);
     } finally {
@@ -185,7 +198,7 @@ export function BillingPage() {
       const res = await fetch(`${baseUrl}/api/services/dynamic/${id}/cost`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, officialCost: val })
+        body: JSON.stringify({ name, officialCost: val }),
       });
       if (res.ok) {
         // Refresh data to update profits in table and chart
@@ -203,7 +216,9 @@ export function BillingPage() {
   const filteredRequests = useMemo(() => {
     return requests
       .filter((r) => r.status === "Completed") // Focus only on completed services for profit
-      .filter((r) => r.serviceName.toLowerCase().includes(searchTerm.toLowerCase()));
+      .filter((r) =>
+        r.serviceName.toLowerCase().includes(searchTerm.toLowerCase()),
+      );
   }, [requests, searchTerm]);
 
   const totalServiceCharge = useMemo(() => {
@@ -217,12 +232,15 @@ export function BillingPage() {
   const netProfit = useMemo(() => {
     return filteredRequests.reduce((sum, r) => sum + r.profit, 0);
   }, [filteredRequests]);
-  
+
   const isProfitPositive = netProfit >= 0;
 
   // Chart Data preparation
   const chartData = useMemo(() => {
-    const groupedByTime: Record<string, { serviceCharge: number; officialCost: number; profit: number }> = {};
+    const groupedByTime: Record<
+      string,
+      { serviceCharge: number; officialCost: number; profit: number }
+    > = {};
 
     filteredRequests.forEach((req) => {
       let timeKey = req.createdDate;
@@ -237,7 +255,11 @@ export function BillingPage() {
       const profit = req.profit;
 
       if (!groupedByTime[timeKey]) {
-        groupedByTime[timeKey] = { serviceCharge: 0, officialCost: 0, profit: 0 };
+        groupedByTime[timeKey] = {
+          serviceCharge: 0,
+          officialCost: 0,
+          profit: 0,
+        };
       }
       groupedByTime[timeKey].serviceCharge += serviceCharge;
       groupedByTime[timeKey].officialCost += officialCost;
@@ -265,14 +287,15 @@ export function BillingPage() {
               Billing
             </h2>
             <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed max-w-2xl">
-              Track the official service cost versus how much we charged to calculate net profit.
+              Track the official service cost versus how much we charged to
+              calculate net profit.
             </p>
           </div>
         </div>
 
         {/* Financial Metrics */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#0b101e] border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col gap-3">
+          <div className="p-6 rounded-3xl bg-white dark:bg-[#0b101e] border-2 border-black dark:border-white shadow-sm flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                 Total Official Cost
@@ -286,7 +309,7 @@ export function BillingPage() {
             </span>
           </div>
 
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#0b101e] border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col gap-3">
+          <div className="p-6 rounded-3xl bg-white dark:bg-[#0b101e] border-2 border-black dark:border-white shadow-sm flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                 Total Service Charge (Revenue)
@@ -300,7 +323,7 @@ export function BillingPage() {
             </span>
           </div>
 
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#0b101e] border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col gap-3">
+          <div className="p-6 rounded-3xl bg-white dark:bg-[#0b101e] border-2 border-black dark:border-white shadow-sm flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                 Net Profit
@@ -312,12 +335,18 @@ export function BillingPage() {
                     : "bg-rose-50 dark:bg-rose-950/30 text-rose-500"
                 }`}
               >
-                {isProfitPositive ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
+                {isProfitPositive ? (
+                  <TrendingUp size={16} />
+                ) : (
+                  <TrendingDown size={16} />
+                )}
               </div>
             </div>
             <span
               className={`text-3xl font-black ${
-                isProfitPositive ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+                isProfitPositive
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-rose-600 dark:text-rose-400"
               }`}
             >
               ₹{netProfit.toLocaleString()}
@@ -326,18 +355,23 @@ export function BillingPage() {
         </div>
 
         {/* Official Costs Configuration Section */}
-        <div className="flex flex-col gap-6 bg-white dark:bg-[#0b101e] border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
+        <div className="flex flex-col gap-6 bg-white dark:bg-[#0b101e] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
-              <Settings size={20} className="text-[#005c3a] dark:text-emerald-500" />
+              <Settings
+                size={20}
+                className="text-[#005c3a] dark:text-emerald-500"
+              />
               Official Costs Configuration
             </h3>
             <p className="text-sm text-slate-500 max-w-sm">
-              Configure the exact official processing cost for each service here. This is subtracted from the user charge to calculate real profit.
+              Configure the exact official processing cost for each service
+              here. This is subtracted from the user charge to calculate real
+              profit.
             </p>
           </div>
-          <div className="overflow-x-auto max-h-96 rounded-2xl border border-slate-100 dark:border-slate-800">
-            <table className="w-full text-left border-collapse">
+          <div className="overflow-x-auto max-h-96 rounded-2xl border-2 border-black dark:border-white">
+            <table className="w-full text-left border-collapse border-2 border-black dark:border-white">
               <thead className="sticky top-0 bg-slate-50 dark:bg-slate-900 z-10 shadow-sm">
                 <tr className="border-b border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-500 uppercase tracking-wider">
                   <th className="py-4 px-4 w-1/2">Service Name</th>
@@ -348,37 +382,56 @@ export function BillingPage() {
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={3} className="py-8 text-center text-slate-400 font-semibold">Loading data...</td>
-                  </tr>
-                ) : configServices.map((svc) => (
-                  <tr key={svc.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/20 transition-colors">
-                    <td className="py-4 px-4 font-bold text-slate-800 dark:text-white">
-                      {svc.name}
-                    </td>
-                    <td className="py-4 px-4 text-center">
-                      <div className="flex items-center justify-center">
-                        <span className="text-slate-400 mr-2 font-bold">₹</span>
-                        <input
-                          type="number"
-                          min="0"
-                          value={editingCosts[svc.id] || ""}
-                          onChange={(e) => setEditingCosts(prev => ({ ...prev, [svc.id]: e.target.value }))}
-                          placeholder="0"
-                          className="w-24 px-3 py-1.5 text-center font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0a0f18] text-slate-800 dark:text-white focus:outline-none focus:border-[#005c3a] dark:focus:border-emerald-500 shadow-sm"
-                        />
-                      </div>
-                    </td>
-                    <td className="py-4 px-4 text-right">
-                      <button
-                        onClick={() => handleSaveOfficialCost(svc.id, svc.name)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-[#005c3a] hover:bg-[#004a2e] dark:bg-emerald-600 dark:hover:bg-emerald-700 rounded-lg transition-colors shadow-sm"
-                      >
-                        <Save size={14} />
-                        Save
-                      </button>
+                    <td
+                      colSpan={3}
+                      className="py-8 text-center text-slate-400 font-semibold"
+                    >
+                      Loading data...
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  configServices.map((svc) => (
+                    <tr
+                      key={svc.id}
+                      className="hover:bg-slate-50/50 dark:hover:bg-slate-900/20 transition-colors"
+                    >
+                      <td className="py-4 px-4 font-bold text-slate-800 dark:text-white">
+                        {svc.name}
+                      </td>
+                      <td className="py-4 px-4 text-center">
+                        <div className="flex items-center justify-center">
+                          <span className="text-slate-400 mr-2 font-bold">
+                            ₹
+                          </span>
+                          <input
+                            type="number"
+                            min="0"
+                            value={editingCosts[svc.id] || ""}
+                            onChange={(e) =>
+                              setEditingCosts((prev) => ({
+                                ...prev,
+                                [svc.id]: e.target.value,
+                              }))
+                            }
+                            placeholder="0"
+                            className="w-24 px-3 py-1.5 text-center font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0a0f18] text-slate-800 dark:text-white focus:outline-none focus:border-[#005c3a] dark:focus:border-emerald-500 shadow-sm"
+                          />
+                        </div>
+                      </td>
+                      <td className="py-4 px-4 text-right">
+                        <button
+                          onClick={() =>
+                            handleSaveOfficialCost(svc.id, svc.name)
+                          }
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-[#005c3a] hover:bg-[#004a2e] dark:bg-emerald-600 dark:hover:bg-emerald-700 rounded-lg transition-colors shadow-sm"
+                        >
+                          <Save size={14} />
+                          Save
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -388,11 +441,17 @@ export function BillingPage() {
         <div className="flex flex-col gap-6 bg-white dark:bg-[#0b101e] border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
-              <Activity size={20} className="text-[#005c3a] dark:text-emerald-500" />
+              <Activity
+                size={20}
+                className="text-[#005c3a] dark:text-emerald-500"
+              />
               Completed Services
             </h3>
             <div className="relative max-w-sm w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                size={16}
+              />
               <input
                 type="text"
                 placeholder="Search services..."
@@ -417,15 +476,23 @@ export function BillingPage() {
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-slate-400 font-semibold">
+                    <td
+                      colSpan={5}
+                      className="py-12 text-center text-slate-400 font-semibold"
+                    >
                       Loading data...
                     </td>
                   </tr>
                 ) : filteredRequests.length > 0 ? (
                   filteredRequests.map((req) => {
                     return (
-                      <tr key={req.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/20 transition-colors">
-                        <td className="py-4 px-4 font-semibold text-slate-500">{req.createdDate}</td>
+                      <tr
+                        key={req.id}
+                        className="hover:bg-slate-50/50 dark:hover:bg-slate-900/20 transition-colors"
+                      >
+                        <td className="py-4 px-4 font-semibold text-slate-500">
+                          {req.createdDate}
+                        </td>
                         <td className="py-4 px-4 font-bold text-slate-800 dark:text-white">
                           {req.serviceName}
                         </td>
@@ -436,8 +503,15 @@ export function BillingPage() {
                           ₹{req.officialCost.toLocaleString()}
                         </td>
                         <td className="py-4 px-4 text-right font-black">
-                          <span className={req.profit >= 0 ? "text-emerald-500" : "text-rose-500"}>
-                            {req.profit > 0 ? "+" : ""}₹{req.profit.toLocaleString()}
+                          <span
+                            className={
+                              req.profit >= 0
+                                ? "text-emerald-500"
+                                : "text-rose-500"
+                            }
+                          >
+                            {req.profit > 0 ? "+" : ""}₹
+                            {req.profit.toLocaleString()}
                           </span>
                         </td>
                       </tr>
@@ -445,7 +519,10 @@ export function BillingPage() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-slate-400 font-semibold">
+                    <td
+                      colSpan={5}
+                      className="py-12 text-center text-slate-400 font-semibold"
+                    >
                       No completed services found.
                     </td>
                   </tr>
@@ -460,7 +537,10 @@ export function BillingPage() {
           <div className="flex flex-col gap-6 bg-white dark:bg-[#0b101e] border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                <TrendingUp size={20} className="text-[#005c3a] dark:text-emerald-500" />
+                <TrendingUp
+                  size={20}
+                  className="text-[#005c3a] dark:text-emerald-500"
+                />
                 Profit Analysis Chart
               </h3>
               <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900/50 p-1 rounded-xl">
@@ -514,74 +594,261 @@ export function BillingPage() {
             <div className="w-full h-80 mt-4">
               <ResponsiveContainer width="100%" height="100%">
                 {chartType === "area" ? (
-                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <AreaChart
+                    data={chartData}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  >
                     <defs>
-                      <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                      <linearGradient
+                        id="colorProfit"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#10b981"
+                          stopOpacity={0.3}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#10b981"
+                          stopOpacity={0}
+                        />
                       </linearGradient>
-                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                      <linearGradient
+                        id="colorRevenue"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#3b82f6"
+                          stopOpacity={0.3}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#3b82f6"
+                          stopOpacity={0}
+                        />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.3} />
-                    <XAxis dataKey="date" tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={{ backgroundColor: "#0f172a", border: "none", borderRadius: "12px", color: "#fff" }} />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#334155"
+                      opacity={0.3}
+                    />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fill: "#64748b", fontSize: 12 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fill: "#64748b", fontSize: 12 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#0f172a",
+                        border: "none",
+                        borderRadius: "12px",
+                        color: "#fff",
+                      }}
+                    />
                     <Legend wrapperStyle={{ paddingTop: "20px" }} />
-                    <Area type="monotone" dataKey="Service Charge" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
-                    <Line type="monotone" dataKey="Official Cost" stroke="#ef4444" strokeWidth={2} strokeDasharray="5 5" dot={false} />
-                    <Area type="monotone" dataKey="Net Profit" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorProfit)" />
+                    <Area
+                      type="monotone"
+                      dataKey="Service Charge"
+                      stroke="#3b82f6"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#colorRevenue)"
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="Official Cost"
+                      stroke="#ef4444"
+                      strokeWidth={2}
+                      strokeDasharray="5 5"
+                      dot={false}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="Net Profit"
+                      stroke="#10b981"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#colorProfit)"
+                    />
                   </AreaChart>
                 ) : chartType === "bar" ? (
-                  <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.3} />
-                    <XAxis dataKey="date" tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={{ backgroundColor: "#0f172a", border: "none", borderRadius: "12px", color: "#fff" }} />
+                  <BarChart
+                    data={chartData}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#334155"
+                      opacity={0.3}
+                    />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fill: "#64748b", fontSize: 12 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fill: "#64748b", fontSize: 12 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#0f172a",
+                        border: "none",
+                        borderRadius: "12px",
+                        color: "#fff",
+                      }}
+                    />
                     <Legend wrapperStyle={{ paddingTop: "20px" }} />
-                    <Bar dataKey="Service Charge" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="Official Cost" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="Net Profit" fill="#10b981" radius={[4, 4, 0, 0]} />
+                    <Bar
+                      dataKey="Service Charge"
+                      fill="#3b82f6"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="Official Cost"
+                      fill="#ef4444"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="Net Profit"
+                      fill="#10b981"
+                      radius={[4, 4, 0, 0]}
+                    />
                   </BarChart>
                 ) : chartType === "line" ? (
-                  <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.3} />
-                    <XAxis dataKey="date" tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={{ backgroundColor: "#0f172a", border: "none", borderRadius: "12px", color: "#fff" }} />
+                  <LineChart
+                    data={chartData}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#334155"
+                      opacity={0.3}
+                    />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fill: "#64748b", fontSize: 12 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fill: "#64748b", fontSize: 12 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#0f172a",
+                        border: "none",
+                        borderRadius: "12px",
+                        color: "#fff",
+                      }}
+                    />
                     <Legend wrapperStyle={{ paddingTop: "20px" }} />
-                    <Line type="linear" dataKey="Service Charge" stroke="#3b82f6" strokeWidth={3} activeDot={{ r: 8 }} dot={{ r: 4, strokeWidth: 2 }} />
-                    <Line type="linear" dataKey="Official Cost" stroke="#ef4444" strokeWidth={3} activeDot={{ r: 8 }} dot={{ r: 4, strokeWidth: 2 }} />
-                    <Line type="linear" dataKey="Net Profit" stroke="#10b981" strokeWidth={3} activeDot={{ r: 8 }} dot={{ r: 4, strokeWidth: 2 }} />
+                    <Line
+                      type="linear"
+                      dataKey="Service Charge"
+                      stroke="#3b82f6"
+                      strokeWidth={3}
+                      activeDot={{ r: 8 }}
+                      dot={{ r: 4, strokeWidth: 2 }}
+                    />
+                    <Line
+                      type="linear"
+                      dataKey="Official Cost"
+                      stroke="#ef4444"
+                      strokeWidth={3}
+                      activeDot={{ r: 8 }}
+                      dot={{ r: 4, strokeWidth: 2 }}
+                    />
+                    <Line
+                      type="linear"
+                      dataKey="Net Profit"
+                      stroke="#10b981"
+                      strokeWidth={3}
+                      activeDot={{ r: 8 }}
+                      dot={{ r: 4, strokeWidth: 2 }}
+                    />
                   </LineChart>
                 ) : (
                   <PieChart>
                     <Pie
                       data={[
-                        { name: "Service Charge", value: totalServiceCharge, fill: "#3b82f6" },
-                        { name: "Official Cost", value: totalOfficialCost, fill: "#ef4444" },
-                        { name: netProfit >= 0 ? "Net Profit" : "Net Loss", value: Math.abs(netProfit), fill: netProfit >= 0 ? "#10b981" : "#f43f5e" }
-                      ].filter(d => d.value > 0)}
+                        {
+                          name: "Service Charge",
+                          value: totalServiceCharge,
+                          fill: "#3b82f6",
+                        },
+                        {
+                          name: "Official Cost",
+                          value: totalOfficialCost,
+                          fill: "#ef4444",
+                        },
+                        {
+                          name: netProfit >= 0 ? "Net Profit" : "Net Loss",
+                          value: Math.abs(netProfit),
+                          fill: netProfit >= 0 ? "#10b981" : "#f43f5e",
+                        },
+                      ].filter((d) => d.value > 0)}
                       dataKey="value"
                       nameKey="name"
                       cx="50%"
                       cy="50%"
                       outerRadius={100}
-                      label={({ name, percent }) => `${name} (${((percent || 0) * 100).toFixed(0)}%)`}
-                    >
-                      {
-                        [
-                          { name: "Service Charge", value: totalServiceCharge, fill: "#3b82f6" },
-                          { name: "Official Cost", value: totalOfficialCost, fill: "#ef4444" },
-                          { name: netProfit >= 0 ? "Net Profit" : "Net Loss", value: Math.abs(netProfit), fill: netProfit >= 0 ? "#10b981" : "#f43f5e" }
-                        ].filter(d => d.value > 0).map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.fill} />
-                        ))
+                      label={({ name, percent }) =>
+                        `${name} (${((percent || 0) * 100).toFixed(0)}%)`
                       }
+                    >
+                      {[
+                        {
+                          name: "Service Charge",
+                          value: totalServiceCharge,
+                          fill: "#3b82f6",
+                        },
+                        {
+                          name: "Official Cost",
+                          value: totalOfficialCost,
+                          fill: "#ef4444",
+                        },
+                        {
+                          name: netProfit >= 0 ? "Net Profit" : "Net Loss",
+                          value: Math.abs(netProfit),
+                          fill: netProfit >= 0 ? "#10b981" : "#f43f5e",
+                        },
+                      ]
+                        .filter((d) => d.value > 0)
+                        .map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
                     </Pie>
-                    <Tooltip contentStyle={{ backgroundColor: "#0f172a", border: "none", borderRadius: "12px", color: "#fff" }} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#0f172a",
+                        border: "none",
+                        borderRadius: "12px",
+                        color: "#fff",
+                      }}
+                    />
                     <Legend wrapperStyle={{ paddingTop: "20px" }} />
                   </PieChart>
                 )}
