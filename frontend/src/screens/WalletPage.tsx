@@ -648,8 +648,8 @@ export function WalletPage() {
           </div>
 
           {/* Ledger Table */}
-          <div className="overflow-x-auto border border-slate-100 dark:border-slate-900/40 rounded-2xl">
-            <table className="w-full text-left border-collapse">
+          <div className="overflow-x-auto border-2 border-black dark:border-white rounded-2xl">
+            <table className="w-full text-left border-collapse border-2 border-black dark:border-white">
               <thead>
                 <tr className="bg-slate-50/50 dark:bg-slate-950/40 border-b border-slate-100 dark:border-slate-900/60 text-slate-400 dark:text-slate-500 text-[10px] uppercase font-extrabold tracking-wider">
                   <th className="py-4 px-5">Date & Time</th>
