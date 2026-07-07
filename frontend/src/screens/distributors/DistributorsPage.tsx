@@ -175,17 +175,6 @@ export function DistributorsPage() {
       <section className="flex flex-col gap-8 w-full">
         {/* Header Block */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-50 dark:border-slate-900/30 pb-6">
-          <div className="space-y-1.5">
-            <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
-              Distributors
-            </h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed max-w-2xl">
-              Register regional channel distributors, manage master wallets,
-              status-guard accounts, and audit floating credit limits for
-              high-volume transactions.
-            </p>
-          </div>
-
           <button
             onClick={handleAddClick}
             className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] dark:hover:bg-emerald-500 text-white font-extrabold text-sm shadow-sm active:scale-[0.98] transition-all duration-200"
