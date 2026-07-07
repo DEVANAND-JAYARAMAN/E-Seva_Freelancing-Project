@@ -94,7 +94,7 @@ export function TopBar({ onMenuClick }: TopBarProps) {
     try {
       await fetch(
         `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/notifications/${id}?userId=${user.role === "admin" ? "ADMIN" : user.id}&createdAt=${createdAt}`,
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
       fetchNotifications();
     } catch (err) {
@@ -136,7 +136,7 @@ export function TopBar({ onMenuClick }: TopBarProps) {
           <h1 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
             Welcome back,{" "}
             <span className="text-slate-800 dark:text-slate-200 font-extrabold capitalize">
-              Thuruvan
+              Thuruvan Communication
             </span>
           </h1>
         </div>
@@ -163,15 +163,21 @@ export function TopBar({ onMenuClick }: TopBarProps) {
             onClick={() => {
               const newIsOpen = !isNotifOpen;
               setIsNotifOpen(newIsOpen);
-              
+
               if (newIsOpen && unreadCount > 0) {
                 // Immediately update local state so badge disappears
-                setNotifications(prev => prev.map(n => ({...n, isRead: true})));
-                
+                setNotifications((prev) =>
+                  prev.map((n) => ({ ...n, isRead: true })),
+                );
+
                 // Call backend in background
                 if (user) {
-                  const targetUserId = user.role === "admin" ? "ADMIN" : user.id;
-                  fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/notifications/read-all?userId=${targetUserId}`, { method: "PATCH" }).catch(console.error);
+                  const targetUserId =
+                    user.role === "admin" ? "ADMIN" : user.id;
+                  fetch(
+                    `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/notifications/read-all?userId=${targetUserId}`,
+                    { method: "PATCH" },
+                  ).catch(console.error);
                 }
               }
             }}
@@ -204,12 +210,15 @@ export function TopBar({ onMenuClick }: TopBarProps) {
                         try {
                           await fetch(
                             `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/notifications/all?userId=${user.role === "admin" ? "ADMIN" : user.id}`,
-                            { method: "DELETE" }
+                            { method: "DELETE" },
                           );
                           setNotifications([]);
                           setIsNotifOpen(false);
                         } catch (err) {
-                          console.error("Failed to clear all notifications:", err);
+                          console.error(
+                            "Failed to clear all notifications:",
+                            err,
+                          );
                         }
                       }}
                       className="text-[10px] font-bold text-slate-400 hover:text-rose-500 transition-colors uppercase tracking-wider"
