@@ -78,46 +78,49 @@ export function BillingPage() {
       const dynMap = new Map();
       dynServices.forEach((s) => {
         if (s.id) dynMap.set(s.id, s.officialCost || 0);
-        if (s.name) dynMap.set(s.name.toLowerCase(), s.officialCost || 0);
+        if (s.name) dynMap.set(s.name.toLowerCase().trim(), s.officialCost || 0);
       });
 
-      // Combine Static + Dynamic
+      // Fetch Requests first to find all sub-services
+      const resReq = await fetch(`${baseUrl}/api/services/requests`);
+      let rawRequests: any[] = [];
+      if (resReq.ok) {
+        rawRequests = await resReq.json() || [];
+      }
+
       const combined: ConfigService[] = [];
       const seenIds = new Set();
+      
+      // Helper to add a service to config list safely
+      const addConfigService = (id: string, name: string) => {
+        const tempId = id || name.toLowerCase().replace(/[^a-z0-9]/g, "-");
+        if (!seenIds.has(tempId)) {
+          let cost = dynMap.get(tempId);
+          if (cost === undefined) cost = dynMap.get(name.toLowerCase().trim());
+          combined.push({
+            id: tempId,
+            name: name,
+            officialCost: cost || 0,
+          });
+          seenIds.add(tempId);
+        }
+      };
 
-      // Add statics
+      // 1. Add statics
       defaultStaticServices.forEach((s) => {
-        let cost = dynMap.get(s.id);
-        if (cost === undefined) cost = dynMap.get(s.name.toLowerCase());
-
-        combined.push({
-          id: s.id,
-          name: s.name,
-          officialCost: cost || 0,
-        });
-        seenIds.add(s.id);
+        addConfigService(s.id, s.name);
       });
 
-      // Add remaining dynamics
+      // 2. Add remaining dynamics
       dynServices.forEach((s) => {
-        if (s.id && !seenIds.has(s.id)) {
-          combined.push({
-            id: s.id,
-            name: s.name,
-            officialCost: s.officialCost || 0,
-          });
-        } else if (!s.id && s.name && !seenIds.has(s.name.toLowerCase())) {
-          // If it's a dynamic service that lost its ID but we haven't seen it yet
-          // Generate a temporary ID so it doesn't break the UI
-          const tempId = s.name.toLowerCase().replace(/\s+/g, "-");
-          if (!seenIds.has(tempId)) {
-            combined.push({
-              id: tempId,
-              name: s.name,
-              officialCost: s.officialCost || 0,
-            });
-            seenIds.add(tempId);
-          }
+        addConfigService(s.id, s.name);
+      });
+
+      // 3. Add ALL unique serviceNames from Requests (these are the Sub-Services)
+      rawRequests.forEach((app: any) => {
+        const sName = (app.serviceName || app.ServiceName || "").trim();
+        if (sName) {
+           addConfigService("", sName);
         }
       });
 
@@ -129,57 +132,49 @@ export function BillingPage() {
       });
       setEditingCosts(initCosts);
 
-      // Fetch Requests and Retroactively Apply Official Cost
-      const resReq = await fetch(`${baseUrl}/api/services/requests`);
-      if (resReq.ok) {
-        const data = await resReq.json();
-        const mapped = (data || []).map((app: any) => {
-          const rawSId = app.serviceId || app.ServiceId || "";
-          const sName = (
-            app.serviceName ||
-            app.ServiceName ||
-            ""
-          ).toLowerCase();
+      // Now apply official cost to the requests for profit calculation
+      const mapped = rawRequests.map((app: any) => {
+        const rawSId = app.serviceId || app.ServiceId || "";
+        const sName = (app.serviceName || app.ServiceName || "").trim();
+        const sNameKey = sName.toLowerCase();
 
-          // Map older legacy IDs to the new standard IDs used in configServices
-          const legacyIdMap: Record<string, string> = {
-            sabarimala_dharsan_booking: "dharsan",
-            sabarimala: "dharsan",
-            aadhaar_address_update: "aadhaar-card-address",
-            long_adhaar_setup: "pdf-services", // Fallback for old PDF/Print services if any
-          };
+        // Map older legacy IDs to the new standard IDs used in configServices
+        const legacyIdMap: Record<string, string> = {
+          sabarimala_dharsan_booking: "dharsan",
+          sabarimala: "dharsan",
+          aadhaar_address_update: "aadhaar-card-address",
+          long_adhaar_setup: "pdf-services", // Fallback for old PDF/Print services if any
+        };
 
-          const sId = legacyIdMap[rawSId] || rawSId;
+        const sId = legacyIdMap[rawSId] || rawSId;
+        const generatedId = sNameKey.replace(/[^a-z0-9]/g, "-");
 
-          // Check if we have an updated official cost for this service (try mapped ID first, then Name)
-          let currentOfficialCost = dynMap.get(sId);
-          if (currentOfficialCost === undefined) {
-            currentOfficialCost = dynMap.get(sName);
-          }
-          if (currentOfficialCost === undefined) {
-            currentOfficialCost = parseFloat(
-              app.officialCost || app.OfficialCost || "0",
-            );
-          }
+        // Hierarchy of finding cost: 
+        // 1. By exact sub-service name (generated ID)
+        // 2. By exact sub-service name (string)
+        // 3. By parent service ID
+        let currentOfficialCost = dynMap.get(generatedId);
+        if (currentOfficialCost === undefined) currentOfficialCost = dynMap.get(sNameKey);
+        if (currentOfficialCost === undefined) currentOfficialCost = dynMap.get(sId);
+        if (currentOfficialCost === undefined) {
+          currentOfficialCost = parseFloat(app.officialCost || app.OfficialCost || "0");
+        }
 
-          const cost = parseFloat(app.cost || app.Cost || "0");
-          const calculatedProfit = cost - currentOfficialCost;
+        const cost = parseFloat(app.cost || app.Cost || "0");
+        const calculatedProfit = cost - currentOfficialCost;
 
-          return {
-            id: app.id || app.Id,
-            serviceName:
-              app.serviceName || app.ServiceName || "Unknown Service",
-            cost: cost,
-            officialCost: currentOfficialCost,
-            profit: calculatedProfit,
-            status: app.status || app.Status || "Pending",
-            createdDate: (app.createdDate || app.CreatedDate || "").split(
-              "T",
-            )[0],
-          };
-        });
-        setRequests(mapped);
-      }
+        return {
+          id: app.id || app.Id,
+          serviceName: sName || "Unknown Service",
+          cost: cost,
+          officialCost: currentOfficialCost,
+          profit: calculatedProfit,
+          status: app.status || app.Status || "Pending",
+          createdDate: (app.createdDate || app.CreatedDate || "").split("T")[0],
+        };
+      });
+      
+      setRequests(mapped);
     } catch (err) {
       console.error("Failed to fetch data", err);
     } finally {

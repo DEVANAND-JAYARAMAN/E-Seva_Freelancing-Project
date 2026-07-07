@@ -41,6 +41,7 @@ module.exports = {
         'float': 'float 3s ease-in-out infinite',
         'glow-cyan': 'glowCyan 3s ease-in-out infinite',
         'glow-violet': 'glowViolet 3s ease-in-out infinite',
+        'marquee': 'marquee 15s linear infinite',
       },
       keyframes: {
         float: {
@@ -54,6 +55,10 @@ module.exports = {
         glowViolet: {
           '0%, 100%': { boxShadow: '0 0 10px rgba(139, 92, 246, 0.2)' },
           '50%': { boxShadow: '0 0 25px rgba(139, 92, 246, 0.5)' },
+        },
+        marquee: {
+          '0%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(-100%)' },
         },
       },
     },

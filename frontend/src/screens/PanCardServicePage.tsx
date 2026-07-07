@@ -2,234 +2,310 @@
 
 import React, { useState } from "react";
 import { AppShell } from "../layouts/AppShell";
-import { CheckCircle2 } from "lucide-react";
-import { useRouter } from "next/navigation";
-
-interface ServicePriceRow {
-  slNo: number;
-  serviceName: string;
-  admin: string;
-  othersiteAdmin: string;
-  distributor: string;
-  retailer: string;
-  customer: string;
-}
+import { CheckCircle2, CreditCard } from "lucide-react";
+import { InputField, SubmitButton, SelectField } from "./services/form/FormFields";
+import { useAuth } from "../store/context/AuthContext";
 
 export function PanCardServicePage() {
-  const router = useRouter();
-  const [prices, setPrices] = useState<ServicePriceRow[]>([
-    {
-      slNo: 1,
-      serviceName: "New Card",
-      admin: "15.00",
-      othersiteAdmin: "0.00",
-      distributor: "30.00",
-      retailer: "30.00",
-      customer: "25.00",
-    },
-    {
-      slNo: 2,
-      serviceName: "Correction Pan Card",
-      admin: "10.00",
-      othersiteAdmin: "0.00",
-      distributor: "20.00",
-      retailer: "20.00",
-      customer: "25.05",
-    },
-  ]);
-
+  const { user } = useAuth();
+  const [formData, setFormData] = useState<Record<string, string>>({
+    applicationType: "New PAN Card (Form 49A)",
+  });
+  const [files, setFiles] = useState<Record<string, File>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  const handleInputChange = (
-    index: number,
-    field: "admin" | "othersiteAdmin" | "distributor" | "retailer" | "customer",
-    value: string,
-  ) => {
-    setPrices((prev) => {
-      const next = [...prev];
-      next[index] = { ...next[index], [field]: value };
-      return next;
-    });
+  const price = 107.00;
+
+  const handleFieldChange = (name: string, value: string, file?: File) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (file) {
+      setFiles((prev) => ({ ...prev, [name]: file }));
+    }
+    if (errors[name]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[name];
+        return next;
+      });
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const newErrors: Record<string, string> = {};
+
+    if (!formData.applicationType) newErrors.applicationType = "Application Type is required";
+    if (!formData.applicantName) newErrors.applicantName = "Applicant Name is required";
+    if (!formData.fatherName) newErrors.fatherName = "Father's Name is required";
+    if (!formData.dob) newErrors.dob = "Date of Birth is required";
+    if (!formData.mobile) newErrors.mobile = "Mobile Number is required";
+    if (!formData.aadhaarNo) newErrors.aadhaarNo = "Aadhaar Number is required";
+
+    // Enforce 10-digit mobile
+    if (formData.mobile && formData.mobile.replace(/\D/g, "").length !== 10) {
+      newErrors.mobile = "Must be a valid 10-digit number";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+    
+    try {
+      const payload = new FormData();
+      payload.append("retailerId", user?.id || "");
+      payload.append("retailerName", user?.name || "Unknown");
+      payload.append("retailerMobile", user?.phone || "");
+      payload.append("serviceId", "pancard");
+      payload.append("serviceName", formData.applicationType);
+      payload.append("cost", String(price));
+      payload.append("walletType", user?.role === "distributor" ? "Distributor" : "Retailer");
+      payload.append("formData", JSON.stringify(formData));
+
+      Object.values(files).forEach((file: File) => {
+        payload.append("documents", file);
+      });
+
+      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
+      const res = await fetch(`${apiUrl}/api/services/request`, {
+        method: "POST",
+        body: payload,
+      });
+
+      if (!res.ok) {
+         const errData = await res.json().catch(() => ({}));
+         alert(errData.error || "Failed to submit request");
+         setIsSubmitting(false);
+         return;
+      }
+      
       setSuccess(true);
-      setTimeout(() => setSuccess(false), 3000);
-    }, 1200);
+      setTimeout(() => {
+        setSuccess(false);
+        setFormData({ applicationType: "New PAN Card (Form 49A)" });
+        setFiles({});
+      }, 3000);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to connect to backend");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (success) {
+    return (
+      <AppShell activePage="PanCard Services">
+        <div className="w-full max-w-4xl mx-auto py-16 flex flex-col items-center justify-center text-center gap-4 bg-white dark:bg-[#030712] rounded-3xl border border-slate-200/80 dark:border-emerald-950/60 shadow-xl min-h-[500px]">
+          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-400 animate-bounce">
+            <CheckCircle2 size={44} className="stroke-[2.5]" />
+          </span>
+          <div>
+            <h5 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+              Application Submitted Successfully!
+            </h5>
+            <p className="text-sm text-slate-400 dark:text-slate-555 mt-2 max-w-md leading-relaxed">
+              Your PAN Card service application has been registered. The details will be verified and processed shortly.
+            </p>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell activePage="PanCard Services">
-      <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 bg-white dark:bg-[#030712] rounded-3xl border border-slate-200/80 dark:border-emerald-950/60 shadow-xl dark:shadow-2xl relative overflow-hidden space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
-        {/* Glow Effects */}
-        <div className="absolute top-[-20%] left-[-10%] w-[35vw] h-[35vw] rounded-full bg-emerald-500/[0.03] dark:bg-emerald-500/5 blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[35vw] h-[35vw] rounded-full bg-emerald-500/[0.03] dark:bg-emerald-500/5 blur-[120px] pointer-events-none" />
-
-        {/* Top Header Section */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-900 pb-5 relative z-10">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-2">
-              <span>Service Payment - PanCard Services</span>
-            </h1>
-            <p className="text-[10px] font-extrabold text-slate-450 dark:text-slate-500 tracking-widest uppercase mt-1">
-              Configure service commission prices & coordinator eligibility
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {success && (
-              <span className="flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50/60 dark:bg-emerald-950/20 px-3 py-1.5 rounded-full border border-emerald-200/60 dark:border-emerald-900/30 animate-in fade-in duration-200">
-                <CheckCircle2 size={13} className="stroke-[2.5]" />
-                Saved Successfully
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Pricing Matrix Panel Grid */}
-        <form onSubmit={handleSubmit} className="relative z-10 space-y-8">
-          <div className="bg-slate-50/40 dark:bg-[#0b0f19] border border-slate-200/60 dark:border-slate-900 rounded-2xl overflow-hidden shadow-sm dark:shadow-xl">
-            <div className="overflow-x-auto w-full">
-              <table className="w-full text-left border-collapse min-w-[750px]">
-                <thead>
-                  <tr className="border-b border-slate-200/60 dark:border-slate-900 bg-slate-100/40 dark:bg-transparent">
-                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest w-[80px]">
-                      Sl No
-                    </th>
-                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest">
-                      Service Name
-                    </th>
-                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest text-center w-[120px]">
-                      Admin
-                    </th>
-                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest text-center w-[130px]">
-                      Othersite Admin
-                    </th>
-                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest text-center w-[120px]">
-                      Distributor
-                    </th>
-                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest text-center w-[120px]">
-                      Retailer
-                    </th>
-                    <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest text-center w-[120px]">
-                      Customer
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200/60 dark:divide-slate-900/60">
-                  {prices.map((row, idx) => (
-                    <tr
-                      key={row.slNo}
-                      className="hover:bg-slate-100/30 dark:hover:bg-slate-950/20 transition-colors"
-                    >
-                      {/* Sl No */}
-                      <td className="py-4 px-5 text-xs font-extrabold text-slate-500 dark:text-slate-600">
-                        {row.slNo}
-                      </td>
-
-                      {/* Service Name */}
-                      <td className="py-4 px-5 text-xs font-extrabold text-slate-700 dark:text-slate-300">
-                        {row.serviceName}
-                      </td>
-
-                      {/* Admin input capsule */}
-                      <td className="py-3 px-2">
-                        <div className="relative flex items-center justify-center">
-                          <input
-                            type="text"
-                            value={row.admin}
-                            onChange={(e) =>
-                              handleInputChange(idx, "admin", e.target.value)
-                            }
-                            className="w-24 h-9 px-3 text-xs font-black text-center bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-800/80 rounded-lg focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-white transition-all outline-none"
-                          />
-                        </div>
-                      </td>
-
-                      {/* Othersite Admin input capsule */}
-                      <td className="py-3 px-2">
-                        <div className="relative flex items-center justify-center">
-                          <input
-                            type="text"
-                            value={row.othersiteAdmin}
-                            onChange={(e) =>
-                              handleInputChange(
-                                idx,
-                                "othersiteAdmin",
-                                e.target.value,
-                              )
-                            }
-                            className="w-24 h-9 px-3 text-xs font-black text-center bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-800/80 rounded-lg focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-white transition-all outline-none"
-                          />
-                        </div>
-                      </td>
-
-                      {/* Distributor input capsule */}
-                      <td className="py-3 px-2">
-                        <div className="relative flex items-center justify-center">
-                          <input
-                            type="text"
-                            value={row.distributor}
-                            onChange={(e) =>
-                              handleInputChange(
-                                idx,
-                                "distributor",
-                                e.target.value,
-                              )
-                            }
-                            className="w-24 h-9 px-3 text-xs font-black text-center bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-800/80 rounded-lg focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-white transition-all outline-none"
-                          />
-                        </div>
-                      </td>
-
-                      {/* Retailer input capsule */}
-                      <td className="py-3 px-2">
-                        <div className="relative flex items-center justify-center">
-                          <input
-                            type="text"
-                            value={row.retailer}
-                            onChange={(e) =>
-                              handleInputChange(idx, "retailer", e.target.value)
-                            }
-                            className="w-24 h-9 px-3 text-xs font-black text-center bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-800/80 rounded-lg focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-white transition-all outline-none"
-                          />
-                        </div>
-                      </td>
-
-                      {/* Customer input capsule */}
-                      <td className="py-3 px-2">
-                        <div className="relative flex items-center justify-center">
-                          <input
-                            type="text"
-                            value={row.customer}
-                            onChange={(e) =>
-                              handleInputChange(idx, "customer", e.target.value)
-                            }
-                            className="w-24 h-9 px-3 text-xs font-black text-center bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-800/80 rounded-lg focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-white transition-all outline-none"
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+      <div className="w-full max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 bg-white dark:bg-[#090d16] rounded-3xl border-2 border-black dark:border-white shadow-sm relative overflow-hidden animate-in fade-in duration-200">
+        <form onSubmit={handleSubmit} className="space-y-8 w-full">
+          {/* Form Header */}
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between border-b border-slate-100 dark:border-slate-900/50 pb-4 gap-4">
+            <div>
+              <h2 className="text-xl font-extrabold text-slate-900 dark:text-white uppercase tracking-tight">
+                PAN Card Application
+              </h2>
+              <p className="text-xs text-slate-450 dark:text-slate-500 mt-1">
+                Apply for a New PAN Card or submit correction requests.
+              </p>
+            </div>
+            <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 flex items-center gap-1.5 select-none bg-slate-100 dark:bg-slate-800/50 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
+              <CreditCard size={14} className="text-[#005c3a] dark:text-emerald-400" />
+              <span>Service Charge : ₹ {price.toFixed(2)}</span>
             </div>
           </div>
 
-          {/* Submit Action Button */}
-          <div className="flex justify-center pt-2">
+          {/* Form Fields Grid */}
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="md:col-span-2">
+                <SelectField
+                  name="applicationType"
+                  label="Application Type"
+                  options={[
+                    "New PAN Card (Form 49A)",
+                    "PAN Correction / Update",
+                    "Duplicate PAN Card",
+                    "Minor to Major PAN Update"
+                  ]}
+                  value={formData.applicationType || ""}
+                  onChange={(val) => handleFieldChange("applicationType", val)}
+                  error={errors.applicationType}
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              <div>
+                <InputField
+                  name="applicantName"
+                  label="Applicant Full Name"
+                  type="text"
+                  placeholder="Enter full name as per Aadhaar"
+                  value={formData.applicantName || ""}
+                  onChange={(val) => handleFieldChange("applicantName", val.toUpperCase())}
+                  error={errors.applicantName}
+                  disabled={isSubmitting}
+                />
+              </div>
+              
+              <div>
+                <InputField
+                  name="fatherName"
+                  label="Father's Name"
+                  type="text"
+                  placeholder="Enter father's full name"
+                  value={formData.fatherName || ""}
+                  onChange={(val) => handleFieldChange("fatherName", val.toUpperCase())}
+                  error={errors.fatherName}
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              <div>
+                <InputField
+                  name="dob"
+                  label="Date of Birth"
+                  type="date"
+                  value={formData.dob || ""}
+                  onChange={(val) => handleFieldChange("dob", val)}
+                  error={errors.dob}
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              <div>
+                <SelectField
+                  name="gender"
+                  label="Gender"
+                  options={["Male", "Female", "Transgender"]}
+                  value={formData.gender || ""}
+                  onChange={(val) => handleFieldChange("gender", val)}
+                  error={errors.gender}
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              <div>
+                <InputField
+                  name="aadhaarNo"
+                  label="Aadhaar Number"
+                  type="text"
+                  placeholder="12-digit Aadhaar Number"
+                  value={formData.aadhaarNo || ""}
+                  onChange={(val) => {
+                    const num = val.replace(/\D/g, "").substring(0, 12);
+                    handleFieldChange("aadhaarNo", num);
+                  }}
+                  error={errors.aadhaarNo}
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              <div>
+                <InputField
+                  name="mobile"
+                  label="Mobile Number"
+                  type="text"
+                  placeholder="10-digit Mobile Number"
+                  value={formData.mobile || ""}
+                  onChange={(val) => {
+                    const num = val.replace(/\D/g, "").substring(0, 10);
+                    handleFieldChange("mobile", num);
+                  }}
+                  error={errors.mobile}
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              <div className="md:col-span-2">
+                <InputField
+                  name="email"
+                  label="Email Address (Optional)"
+                  type="email"
+                  placeholder="For receiving e-PAN"
+                  value={formData.email || ""}
+                  onChange={(val) => handleFieldChange("email", val)}
+                  error={errors.email}
+                  disabled={isSubmitting}
+                />
+              </div>
+            </div>
+
+            {/* Document Uploads Section */}
+            <div className="pt-4 mt-6 border-t border-slate-100 dark:border-slate-900/50">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest mb-4">
+                Required Documents
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <InputField
+                  name="aadhaarFront"
+                  label="Aadhaar Card (Front)"
+                  type="file"
+                  onChange={(val, file) => handleFieldChange("aadhaarFront", file?.name || "")}
+                  disabled={isSubmitting}
+                />
+                <InputField
+                  name="aadhaarBack"
+                  label="Aadhaar Card (Back)"
+                  type="file"
+                  onChange={(val, file) => handleFieldChange("aadhaarBack", file?.name || "")}
+                  disabled={isSubmitting}
+                />
+                <InputField
+                  name="photo"
+                  label="Passport Size Photo"
+                  type="file"
+                  onChange={(val, file) => handleFieldChange("photo", file?.name || "")}
+                  disabled={isSubmitting}
+                />
+                <InputField
+                  name="signature"
+                  label="Signature (Black Ink)"
+                  type="file"
+                  onChange={(val, file) => handleFieldChange("signature", file?.name || "")}
+                  disabled={isSubmitting}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-900/60 mt-8">
             <button
-              type="submit"
+              type="button"
+              onClick={() => setFormData({ applicationType: "New PAN Card (Form 49A)" })}
               disabled={isSubmitting}
-              className="flex h-11 px-14 items-center justify-center rounded-xl bg-[#005c3a] dark:bg-emerald-600 text-white font-black text-xs uppercase tracking-wider hover:opacity-90 active:scale-[0.98] disabled:opacity-50 transition-all outline-none shadow-lg shadow-[#005c3a]/10 dark:shadow-emerald-950/20"
+              className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
             >
-              {isSubmitting ? "Submitting Configuration..." : "Submit"}
+              Reset
             </button>
+            <SubmitButton
+              text="Submit Application"
+              loading={isSubmitting}
+              disabled={isSubmitting}
+            />
           </div>
         </form>
       </div>
