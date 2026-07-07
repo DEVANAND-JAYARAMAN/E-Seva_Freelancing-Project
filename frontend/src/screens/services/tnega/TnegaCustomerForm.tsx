@@ -132,7 +132,7 @@ export function TnegaCustomerForm({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-md p-4 animate-fadeIn">
       {/* Modal Container */}
-      <div className="relative w-full max-w-4xl bg-white dark:bg-[#090d16] border-2 border-black rounded-3xl shadow-xl overflow-hidden animate-slideUp">
+      <div className="relative w-full max-w-4xl bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl shadow-xl overflow-hidden animate-slideUp">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-50 dark:border-slate-900/40">
           <div>

@@ -720,7 +720,7 @@ export function PdfPage() {
               {servicesList.map((service) => (
                 <div
                   key={service.id}
-                  className="bg-white dark:bg-[#090d16] border-2 border-black rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col group relative"
+                  className="bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col group relative"
                 >
                   {isAdmin && (
                     <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
@@ -1091,7 +1091,7 @@ export function PdfPage() {
             </div>
 
             {/* Table ledger containing previous searches */}
-            <div className="bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl overflow-hidden shadow-sm">
+            <div className="bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl overflow-hidden shadow-sm">
               {filteredLogs.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">

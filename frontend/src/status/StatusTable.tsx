@@ -74,12 +74,10 @@ export function StatusTable({
 
       {/* Table Section */}
       <div
-        className="overflow-x-auto rounded-2xl border-2 border-black"
-        style={{ border: "2px solid black" }}
+        className="overflow-x-auto rounded-2xl border-2 border-black dark:border-white"
       >
         <table
-          className="w-full text-left border-collapse"
-          style={{ border: "2px solid black" }}
+          className="w-full text-left border-collapse border-2 border-black dark:border-white"
         >
           <thead>
             <tr className="bg-slate-50/40 dark:bg-[#090d16]/30 border-b border-slate-50 dark:border-slate-900/30">

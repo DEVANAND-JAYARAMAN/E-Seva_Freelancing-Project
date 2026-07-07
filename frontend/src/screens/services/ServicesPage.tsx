@@ -2094,7 +2094,7 @@ export function ServicesPage() {
     <AppShell activePage="Our Service">
       <section className="flex flex-col gap-6 w-full pb-8">
         {/* Navigation Breadcrumb Mock Address Bar */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-[#090d16] border-2 border-black rounded-2xl p-4 shadow-sm">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-2xl p-4 shadow-sm">
           <div className="flex items-center gap-2 text-sm text-slate-500 font-semibold w-full md:w-auto">
             <span className="text-slate-400 dark:text-slate-500 font-bold uppercase text-xs tracking-wider">
               Services Directory
@@ -2241,7 +2241,7 @@ export function ServicesPage() {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-[#090d16] border-2 border-black rounded-3xl text-center shadow-sm">
+          <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl text-center shadow-sm">
             <AlertCircle
               size={32}
               className="text-slate-300 dark:text-slate-700 mb-2"
@@ -2266,7 +2266,7 @@ export function ServicesPage() {
             />
 
             {/* Modal Dialog */}
-            <div className="relative w-full max-w-md bg-white dark:bg-[#090d16] border-2 border-black rounded-3xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-250 z-10 p-6 flex flex-col gap-5">
+            <div className="relative w-full max-w-md bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-250 z-10 p-6 flex flex-col gap-5">
               {/* Form Success State Screen */}
               {paymentPhase === "success" ? (
                 <ServiceSuccessScreen serviceName={selectedService.name} />
@@ -2599,7 +2599,7 @@ function EditServiceModal({
         className="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative w-full max-w-md bg-white dark:bg-[#090d16] border-2 border-black rounded-3xl shadow-xl overflow-hidden p-6 flex flex-col gap-5 z-10 animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-md bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl shadow-xl overflow-hidden p-6 flex flex-col gap-5 z-10 animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between border-b border-slate-50 dark:border-slate-900/50 pb-4">
           <h4 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wide">
             Edit Card Details

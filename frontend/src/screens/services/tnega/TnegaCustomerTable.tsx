@@ -49,7 +49,7 @@ export function TnegaCustomerTable({
   });
 
   return (
-    <div className="bg-white dark:bg-[#090d16] border-2 border-black rounded-3xl p-6 shadow-sm flex flex-col space-y-6">
+    <div className="bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm flex flex-col space-y-6">
       {/* Search and Filter Panel */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="relative flex-1">

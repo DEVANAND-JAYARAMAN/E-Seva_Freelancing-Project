@@ -1809,7 +1809,7 @@ export function PaymentsPage() {
                     <article
                       key={item.id}
                       onClick={() => handleCardClick(item)}
-                      className="bg-white dark:bg-[#090d16] border-2 border-black rounded-3xl p-6 shadow-sm hover:shadow-md cursor-pointer group transition-all duration-300 flex flex-col items-center justify-center text-center min-h-[160px] relative overflow-hidden hover:translate-y-[-4px]"
+                      className="bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm hover:shadow-md cursor-pointer group transition-all duration-300 flex flex-col items-center justify-center text-center min-h-[160px] relative overflow-hidden hover:translate-y-[-4px]"
                     >
                       <div className="absolute inset-0 bg-gradient-to-b from-slate-50/10 to-transparent dark:from-slate-900/5 to-transparent pointer-events-none" />
 
@@ -1850,7 +1850,7 @@ export function PaymentsPage() {
           </div>
         ) : (
           /* FULL PAGE CONFIGURATION MATRIX VIEW ("OPEN NEW PAGE") */
-          <div className="w-full bg-white dark:bg-[#090d16] border-2 border-black rounded-3xl p-6 shadow-md transition-all relative overflow-hidden animate-in fade-in duration-200">
+          <div className="w-full bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 shadow-md transition-all relative overflow-hidden animate-in fade-in duration-200">
             {/* Glassmorphic Background Accents */}
             <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent pointer-events-none" />
 
@@ -1885,7 +1885,7 @@ export function PaymentsPage() {
 
             {/* Configuration Pricing Form Table */}
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-              <div className="overflow-x-auto w-full border-2 border-black rounded-2xl">
+              <div className="overflow-x-auto w-full border-2 border-black dark:border-white rounded-2xl">
                 <table className="w-full min-w-[700px] border-collapse text-left">
                   <thead>
                     <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-[10px] font-extrabold uppercase tracking-widest bg-slate-50 dark:bg-slate-950/40">
