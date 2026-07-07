@@ -39,7 +39,7 @@ export function ServiceCard({
     return (
       <article
         onClick={isManageMode ? undefined : onClick}
-        className={`bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 shadow-sm flex items-center gap-5 border-l-4 border-l-transparent transition-all duration-300 relative ${
+        className={`bg-white dark:bg-[#090d16] border-2 border-black rounded-3xl p-6 shadow-sm flex items-center gap-5 border-l-4 border-l-transparent transition-all duration-300 relative ${
           isManageMode
             ? "border-amber-400 dark:border-amber-500/50"
             : "hover:shadow-md cursor-pointer group hover:border-l-[#005c3a] dark:hover:border-l-emerald-400 hover:translate-y-[-2px]"
@@ -125,7 +125,7 @@ export function ServiceCard({
   return (
     <article
       onClick={isManageMode ? undefined : onClick}
-      className={`bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 shadow-sm flex flex-col items-center text-center gap-2 relative overflow-hidden transition-all duration-300 ${
+      className={`bg-white dark:bg-[#090d16] border-2 border-black rounded-3xl p-6 shadow-sm flex flex-col items-center text-center gap-2 relative overflow-hidden transition-all duration-300 ${
         isManageMode
           ? "border-amber-400 dark:border-amber-500/50"
           : "hover:shadow-md cursor-pointer group hover:translate-y-[-4px]"

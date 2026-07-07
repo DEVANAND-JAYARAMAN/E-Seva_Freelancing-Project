@@ -8,7 +8,11 @@ type AddServiceModalProps = {
   onAdd: (service: EService) => void;
 };
 
-export function AddServiceModal({ isOpen, onClose, onAdd }: AddServiceModalProps) {
+export function AddServiceModal({
+  isOpen,
+  onClose,
+  onAdd,
+}: AddServiceModalProps) {
   const [name, setName] = useState("");
   const [retailerPrice, setRetailerPrice] = useState("0");
   const [distributorPrice, setDistributorPrice] = useState("0");
@@ -44,7 +48,8 @@ export function AddServiceModal({ isOpen, onClose, onAdd }: AddServiceModalProps
       bgColor: "bg-blue-500",
       glowColor: "shadow-blue-500/10",
       category: "All",
-      formFields: formFields.length > 0 ? formFields : ["applicantName", "mobile"],
+      formFields:
+        formFields.length > 0 ? formFields : ["applicantName", "mobile"],
       price: {
         retailer: Number(retailerPrice) || 0,
         distributor: Number(distributorPrice) || 0,
@@ -62,7 +67,7 @@ export function AddServiceModal({ isOpen, onClose, onAdd }: AddServiceModalProps
         className="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative w-full max-w-md bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl shadow-xl overflow-hidden p-6 flex flex-col gap-5 z-10 animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-md bg-white dark:bg-[#090d16] border-2 border-black rounded-3xl shadow-xl overflow-hidden p-6 flex flex-col gap-5 z-10 animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between border-b border-slate-50 dark:border-slate-900/50 pb-4">
           <h4 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wide">
             Add New Service
@@ -150,10 +155,16 @@ export function AddServiceModal({ isOpen, onClose, onAdd }: AddServiceModalProps
                 {customImage ? (
                   <>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={customImage} alt="" className="h-full w-full object-contain" />
+                    <img
+                      src={customImage}
+                      alt=""
+                      className="h-full w-full object-contain"
+                    />
                   </>
                 ) : (
-                  <div className="text-[10px] font-bold text-slate-350">Upload</div>
+                  <div className="text-[10px] font-bold text-slate-350">
+                    Upload
+                  </div>
                 )}
               </div>
               <div className="flex-1">

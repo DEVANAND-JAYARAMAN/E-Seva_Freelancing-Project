@@ -47,7 +47,7 @@ export function TnegaStats({ customers }: TnegaStatsProps) {
         return (
           <div
             key={idx}
-            className="bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-between group"
+            className="bg-white dark:bg-[#090d16] border-2 border-black rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-300 flex items-center justify-between group"
           >
             <div className="space-y-2">
               <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">

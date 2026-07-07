@@ -358,7 +358,7 @@ export function RtoServicesPage() {
     <AppShell activePage="Our Service">
       <section className="flex flex-col gap-6 w-full pb-8">
         {/* Navigation Breadcrumb Bar */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-2xl p-4 shadow-sm">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-[#090d16] border-2 border-black rounded-2xl p-4 shadow-sm">
           <div className="flex items-center gap-2 text-sm text-slate-500 font-semibold w-full md:w-auto">
             <span
               onClick={() => {
@@ -432,7 +432,7 @@ export function RtoServicesPage() {
         ) : (
           /* ELEGANT & PROFESSIONAL ENTERPRISE DESIGN FOR INLINE FORM */
           <div className="w-full">
-            <div className="w-full bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 md:p-8 shadow-sm flex flex-col gap-6 relative overflow-hidden animate-in fade-in duration-200">
+            <div className="w-full bg-white dark:bg-[#090d16] border-2 border-black rounded-3xl p-6 md:p-8 shadow-sm flex flex-col gap-6 relative overflow-hidden animate-in fade-in duration-200">
               {activeForm === "chassis-to-rc" ? (
                 <ChassisToRc onCancel={() => setActiveForm(null)} />
               ) : activeForm === "engine-to-rc" ? (
