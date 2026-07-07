@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   TrendingUp,
   TrendingDown,
@@ -10,6 +10,8 @@ import {
   Search,
   Save,
   Settings,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
 import { useAuth } from "../../store/context/AuthContext";
@@ -47,12 +49,14 @@ interface ConfigService {
   id: string;
   name: string;
   officialCost: number;
+  parentId?: string;
 }
 
 export function BillingPage() {
   const { user } = useAuth();
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [configServices, setConfigServices] = useState<ConfigService[]>([]);
+  const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set());
   const [editingCosts, setEditingCosts] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -96,7 +100,7 @@ export function BillingPage() {
       const seenIds = new Set();
       
       // Helper to add a service to config list safely
-      const addConfigService = (id: string, name: string) => {
+      const addConfigService = (id: string, name: string, parentId?: string) => {
         const tempId = id || name.toLowerCase().replace(/[^a-z0-9]/g, "-");
         if (!seenIds.has(tempId)) {
           let cost = dynMap.get(tempId);
@@ -105,6 +109,7 @@ export function BillingPage() {
             id: tempId,
             name: name,
             officialCost: cost || 0,
+            parentId: parentId,
           });
           seenIds.add(tempId);
         }
@@ -112,7 +117,7 @@ export function BillingPage() {
 
       // 1. Add statics
       defaultStaticServices.forEach((s) => {
-        addConfigService(s.id, s.name);
+        addConfigService(s.id, s.name, (s as any).parentId);
       });
 
       // 2. Add remaining dynamics
@@ -389,47 +394,115 @@ export function BillingPage() {
                     </td>
                   </tr>
                 ) : (
-                  configServices.map((svc) => (
-                    <tr
-                      key={svc.id}
-                      className="hover:bg-slate-50/50 dark:hover:bg-slate-900/20 transition-colors"
-                    >
-                      <td className="py-4 px-4 font-bold text-slate-800 dark:text-white">
-                        {svc.name}
-                      </td>
-                      <td className="py-4 px-4 text-center">
-                        <div className="flex items-center justify-center">
-                          <span className="text-slate-400 mr-2 font-bold">
-                            ₹
-                          </span>
-                          <input
-                            type="number"
-                            min="0"
-                            value={editingCosts[svc.id] || ""}
-                            onChange={(e) =>
-                              setEditingCosts((prev) => ({
-                                ...prev,
-                                [svc.id]: e.target.value,
-                              }))
-                            }
-                            placeholder="0"
-                            className="w-24 px-3 py-1.5 text-center font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0a0f18] text-slate-800 dark:text-white focus:outline-none focus:border-[#005c3a] dark:focus:border-emerald-500 shadow-sm"
-                          />
-                        </div>
-                      </td>
-                      <td className="py-4 px-4 text-right">
-                        <button
-                          onClick={() =>
-                            handleSaveOfficialCost(svc.id, svc.name)
-                          }
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-[#005c3a] hover:bg-[#004a2e] dark:bg-emerald-600 dark:hover:bg-emerald-700 rounded-lg transition-colors shadow-sm"
-                        >
-                          <Save size={14} />
-                          Save
-                        </button>
-                      </td>
-                    </tr>
-                  ))
+                  configServices.filter(svc => !svc.parentId).map((svc) => {
+                    const children = configServices.filter(child => child.parentId === svc.id);
+                    const hasChildren = children.length > 0;
+                    const isExpanded = expandedParents.has(svc.id);
+                    
+                    return (
+                      <React.Fragment key={svc.id}>
+                        <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-900/20 transition-colors">
+                          <td className="py-4 px-4 font-bold text-slate-800 dark:text-white">
+                            <div className="flex items-center gap-2">
+                              {hasChildren ? (
+                                <button
+                                  onClick={() => {
+                                    setExpandedParents(prev => {
+                                      const next = new Set(prev);
+                                      if (next.has(svc.id)) next.delete(svc.id);
+                                      else next.add(svc.id);
+                                      return next;
+                                    });
+                                  }}
+                                  className="p-1 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors"
+                                >
+                                  {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                                </button>
+                              ) : (
+                                <div className="w-6" /> // spacer
+                              )}
+                              {svc.name}
+                            </div>
+                          </td>
+                          <td className="py-4 px-4 text-center">
+                            <div className="flex items-center justify-center">
+                              <span className="text-slate-400 mr-2 font-bold">
+                                ₹
+                              </span>
+                              <input
+                                type="number"
+                                min="0"
+                                value={editingCosts[svc.id] || ""}
+                                onChange={(e) =>
+                                  setEditingCosts((prev) => ({
+                                    ...prev,
+                                    [svc.id]: e.target.value,
+                                  }))
+                                }
+                                placeholder="0"
+                                className="w-24 px-3 py-1.5 text-center font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0a0f18] text-slate-800 dark:text-white focus:outline-none focus:border-[#005c3a] dark:focus:border-emerald-500 shadow-sm"
+                              />
+                            </div>
+                          </td>
+                          <td className="py-4 px-4 text-right">
+                            <button
+                              onClick={() =>
+                                handleSaveOfficialCost(svc.id, svc.name)
+                              }
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-[#005c3a] hover:bg-[#004a2e] dark:bg-emerald-600 dark:hover:bg-emerald-700 rounded-lg transition-colors shadow-sm"
+                            >
+                              <Save size={14} />
+                              Save
+                            </button>
+                          </td>
+                        </tr>
+                        {isExpanded && children.map(child => (
+                          <tr
+                            key={child.id}
+                            className="bg-slate-50/30 dark:bg-slate-900/10 hover:bg-slate-50/80 dark:hover:bg-slate-900/30 transition-colors"
+                          >
+                            <td className="py-3 px-4 pl-12 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                              <div className="flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+                                {child.name}
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <div className="flex items-center justify-center">
+                                <span className="text-slate-400 mr-2 font-bold">
+                                  ₹
+                                </span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={editingCosts[child.id] || ""}
+                                  onChange={(e) =>
+                                    setEditingCosts((prev) => ({
+                                      ...prev,
+                                      [child.id]: e.target.value,
+                                    }))
+                                  }
+                                  placeholder="0"
+                                  className="w-24 px-3 py-1.5 text-center font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0a0f18] text-slate-800 dark:text-white focus:outline-none focus:border-[#005c3a] dark:focus:border-emerald-500 shadow-sm"
+                                />
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <button
+                                onClick={() =>
+                                  handleSaveOfficialCost(child.id, child.name)
+                                }
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-700 bg-white dark:bg-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors shadow-sm"
+                              >
+                                <Save size={14} />
+                                Save
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </React.Fragment>
+                    );
+                  })
                 )}
               </tbody>
             </table>
