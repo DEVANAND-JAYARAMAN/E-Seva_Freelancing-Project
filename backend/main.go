@@ -75,6 +75,7 @@ func main() {
 		api.POST("/notifications", notification.CreateNotification)
 		api.GET("/notifications", notification.GetNotifications)
 		api.DELETE("/notifications/all", notification.ClearAllNotifications)
+		api.PATCH("/notifications/read-all", notification.MarkAllAsRead)
 		api.PATCH("/notifications/:id/read", notification.MarkAsRead)
 		api.DELETE("/notifications/:id", notification.DeleteNotification)
 

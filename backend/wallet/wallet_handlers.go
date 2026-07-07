@@ -215,6 +215,26 @@ func ManualRecharge(c *gin.Context) {
 		log.Printf("Failed to write manual tx record: %v", err)
 	}
 
+	// Create Notification for ADMIN
+	notifId := "NOTIF" + now.Format("20060102150405")
+	notif := map[string]interface{}{
+		"PK":        "USER#ADMIN",
+		"SK":        "NOTIF#" + now.Format(time.RFC3339) + "#" + notifId,
+		"id":        notifId,
+		"userId":    "ADMIN",
+		"title":     "Manual Wallet Recharge",
+		"message":   fmt.Sprintf("User %s requested a manual wallet recharge of %v (UTR: %s)", req.UserId, req.Amount, req.UtrNumber),
+		"type":      "info",
+		"isRead":    false,
+		"createdAt": now.Format(time.RFC3339),
+		"link":      "/admin/wallet",
+	}
+	notifItem, _ := attributevalue.MarshalMap(notif)
+	_, _ = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+		TableName: aws.String("Notifications"),
+		Item:      notifItem,
+	})
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Recharge successful",
 		"amount":  req.Amount,
