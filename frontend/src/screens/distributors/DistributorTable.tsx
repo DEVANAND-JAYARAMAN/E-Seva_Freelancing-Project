@@ -170,7 +170,7 @@ export function DistributorTable({
                       <span className="text-[10px] uppercase text-slate-400 font-bold mr-1">
                         ID:
                       </span>
-                      <span className="font-mono bg-slate-50 dark:bg-slate-900/60 px-1.5 py-0.5 rounded border border-slate-100 dark:border-slate-800/80">
+                      <span className="font-mono bg-slate-50 dark:bg-slate-900/60 px-1.5 py-0.5 rounded">
                         {distributor.id}
                       </span>
                     </div>
@@ -178,7 +178,7 @@ export function DistributorTable({
                       <span className="text-[10px] uppercase text-slate-400 font-bold mr-1">
                         PWD:
                       </span>
-                      <span className="font-mono bg-slate-50 dark:bg-slate-900/60 px-1.5 py-0.5 rounded border border-slate-100 dark:border-slate-800/80">
+                      <span className="font-mono bg-slate-50 dark:bg-slate-900/60 px-1.5 py-0.5 rounded">
                         {distributor.rawPassword || "N/A"}
                       </span>
                     </div>
