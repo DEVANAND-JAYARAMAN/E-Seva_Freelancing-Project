@@ -1812,8 +1812,13 @@ export function ServicesPage() {
 
           setServicesList((prev) => {
             const existingIds = new Set(prev.map((p) => p.id));
+            const existingNames = new Set(
+              prev.map((p) => p.name.trim().toLowerCase()),
+            );
             const newServices = dynamicServices.filter(
-              (d) => !existingIds.has(d.id),
+              (d) =>
+                !existingIds.has(d.id) &&
+                !existingNames.has(d.name.trim().toLowerCase()),
             );
             return [...prev, ...newServices];
           });
