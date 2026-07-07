@@ -52,7 +52,11 @@ export function DistributorsPage() {
   const handleFormSubmit = async (
     data: Omit<Distributor, "id" | "createdDate"> & { id?: string },
   ) => {
-    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
+    const apiUrl =
+      `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(
+        /\/api$/,
+        "",
+      );
     if (data.id) {
       // Edit mode (API Call)
       try {
@@ -71,7 +75,9 @@ export function DistributorsPage() {
         });
         if (res.ok) {
           setDistributors((prev) =>
-            prev.map((item) => (item.id === data.id ? { ...item, ...data } : item)),
+            prev.map((item) =>
+              item.id === data.id ? { ...item, ...data } : item,
+            ),
           );
         } else {
           const errData = await res.json().catch(() => ({}));
@@ -97,7 +103,7 @@ export function DistributorsPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-        
+
         if (res.ok) {
           const result = await res.json();
           const newDistributor: Distributor = {
@@ -124,7 +130,11 @@ export function DistributorsPage() {
     if (!distributor) return;
 
     const newStatus = distributor.status === "Active" ? "Suspended" : "Active";
-    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
+    const apiUrl =
+      `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(
+        /\/api$/,
+        "",
+      );
 
     try {
       const res = await fetch(`${apiUrl}/api/users/${id}`, {
@@ -167,7 +177,7 @@ export function DistributorsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-50 dark:border-slate-900/30 pb-6">
           <div className="space-y-1.5">
             <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
-              Distributors Hub
+              Distributors
             </h2>
             <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed max-w-2xl">
               Register regional channel distributors, manage master wallets,
