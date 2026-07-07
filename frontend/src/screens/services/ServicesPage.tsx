@@ -44,7 +44,44 @@ export interface EService {
 
 // Reusable custom vectors designed to look like "real images related to the heading"
 function renderServiceImage(id: string, className = "w-14 h-14") {
-  switch (id) {
+  const normalized = id.toLowerCase().replace(/[^a-z0-9]/g, "");
+  let matchedId = id;
+  if (normalized.includes("pdf")) matchedId = "pdf-services";
+  else if (normalized.includes("software")) matchedId = "software-keys";
+  else if (normalized.includes("msme")) matchedId = "msme";
+  else if (normalized.includes("ration")) matchedId = "ration-card";
+  else if (normalized.includes("gst")) matchedId = "gst";
+  else if (normalized.includes("aadhaar") || normalized.includes("adhaar"))
+    matchedId = "aadhaar-card-address";
+  else if (normalized.includes("canedit")) matchedId = "can-edit";
+  else if (normalized.includes("rto")) matchedId = "rto-services";
+  else if (
+    normalized.includes("registration") ||
+    normalized.includes("பதிவு") ||
+    normalized.includes("பதிவுத்துறை")
+  )
+    matchedId = "registration-dept";
+  else if (normalized.includes("voter")) matchedId = "voter-id";
+  else if (normalized.includes("fssai")) matchedId = "fssai";
+  else if (normalized.includes("certificate") || normalized.includes("course"))
+    matchedId = "certificate-courses";
+  else if (normalized.includes("employment")) matchedId = "employment-services";
+  else if (normalized.includes("police") || normalized.includes("verification"))
+    matchedId = "police-verification";
+  else if (normalized.includes("pan")) matchedId = "pancard";
+  else if (normalized.includes("agri")) matchedId = "agri-stack-pdf";
+  else if (normalized.includes("pvc")) matchedId = "pvc-card-print";
+  else if (normalized.includes("health") || normalized.includes("cm"))
+    matchedId = "cm-health-card";
+  else if (normalized.includes("tnega")) matchedId = "tnega";
+  else if (
+    normalized.includes("dharsan") ||
+    normalized.includes("darshan") ||
+    normalized.includes("sabarimala")
+  )
+    matchedId = "dharsan";
+
+  switch (matchedId) {
     case "pdf-services":
       return (
         <svg

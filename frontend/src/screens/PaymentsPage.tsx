@@ -497,7 +497,44 @@ const DEFAULT_SUB_SERVICES: Record<string, SubService[]> = {
 
 // Designed vectors mapping
 function renderServiceImage(id: string, className = "w-14 h-14") {
-  switch (id) {
+  const normalized = id.toLowerCase().replace(/[^a-z0-9]/g, "");
+  let matchedId = id;
+  if (normalized.includes("pdf")) matchedId = "pdf-services";
+  else if (normalized.includes("software")) matchedId = "software-keys";
+  else if (normalized.includes("msme")) matchedId = "msme";
+  else if (normalized.includes("ration")) matchedId = "ration-card";
+  else if (normalized.includes("gst")) matchedId = "gst";
+  else if (normalized.includes("aadhaar") || normalized.includes("adhaar"))
+    matchedId = "aadhaar-card-address";
+  else if (normalized.includes("canedit")) matchedId = "can-edit";
+  else if (normalized.includes("rto")) matchedId = "rto-services";
+  else if (
+    normalized.includes("registration") ||
+    normalized.includes("பதிவு") ||
+    normalized.includes("பதிவுத்துறை")
+  )
+    matchedId = "registration-dept";
+  else if (normalized.includes("voter")) matchedId = "voter-id";
+  else if (normalized.includes("fssai")) matchedId = "fssai";
+  else if (normalized.includes("certificate") || normalized.includes("course"))
+    matchedId = "certificate-courses";
+  else if (normalized.includes("employment")) matchedId = "employment-services";
+  else if (normalized.includes("police") || normalized.includes("verification"))
+    matchedId = "police-verification";
+  else if (normalized.includes("pan")) matchedId = "pancard";
+  else if (normalized.includes("agri")) matchedId = "agri-stack-pdf";
+  else if (normalized.includes("pvc")) matchedId = "pvc-card-print";
+  else if (normalized.includes("health") || normalized.includes("cm"))
+    matchedId = "cm-health-card";
+  else if (normalized.includes("tnega")) matchedId = "tnega";
+  else if (
+    normalized.includes("dharsan") ||
+    normalized.includes("darshan") ||
+    normalized.includes("sabarimala")
+  )
+    matchedId = "dharsan";
+
+  switch (matchedId) {
     case "tnega":
       return (
         <svg
@@ -1625,9 +1662,11 @@ export function PaymentsPage() {
 
   // Load config from backend
   // Load config from backend
-  
+
   useEffect(() => {
-    fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/pricing`)
+    fetch(
+      `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/pricing`,
+    )
       .then((res) => res.json())
       .then((data) => {
         if (data && Object.keys(data).length > 0) {
@@ -1707,9 +1746,11 @@ export function PaymentsPage() {
     if (!newServiceName.trim()) return;
 
     // Check for duplicate service name globally
-    const isDuplicate = Object.values(pricingConfig).flat().some(
-      (s) => s.name.toLowerCase() === newServiceName.trim().toLowerCase()
-    );
+    const isDuplicate = Object.values(pricingConfig)
+      .flat()
+      .some(
+        (s) => s.name.toLowerCase() === newServiceName.trim().toLowerCase(),
+      );
     if (isDuplicate) {
       setAddError("A service with this name already exists!");
       return;
@@ -1757,13 +1798,16 @@ export function PaymentsPage() {
     setPricingConfig(updatedConfig);
 
     // Save to backend
-    fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/pricing`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
+    fetch(
+      `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/pricing`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedConfig),
       },
-      body: JSON.stringify(updatedConfig),
-    }).catch((err) => console.error("Failed to save pricing config:", err));
+    ).catch((err) => console.error("Failed to save pricing config:", err));
 
     setActiveCatalogItem(null); // Return back to cards grid view
     setShowSuccessToast(true);
@@ -1807,7 +1851,7 @@ export function PaymentsPage() {
                     <article
                       key={item.id}
                       onClick={() => handleCardClick(item)}
-                      className="bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 shadow-sm hover:shadow-md cursor-pointer group transition-all duration-300 flex flex-col items-center justify-center text-center min-h-[160px] relative overflow-hidden hover:translate-y-[-4px]"
+                      className="bg-white dark:bg-[#090d16] border-2 border-black rounded-3xl p-6 shadow-sm hover:shadow-md cursor-pointer group transition-all duration-300 flex flex-col items-center justify-center text-center min-h-[160px] relative overflow-hidden hover:translate-y-[-4px]"
                     >
                       <div className="absolute inset-0 bg-gradient-to-b from-slate-50/10 to-transparent dark:from-slate-900/5 to-transparent pointer-events-none" />
 
@@ -2186,9 +2230,13 @@ export function PaymentsPage() {
                       setAddError("");
                     }}
                     placeholder="e.g. Passport Application"
-                    className={`w-full px-4 py-2.5 rounded-xl border ${addError ? 'border-red-500 focus:ring-red-500/25 focus:border-red-500' : 'border-slate-200 dark:border-slate-800 focus:ring-[#005c3a]/25 focus:border-[#005c3a]'} bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 text-xs font-semibold text-slate-800 dark:text-slate-200`}
+                    className={`w-full px-4 py-2.5 rounded-xl border ${addError ? "border-red-500 focus:ring-red-500/25 focus:border-red-500" : "border-slate-200 dark:border-slate-800 focus:ring-[#005c3a]/25 focus:border-[#005c3a]"} bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 text-xs font-semibold text-slate-800 dark:text-slate-200`}
                   />
-                  {addError && <p className="text-[10px] text-red-500 font-bold mt-1">{addError}</p>}
+                  {addError && (
+                    <p className="text-[10px] text-red-500 font-bold mt-1">
+                      {addError}
+                    </p>
+                  )}
                 </div>
 
                 {/* Primary Prices Grid */}
