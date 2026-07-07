@@ -126,7 +126,7 @@ export function PdfServicePage() {
     const fetchPrices = async () => {
       try {
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/pdf-pricing`
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/pdf-pricing`,
         );
         if (response.ok) {
           const data = await response.json();
@@ -192,7 +192,7 @@ export function PdfServicePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/pdf-pricing`,
@@ -202,7 +202,7 @@ export function PdfServicePage() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(prices),
-        }
+        },
       );
 
       if (response.ok) {
@@ -220,7 +220,7 @@ export function PdfServicePage() {
 
   return (
     <AppShell activePage="PDF Service">
-      <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 bg-white dark:bg-[#030712] rounded-3xl border border-slate-200/80 dark:border-emerald-950/60 shadow-xl dark:shadow-2xl relative overflow-hidden space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 bg-white dark:bg-[#030712] rounded-3xl border-2 border-black dark:border-white shadow-xl dark:shadow-2xl relative overflow-hidden space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
         {/* Glow Effects */}
         <div className="absolute top-[-20%] left-[-10%] w-[35vw] h-[35vw] rounded-full bg-emerald-500/[0.03] dark:bg-emerald-500/5 blur-[120px] pointer-events-none" />
         <div className="absolute bottom-[-20%] right-[-10%] w-[35vw] h-[35vw] rounded-full bg-emerald-500/[0.03] dark:bg-emerald-500/5 blur-[120px] pointer-events-none" />
@@ -257,9 +257,9 @@ export function PdfServicePage() {
 
         {/* Pricing Matrix Panel Grid */}
         <form onSubmit={handleSubmit} className="relative z-10 space-y-8">
-          <div className="bg-slate-50/40 dark:bg-[#0b0f19] border border-slate-200/60 dark:border-slate-900 rounded-2xl overflow-hidden shadow-sm dark:shadow-xl">
+          <div className="bg-slate-50/40 dark:bg-[#0b0f19] border-2 border-black dark:border-white rounded-2xl overflow-hidden shadow-sm dark:shadow-xl">
             <div className="overflow-x-auto w-full">
-              <table className="w-full text-left border-collapse min-w-[750px]">
+              <table className="w-full text-left border-collapse min-w-[750px] border-2 border-black dark:border-white">
                 <thead>
                   <tr className="border-b border-slate-200/60 dark:border-slate-900 bg-slate-100/40 dark:bg-transparent">
                     <th className="py-4 px-5 text-[10px] font-extrabold text-slate-450 dark:text-slate-500 uppercase tracking-widest w-[80px]">
