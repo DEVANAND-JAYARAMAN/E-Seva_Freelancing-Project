@@ -28,7 +28,13 @@ export function StatusTable({
 }: StatusTableProps) {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      return params.get("search") || "";
+    }
+    return "";
+  });
 
   const getStatusColor = (status: TicketStatus) => {
     switch (status) {

@@ -9,7 +9,9 @@ import {
   Mail,
   MapPin,
   Fingerprint,
+  Activity,
 } from "lucide-react";
+import Link from "next/link";
 import type { Retailer } from "./types";
 
 type RetailerTableProps = {
@@ -94,10 +96,16 @@ export function RetailerTable({
                 Contact Details
               </th>
               <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                Id & Password
+              </th>
+              <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                 Location
               </th>
               <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-right">
                 Wallet Balance
+              </th>
+              <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">
+                Transaction
               </th>
               <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">
                 Status
@@ -154,6 +162,26 @@ export function RetailerTable({
                     )}
                   </td>
 
+                  {/* Id & Password */}
+                  <td className="py-4 px-6 space-y-1">
+                    <div className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                      <span className="text-[10px] uppercase text-slate-400 font-bold mr-1">
+                        ID:
+                      </span>
+                      <span className="font-mono bg-slate-50 dark:bg-slate-900/60 px-1.5 py-0.5 rounded border border-slate-100 dark:border-slate-800/80">
+                        {retailer.id}
+                      </span>
+                    </div>
+                    <div className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                      <span className="text-[10px] uppercase text-slate-400 font-bold mr-1">
+                        PWD:
+                      </span>
+                      <span className="font-mono bg-slate-50 dark:bg-slate-900/60 px-1.5 py-0.5 rounded border border-slate-100 dark:border-slate-800/80">
+                        {retailer.rawPassword || "N/A"}
+                      </span>
+                    </div>
+                  </td>
+
                   {/* Location */}
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-400">
@@ -171,6 +199,17 @@ export function RetailerTable({
                         maximumFractionDigits: 2,
                       })}
                     </span>
+                  </td>
+
+                  {/* Transaction */}
+                  <td className="py-4 px-6 text-center">
+                    <Link
+                      href={`/status?search=${encodeURIComponent(retailer.name)}`}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-900/50 hover:bg-[#e8f5e9]/50 dark:hover:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-400 border border-slate-100 dark:border-slate-900 text-xs font-bold transition-all duration-200"
+                    >
+                      <Activity size={12} />
+                      <span>Transactions</span>
+                    </Link>
                   </td>
 
                   {/* Status Badges */}
@@ -221,7 +260,7 @@ export function RetailerTable({
               ))
             ) : (
               <tr>
-                <td colSpan={6} className="py-12 text-center">
+                <td colSpan={8} className="py-12 text-center">
                   <div className="flex flex-col items-center justify-center space-y-2 text-slate-400">
                     <AlertCircle
                       size={24}
