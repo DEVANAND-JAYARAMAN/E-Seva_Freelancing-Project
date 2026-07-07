@@ -83,8 +83,8 @@ export function RetailerTable({
       </div>
 
       {/* Table Section */}
-      <div className="overflow-x-auto rounded-2xl border border-slate-50 dark:border-slate-900/30">
-        <table className="w-full text-left border-collapse">
+      <div className="overflow-x-auto rounded-2xl border-2 border-black dark:border-white">
+        <table className="w-full text-left border-collapse border-2 border-black dark:border-white">
           <thead>
             <tr className="bg-slate-50/40 dark:bg-[#090d16]/30 border-b border-slate-50 dark:border-slate-900/30">
               <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
