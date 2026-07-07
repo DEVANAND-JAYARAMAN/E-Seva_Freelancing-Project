@@ -164,7 +164,7 @@ export function WalletPage() {
       try {
         const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(
           /(?:\/api|\/)+$/,
-          ""
+          "",
         );
         const res = await fetch(`${baseUrl}/api/v1/wallet/recharge/gateway`, {
           method: "POST",
@@ -180,7 +180,7 @@ export function WalletPage() {
               baseUrl +
               "/api/v1/wallet/recharge/return?redirect_url=" +
               encodeURIComponent(
-                window.location.origin + window.location.pathname
+                window.location.origin + window.location.pathname,
               ),
             user_id: user?.id || "",
           }),
@@ -194,7 +194,7 @@ export function WalletPage() {
           const popup = window.open(
             data.data.payment_url,
             "Payment Gateway",
-            `width=${width},height=${height},left=${left},top=${top}`
+            `width=${width},height=${height},left=${left},top=${top}`,
           );
 
           const pollTimer = setInterval(async () => {
@@ -222,7 +222,7 @@ export function WalletPage() {
                     headers: {
                       Authorization: `Bearer ${localStorage.getItem("token")}`,
                     },
-                  }
+                  },
                 );
                 const statusData = await statusRes.json();
 
@@ -235,18 +235,18 @@ export function WalletPage() {
                   handleGatewaySuccess(data.data.order_id);
                 } else if (statusData.status === "Pending") {
                   setFormError(
-                    "Payment is pending or canceled. If deducted, it will be credited soon."
+                    "Payment is pending or canceled. If deducted, it will be credited soon.",
                   );
                 } else {
                   handleGatewayFailed(data.data.order_id, statusData.status);
                   setFormError(
-                    `Payment failed or canceled (Status: ${statusData.status})`
+                    `Payment failed or canceled (Status: ${statusData.status})`,
                   );
                 }
               } catch (err) {
                 setGatewayProcessing(false);
                 setFormError(
-                  "Could not verify payment status. Please check transaction history."
+                  "Could not verify payment status. Please check transaction history.",
                 );
               }
             }
@@ -254,7 +254,7 @@ export function WalletPage() {
         } else {
           setGatewayProcessing(false);
           setFormError(
-            data.error || data.message || "Failed to initiate payment gateway."
+            data.error || data.message || "Failed to initiate payment gateway.",
           );
         }
       } catch (err) {
@@ -433,7 +433,7 @@ export function WalletPage() {
       setFormError(
         error.message || "Something went wrong while saving to database.",
       );
-      
+
       const newTransaction: WalletTransaction = {
         id: `tx-fail-${Date.now()}`,
         date: new Date().toLocaleString("en-US", {
@@ -475,7 +475,7 @@ export function WalletPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-900/60 pb-6">
           <div className="space-y-1.5">
             <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
-              My Wallet Balance & History
+              My Wallet Balance
             </h2>
             <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed max-w-2xl">
               Add balance to your wallets, check real-time service deduction
@@ -783,7 +783,8 @@ export function WalletPage() {
                       Recharge Successful!
                     </h5>
                     <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-xs leading-relaxed">
-                      Your recharge was successful and the amount has been credited directly to your wallet.
+                      Your recharge was successful and the amount has been
+                      credited directly to your wallet.
                     </p>
                   </div>
                 </div>
@@ -893,7 +894,6 @@ export function WalletPage() {
                           />
                         </div>
                       )}
-
                     </div>
 
                     {/* Right Column: Dynamic Info / QR details / Bank Details Card */}
@@ -905,7 +905,7 @@ export function WalletPage() {
                               {/* eslint-disable-next-line @next/next/no-img-element */}
                               <img
                                 src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(
-                                  `upi://pay?pa=${process.env.NEXT_PUBLIC_UPI_ID || "mkksriptsami@oksbi"}&pn=Thuruvan%20Communications&am=${amount || 0}&cu=INR&tn=Wallet%20Recharge`
+                                  `upi://pay?pa=${process.env.NEXT_PUBLIC_UPI_ID || "mkksriptsami@oksbi"}&pn=Thuruvan%20Communications&am=${amount || 0}&cu=INR&tn=Wallet%20Recharge`,
                                 )}`}
                                 alt="Payment QR Code"
                                 className="w-28 h-28 object-contain"
@@ -955,10 +955,14 @@ export function WalletPage() {
                         {gatewayProcessing ? (
                           <>
                             <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            {paymentMode === "UPI" ? "Connecting to Gateway..." : "Submitting..."}
+                            {paymentMode === "UPI"
+                              ? "Connecting to Gateway..."
+                              : "Submitting..."}
                           </>
+                        ) : paymentMode === "UPI" ? (
+                          "Pay via Gateway"
                         ) : (
-                          paymentMode === "UPI" ? "Pay via Gateway" : "Submit Request"
+                          "Submit Request"
                         )}
                       </button>
                     </div>
