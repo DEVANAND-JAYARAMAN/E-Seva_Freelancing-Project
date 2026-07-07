@@ -172,16 +172,17 @@ export function RetailerTable({
                         {retailer.id}
                       </span>
                     </div>
-                    {retailer.rawPassword && (
-                      <div className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-                        <span className="text-[10px] uppercase text-slate-400 font-bold mr-1">
-                          PWD:
-                        </span>
-                        <span className="font-mono bg-slate-50 dark:bg-slate-900/60 px-1.5 py-0.5 rounded">
-                          {retailer.rawPassword}
-                        </span>
-                      </div>
-                    )}
+                    <div className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                      <span className="text-[10px] uppercase text-slate-400 font-bold mr-1">
+                        PWD:
+                      </span>
+                      <span className="font-mono bg-slate-50 dark:bg-slate-900/60 px-1.5 py-0.5 rounded">
+                        {!retailer.rawPassword ||
+                        retailer.rawPassword.toLowerCase() === "n/a"
+                          ? "-"
+                          : retailer.rawPassword}
+                      </span>
+                    </div>
                   </td>
 
                   {/* Location */}

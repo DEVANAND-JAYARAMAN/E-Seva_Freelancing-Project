@@ -142,7 +142,7 @@ export function TransactionsPage() {
               Transaction Details
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
-              Viewing: {targetName} ({targetUserId})
+              Viewing: {targetName}
             </p>
           </div>
         </div>
