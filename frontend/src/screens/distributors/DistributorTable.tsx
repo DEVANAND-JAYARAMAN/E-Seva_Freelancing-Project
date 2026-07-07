@@ -208,7 +208,7 @@ export function DistributorTable({
                   {/* Transaction */}
                   <td className="py-4 px-6 text-center">
                     <Link
-                      href={`/status?search=${encodeURIComponent(distributor.name)}`}
+                      href={`/transactions?userId=${encodeURIComponent(distributor.id)}&name=${encodeURIComponent(distributor.name)}`}
                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-900/50 hover:bg-[#e8f5e9]/50 dark:hover:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-400 border border-slate-100 dark:border-slate-900 text-xs font-bold transition-all duration-200"
                     >
                       <Activity size={12} />
