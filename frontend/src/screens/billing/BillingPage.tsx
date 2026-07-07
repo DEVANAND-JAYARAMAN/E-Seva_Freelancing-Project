@@ -82,7 +82,11 @@ export function BillingPage() {
       });
 
       // Fetch Requests first to find all sub-services
-      const resReq = await fetch(`${baseUrl}/api/services/requests`);
+      let reqUrl = `${baseUrl}/api/services/requests`;
+      if (user?.role && user.role !== "admin") {
+        reqUrl += `?userId=${user.userId}`;
+      }
+      const resReq = await fetch(reqUrl);
       let rawRequests: any[] = [];
       if (resReq.ok) {
         rawRequests = await resReq.json() || [];

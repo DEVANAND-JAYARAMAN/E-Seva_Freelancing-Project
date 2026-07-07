@@ -2,14 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { FileText, User, Wallet } from "lucide-react";
+import { useAuth } from "../../store/context/AuthContext";
 
 export function ServiceQueue() {
+  const { user } = useAuth();
   const [servicesData, setServicesData] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch(
-      `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/requests`,
-    )
+    let url = `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/requests`;
+    if (user?.role && user.role !== "admin") {
+      url += `?userId=${user.userId}`;
+    }
+    
+    fetch(url)
       .then((res) => res.json())
       .then((data) => {
         const dataArray = Array.isArray(data) ? data : [];
@@ -23,7 +28,7 @@ export function ServiceQueue() {
         setServicesData(sorted);
       })
       .catch(console.error);
-  }, []);
+  }, [user?.userId, user?.role]);
 
   // Map status styles using tailwind
   const statusClasses: Record<string, string> = {

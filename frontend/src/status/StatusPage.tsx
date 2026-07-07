@@ -14,6 +14,7 @@ import { StatusStats } from "./StatusStats";
 import { useEffect } from "react";
 import { StatusDetailModal } from "./StatusDetailModal";
 import type { StatusTicket, TicketStatus } from "./types";
+import { useAuth } from "../store/context/AuthContext";
 
 // Seed data with precisely the 5 statuses requested by the user
 const seedTickets: StatusTicket[] = [
@@ -81,6 +82,7 @@ const seedTickets: StatusTicket[] = [
 ];
 
 export function StatusPage() {
+  const { user } = useAuth();
   const [tickets, setTickets] = useState<StatusTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<TicketStatus | "All">("All");
@@ -91,7 +93,12 @@ export function StatusPage() {
   // Fetch real data from backend
   const fetchTickets = async () => {
     try {
-      const res = await fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/requests`);
+      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "");
+      let url = `${baseUrl}/api/services/requests`;
+      if (user?.role && user.role !== "admin") {
+        url += `?userId=${user.userId}`;
+      }
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         const sortedData = (data || []).sort((a: any, b: any) => 
@@ -125,8 +132,10 @@ export function StatusPage() {
   };
 
   useEffect(() => {
-    fetchTickets();
-  }, []);
+    if (user?.userId) {
+      fetchTickets();
+    }
+  }, [user?.userId]);
 
   // Update status and remarks via API
   const handleUpdateStatus = async (
