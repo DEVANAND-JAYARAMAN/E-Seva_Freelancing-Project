@@ -34,7 +34,8 @@ jobs:
       - name: Get EC2 IP
         id: get-ip
         run: |
-          echo "EC2_IP=3.108.235.150" >> $GITHUB_ENV
+          IP=$(curl -s https://daqpqxq9zg.execute-api.ap-south-1.amazonaws.com/prod/ip | jq -r .public_ip)
+          echo "EC2_IP=$IP" >> $GITHUB_ENV
 
       - name: Copy binary to EC2
         continue-on-error: true
