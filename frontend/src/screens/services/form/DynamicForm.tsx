@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useFormEdit } from "../../../store/context/FormEditContext";
 import { FormSchema } from "./types";
 import { validateField } from "./validators";
 import {
@@ -24,6 +25,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
   onCancel,
   isLoading = false,
 }) => {
+  const { overrides } = useFormEdit();
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -255,7 +257,28 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
       ))}
 
       {/* Form Action Buttons */}
-      <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-900/60 mt-8">
+      
+      {/* Added Extra Fields */}
+      {overrides.addedFields && overrides.addedFields.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+          {overrides.addedFields.map((field) => (
+            <InputField
+              key={field.name}
+              name={field.name}
+              label={field.label}
+              type={(field.type as any) || "text"}
+              placeholder={field.placeholder}
+              value={formData[field.name] || ""}
+              error={errors && errors[field.name]}
+              disabled={isSubmitting}
+              onChange={(val, file) => {
+                handleFieldChange(field.name, val, file);
+              }}
+            />
+          ))}
+        </div>
+      )}
+<div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-900/60 mt-8">
         <button
           type="button"
           onClick={onCancel}
