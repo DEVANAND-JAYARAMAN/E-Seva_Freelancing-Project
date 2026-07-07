@@ -155,6 +155,14 @@ export function WalletPage() {
       return;
     }
 
+    if (user?.role === "admin") {
+      setGatewayProcessing(true);
+      setTimeout(() => {
+        handleGatewaySuccess(`admin-manual-${Date.now()}`);
+      }, 500);
+      return;
+    }
+
     if (paymentMode === "UPI") {
       if (!mobileNumber.trim() || mobileNumber.trim().length !== 10) {
         setFormError("Please enter a valid 10-digit mobile number.");
@@ -811,10 +819,10 @@ export function WalletPage() {
                   {/* Form fields */}
                   <form
                     onSubmit={handleRechargeSubmit}
-                    className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                    className={`grid grid-cols-1 ${user?.role === "admin" ? "" : "md:grid-cols-2"} gap-6`}
                   >
                     {formError && (
-                      <div className="col-span-1 md:col-span-2 flex items-center gap-2 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 p-3 rounded-xl text-xs font-bold animate-in fade-in duration-200">
+                      <div className={`col-span-1 ${user?.role === "admin" ? "" : "md:col-span-2"} flex items-center gap-2 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 p-3 rounded-xl text-xs font-bold animate-in fade-in duration-200`}>
                         <AlertCircle size={14} className="shrink-0" />
                         <span>{formError}</span>
                       </div>
@@ -825,121 +833,127 @@ export function WalletPage() {
                       {/* Amount field */}
                       <div className="space-y-1.5">
                         <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
-                          Amount to Recharge (₹)
+                          Amount to {user?.role === "admin" ? "Add" : "Recharge"} (₹)
                         </label>
                         <input
                           type="number"
                           placeholder="e.g. 1500"
                           value={amount}
                           onChange={(e) => setAmount(e.target.value)}
-                          disabled={utrNumber.trim().length > 0}
+                          disabled={user?.role !== "admin" && utrNumber.trim().length > 0}
                           className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                           required
                           min="1"
                         />
                       </div>
 
-                      {/* Payment Mode */}
-                      <div className="space-y-1.5">
-                        <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
-                          Payment Mode / channel
-                        </label>
-                        <select
-                          value={paymentMode}
-                          onChange={(e) => {
-                            setPaymentMode(e.target.value as "UPI" | "QR");
-                            setFormError("");
-                          }}
-                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all appearance-none cursor-pointer"
-                        >
-                          <option value="UPI">UPI ID Request (Gateway)</option>
-                          <option value="QR">Manual QR Scan</option>
-                        </select>
-                      </div>
+                      {user?.role !== "admin" && (
+                        <>
+                          {/* Payment Mode */}
+                          <div className="space-y-1.5">
+                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+                              Payment Mode / channel
+                            </label>
+                            <select
+                              value={paymentMode}
+                              onChange={(e) => {
+                                setPaymentMode(e.target.value as "UPI" | "QR");
+                                setFormError("");
+                              }}
+                              className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all appearance-none cursor-pointer"
+                            >
+                              <option value="UPI">UPI ID Request (Gateway)</option>
+                              <option value="QR">Manual QR Scan</option>
+                            </select>
+                          </div>
 
-                      {/* Mobile Number (shown for both modes) */}
-                      <div className="space-y-1.5 animate-in fade-in duration-200">
-                        <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
-                          Mobile Number
-                        </label>
-                        <input
-                          type="tel"
-                          placeholder="Enter 10-digit mobile number"
-                          value={mobileNumber}
-                          onChange={(e) => {
-                            setMobileNumber(e.target.value.replace(/\D/g, ""));
-                            setFormError("");
-                          }}
-                          maxLength={10}
-                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
-                          required
-                        />
-                      </div>
+                          {/* Mobile Number (shown for both modes) */}
+                          <div className="space-y-1.5 animate-in fade-in duration-200">
+                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+                              Mobile Number
+                            </label>
+                            <input
+                              type="tel"
+                              placeholder="Enter 10-digit mobile number"
+                              value={mobileNumber}
+                              onChange={(e) => {
+                                setMobileNumber(e.target.value.replace(/\D/g, ""));
+                                setFormError("");
+                              }}
+                              maxLength={10}
+                              className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
+                              required
+                            />
+                          </div>
 
-                      {/* UTR reference */}
-                      {paymentMode === "QR" && (
-                        <div className="space-y-1.5 animate-in fade-in duration-200">
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
-                            Transaction UTR / Ref ID
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="Enter 12-digit UTR/Ref No."
-                            value={utrNumber}
-                            onChange={(e) => {
-                              setUtrNumber(e.target.value);
-                              setFormError("");
-                            }}
-                            className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
-                          />
-                        </div>
+                          {/* UTR reference */}
+                          {paymentMode === "QR" && (
+                            <div className="space-y-1.5 animate-in fade-in duration-200">
+                              <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+                                Transaction UTR / Ref ID
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="Enter 12-digit UTR/Ref No."
+                                value={utrNumber}
+                                onChange={(e) => {
+                                  setUtrNumber(e.target.value);
+                                  setFormError("");
+                                }}
+                                className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
+                              />
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
 
                     {/* Right Column: Dynamic Info / QR details / Bank Details Card */}
-                    <div className="flex flex-col justify-center h-full">
-                      <div className="bg-slate-50/50 dark:bg-slate-950/25 border border-slate-100 dark:border-slate-900/60 rounded-2xl p-4 flex flex-col items-center justify-center min-h-[280px] text-center">
-                        {paymentMode === "QR" && (
-                          <div className="flex flex-col items-center gap-3.5 animate-in fade-in duration-200">
-                            <div className="p-2.5 bg-white rounded-xl shadow-sm border border-slate-100">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(
-                                  `upi://pay?pa=${process.env.NEXT_PUBLIC_UPI_ID || "mkksriptsami@oksbi"}&pn=Thuruvan%20Communications&am=${amount || 0}&cu=INR&tn=Wallet%20Recharge`,
-                                )}`}
-                                alt="Payment QR Code"
-                                className="w-28 h-28 object-contain"
-                              />
+                    {user?.role !== "admin" && (
+                      <div className="flex flex-col justify-center h-full">
+                        <div className="bg-slate-50/50 dark:bg-slate-950/25 border border-slate-100 dark:border-slate-900/60 rounded-2xl p-4 flex flex-col items-center justify-center min-h-[280px] text-center">
+                          {paymentMode === "QR" && (
+                            <div className="flex flex-col items-center gap-3.5 animate-in fade-in duration-200">
+                              <div className="p-2.5 bg-white rounded-xl shadow-sm border border-slate-100">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(
+                                    `upi://pay?pa=${process.env.NEXT_PUBLIC_UPI_ID || "mkksriptsami@oksbi"}&pn=Thuruvan%20Communications&am=${amount || 0}&cu=INR&tn=Wallet%20Recharge`,
+                                  )}`}
+                                  alt="Payment QR Code"
+                                  className="w-28 h-28 object-contain"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-xs font-black text-slate-800 dark:text-slate-200">
+                                  Scan & Pay ₹{amount || "0.00"}
+                                </p>
+                              </div>
                             </div>
-                            <div className="space-y-1">
-                              <p className="text-xs font-black text-slate-800 dark:text-slate-200">
-                                Scan & Pay ₹{amount || "0.00"}
-                              </p>
-                            </div>
-                          </div>
-                        )}
+                          )}
 
-                        {paymentMode === "UPI" && (
-                          <div className="flex flex-col items-center gap-3 text-slate-500 dark:text-slate-400 p-2 animate-in fade-in duration-200">
-                            <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-450 shadow-sm">
-                              <Wallet size={20} />
-                            </span>
-                            <div className="space-y-1">
-                              <h5 className="text-xs font-black text-slate-855 dark:text-slate-200 uppercase tracking-wider">
-                                Payment Gateway
-                              </h5>
-                              <p className="text-[10px] text-slate-450 dark:text-slate-500 max-w-[200px] leading-relaxed">
-                                You will be redirected to the secure payment
-                                gateway to complete the payment via any UPI App.
-                              </p>
+                          {paymentMode === "UPI" && (
+                            <div className="flex flex-col items-center gap-3 text-slate-500 dark:text-slate-400 p-2 animate-in fade-in duration-200">
+                              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-450 shadow-sm">
+                                <Wallet size={20} />
+                              </span>
+                              <div className="space-y-1">
+                                <h5 className="text-xs font-black text-slate-855 dark:text-slate-200 uppercase tracking-wider">
+                                  Payment Gateway
+                                </h5>
+                                <p className="text-[10px] text-slate-450 dark:text-slate-500 max-w-[200px] leading-relaxed">
+                                  You will be redirected to the secure payment
+                                  gateway to complete the payment via any UPI App.
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Bottom Row: Action Buttons */}
-                    <div className="col-span-1 md:col-span-2 flex items-center gap-3 border-t border-slate-50 dark:border-slate-900/50 pt-4 mt-2">
+                    <div className={`col-span-1 ${user?.role === "admin" ? "" : "md:col-span-2"} flex items-center gap-3 border-t border-slate-50 dark:border-slate-900/50 pt-4 mt-2`}>
                       <button
                         type="button"
                         onClick={() => setIsModalOpen(false)}

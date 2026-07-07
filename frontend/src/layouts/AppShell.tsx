@@ -30,7 +30,7 @@ export function AppShell({
       {/* Main content body */}
       <div className="lg:pl-64 flex flex-col min-h-screen">
         {/* Sleek Top Header (visible on both mobile and desktop) */}
-        <TopBar onMenuClick={() => setSidebarOpen(true)} />
+        <TopBar onMenuClick={() => setSidebarOpen(true)} activePage={activePage} />
 
         {activePage === "Dashboard" && <GlobalAlertsDisplay />}
 

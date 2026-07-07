@@ -10,6 +10,7 @@ import {
   LogOut,
   Check,
   X,
+  Wallet,
 } from "lucide-react";
 import { useTheme } from "../store/context/ThemeProvider";
 import { useAuth } from "../store/context/AuthContext";
@@ -27,9 +28,10 @@ type Notification = {
 
 type TopBarProps = {
   onMenuClick: () => void;
+  activePage?: string;
 };
 
-export function TopBar({ onMenuClick }: TopBarProps) {
+export function TopBar({ onMenuClick, activePage }: TopBarProps) {
   const { theme, toggleTheme } = useTheme();
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -144,6 +146,20 @@ export function TopBar({ onMenuClick }: TopBarProps) {
 
       {/* Global Utilities (Notifications, Settings, Theme, Mini Profile) */}
       <div className="flex items-center gap-3">
+        {/* Wallet Balance Display (Retailers & Distributors only, hidden on Dashboard & Wallet pages) */}
+        {user?.role && ["retailer", "distributor"].includes(user.role) && activePage !== "Dashboard" && activePage !== "Wallet" && (
+          <button
+            onClick={() => router.push("/wallets")}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-[#005c3a]/20 bg-[#005c3a]/5 dark:border-emerald-500/20 dark:bg-emerald-950/20 hover:bg-[#005c3a]/10 dark:hover:bg-emerald-950/40 text-[#005c3a] dark:text-emerald-450 transition-all active:scale-95"
+            title="Go to Wallet"
+          >
+            <Wallet size={16} />
+            <span className="text-xs font-extrabold tracking-tight">
+              ₹{(user.walletBalance || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+            </span>
+          </button>
+        )}
+
         {/* Toggle Theme button */}
         <button
           onClick={toggleTheme}
