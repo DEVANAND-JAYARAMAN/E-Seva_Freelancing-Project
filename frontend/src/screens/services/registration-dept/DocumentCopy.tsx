@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { InputField, SelectField, SubmitButton } from "../form/FormFields";
 import { validateField, PATTERNS } from "../form/validators";
+import { ServiceMessageManager } from "../../../components/ServiceMessageManager";
 
 interface DocumentCopyProps {
   onCancel: () => void;
@@ -124,10 +125,11 @@ export const DocumentCopy: React.FC<DocumentCopyProps> = ({ onCancel }) => {
         </div>
       </div>
 
-      {/* Red Alert Banner requested in the screenshot */}
-      <div className="text-sm font-extrabold text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-2xl p-4 tracking-wide shadow-sm">
-        பத்திர நகல் ஆவணம் 3 முதல் 5மணி நேரத்தில் கிடைக்கும்
-      </div>
+      {/* Red Alert Banner requested in the screenshot / Admin manageable */}
+      <ServiceMessageManager 
+        serviceId="registration-dept-document-copy" 
+        serviceName="Document Copy" 
+      />
 
       {/* 2-Column Form Fields */}
       <div className="space-y-5">
