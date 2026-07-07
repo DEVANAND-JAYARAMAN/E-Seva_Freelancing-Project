@@ -13,6 +13,7 @@ import {
   FileText,
   AlertCircle,
   CheckCircle2,
+  ArrowLeft,
 } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
 import { useAuth } from "../../store/context/AuthContext";
@@ -2287,25 +2288,28 @@ export function ServicesPage() {
                 <>
                   {/* Modal Header */}
                   <div className="flex items-center justify-between border-b border-slate-50 dark:border-slate-900/50 pb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="shrink-0">
-                        {renderServiceImage(selectedService.id, "w-10 h-10")}
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wide">
-                          {selectedService.name}
-                        </h4>
-                        <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">
-                          Create E-Seva Application
-                        </p>
+                    <div className="flex items-center gap-4">
+                      <button
+                        type="button"
+                        onClick={() => setIsModalOpen(false)}
+                        className="flex items-center justify-center p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/50 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors shrink-0"
+                      >
+                        <ArrowLeft size={18} strokeWidth={2.5} />
+                      </button>
+                      <div className="flex items-center gap-3">
+                        <div className="shrink-0 hidden sm:block">
+                          {renderServiceImage(selectedService.id, "w-10 h-10")}
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wide">
+                            {selectedService.name}
+                          </h4>
+                          <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">
+                            Create E-Seva Application
+                          </p>
+                        </div>
                       </div>
                     </div>
-                    <button
-                      onClick={() => setIsModalOpen(false)}
-                      className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
-                    >
-                      <Plus size={14} className="rotate-45" />
-                    </button>
                   </div>
 
                   {/* Dynamic Form Generation */}

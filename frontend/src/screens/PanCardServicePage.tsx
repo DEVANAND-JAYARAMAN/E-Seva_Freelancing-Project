@@ -54,7 +54,7 @@ export function PanCardServicePage() {
     }
 
     setIsSubmitting(true);
-    
+
     try {
       const payload = new FormData();
       payload.append("retailerId", user?.id || "");
@@ -77,12 +77,12 @@ export function PanCardServicePage() {
       });
 
       if (!res.ok) {
-         const errData = await res.json().catch(() => ({}));
-         alert(errData.error || "Failed to submit request");
-         setIsSubmitting(false);
-         return;
+        const errData = await res.json().catch(() => ({}));
+        alert(errData.error || "Failed to submit request");
+        setIsSubmitting(false);
+        return;
       }
-      
+
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
@@ -169,7 +169,7 @@ export function PanCardServicePage() {
                   disabled={isSubmitting}
                 />
               </div>
-              
+
               <div>
                 <InputField
                   name="fatherName"

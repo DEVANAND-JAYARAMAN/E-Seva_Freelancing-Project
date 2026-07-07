@@ -61,11 +61,14 @@ export function AdminNotificationsPage() {
     setIsLoading(true);
 
     try {
+      const activeCount = alerts.filter(a => a.status === "Active").length;
+      const initialStatus = activeCount < 2 ? "Active" : "Inactive";
+      
       const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
       const res = await fetch(`${apiUrl}/api/alerts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: newMessage.trim(), status: "Inactive" })
+        body: JSON.stringify({ message: newMessage.trim(), status: initialStatus })
       });
       if (res.ok) {
         setNewMessage("");

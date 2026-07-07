@@ -34,29 +34,6 @@ export function DashboardPage2({
   const [requestUtr, setRequestUtr] = useState("");
 
   const [notifications, setNotifications] = useState<string[]>([]);
-  const [activeAlerts, setActiveAlerts] = useState<any[]>([]);
-  const [currentAlertIndex, setCurrentAlertIndex] = useState<number>(0);
-
-  const fetchGlobalAlerts = async () => {
-    try {
-      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(
-        /(?:\/api|\/)+$/,
-        "",
-      );
-      const res = await fetch(`${baseUrl}/api/alerts`);
-      if (res.ok) {
-        const data = await res.json();
-        const active = data.filter((a: any) => a.status === "Active");
-        setActiveAlerts(active);
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  useEffect(() => {
-    fetchGlobalAlerts();
-  }, []);
 
   const handleWalletRequest = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -161,50 +138,6 @@ export function DashboardPage2({
   return (
     <AppShell activePage="Dashboard">
       <div className="flex flex-col gap-6 w-full animate-in fade-in slide-in-from-bottom-4 duration-300">
-        {/* Global Alerts Marquee */}
-        {activeAlerts.length > 0 && (
-          <div className="w-full bg-rose-600 text-white overflow-hidden rounded-xl flex items-center h-10 px-4 shadow-sm relative">
-            <div className="absolute left-0 z-10 bg-rose-700 h-full px-4 flex items-center font-black uppercase text-xs tracking-widest shadow-[5px_0_15px_rgba(0,0,0,0.2)]">
-              Important Alert
-            </div>
-            <div className="w-full whitespace-nowrap animate-marquee flex items-center gap-12 pl-32">
-              {activeAlerts.map((alert, idx) => (
-                <span key={idx} className="font-bold text-sm tracking-wide">
-                  • {alert.message}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Global Alerts Popup Sequential Modal */}
-        {activeAlerts.length > 0 && currentAlertIndex < activeAlerts.length && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-white dark:bg-[#0b101e] rounded-3xl w-full max-w-md overflow-hidden shadow-2xl transform transition-all border border-rose-200 dark:border-rose-900 animate-in zoom-in-95 duration-200">
-              <div className="bg-rose-50 dark:bg-rose-950/40 p-6 flex flex-col items-center text-center relative border-b border-rose-100 dark:border-rose-900/60">
-                <div className="h-16 w-16 bg-rose-100 dark:bg-rose-900/60 text-rose-600 dark:text-rose-400 rounded-full flex items-center justify-center mb-4 shadow-inner">
-                  <AlertTriangle size={32} strokeWidth={2.5} />
-                </div>
-                <h3 className="text-xl font-black text-rose-700 dark:text-rose-400 uppercase tracking-tight">
-                  Important Alert {activeAlerts.length > 1 ? `(${currentAlertIndex + 1}/${activeAlerts.length})` : ""}
-                </h3>
-              </div>
-              
-              <div className="p-8 text-center bg-white dark:bg-[#0b101e]">
-                <p className="text-slate-700 dark:text-slate-300 font-bold text-lg leading-relaxed">
-                  {activeAlerts[currentAlertIndex].message}
-                </p>
-                
-                <button
-                  onClick={() => setCurrentAlertIndex((prev) => prev + 1)}
-                  className="mt-8 w-full bg-rose-600 hover:bg-rose-700 text-white font-bold uppercase tracking-wider py-3 rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-rose-600/20"
-                >
-                  I Understand & Close
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Welcome Header Hero Banner */}
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-950 via-[#005c3a] to-emerald-900 dark:from-emerald-950 dark:via-[#003822] dark:to-emerald-950 p-6 lg:p-8 text-white shadow-xl">
