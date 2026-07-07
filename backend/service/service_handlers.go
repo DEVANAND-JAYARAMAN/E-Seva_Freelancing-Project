@@ -312,7 +312,7 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 
 
 	validStatuses := map[string]bool{
-		"Approved": true, "Rejected": true,
+		"Approved": true, "Rejected": true, "Process": true, "Resubmit": true, "Pending": true,
 	}
 	if !validStatuses[status] {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid status"})

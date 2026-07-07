@@ -33,6 +33,10 @@ export function ServiceQueue() {
       "bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400",
     Completed:
       "bg-teal-50 dark:bg-teal-950/30 text-teal-600 dark:text-teal-400",
+    Pending:
+      "bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400",
+    Process:
+      "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400",
   };
 
   // Map icons and their background colors based on status
@@ -54,6 +58,16 @@ export function ServiceQueue() {
       icon: Wallet,
       bg: "bg-purple-50 dark:bg-purple-950/30",
       text: "text-purple-600 dark:text-purple-400",
+    },
+    Pending: {
+      icon: FileText,
+      bg: "bg-amber-50 dark:bg-amber-950/30",
+      text: "text-amber-600 dark:text-amber-400",
+    },
+    Process: {
+      icon: FileText,
+      bg: "bg-blue-50 dark:bg-blue-950/30",
+      text: "text-blue-600 dark:text-blue-400",
     },
   };
 

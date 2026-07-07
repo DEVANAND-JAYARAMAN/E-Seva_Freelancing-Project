@@ -24,6 +24,22 @@ export function StatusStats({
 
   const stats = [
     {
+      label: "Pending",
+      value: getCount("Pending"),
+      icon: Clock,
+      status: "Pending" as TicketStatus,
+      gradientClass:
+        "bg-gradient-to-br from-[#7c2d12] to-[#451a03] dark:from-[#431407] dark:to-[#270b04]",
+    },
+    {
+      label: "Process",
+      value: getCount("Process"),
+      icon: Loader,
+      status: "Process" as TicketStatus,
+      gradientClass:
+        "bg-gradient-to-br from-[#005274] to-[#003850] dark:from-[#002e42] dark:to-[#001c29]",
+    },
+    {
       label: "Resubmit",
       value: getCount("Resubmit"),
       icon: RefreshCw,
@@ -50,7 +66,7 @@ export function StatusStats({
   ];
 
   return (
-    <section className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full">
+    <section className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 w-full">
       {/* "All" Filter Card — slate-indigo gradient */}
       <button
         type="button"

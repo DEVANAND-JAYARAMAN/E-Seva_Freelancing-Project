@@ -1,4 +1,6 @@
 export type TicketStatus =
+  | "Pending"
+  | "Process"
   | "Resubmit"
   | "Approved"
   | "Rejected";
