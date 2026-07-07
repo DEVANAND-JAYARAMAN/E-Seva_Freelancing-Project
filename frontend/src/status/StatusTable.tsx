@@ -57,7 +57,7 @@ export function StatusTable({
   });
 
   return (
-    <div className="bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 shadow-sm flex flex-col space-y-6">
+    <div className="bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm flex flex-col space-y-6">
       {/* Search Input Bar */}
       <div className="relative w-full">
         <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
@@ -73,12 +73,8 @@ export function StatusTable({
       </div>
 
       {/* Table Section */}
-      <div
-        className="overflow-x-auto rounded-2xl border-2 border-black dark:border-white"
-      >
-        <table
-          className="w-full text-left border-collapse border-2 border-black dark:border-white"
-        >
+      <div className="overflow-x-auto rounded-2xl border-2 border-black dark:border-white">
+        <table className="w-full text-left border-collapse border-2 border-black dark:border-white">
           <thead>
             <tr className="bg-slate-50/40 dark:bg-[#090d16]/30 border-b border-slate-50 dark:border-slate-900/30">
               <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
