@@ -25,6 +25,7 @@ export function RetailerForm({
   const [balance, setBalance] = useState("0");
   const [status, setStatus] = useState<"Active" | "Suspended">("Active");
   const [aadhaarNo, setAadhaarNo] = useState("");
+  const [password, setPassword] = useState("");
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -49,6 +50,7 @@ export function RetailerForm({
       setBalance("0");
       setStatus("Active");
       setAadhaarNo("");
+      setPassword("");
     }
     setErrors({});
   }, [retailer, isOpen]);
@@ -84,6 +86,10 @@ export function RetailerForm({
       }
     }
 
+    if (!retailer && !password.trim()) {
+      newErrors.password = "Password is required for new accounts";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -102,7 +108,8 @@ export function RetailerForm({
       balance: parseFloat(balance) || 0,
       status,
       aadhaarNo: aadhaarNo.trim(),
-    });
+      rawPassword: password.trim() || undefined,
+    } as any);
 
     onClose();
   };
@@ -279,6 +286,29 @@ export function RetailerForm({
               {errors.aadhaarNo && (
                 <span className="text-[10px] font-bold text-rose-500">
                   {errors.aadhaarNo}
+                </span>
+              )}
+            </div>
+
+            {/* Password (Optional for Edit, Required for New) */}
+            <div className="col-span-2 sm:col-span-1 flex flex-col gap-1.5">
+              <label className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                Password {retailer && "(Leave blank to keep unchanged)"}
+              </label>
+              <input
+                type="text"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter password..."
+                className={`w-full px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/20 dark:focus:ring-emerald-500/20 bg-white dark:bg-[#0a0f18]/30 ${
+                  errors.password
+                    ? "border-rose-400 dark:border-rose-500/50"
+                    : "border-slate-200 dark:border-slate-800/80 focus:border-[#005c3a] dark:focus:border-emerald-500"
+                }`}
+              />
+              {errors.password && (
+                <span className="text-[10px] font-bold text-rose-500">
+                  {errors.password}
                 </span>
               )}
             </div>

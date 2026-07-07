@@ -96,7 +96,7 @@ export function DistributorsPage() {
           email: data.email,
           mobile: data.phone,
           role: "distributor",
-          password: "password123", // default password
+          password: (data as any).rawPassword,
         };
         const res = await fetch(`${apiUrl}/api/auth/signup`, {
           method: "POST",
