@@ -58,7 +58,7 @@ export function ServiceQueue() {
   };
 
   return (
-    <article className="recent-updates-card bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
+    <article className="recent-updates-card bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
       <div className="flex items-center justify-between gap-4 mb-6">
         <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           Recent Updates
@@ -94,9 +94,14 @@ export function ServiceQueue() {
                     {service.serviceName || service.name || "Unknown Service"}
                   </strong>
                   <span className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mt-1 truncate">
-                    {service.retailerName || service.RetailerName || service.retailerId || service.RetailerId || "Unknown"}
+                    {service.retailerName ||
+                      service.RetailerName ||
+                      service.retailerId ||
+                      service.RetailerId ||
+                      "Unknown"}
                     <span className="text-slate-400 dark:text-slate-500 font-normal ml-1">
-                      ({service.retailerMobile || service.RetailerMobile || "-"})
+                      ({service.retailerMobile || service.RetailerMobile || "-"}
+                      )
                     </span>
                   </span>
                   <span className="block text-[11px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5">
