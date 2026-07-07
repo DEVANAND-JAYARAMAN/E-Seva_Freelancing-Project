@@ -438,7 +438,7 @@ export function BillingPage() {
         </div>
 
         {/* Table Section */}
-        <div className="flex flex-col gap-6 bg-white dark:bg-[#0b101e] border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
+        <div className="flex flex-col gap-6 bg-white dark:bg-[#0b101e] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
               <Activity
@@ -462,8 +462,8 @@ export function BillingPage() {
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800">
-            <table className="w-full text-left border-collapse">
+          <div className="overflow-x-auto rounded-2xl border-2 border-black dark:border-white">
+            <table className="w-full text-left border-collapse border-2 border-black dark:border-white">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-500 uppercase tracking-wider">
                   <th className="py-4 px-4">Date</th>
@@ -534,7 +534,7 @@ export function BillingPage() {
 
         {/* Chart Section */}
         {chartData.length > 0 && (
-          <div className="flex flex-col gap-6 bg-white dark:bg-[#0b101e] border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
+          <div className="flex flex-col gap-6 bg-white dark:bg-[#0b101e] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
                 <TrendingUp
