@@ -1787,11 +1787,6 @@ export function PaymentsPage() {
           /* CARD GRID CATALOG VIEW */
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-50 dark:border-slate-900/40 pb-3 gap-3">
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-                  Available E-Seva Utility Payments
-                </h3>
-              </div>
               <div className="relative max-w-xs w-full sm:w-64">
                 <Search
                   size={14}
@@ -1855,7 +1850,7 @@ export function PaymentsPage() {
           </div>
         ) : (
           /* FULL PAGE CONFIGURATION MATRIX VIEW ("OPEN NEW PAGE") */
-          <div className="w-full bg-white dark:bg-[#090d16] border border-slate-200 dark:border-slate-900 rounded-3xl p-6 shadow-md transition-all relative overflow-hidden animate-in fade-in duration-200">
+          <div className="w-full bg-white dark:bg-[#090d16] border-2 border-black rounded-3xl p-6 shadow-md transition-all relative overflow-hidden animate-in fade-in duration-200">
             {/* Glassmorphic Background Accents */}
             <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent pointer-events-none" />
 
@@ -1890,7 +1885,7 @@ export function PaymentsPage() {
 
             {/* Configuration Pricing Form Table */}
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-              <div className="overflow-x-auto w-full border border-slate-200 dark:border-slate-900/60 rounded-2xl">
+              <div className="overflow-x-auto w-full border-2 border-black rounded-2xl">
                 <table className="w-full min-w-[700px] border-collapse text-left">
                   <thead>
                     <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-[10px] font-extrabold uppercase tracking-widest bg-slate-50 dark:bg-slate-950/40">
