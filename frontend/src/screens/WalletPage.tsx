@@ -571,7 +571,7 @@ export function WalletPage() {
         </div>
 
         {/* Interactive Transaction Ledger Section */}
-        <section className="bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 shadow-sm flex flex-col gap-6">
+        <section className="bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm flex flex-col gap-6">
           {/* Header & Controls bar */}
           <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
             <div className="flex items-center gap-2">
