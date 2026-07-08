@@ -77,7 +77,7 @@ export function ServiceQueue() {
   };
 
   return (
-    <article className="recent-updates-card bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
+    <article className="recent-updates-card bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
       <div className="flex items-center justify-between gap-4 mb-6">
         <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           Recent Updates

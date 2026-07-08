@@ -1127,7 +1127,7 @@ export function SoftwareKeysPage() {
     <AppShell activePage="Our Service">
       <section className="flex flex-col gap-6 w-full pb-8">
         {/* Navigation Breadcrumb Bar */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-2xl p-4 shadow-sm">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-2xl p-4 shadow-sm">
           <div className="flex items-center gap-2 text-sm text-slate-500 font-semibold w-full md:w-auto">
             <span
               onClick={() => {
@@ -1172,7 +1172,7 @@ export function SoftwareKeysPage() {
                   placeholder="Search software keys..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-4 py-1.5 border border-slate-100 dark:border-slate-800/80 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a]/50 outline-none transition-all"
+                  className="w-full pl-9 pr-4 py-1.5 border border-slate-100 dark:border-slate-800/80 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-slate-50 dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a]/50 outline-none transition-all"
                 />
               </div>
             )}
@@ -1208,7 +1208,7 @@ export function SoftwareKeysPage() {
                 <div
                   key={software.id}
                   onClick={() => handleCardClick(software)}
-                  className="bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-5 shadow-sm hover:shadow-md cursor-pointer group transition-all duration-300 flex flex-col items-center justify-center text-center relative overflow-hidden hover:translate-y-[-4px]"
+                  className="bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-5 shadow-sm hover:shadow-md cursor-pointer group transition-all duration-300 flex flex-col items-center justify-center text-center relative overflow-hidden hover:translate-y-[-4px]"
                 >
                   <div className="absolute inset-0 bg-gradient-to-b from-slate-50/10 to-transparent dark:from-slate-900/5 to-transparent pointer-events-none" />
 
@@ -1256,11 +1256,11 @@ export function SoftwareKeysPage() {
           /* RENDER CUSTOM APPLY FORM INLINE */
           <div className="w-full">
             {paymentPhase === "success" && selectedSoftware ? (
-              <div className="w-full bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 md:p-8 shadow-sm flex flex-col gap-6 relative overflow-hidden animate-in fade-in duration-200">
+              <div className="w-full bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 md:p-8 shadow-sm flex flex-col gap-6 relative overflow-hidden animate-in fade-in duration-200">
                 <ServiceSuccessScreen serviceName={selectedSoftware.name} />
               </div>
             ) : paymentPhase === "payment" && selectedSoftware ? (
-              <div className="w-full bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 md:p-8 shadow-sm flex flex-col gap-6 relative overflow-hidden animate-in fade-in duration-200">
+              <div className="w-full bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 md:p-8 shadow-sm flex flex-col gap-6 relative overflow-hidden animate-in fade-in duration-200">
                 <div className="py-2">
                   <ServicePaymentScreen
                     serviceName={selectedSoftware.name}
@@ -1287,7 +1287,7 @@ export function SoftwareKeysPage() {
             />
 
             {/* Modal Dialog */}
-            <div className="relative w-full max-w-md bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-250 z-10 p-6 flex flex-col gap-5">
+            <div className="relative w-full max-w-md bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-250 z-10 p-6 flex flex-col gap-5">
               {/* Form Success State Screen */}
               {paymentPhase === "success" ? (
                 <ServiceSuccessScreen serviceName={selectedSoftware.name} />
@@ -1356,7 +1356,7 @@ export function SoftwareKeysPage() {
                         onChange={(e) =>
                           handleFieldChange("quantity", e.target.value)
                         }
-                        className={`w-full px-4 py-2.5 border rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#005c3a]/15 bg-white dark:bg-[#0a0f18]/30 transition-all ${
+                        className={`w-full px-4 py-2.5 border rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#005c3a]/15 bg-slate-50 dark:bg-[#0a0f18]/30 transition-all ${
                           errors.quantity
                             ? "border-rose-450 dark:border-rose-500/50"
                             : "border-slate-200 dark:border-slate-850 focus:border-[#005c3a]"
@@ -1381,7 +1381,7 @@ export function SoftwareKeysPage() {
                         onChange={(e) =>
                           handleFieldChange("customerEmail", e.target.value)
                         }
-                        className={`w-full px-4 py-2.5 border rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#005c3a]/15 bg-white dark:bg-[#0a0f18]/30 transition-all ${
+                        className={`w-full px-4 py-2.5 border rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#005c3a]/15 bg-slate-50 dark:bg-[#0a0f18]/30 transition-all ${
                           errors.customerEmail
                             ? "border-rose-450 dark:border-rose-500/50"
                             : "border-slate-200 dark:border-slate-850 focus:border-[#005c3a]"

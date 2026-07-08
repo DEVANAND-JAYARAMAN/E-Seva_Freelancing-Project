@@ -136,7 +136,7 @@ export const ServiceMessageManager = ({ serviceId, serviceName }: { serviceId: s
 
       {isOpen && user?.role === 'admin' && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
+          <div className="bg-slate-50 dark:bg-slate-900 rounded-2xl w-full max-w-lg p-6 shadow-2xl relative">
             <button onClick={() => setIsOpen(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
               <X size={20} />
             </button>

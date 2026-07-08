@@ -181,114 +181,10 @@ export function DashboardPage2({
           aria-label="Partner stats"
         >
 
-          {/* Card 1: RESUBMIT */}
-          <article
-            className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
-            onClick={() => router.push("/status")}
-          >
-            <div className="space-y-1">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                Resubmit
-              </p>
-              <strong className="block text-2xl font-black text-slate-900 dark:text-white">
-                {resubmitCount}
-              </strong>
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
-                Needs Attention
-              </span>
-            </div>
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-purple-50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400">
-              <RefreshCw size={18} />
-            </span>
-          </article>
-
-          {/* Card: PENDING */}
-          <article
-            className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
-            onClick={() => router.push("/status")}
-          >
-            <div className="space-y-1">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                Pending
-              </p>
-              <strong className="block text-2xl font-black text-slate-900 dark:text-white">
-                {pendingCount}
-              </strong>
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
-                Awaiting Review
-              </span>
-            </div>
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400">
-              <Clock size={18} />
-            </span>
-          </article>
-
-          {/* Card: PROCESS */}
-          <article
-            className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
-            onClick={() => router.push("/status")}
-          >
-            <div className="space-y-1">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                In Process
-              </p>
-              <strong className="block text-2xl font-black text-slate-900 dark:text-white">
-                {processCount}
-              </strong>
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
-                Currently Processing
-              </span>
-            </div>
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400">
-              <Zap size={18} />
-            </span>
-          </article>
-
-          {/* Card: REJECTED */}
-          <article
-            className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
-            onClick={() => router.push("/status")}
-          >
-            <div className="space-y-1">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                Rejected
-              </p>
-              <strong className="block text-2xl font-black text-slate-900 dark:text-white">
-                {rejectedCount}
-              </strong>
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
-                Declined Submissions
-              </span>
-            </div>
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-red-50 dark:bg-red-950/20 text-red-500 dark:text-red-400">
-              <XCircle size={18} />
-            </span>
-          </article>
-
-          {/* Card 5: APPROVED */}
-          <article
-            className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
-            onClick={() => router.push("/status")}
-          >
-            <div className="space-y-1">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                Approved
-              </p>
-              <strong className="block text-2xl font-black text-slate-900 dark:text-white">
-                {approvedCount}
-              </strong>
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
-                Completed Requests
-              </span>
-            </div>
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-450">
-              <CheckCircle size={18} />
-            </span>
-          </article>
-
+          
           {/* Card 6: WALLET */}
           <article
-            className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+            className="flex items-center justify-between bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
             onClick={() => router.push("/wallets")}
           >
             <div className="space-y-1">
@@ -309,9 +205,114 @@ export function DashboardPage2({
               <Wallet size={18} />
             </span>
           </article>
+{/* Card 1: RESUBMIT */}
+          <article
+            className="flex items-center justify-between bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+            onClick={() => router.push("/status")}
+          >
+            <div className="space-y-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                Resubmit
+              </p>
+              <strong className="block text-2xl font-black text-slate-900 dark:text-white">
+                {resubmitCount}
+              </strong>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
+                Needs Attention
+              </span>
+            </div>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-purple-50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400">
+              <RefreshCw size={18} />
+            </span>
+          </article>
+
+          {/* Card: PENDING */}
+          <article
+            className="flex items-center justify-between bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+            onClick={() => router.push("/status")}
+          >
+            <div className="space-y-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                Pending
+              </p>
+              <strong className="block text-2xl font-black text-slate-900 dark:text-white">
+                {pendingCount}
+              </strong>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
+                Awaiting Review
+              </span>
+            </div>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400">
+              <Clock size={18} />
+            </span>
+          </article>
+
+          {/* Card: PROCESS */}
+          <article
+            className="flex items-center justify-between bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+            onClick={() => router.push("/status")}
+          >
+            <div className="space-y-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                In Process
+              </p>
+              <strong className="block text-2xl font-black text-slate-900 dark:text-white">
+                {processCount}
+              </strong>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
+                Currently Processing
+              </span>
+            </div>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400">
+              <Zap size={18} />
+            </span>
+          </article>
+
+          {/* Card: REJECTED */}
+          <article
+            className="flex items-center justify-between bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+            onClick={() => router.push("/status")}
+          >
+            <div className="space-y-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                Rejected
+              </p>
+              <strong className="block text-2xl font-black text-slate-900 dark:text-white">
+                {rejectedCount}
+              </strong>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
+                Declined Submissions
+              </span>
+            </div>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-red-50 dark:bg-red-950/20 text-red-500 dark:text-red-400">
+              <XCircle size={18} />
+            </span>
+          </article>
+
+          {/* Card 5: APPROVED */}
+          <article
+            className="flex items-center justify-between bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+            onClick={() => router.push("/status")}
+          >
+            <div className="space-y-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                Approved
+              </p>
+              <strong className="block text-2xl font-black text-slate-900 dark:text-white">
+                {approvedCount}
+              </strong>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
+                Completed Requests
+              </span>
+            </div>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-450">
+              <CheckCircle size={18} />
+            </span>
+          </article>
+
 
           {/* Card 8: TOTAL APPLICATIONS */}
-          <article className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
+          <article className="flex items-center justify-between bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
             <div className="space-y-1">
               <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 Applications
@@ -331,7 +332,7 @@ export function DashboardPage2({
           {/* Card 9: RETAILERS (Only for Distributor) */}
           {user?.role === "distributor" && (
             <article
-              className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+              className="flex items-center justify-between bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
               onClick={() => router.push("/retailers")}
             >
               <div className="space-y-1">
@@ -353,7 +354,7 @@ export function DashboardPage2({
         </section>
 
         {/* Our Services Status Table section */}
-        <section className="bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm">
+        <section className="bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm">
           <div className="border-b border-slate-100 dark:border-slate-900/60 pb-3">
             <h3 className="text-sm font-black text-slate-950 dark:text-white uppercase tracking-wider">
               Our Services Status
@@ -469,7 +470,7 @@ export function DashboardPage2({
         {/* Modal Dialog: Load Funds / Wallet Request */}
         {showRequestModal && (
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-[#0c101d] border border-slate-200 dark:border-slate-800 rounded-3xl max-w-sm w-full p-6 space-y-6 shadow-2xl animate-in zoom-in-95 duration-150">
+            <div className="bg-slate-50 dark:bg-[#0c101d] border border-slate-200 dark:border-slate-800 rounded-3xl max-w-sm w-full p-6 space-y-6 shadow-2xl animate-in zoom-in-95 duration-150">
               <div className="flex items-center gap-3">
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-400 shadow-inner">
                   <Wallet size={18} />

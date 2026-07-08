@@ -32,7 +32,7 @@ export function ServiceNavigation({
   };
 
   return (
-    <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-2xl p-4 shadow-sm">
+    <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-50 dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-2xl p-4 shadow-sm">
       <div className="flex items-center gap-2 text-sm text-slate-500 font-semibold w-full md:w-auto">
         <span
           onClick={() => {

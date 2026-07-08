@@ -145,7 +145,7 @@ export function AdminNotificationsPage() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 flex flex-col gap-4">
+        <div className="bg-slate-50 dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 flex flex-col gap-4">
           <label className="text-sm font-bold text-slate-700 dark:text-slate-300">
             New Alert Message (Type in Tanglish to auto-convert to Tamil)
           </label>
@@ -178,7 +178,7 @@ export function AdminNotificationsPage() {
           ) : (
             <div className="grid gap-4">
               {alerts.map(alert => (
-                <div key={alert.id} className={`p-4 rounded-2xl border ${alert.status === "Active" ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900'} flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between transition-all`}>
+                <div key={alert.id} className={`p-4 rounded-2xl border ${alert.status === "Active" ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20' : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900'} flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between transition-all`}>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
                       {alert.status === "Active" ? (

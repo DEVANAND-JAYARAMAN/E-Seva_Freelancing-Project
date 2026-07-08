@@ -49,7 +49,7 @@ export function TnegaCustomerTable({
   });
 
   return (
-    <div className="bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm flex flex-col space-y-6">
+    <div className="bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm flex flex-col space-y-6">
       {/* Search and Filter Panel */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="relative flex-1">
@@ -77,7 +77,7 @@ export function TnegaCustomerTable({
                 onClick={() => setStatusFilter(filter)}
                 className={`px-4 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 ${
                   statusFilter === filter
-                    ? "bg-white dark:bg-[#090d16] text-[#005c3a] dark:text-emerald-400 shadow-sm border border-slate-100 dark:border-slate-850/50"
+                    ? "bg-slate-50 dark:bg-[#090d16] text-[#005c3a] dark:text-emerald-400 shadow-sm border border-slate-100 dark:border-slate-850/50"
                     : "text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
                 }`}
               >

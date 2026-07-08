@@ -133,7 +133,7 @@ export function TransactionsPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => router.back()}
-            className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white dark:bg-[#090d16] border-2 border-black dark:border-white shadow-sm hover:bg-slate-50 dark:hover:bg-slate-900 transition-all"
+            className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white shadow-sm hover:bg-slate-50 dark:hover:bg-slate-900 transition-all"
           >
             <ArrowLeft size={16} />
           </button>
@@ -148,7 +148,7 @@ export function TransactionsPage() {
         </div>
 
         {/* Interactive Transaction Ledger Section */}
-        <section className="bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm flex flex-col gap-6">
+        <section className="bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm flex flex-col gap-6">
           {/* Header & Controls bar */}
           <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
             <div className="flex items-center gap-2">
@@ -178,7 +178,7 @@ export function TransactionsPage() {
                   placeholder="Search ref, desc..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
+                  className="w-full pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-slate-50 dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
                 />
               </div>
 
@@ -188,7 +188,7 @@ export function TransactionsPage() {
                   onClick={() => setTypeFilter("all")}
                   className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition-all ${
                     typeFilter === "all"
-                      ? "bg-white dark:bg-[#0f1524] text-[#005c3a] dark:text-emerald-400 shadow-sm"
+                      ? "bg-slate-50 dark:bg-[#0f1524] text-[#005c3a] dark:text-emerald-400 shadow-sm"
                       : "text-slate-400 dark:text-slate-500 hover:text-slate-750 dark:hover:text-slate-300"
                   }`}
                 >
@@ -198,7 +198,7 @@ export function TransactionsPage() {
                   onClick={() => setTypeFilter("credit")}
                   className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition-all ${
                     typeFilter === "credit"
-                      ? "bg-white dark:bg-[#0f1524] text-emerald-600 dark:text-emerald-400 shadow-sm"
+                      ? "bg-slate-50 dark:bg-[#0f1524] text-emerald-600 dark:text-emerald-400 shadow-sm"
                       : "text-slate-400 dark:text-slate-500 hover:text-slate-750 dark:hover:text-slate-300"
                   }`}
                 >
@@ -208,7 +208,7 @@ export function TransactionsPage() {
                   onClick={() => setTypeFilter("debit")}
                   className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition-all ${
                     typeFilter === "debit"
-                      ? "bg-white dark:bg-[#0f1524] text-rose-600 dark:text-rose-455 shadow-sm"
+                      ? "bg-slate-50 dark:bg-[#0f1524] text-rose-600 dark:text-rose-455 shadow-sm"
                       : "text-slate-400 dark:text-slate-500 hover:text-slate-750 dark:hover:text-slate-300"
                   }`}
                 >

@@ -108,9 +108,9 @@ export function StatusDetailModal({
   return (
     <div className="fixed inset-0 z-50 flex bg-slate-50 dark:bg-[#04080f] animate-fadeIn">
       {/* Full Page Container */}
-      <div className="relative w-full h-full bg-white dark:bg-[#090d16] shadow-2xl flex flex-col overflow-hidden">
+      <div className="relative w-full h-full bg-slate-50 dark:bg-[#090d16] shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-slate-900/60 shrink-0 bg-white dark:bg-[#090d16] z-10">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-slate-900/60 shrink-0 bg-slate-50 dark:bg-[#090d16] z-10">
           <div>
             <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">
               Service Request Details
@@ -132,7 +132,7 @@ export function StatusDetailModal({
               {/* Core Details Grid */}
               <div className="grid grid-cols-2 gap-4 bg-slate-50/50 dark:bg-[#0a0f18]/10 p-5 rounded-2xl border-2 border-black dark:border-white">
                 {/* Service Name */}
-                <div className="col-span-2 bg-white dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                <div className="col-span-2 bg-slate-50 dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                   <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                     Requested Service
                   </span>
@@ -142,7 +142,7 @@ export function StatusDetailModal({
                 </div>
 
                 {/* Retailer */}
-                <div className="bg-white dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                <div className="bg-slate-50 dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                   <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                     Retailer / Distributor
                   </span>
@@ -157,7 +157,7 @@ export function StatusDetailModal({
                 </div>
 
                 {/* Role */}
-                <div className="bg-white dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                <div className="bg-slate-50 dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                   <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                     User Role
                   </span>
@@ -167,7 +167,7 @@ export function StatusDetailModal({
                 </div>
 
                 {/* Charge */}
-                <div className="bg-white dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                <div className="bg-slate-50 dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                   <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                     Processing Charge
                   </span>
@@ -177,7 +177,7 @@ export function StatusDetailModal({
                 </div>
 
                 {/* Current Status */}
-                <div className="bg-white dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                <div className="bg-slate-50 dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                   <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                     Current Status
                   </span>
@@ -201,7 +201,7 @@ export function StatusDetailModal({
                 </div>
 
                 {/* Created At */}
-                <div className="bg-white dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                <div className="bg-slate-50 dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                   <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                     Submission Date
                   </span>
@@ -211,7 +211,7 @@ export function StatusDetailModal({
                 </div>
 
                 {/* Last Updated */}
-                <div className="bg-white dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                <div className="bg-slate-50 dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                   <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                     Last Status Update
                   </span>
@@ -248,7 +248,7 @@ export function StatusDetailModal({
                             type="text"
                             readOnly
                             value={value || ""}
-                            className="w-full bg-white dark:bg-[#090d16] border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 dark:text-slate-200 focus:outline-none shadow-sm cursor-default"
+                            className="w-full bg-slate-50 dark:bg-[#090d16] border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 dark:text-slate-200 focus:outline-none shadow-sm cursor-default"
                           />
                         </div>
                       ))}
@@ -431,7 +431,7 @@ export function StatusDetailModal({
                   <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                     Admin Remarks
                   </span>
-                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 bg-white dark:bg-[#090d16] p-4 rounded-xl border border-slate-200 dark:border-slate-800">
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-[#090d16] p-4 rounded-xl border border-slate-200 dark:border-slate-800">
                     {ticket.remarks}
                   </p>
                 </div>
@@ -452,7 +452,7 @@ export function StatusDetailModal({
                       }}
                       rows={4}
                       placeholder="Enter custom remarks before updating status..."
-                      className="w-full h-[142px] px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18] text-sm font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 dark:focus:ring-emerald-500/20 transition-all resize-none"
+                      className="w-full h-[142px] px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0a0f18] text-sm font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 dark:focus:ring-emerald-500/20 transition-all resize-none"
                     />
                   </div>
 

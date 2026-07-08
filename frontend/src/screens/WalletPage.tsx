@@ -533,7 +533,7 @@ export function WalletPage() {
               </span>
               <button
                 onClick={() => openRechargeModal()}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-[#005c3a] hover:bg-emerald-50 text-xs font-extrabold rounded-xl transition-all duration-200 active:scale-95 shadow-sm"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-50 text-[#005c3a] hover:bg-emerald-50 text-xs font-extrabold rounded-xl transition-all duration-200 active:scale-95 shadow-sm"
               >
                 <Plus size={14} className="stroke-[3]" />
                 Recharge
@@ -579,7 +579,7 @@ export function WalletPage() {
         </div>
 
         {/* Interactive Transaction Ledger Section */}
-        <section className="bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm flex flex-col gap-6">
+        <section className="bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm flex flex-col gap-6">
           {/* Header & Controls bar */}
           <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
             <div className="flex items-center gap-2">
@@ -609,7 +609,7 @@ export function WalletPage() {
                   placeholder="Search ref, desc..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
+                  className="w-full pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-slate-50 dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
                 />
               </div>
 
@@ -619,7 +619,7 @@ export function WalletPage() {
                   onClick={() => setTypeFilter("all")}
                   className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition-all ${
                     typeFilter === "all"
-                      ? "bg-white dark:bg-[#0f1524] text-[#005c3a] dark:text-emerald-400 shadow-sm"
+                      ? "bg-slate-50 dark:bg-[#0f1524] text-[#005c3a] dark:text-emerald-400 shadow-sm"
                       : "text-slate-400 dark:text-slate-500 hover:text-slate-750 dark:hover:text-slate-300"
                   }`}
                 >
@@ -629,7 +629,7 @@ export function WalletPage() {
                   onClick={() => setTypeFilter("credit")}
                   className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition-all ${
                     typeFilter === "credit"
-                      ? "bg-white dark:bg-[#0f1524] text-emerald-600 dark:text-emerald-400 shadow-sm"
+                      ? "bg-slate-50 dark:bg-[#0f1524] text-emerald-600 dark:text-emerald-400 shadow-sm"
                       : "text-slate-400 dark:text-slate-500 hover:text-slate-750 dark:hover:text-slate-300"
                   }`}
                 >
@@ -639,7 +639,7 @@ export function WalletPage() {
                   onClick={() => setTypeFilter("debit")}
                   className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition-all ${
                     typeFilter === "debit"
-                      ? "bg-white dark:bg-[#0f1524] text-rose-600 dark:text-rose-450 shadow-sm"
+                      ? "bg-slate-50 dark:bg-[#0f1524] text-rose-600 dark:text-rose-450 shadow-sm"
                       : "text-slate-400 dark:text-slate-500 hover:text-slate-750 dark:hover:text-slate-300"
                   }`}
                 >
@@ -779,7 +779,7 @@ export function WalletPage() {
             />
 
             {/* Modal Dialog */}
-            <div className="relative w-full max-w-2xl bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-250 z-10 p-6 flex flex-col gap-5">
+            <div className="relative w-full max-w-2xl bg-slate-50 dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-250 z-10 p-6 flex flex-col gap-5">
               {/* Form Success State Screen */}
               {formSuccess ? (
                 <div className="py-10 flex flex-col items-center justify-center text-center gap-4">
@@ -841,7 +841,7 @@ export function WalletPage() {
                           value={amount}
                           onChange={(e) => setAmount(e.target.value)}
                           disabled={user?.role !== "admin" && utrNumber.trim().length > 0}
-                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-slate-50 dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                           required
                           min="1"
                         />
@@ -860,7 +860,7 @@ export function WalletPage() {
                                 setPaymentMode(e.target.value as "UPI" | "QR");
                                 setFormError("");
                               }}
-                              className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all appearance-none cursor-pointer"
+                              className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-slate-50 dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all appearance-none cursor-pointer"
                             >
                               <option value="UPI">UPI ID Request (Gateway)</option>
                               <option value="QR">Manual QR Scan</option>
@@ -881,7 +881,7 @@ export function WalletPage() {
                                 setFormError("");
                               }}
                               maxLength={10}
-                              className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
+                              className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-slate-50 dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
                               required
                             />
                           </div>
@@ -900,7 +900,7 @@ export function WalletPage() {
                                   setUtrNumber(e.target.value);
                                   setFormError("");
                                 }}
-                                className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
+                                className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-slate-50 dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
                               />
                             </div>
                           )}
@@ -914,7 +914,7 @@ export function WalletPage() {
                         <div className="bg-slate-50/50 dark:bg-slate-950/25 border border-slate-100 dark:border-slate-900/60 rounded-2xl p-4 flex flex-col items-center justify-center min-h-[280px] text-center">
                           {paymentMode === "QR" && (
                             <div className="flex flex-col items-center gap-3.5 animate-in fade-in duration-200">
-                              <div className="p-2.5 bg-white rounded-xl shadow-sm border border-slate-100">
+                              <div className="p-2.5 bg-slate-50 rounded-xl shadow-sm border border-slate-100">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
                                   src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(

@@ -220,7 +220,7 @@ export function PdfServicePage() {
 
   return (
     <AppShell activePage="PDF Service">
-      <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 bg-white dark:bg-[#030712] rounded-3xl border-2 border-black dark:border-white shadow-xl dark:shadow-2xl relative overflow-hidden space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 bg-slate-50 dark:bg-[#030712] rounded-3xl border-2 border-black dark:border-white shadow-xl dark:shadow-2xl relative overflow-hidden space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-300">
         {/* Glow Effects */}
         <div className="absolute top-[-20%] left-[-10%] w-[35vw] h-[35vw] rounded-full bg-emerald-500/[0.03] dark:bg-emerald-500/5 blur-[120px] pointer-events-none" />
         <div className="absolute bottom-[-20%] right-[-10%] w-[35vw] h-[35vw] rounded-full bg-emerald-500/[0.03] dark:bg-emerald-500/5 blur-[120px] pointer-events-none" />
@@ -313,7 +313,7 @@ export function PdfServicePage() {
                             onChange={(e) =>
                               handleInputChange(idx, "admin", e.target.value)
                             }
-                            className="w-24 h-9 px-3 text-xs font-black text-center bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-800/80 rounded-lg focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-white transition-all outline-none"
+                            className="w-24 h-9 px-3 text-xs font-black text-center bg-slate-50 dark:bg-[#131926] border border-slate-200 dark:border-slate-800/80 rounded-lg focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-white transition-all outline-none"
                           />
                         </div>
                       </td>
@@ -331,7 +331,7 @@ export function PdfServicePage() {
                                 e.target.value,
                               )
                             }
-                            className="w-24 h-9 px-3 text-xs font-black text-center bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-800/80 rounded-lg focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-white transition-all outline-none"
+                            className="w-24 h-9 px-3 text-xs font-black text-center bg-slate-50 dark:bg-[#131926] border border-slate-200 dark:border-slate-800/80 rounded-lg focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-white transition-all outline-none"
                           />
                         </div>
                       </td>
@@ -349,7 +349,7 @@ export function PdfServicePage() {
                                 e.target.value,
                               )
                             }
-                            className="w-24 h-9 px-3 text-xs font-black text-center bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-800/80 rounded-lg focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-white transition-all outline-none"
+                            className="w-24 h-9 px-3 text-xs font-black text-center bg-slate-50 dark:bg-[#131926] border border-slate-200 dark:border-slate-800/80 rounded-lg focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-white transition-all outline-none"
                           />
                         </div>
                       </td>
@@ -363,7 +363,7 @@ export function PdfServicePage() {
                             onChange={(e) =>
                               handleInputChange(idx, "retailer", e.target.value)
                             }
-                            className="w-24 h-9 px-3 text-xs font-black text-center bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-800/80 rounded-lg focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-white transition-all outline-none"
+                            className="w-24 h-9 px-3 text-xs font-black text-center bg-slate-50 dark:bg-[#131926] border border-slate-200 dark:border-slate-800/80 rounded-lg focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-white transition-all outline-none"
                           />
                         </div>
                       </td>
@@ -377,7 +377,7 @@ export function PdfServicePage() {
                             onChange={(e) =>
                               handleInputChange(idx, "customer", e.target.value)
                             }
-                            className="w-24 h-9 px-3 text-xs font-black text-center bg-white dark:bg-[#131926] border border-slate-200 dark:border-slate-800/80 rounded-lg focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-white transition-all outline-none"
+                            className="w-24 h-9 px-3 text-xs font-black text-center bg-slate-50 dark:bg-[#131926] border border-slate-200 dark:border-slate-800/80 rounded-lg focus:border-emerald-500 dark:focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-slate-800 dark:text-white transition-all outline-none"
                           />
                         </div>
                       </td>
@@ -424,7 +424,7 @@ export function PdfServicePage() {
             className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm"
             onClick={() => setIsAddModalOpen(false)}
           />
-          <div className="relative w-full max-w-md bg-white dark:bg-[#090d16] border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden p-6 z-10 animate-in fade-in zoom-in-95 duration-200">
+          <div className="relative w-full max-w-md bg-slate-50 dark:bg-[#090d16] border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden p-6 z-10 animate-in fade-in zoom-in-95 duration-200">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
               <h4 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
@@ -452,7 +452,7 @@ export function PdfServicePage() {
                   value={newServiceName}
                   onChange={(e) => setNewServiceName(e.target.value)}
                   placeholder="e.g. Passport Application"
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
                 />
               </div>
 
@@ -468,7 +468,7 @@ export function PdfServicePage() {
                     min="0"
                     value={newAdminPrice}
                     onChange={(e) => setNewAdminPrice(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
                   />
                 </div>
                 <div className="space-y-1">
@@ -481,7 +481,7 @@ export function PdfServicePage() {
                     min="0"
                     value={newOthersiteAdminPrice}
                     onChange={(e) => setNewOthersiteAdminPrice(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
                   />
                 </div>
               </div>
@@ -498,7 +498,7 @@ export function PdfServicePage() {
                     min="0"
                     value={newDistributorPrice}
                     onChange={(e) => setNewDistributorPrice(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
                   />
                 </div>
                 <div className="space-y-1">
@@ -511,7 +511,7 @@ export function PdfServicePage() {
                     min="0"
                     value={newRetailerPrice}
                     onChange={(e) => setNewRetailerPrice(e.target.value)}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
                   />
                 </div>
               </div>
@@ -527,7 +527,7 @@ export function PdfServicePage() {
                   min="0"
                   value={newCustomerPrice}
                   onChange={(e) => setNewCustomerPrice(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
                 />
               </div>
 

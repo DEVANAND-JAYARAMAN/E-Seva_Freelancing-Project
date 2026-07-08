@@ -101,7 +101,7 @@ export const AgriStackPdfForm: React.FC<AgriStackPdfFormProps> = ({
           type="button"
           onClick={onCancel}
           disabled={isLoading}
-          className="px-6 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-transparent text-slate-655 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider transition-all select-none"
+          className="px-6 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-transparent text-slate-655 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider transition-all select-none"
         >
           CANCEL
         </button>

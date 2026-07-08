@@ -67,7 +67,7 @@ export function StatusTable({
   });
 
   return (
-    <div className="bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm flex flex-col space-y-6">
+    <div className="bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm flex flex-col space-y-6">
       {/* Search Input Bar */}
       <div className="relative w-full">
         <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">

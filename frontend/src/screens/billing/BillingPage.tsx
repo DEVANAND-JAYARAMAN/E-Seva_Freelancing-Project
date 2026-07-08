@@ -299,7 +299,7 @@ export function BillingPage() {
 
         {/* Financial Metrics */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#0b101e] border-2 border-black dark:border-white shadow-sm flex flex-col gap-3">
+          <div className="p-6 rounded-3xl bg-slate-50 dark:bg-[#0b101e] border-2 border-black dark:border-white shadow-sm flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                 Total Official Cost
@@ -313,7 +313,7 @@ export function BillingPage() {
             </span>
           </div>
 
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#0b101e] border-2 border-black dark:border-white shadow-sm flex flex-col gap-3">
+          <div className="p-6 rounded-3xl bg-slate-50 dark:bg-[#0b101e] border-2 border-black dark:border-white shadow-sm flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                 Total Service Charge (Revenue)
@@ -327,7 +327,7 @@ export function BillingPage() {
             </span>
           </div>
 
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#0b101e] border-2 border-black dark:border-white shadow-sm flex flex-col gap-3">
+          <div className="p-6 rounded-3xl bg-slate-50 dark:bg-[#0b101e] border-2 border-black dark:border-white shadow-sm flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                 Net Profit
@@ -359,7 +359,7 @@ export function BillingPage() {
         </div>
 
         {/* Official Costs Configuration Section */}
-        <div className="flex flex-col gap-6 bg-white dark:bg-[#0b101e] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm">
+        <div className="flex flex-col gap-6 bg-slate-50 dark:bg-[#0b101e] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
               <Settings
@@ -440,7 +440,7 @@ export function BillingPage() {
                                   }))
                                 }
                                 placeholder="0"
-                                className="w-24 px-3 py-1.5 text-center font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0a0f18] text-slate-800 dark:text-white focus:outline-none focus:border-[#005c3a] dark:focus:border-emerald-500 shadow-sm"
+                                className="w-24 px-3 py-1.5 text-center font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#0a0f18] text-slate-800 dark:text-white focus:outline-none focus:border-[#005c3a] dark:focus:border-emerald-500 shadow-sm"
                               />
                             </div>
                           </td>
@@ -483,7 +483,7 @@ export function BillingPage() {
                                     }))
                                   }
                                   placeholder="0"
-                                  className="w-24 px-3 py-1.5 text-center font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0a0f18] text-slate-800 dark:text-white focus:outline-none focus:border-[#005c3a] dark:focus:border-emerald-500 shadow-sm"
+                                  className="w-24 px-3 py-1.5 text-center font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#0a0f18] text-slate-800 dark:text-white focus:outline-none focus:border-[#005c3a] dark:focus:border-emerald-500 shadow-sm"
                                 />
                               </div>
                             </td>
@@ -492,7 +492,7 @@ export function BillingPage() {
                                 onClick={() =>
                                   handleSaveOfficialCost(child.id, child.name)
                                 }
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-700 bg-white dark:bg-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors shadow-sm"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-50 dark:bg-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors shadow-sm"
                               >
                                 <Save size={14} />
                                 Save
@@ -510,7 +510,7 @@ export function BillingPage() {
         </div>
 
         {/* Table Section */}
-        <div className="flex flex-col gap-6 bg-white dark:bg-[#0b101e] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm">
+        <div className="flex flex-col gap-6 bg-slate-50 dark:bg-[#0b101e] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
               <Activity
@@ -606,7 +606,7 @@ export function BillingPage() {
 
         {/* Chart Section */}
         {chartData.length > 0 && (
-          <div className="flex flex-col gap-6 bg-white dark:bg-[#0b101e] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm">
+          <div className="flex flex-col gap-6 bg-slate-50 dark:bg-[#0b101e] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
                 <TrendingUp
@@ -620,7 +620,7 @@ export function BillingPage() {
                   onClick={() => setTimeFilter("day")}
                   className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
                     timeFilter === "day"
-                      ? "bg-white dark:bg-slate-800 shadow-sm text-emerald-600 dark:text-emerald-400"
+                      ? "bg-slate-50 dark:bg-slate-800 shadow-sm text-emerald-600 dark:text-emerald-400"
                       : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                   }`}
                 >
@@ -630,7 +630,7 @@ export function BillingPage() {
                   onClick={() => setTimeFilter("month")}
                   className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
                     timeFilter === "month"
-                      ? "bg-white dark:bg-slate-800 shadow-sm text-emerald-600 dark:text-emerald-400"
+                      ? "bg-slate-50 dark:bg-slate-800 shadow-sm text-emerald-600 dark:text-emerald-400"
                       : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                   }`}
                 >
@@ -640,7 +640,7 @@ export function BillingPage() {
                   onClick={() => setTimeFilter("year")}
                   className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
                     timeFilter === "year"
-                      ? "bg-white dark:bg-slate-800 shadow-sm text-emerald-600 dark:text-emerald-400"
+                      ? "bg-slate-50 dark:bg-slate-800 shadow-sm text-emerald-600 dark:text-emerald-400"
                       : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                   }`}
                 >
@@ -654,7 +654,7 @@ export function BillingPage() {
                     onClick={() => setChartType(type as any)}
                     className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all capitalize ${
                       chartType === type
-                        ? "bg-white dark:bg-slate-800 shadow-sm text-[#005c3a] dark:text-emerald-500"
+                        ? "bg-slate-50 dark:bg-slate-800 shadow-sm text-[#005c3a] dark:text-emerald-500"
                         : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                     }`}
                   >

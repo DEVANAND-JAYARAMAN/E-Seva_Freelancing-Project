@@ -221,7 +221,7 @@ export function VoterIdPage() {
         ) : (
           /* ELEGANT & PROFESSIONAL ENTERPRISE DESIGN FOR INLINE FORM */
           <div className="w-full">
-            <div className="w-full bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 md:p-8 shadow-sm flex flex-col gap-6 relative overflow-hidden animate-in fade-in duration-200">
+            <div className="w-full bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 md:p-8 shadow-sm flex flex-col gap-6 relative overflow-hidden animate-in fade-in duration-200">
               {activeForm === "epic-voter-pdf" ? (
                 <EpicVoterPdf onCancel={() => setActiveForm(null)} />
               ) : activeForm === "update-cell-one-otp" ? (

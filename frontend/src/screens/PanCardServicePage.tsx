@@ -102,7 +102,7 @@ export function PanCardServicePage() {
   if (success) {
     return (
       <AppShell activePage="PanCard Services">
-        <div className="w-full max-w-4xl mx-auto py-16 flex flex-col items-center justify-center text-center gap-4 bg-white dark:bg-[#030712] rounded-3xl border border-slate-200/80 dark:border-emerald-950/60 shadow-xl min-h-[500px]">
+        <div className="w-full max-w-4xl mx-auto py-16 flex flex-col items-center justify-center text-center gap-4 bg-slate-50 dark:bg-[#030712] rounded-3xl border border-slate-200/80 dark:border-emerald-950/60 shadow-xl min-h-[500px]">
           <span className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-400 animate-bounce">
             <CheckCircle2 size={44} className="stroke-[2.5]" />
           </span>
@@ -121,7 +121,7 @@ export function PanCardServicePage() {
 
   return (
     <AppShell activePage="PanCard Services">
-      <div className="w-full max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 bg-white dark:bg-[#090d16] rounded-3xl border-2 border-black dark:border-white shadow-sm relative overflow-hidden animate-in fade-in duration-200">
+      <div className="w-full max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 bg-slate-50 dark:bg-[#090d16] rounded-3xl border-2 border-black dark:border-white shadow-sm relative overflow-hidden animate-in fade-in duration-200">
         <form onSubmit={handleSubmit} className="space-y-8 w-full">
           {/* Form Header */}
           <div className="flex flex-col sm:flex-row sm:items-start justify-between border-b border-slate-100 dark:border-slate-900/50 pb-4 gap-4">
@@ -308,7 +308,7 @@ export function PanCardServicePage() {
               type="button"
               onClick={() => setFormData({ applicationType: "New PAN Card (Form 49A)" })}
               disabled={isSubmitting}
-              className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
+              className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
             >
               Reset
             </button>

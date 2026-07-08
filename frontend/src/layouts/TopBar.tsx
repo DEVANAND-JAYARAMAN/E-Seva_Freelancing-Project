@@ -214,7 +214,7 @@ export function TopBar({ onMenuClick, activePage }: TopBarProps) {
                 className="fixed inset-0 z-40 cursor-default"
                 onClick={() => setIsNotifOpen(false)}
               />
-              <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#0c101d] p-3 shadow-2xl dark:shadow-black/50 z-50 animate-in fade-in slide-in-from-top-2 duration-150 flex flex-col gap-2">
+              <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50 dark:bg-[#0c101d] p-3 shadow-2xl dark:shadow-black/50 z-50 animate-in fade-in slide-in-from-top-2 duration-150 flex flex-col gap-2">
                 <h3 className="text-sm font-extrabold px-2 pt-1 pb-2 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     <span>Notifications</span>
@@ -295,7 +295,7 @@ export function TopBar({ onMenuClick, activePage }: TopBarProps) {
                 className="fixed inset-0 z-40 cursor-default"
                 onClick={() => setIsDropdownOpen(false)}
               />
-              <div className="absolute right-0 mt-2 w-52 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#0c101d] p-2 shadow-2xl dark:shadow-black/50 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+              <div className="absolute right-0 mt-2 w-52 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50 dark:bg-[#0c101d] p-2 shadow-2xl dark:shadow-black/50 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                 <button
                   onClick={() => {
                     setIsDropdownOpen(false);

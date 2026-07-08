@@ -132,7 +132,7 @@ export function TnegaCustomerForm({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-md p-4 animate-fadeIn">
       {/* Modal Container */}
-      <div className="relative w-full max-w-4xl bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl shadow-xl overflow-hidden animate-slideUp">
+      <div className="relative w-full max-w-4xl bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl shadow-xl overflow-hidden animate-slideUp">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-50 dark:border-slate-900/40">
           <div>
@@ -341,7 +341,7 @@ export function TnegaCustomerForm({
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-850 bg-white dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all"
+              className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-850 bg-slate-50 dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all"
             >
               CANCEL
             </button>

@@ -155,7 +155,7 @@ export const PvcCardPrintForm: React.FC<PvcCardPrintFormProps> = ({
         </div>
 
         {/* Dynamic Services Selector Table */}
-        <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-950">
+        <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-950">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs font-semibold">
               <thead>
@@ -244,7 +244,7 @@ export const PvcCardPrintForm: React.FC<PvcCardPrintFormProps> = ({
                 {items.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-850 p-3 rounded-lg shadow-sm"
+                    className="flex items-center justify-between bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-850 p-3 rounded-lg shadow-sm"
                   >
                     <div className="flex items-center gap-4 text-xs">
                       <div>
@@ -385,7 +385,7 @@ export const PvcCardPrintForm: React.FC<PvcCardPrintFormProps> = ({
           type="button"
           onClick={onCancel}
           disabled={isLoading}
-          className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
+          className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
         >
           Cancel
         </button>

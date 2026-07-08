@@ -325,7 +325,7 @@ export function PdfPage() {
       case "adhaar-verification":
         return (
           <div className="relative w-full h-36 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center overflow-hidden">
-            <div className="relative w-36 h-22 rounded-lg bg-white dark:bg-[#0a0f18]/30 border border-slate-250 dark:border-slate-800 shadow-lg flex flex-col p-2 justify-between">
+            <div className="relative w-36 h-22 rounded-lg bg-slate-50 dark:bg-[#0a0f18]/30 border border-slate-250 dark:border-slate-800 shadow-lg flex flex-col p-2 justify-between">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-900/40 pb-1">
                 <span className="text-[5px] font-black text-slate-500 uppercase tracking-wider">
                   Aadhaar Validation
@@ -720,7 +720,7 @@ export function PdfPage() {
               {servicesList.map((service) => (
                 <div
                   key={service.id}
-                  className="bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col group relative"
+                  className="bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col group relative"
                 >
                   {isAdmin && (
                     <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
@@ -802,7 +802,7 @@ export function PdfPage() {
         ) : activeForm && activeServiceObj ? (
           /* RENDER CUSTOM APPLY FORM INLINE */
           <div className="w-full">
-            <div className="w-full bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 md:p-8 shadow-sm flex flex-col gap-6 relative overflow-hidden animate-in fade-in duration-200">
+            <div className="w-full bg-slate-50 dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 md:p-8 shadow-sm flex flex-col gap-6 relative overflow-hidden animate-in fade-in duration-200">
               {submissionSuccess ? (
                 <div className="py-16 flex flex-col items-center justify-center text-center gap-4">
                   <span className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-400 animate-bounce">
@@ -1046,7 +1046,7 @@ export function PdfPage() {
                       type="button"
                       onClick={() => setActiveForm(null)}
                       disabled={isSubmitting}
-                      className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
+                      className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
                     >
                       Cancel
                     </button>
@@ -1064,7 +1064,7 @@ export function PdfPage() {
           /* RENDER DETAILED LIST/TRANSACTIONS LEDGER */
           <div className="space-y-6">
             {/* Header metadata summary */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-50 dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 shadow-sm">
               <div>
                 <h3 className="text-base font-extrabold text-slate-900 dark:text-white capitalize">
                   {servicesList.find((x) => x.id === activeListView)?.name}{" "}
@@ -1091,7 +1091,7 @@ export function PdfPage() {
             </div>
 
             {/* Table ledger containing previous searches */}
-            <div className="bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl overflow-hidden shadow-sm">
+            <div className="bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl overflow-hidden shadow-sm">
               {filteredLogs.length > 0 ? (
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">
@@ -1260,7 +1260,7 @@ function EditServiceModal({
         className="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative w-full max-w-md bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl shadow-xl overflow-hidden p-6 flex flex-col gap-5 z-10 animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-md bg-slate-50 dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl shadow-xl overflow-hidden p-6 flex flex-col gap-5 z-10 animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between border-b border-slate-50 dark:border-slate-900/50 pb-4">
           <h4 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wide">
             Edit Card Details
@@ -1282,7 +1282,7 @@ function EditServiceModal({
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
             />
           </div>
 
@@ -1294,7 +1294,7 @@ function EditServiceModal({
               type="number"
               value={amount}
               onChange={(e) => setAmount(Number(e.target.value))}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
             />
           </div>
 
@@ -1391,7 +1391,7 @@ function AddServiceModal({ isOpen, onClose, onSave }: AddServiceModalProps) {
         className="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative w-full max-w-md bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl shadow-xl overflow-hidden p-6 flex flex-col gap-5 z-10 animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-md bg-slate-50 dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl shadow-xl overflow-hidden p-6 flex flex-col gap-5 z-10 animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between border-b border-slate-50 dark:border-slate-900/50 pb-4">
           <h4 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wide">
             Add PDF Service
@@ -1413,7 +1413,7 @@ function AddServiceModal({ isOpen, onClose, onSave }: AddServiceModalProps) {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
               placeholder="e.g. New PDF Extract"
             />
           </div>
@@ -1426,7 +1426,7 @@ function AddServiceModal({ isOpen, onClose, onSave }: AddServiceModalProps) {
               type="number"
               value={amount}
               onChange={(e) => setAmount(Number(e.target.value))}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
             />
           </div>
 

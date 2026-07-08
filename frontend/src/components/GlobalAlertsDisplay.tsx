@@ -63,7 +63,7 @@ export const GlobalAlertsDisplay = () => {
 
       {activePopupAlert && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-[2rem] w-full max-w-md p-8 shadow-2xl relative border-t-8 border-red-500 transform transition-all">
+          <div className="bg-slate-50 dark:bg-slate-900 rounded-[2rem] w-full max-w-md p-8 shadow-2xl relative border-t-8 border-red-500 transform transition-all">
             <button 
               onClick={() => handleClose(activePopupAlert.id)} 
               className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-full p-2 transition-all"

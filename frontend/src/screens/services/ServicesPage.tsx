@@ -2095,7 +2095,7 @@ export function ServicesPage() {
     <AppShell activePage="Our Service">
       <section className="flex flex-col gap-6 w-full pb-8">
         {/* Navigation Breadcrumb Mock Address Bar */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-2xl p-4 shadow-sm">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-2xl p-4 shadow-sm">
           <div className="flex items-center gap-2 text-sm text-slate-500 font-semibold w-full md:w-auto">
             <span className="text-slate-400 dark:text-slate-500 font-bold uppercase text-xs tracking-wider">
               Services Directory
@@ -2112,7 +2112,7 @@ export function ServicesPage() {
                   className={`inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all select-none border border-slate-200 dark:border-slate-800 whitespace-nowrap ${
                     isManageMode
                       ? "bg-amber-500 hover:bg-amber-600 text-white border-transparent"
-                      : "bg-white dark:bg-transparent text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-900"
+                      : "bg-slate-50 dark:bg-transparent text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-900"
                   }`}
                 >
                   <span>
@@ -2141,7 +2141,7 @@ export function ServicesPage() {
                 placeholder="Search utility services..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 border border-slate-100 dark:border-slate-800/80 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a]/50 outline-none transition-all"
+                className="w-full pl-9 pr-4 py-2 border border-slate-100 dark:border-slate-800/80 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-slate-50 dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a]/50 outline-none transition-all"
               />
             </div>
           </div>
@@ -2242,7 +2242,7 @@ export function ServicesPage() {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl text-center shadow-sm">
+          <div className="flex flex-col items-center justify-center p-12 bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl text-center shadow-sm">
             <AlertCircle
               size={32}
               className="text-slate-300 dark:text-slate-700 mb-2"
@@ -2267,7 +2267,7 @@ export function ServicesPage() {
             />
 
             {/* Modal Dialog */}
-            <div className="relative w-full max-w-md bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-250 z-10 p-6 flex flex-col gap-5">
+            <div className="relative w-full max-w-md bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-250 z-10 p-6 flex flex-col gap-5">
               {/* Form Success State Screen */}
               {paymentPhase === "success" ? (
                 <ServiceSuccessScreen serviceName={selectedService.name} />
@@ -2438,7 +2438,7 @@ export function ServicesPage() {
                               onChange={(e) =>
                                 handleFieldChange(field, e.target.value)
                               }
-                              className="w-full px-4 py-2.8 border border-slate-200 dark:border-slate-850 rounded-xl bg-slate-50/50 dark:bg-[#0a0f18]/30 text-xs font-semibold text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a]/50 outline-none transition-all"
+                              className="w-full px-4 py-2.8 border border-slate-200 dark:border-slate-850 rounded-xl bg-slate-50/50 dark:bg-[#0a0f18]/30 text-xs font-semibold text-slate-700 dark:text-slate-350 focus:bg-slate-50 dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a]/50 outline-none transition-all"
                             >
                               <option value="">-- Choose Category --</option>
                               {options[field]?.map((opt) => (
@@ -2487,7 +2487,7 @@ export function ServicesPage() {
                                 ? "e.g. 1234 5678 9012"
                                 : `Enter ${label.toLowerCase()}`
                             }
-                            className={`w-full px-4 py-2.5 border rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#005c3a]/15 bg-white dark:bg-[#0a0f18]/30 transition-all ${
+                            className={`w-full px-4 py-2.5 border rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#005c3a]/15 bg-slate-50 dark:bg-[#0a0f18]/30 transition-all ${
                               isError
                                 ? "border-rose-400 dark:border-rose-500/50"
                                 : "border-slate-200 dark:border-slate-850 focus:border-[#005c3a]"
@@ -2603,7 +2603,7 @@ function EditServiceModal({
         className="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative w-full max-w-md bg-white dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl shadow-xl overflow-hidden p-6 flex flex-col gap-5 z-10 animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-md bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl shadow-xl overflow-hidden p-6 flex flex-col gap-5 z-10 animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between border-b border-slate-50 dark:border-slate-900/50 pb-4">
           <h4 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wide">
             Edit Card Details
@@ -2625,7 +2625,7 @@ function EditServiceModal({
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
             />
           </div>
 
@@ -2637,7 +2637,7 @@ function EditServiceModal({
               type="number"
               value={officialCost}
               onChange={(e) => setOfficialCost(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
             />
           </div>
 

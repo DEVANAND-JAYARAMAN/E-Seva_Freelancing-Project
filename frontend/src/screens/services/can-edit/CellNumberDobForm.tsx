@@ -211,7 +211,7 @@ export const CellNumberDobForm: React.FC<CellNumberDobFormProps> = ({
                   value={formData.dob}
                   disabled={isSubmitting}
                   onChange={(e) => handleFieldChange("dob", e.target.value)}
-                  className={`w-full px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/20 dark:focus:ring-emerald-500/20 bg-white dark:bg-[#0a0f18]/30 ${
+                  className={`w-full px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/20 dark:focus:ring-emerald-500/20 bg-slate-50 dark:bg-[#0a0f18]/30 ${
                     errors.dob
                       ? "border-red-500"
                       : "border-slate-250 dark:border-slate-800/80 focus:border-[#005c3a] dark:focus:border-emerald-500"
@@ -295,7 +295,7 @@ export const CellNumberDobForm: React.FC<CellNumberDobFormProps> = ({
               type="button"
               onClick={onCancel}
               disabled={isSubmitting}
-              className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
+              className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
             >
               Cancel
             </button>
