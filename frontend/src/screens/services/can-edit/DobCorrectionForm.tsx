@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useFormEdit } from "../../../store/context/FormEditContext";
 import { CheckCircle2 } from "lucide-react";
 import { InputField, SelectField, SubmitButton } from "../form/FormFields";
 import { validateField } from "../form/validators";
@@ -10,6 +11,7 @@ interface DobCorrectionFormProps {
 export const DobCorrectionForm: React.FC<DobCorrectionFormProps> = ({
   onCancel,
 }) => {
+  const { overrides } = useFormEdit();
   const [formData, setFormData] = useState<Record<string, string>>({
     canNumber: "",
     district: "",
@@ -136,11 +138,45 @@ export const DobCorrectionForm: React.FC<DobCorrectionFormProps> = ({
               name="district"
               label="District"
               options={[
-                { label: "Chennai", value: "Chennai" },
-                { label: "Coimbatore", value: "Coimbatore" },
-                { label: "Madurai", value: "Madurai" },
-                { label: "Trichy", value: "Trichy" },
-              ]}
+                         { label: "Ariyalur", value: "Ariyalur" },
+                         { label: "Chengalpattu", value: "Chengalpattu" },
+                         { label: "Chennai", value: "Chennai" },
+                         { label: "Coimbatore", value: "Coimbatore" },
+                         { label: "Cuddalore", value: "Cuddalore" },
+                         { label: "Dharmapuri", value: "Dharmapuri" },
+                         { label: "Dindigul", value: "Dindigul" },
+                         { label: "Erode", value: "Erode" },
+                         { label: "Kallakurichi", value: "Kallakurichi" },
+                         { label: "Kanchipuram", value: "Kanchipuram" },
+                         { label: "Kanyakumari", value: "Kanyakumari" },
+                         { label: "Karur", value: "Karur" },
+                         { label: "Krishnagiri", value: "Krishnagiri" },
+                         { label: "Madurai", value: "Madurai" },
+                         { label: "Mayiladuthurai", value: "Mayiladuthurai" },
+                         { label: "Nagapattinam", value: "Nagapattinam" },
+                         { label: "Namakkal", value: "Namakkal" },
+                         { label: "Nilgiris", value: "Nilgiris" },
+                         { label: "Perambalur", value: "Perambalur" },
+                         { label: "Pudukkottai", value: "Pudukkottai" },
+                         { label: "Ramanathapuram", value: "Ramanathapuram" },
+                         { label: "Ranipet", value: "Ranipet" },
+                         { label: "Salem", value: "Salem" },
+                         { label: "Sivaganga", value: "Sivaganga" },
+                         { label: "Tenkasi", value: "Tenkasi" },
+                         { label: "Thanjavur", value: "Thanjavur" },
+                         { label: "Theni", value: "Theni" },
+                         { label: "Thoothukudi", value: "Thoothukudi" },
+                         { label: "Tiruchirappalli (Trichy)", value: "Tiruchirappalli" },
+                         { label: "Tirunelveli", value: "Tirunelveli" },
+                         { label: "Tirupathur", value: "Tirupathur" },
+                         { label: "Tiruppur", value: "Tiruppur" },
+                         { label: "Tiruvallur", value: "Tiruvallur" },
+                         { label: "Tiruvannamalai", value: "Tiruvannamalai" },
+                         { label: "Tiruvarur", value: "Tiruvarur" },
+                         { label: "Vellore", value: "Vellore" },
+                         { label: "Viluppuram", value: "Viluppuram" },
+                         { label: "Virudhunagar", value: "Virudhunagar" }
+                       ]}
               value={formData.district}
               error={errors.district}
               disabled={isSubmitting}
@@ -175,12 +211,33 @@ export const DobCorrectionForm: React.FC<DobCorrectionFormProps> = ({
         </div>
       </div>
 
-      <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-900/60 mt-8">
+      
+      {/* Added Extra Fields */}
+      {overrides.addedFields && overrides.addedFields.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+          {overrides.addedFields.map((field) => (
+            <InputField
+              key={field.name}
+              name={field.name}
+              label={field.label}
+              type={(field.type as any) || "text"}
+              placeholder={field.placeholder}
+              value={formData[field.name] || ""}
+              error={errors && errors[field.name]}
+              disabled={isSubmitting}
+              onChange={(val, file) => {
+                handleFieldChange(field.name, val, file);
+              }}
+            />
+          ))}
+        </div>
+      )}
+<div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-900/60 mt-8">
         <button
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
+          className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
         >
           Cancel
         </button>

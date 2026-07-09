@@ -10,6 +10,7 @@ import {
   LogOut,
   Check,
   X,
+  Wallet,
 } from "lucide-react";
 import { useTheme } from "../store/context/ThemeProvider";
 import { useAuth } from "../store/context/AuthContext";
@@ -27,9 +28,10 @@ type Notification = {
 
 type TopBarProps = {
   onMenuClick: () => void;
+  activePage?: string;
 };
 
-export function TopBar({ onMenuClick }: TopBarProps) {
+export function TopBar({ onMenuClick, activePage }: TopBarProps) {
   const { theme, toggleTheme } = useTheme();
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -94,7 +96,7 @@ export function TopBar({ onMenuClick }: TopBarProps) {
     try {
       await fetch(
         `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/notifications/${id}?userId=${user.role === "admin" ? "ADMIN" : user.id}&createdAt=${createdAt}`,
-        { method: "DELETE" }
+        { method: "DELETE" },
       );
       fetchNotifications();
     } catch (err) {
@@ -136,7 +138,7 @@ export function TopBar({ onMenuClick }: TopBarProps) {
           <h1 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
             Welcome back,{" "}
             <span className="text-slate-800 dark:text-slate-200 font-extrabold capitalize">
-              Thuruvan
+              Thuruvan Communication
             </span>
           </h1>
         </div>
@@ -144,6 +146,20 @@ export function TopBar({ onMenuClick }: TopBarProps) {
 
       {/* Global Utilities (Notifications, Settings, Theme, Mini Profile) */}
       <div className="flex items-center gap-3">
+        {/* Wallet Balance Display (Retailers & Distributors only, hidden on Dashboard & Wallet pages) */}
+        {user?.role && ["retailer", "distributor"].includes(user.role) && activePage !== "Dashboard" && activePage !== "Wallet" && (
+          <button
+            onClick={() => router.push("/wallets")}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-[#005c3a]/20 bg-[#005c3a]/5 dark:border-emerald-500/20 dark:bg-emerald-950/20 hover:bg-[#005c3a]/10 dark:hover:bg-emerald-950/40 text-[#005c3a] dark:text-emerald-450 transition-all active:scale-95"
+            title="Go to Wallet"
+          >
+            <Wallet size={16} />
+            <span className="text-xs font-extrabold tracking-tight">
+              ₹{(user.walletBalance || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+            </span>
+          </button>
+        )}
+
         {/* Toggle Theme button */}
         <button
           onClick={toggleTheme}
@@ -160,7 +176,27 @@ export function TopBar({ onMenuClick }: TopBarProps) {
         {/* Notifications link */}
         <div className="relative">
           <button
-            onClick={() => setIsNotifOpen(!isNotifOpen)}
+            onClick={() => {
+              const newIsOpen = !isNotifOpen;
+              setIsNotifOpen(newIsOpen);
+
+              if (newIsOpen && unreadCount > 0) {
+                // Immediately update local state so badge disappears
+                setNotifications((prev) =>
+                  prev.map((n) => ({ ...n, isRead: true })),
+                );
+
+                // Call backend in background
+                if (user) {
+                  const targetUserId =
+                    user.role === "admin" ? "ADMIN" : user.id;
+                  fetch(
+                    `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/notifications/read-all?userId=${targetUserId}`,
+                    { method: "PATCH" },
+                  ).catch(console.error);
+                }
+              }
+            }}
             className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200/80 dark:border-slate-800/60 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/60 hover:text-slate-800 dark:hover:text-slate-200 active:scale-95 transition-all duration-300"
             aria-label="Notifications"
           >
@@ -178,15 +214,10 @@ export function TopBar({ onMenuClick }: TopBarProps) {
                 className="fixed inset-0 z-40 cursor-default"
                 onClick={() => setIsNotifOpen(false)}
               />
-              <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#0c101d] p-3 shadow-2xl dark:shadow-black/50 z-50 animate-in fade-in slide-in-from-top-2 duration-150 flex flex-col gap-2">
+              <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50 dark:bg-[#0c101d] p-3 shadow-2xl dark:shadow-black/50 z-50 animate-in fade-in slide-in-from-top-2 duration-150 flex flex-col gap-2">
                 <h3 className="text-sm font-extrabold px-2 pt-1 pb-2 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     <span>Notifications</span>
-                    {notifications.length > 0 && (
-                      <span className="text-[10px] text-slate-400 font-normal">
-                        {unreadCount} unread
-                      </span>
-                    )}
                   </div>
                   {notifications.length > 0 && (
                     <button
@@ -195,11 +226,15 @@ export function TopBar({ onMenuClick }: TopBarProps) {
                         try {
                           await fetch(
                             `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/notifications/all?userId=${user.role === "admin" ? "ADMIN" : user.id}`,
-                            { method: "DELETE" }
+                            { method: "DELETE" },
                           );
                           setNotifications([]);
+                          setIsNotifOpen(false);
                         } catch (err) {
-                          console.error("Failed to clear all notifications:", err);
+                          console.error(
+                            "Failed to clear all notifications:",
+                            err,
+                          );
                         }
                       }}
                       className="text-[10px] font-bold text-slate-400 hover:text-rose-500 transition-colors uppercase tracking-wider"
@@ -221,9 +256,6 @@ export function TopBar({ onMenuClick }: TopBarProps) {
                         if (notif.link) {
                           router.push(notif.link);
                           setIsNotifOpen(false);
-                          if (!notif.isRead) {
-                            markAsRead(notif.id, notif.createdAt);
-                          }
                         }
                       }}
                     >
@@ -231,30 +263,6 @@ export function TopBar({ onMenuClick }: TopBarProps) {
                         <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                           {notif.title}
                         </span>
-                        <div className="flex items-center gap-1">
-                          {!notif.isRead && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                markAsRead(notif.id, notif.createdAt);
-                              }}
-                              className="text-[#005c3a] dark:text-emerald-400 hover:opacity-70 p-1 bg-[#005c3a]/10 dark:bg-emerald-950/40 rounded-md"
-                              title="Mark as read"
-                            >
-                              <Check size={12} />
-                            </button>
-                          )}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              clearNotification(notif.id, notif.createdAt);
-                            }}
-                            className="text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 p-1 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
-                            title="Clear notification"
-                          >
-                            <X size={12} />
-                          </button>
-                        </div>
                       </div>
                       <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">
                         {notif.message}
@@ -287,7 +295,7 @@ export function TopBar({ onMenuClick }: TopBarProps) {
                 className="fixed inset-0 z-40 cursor-default"
                 onClick={() => setIsDropdownOpen(false)}
               />
-              <div className="absolute right-0 mt-2 w-52 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-[#0c101d] p-2 shadow-2xl dark:shadow-black/50 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+              <div className="absolute right-0 mt-2 w-52 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50 dark:bg-[#0c101d] p-2 shadow-2xl dark:shadow-black/50 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
                 <button
                   onClick={() => {
                     setIsDropdownOpen(false);

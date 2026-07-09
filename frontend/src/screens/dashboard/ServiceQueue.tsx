@@ -2,14 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { FileText, User, Wallet } from "lucide-react";
+import { useAuth } from "../../store/context/AuthContext";
 
 export function ServiceQueue() {
+  const { user } = useAuth();
   const [servicesData, setServicesData] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch(
-      `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/requests`,
-    )
+    let url = `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/requests`;
+    if (user?.role && user.role !== "admin") {
+      url += `?userId=${user.id}`;
+    }
+    
+    fetch(url)
       .then((res) => res.json())
       .then((data) => {
         const dataArray = Array.isArray(data) ? data : [];
@@ -23,7 +28,7 @@ export function ServiceQueue() {
         setServicesData(sorted);
       })
       .catch(console.error);
-  }, []);
+  }, [user?.id, user?.role]);
 
   // Map status styles using tailwind
   const statusClasses: Record<string, string> = {
@@ -33,6 +38,10 @@ export function ServiceQueue() {
       "bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400",
     Completed:
       "bg-teal-50 dark:bg-teal-950/30 text-teal-600 dark:text-teal-400",
+    Pending:
+      "bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400",
+    Process:
+      "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400",
   };
 
   // Map icons and their background colors based on status
@@ -55,10 +64,20 @@ export function ServiceQueue() {
       bg: "bg-purple-50 dark:bg-purple-950/30",
       text: "text-purple-600 dark:text-purple-400",
     },
+    Pending: {
+      icon: FileText,
+      bg: "bg-amber-50 dark:bg-amber-950/30",
+      text: "text-amber-600 dark:text-amber-400",
+    },
+    Process: {
+      icon: FileText,
+      bg: "bg-blue-50 dark:bg-blue-950/30",
+      text: "text-blue-600 dark:text-blue-400",
+    },
   };
 
   return (
-    <article className="recent-updates-card bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
+    <article className="recent-updates-card bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-300">
       <div className="flex items-center justify-between gap-4 mb-6">
         <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
           Recent Updates
@@ -94,9 +113,14 @@ export function ServiceQueue() {
                     {service.serviceName || service.name || "Unknown Service"}
                   </strong>
                   <span className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mt-1 truncate">
-                    {service.retailerName || service.RetailerName || service.retailerId || service.RetailerId || "Unknown"}
+                    {service.retailerName ||
+                      service.RetailerName ||
+                      service.retailerId ||
+                      service.RetailerId ||
+                      "Unknown"}
                     <span className="text-slate-400 dark:text-slate-500 font-normal ml-1">
-                      ({service.retailerMobile || service.RetailerMobile || "-"})
+                      ({service.retailerMobile || service.RetailerMobile || "-"}
+                      )
                     </span>
                   </span>
                   <span className="block text-[11px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5">

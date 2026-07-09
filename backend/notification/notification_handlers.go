@@ -116,6 +116,52 @@ func MarkAsRead(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Notification marked as read"})
 }
 
+func MarkAllAsRead(c *gin.Context) {
+	userId := c.Query("userId")
+	if userId == "" {
+		userId = "ALL"
+	}
+
+	// First query all unread notifications for this user
+	out, err := db.DynamoClient.Query(context.TODO(), &dynamodb.QueryInput{
+		TableName: aws.String("Notifications"),
+		KeyConditionExpression: aws.String("PK = :pk AND begins_with(SK, :sk)"),
+		FilterExpression: aws.String("isRead = :r"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":pk": &types.AttributeValueMemberS{Value: "USER#" + userId},
+			":sk": &types.AttributeValueMemberS{Value: "NOTIF#"},
+			":r":  &types.AttributeValueMemberBOOL{Value: false},
+		},
+	})
+	
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch unread notifications"})
+		return
+	}
+
+	// Update them all to read
+	for _, item := range out.Items {
+		sk := item["SK"].(*types.AttributeValueMemberS).Value
+		_, err := db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+			TableName: aws.String("Notifications"),
+			Key: map[string]types.AttributeValue{
+				"PK": &types.AttributeValueMemberS{Value: "USER#" + userId},
+				"SK": &types.AttributeValueMemberS{Value: sk},
+			},
+			UpdateExpression: aws.String("SET isRead = :r"),
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":r": &types.AttributeValueMemberBOOL{Value: true},
+			},
+		})
+		if err != nil {
+			// Log error but continue
+			continue
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "All notifications marked as read"})
+}
+
 func DeleteNotification(c *gin.Context) {
 	id := c.Param("id")
 	userId := c.Query("userId")

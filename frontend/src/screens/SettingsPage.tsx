@@ -95,7 +95,7 @@ export function SettingsPage() {
             {activeTab === "security" && (
               <form
                 onSubmit={handlePasswordSubmit}
-                className="bg-white dark:bg-[#0c101d] border border-slate-200/60 dark:border-slate-800/40 rounded-2xl p-6 space-y-6 shadow-sm"
+                className="bg-slate-50 dark:bg-[#0c101d] border border-slate-200/60 dark:border-slate-800/40 rounded-2xl p-6 space-y-6 shadow-sm"
               >
                 <div className="border-b border-slate-100 dark:border-slate-800/60 pb-3 flex justify-between items-center">
                   <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
@@ -205,7 +205,7 @@ export function SettingsPage() {
             )}
 
             {activeTab === "notifications" && (
-              <div className="bg-white dark:bg-[#0c101d] border border-slate-200/60 dark:border-slate-800/40 rounded-2xl p-6 space-y-6 shadow-sm">
+              <div className="bg-slate-50 dark:bg-[#0c101d] border border-slate-200/60 dark:border-slate-800/40 rounded-2xl p-6 space-y-6 shadow-sm">
                 <div className="border-b border-slate-100 dark:border-slate-800/60 pb-3">
                   <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                     <Bell
@@ -287,7 +287,7 @@ export function SettingsPage() {
             )}
 
             {activeTab === "appearance" && (
-              <div className="bg-white dark:bg-[#0c101d] border border-slate-200/60 dark:border-slate-800/40 rounded-2xl p-6 space-y-6 shadow-sm">
+              <div className="bg-slate-50 dark:bg-[#0c101d] border border-slate-200/60 dark:border-slate-800/40 rounded-2xl p-6 space-y-6 shadow-sm">
                 <div className="border-b border-slate-100 dark:border-slate-800/60 pb-3">
                   <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                     {theme === "dark" ? (

@@ -1625,9 +1625,11 @@ export function PaymentsPage() {
 
   // Load config from backend
   // Load config from backend
-  
+
   useEffect(() => {
-    fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/pricing`)
+    fetch(
+      `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/pricing`,
+    )
       .then((res) => res.json())
       .then((data) => {
         if (data && Object.keys(data).length > 0) {
@@ -1707,9 +1709,11 @@ export function PaymentsPage() {
     if (!newServiceName.trim()) return;
 
     // Check for duplicate service name globally
-    const isDuplicate = Object.values(pricingConfig).flat().some(
-      (s) => s.name.toLowerCase() === newServiceName.trim().toLowerCase()
-    );
+    const isDuplicate = Object.values(pricingConfig)
+      .flat()
+      .some(
+        (s) => s.name.toLowerCase() === newServiceName.trim().toLowerCase(),
+      );
     if (isDuplicate) {
       setAddError("A service with this name already exists!");
       return;
@@ -1757,13 +1761,16 @@ export function PaymentsPage() {
     setPricingConfig(updatedConfig);
 
     // Save to backend
-    fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/pricing`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
+    fetch(
+      `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/pricing`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedConfig),
       },
-      body: JSON.stringify(updatedConfig),
-    }).catch((err) => console.error("Failed to save pricing config:", err));
+    ).catch((err) => console.error("Failed to save pricing config:", err));
 
     setActiveCatalogItem(null); // Return back to cards grid view
     setShowSuccessToast(true);
@@ -1780,11 +1787,6 @@ export function PaymentsPage() {
           /* CARD GRID CATALOG VIEW */
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-50 dark:border-slate-900/40 pb-3 gap-3">
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
-                  Available E-Seva Utility Payments
-                </h3>
-              </div>
               <div className="relative max-w-xs w-full sm:w-64">
                 <Search
                   size={14}
@@ -1795,7 +1797,7 @@ export function PaymentsPage() {
                   placeholder="Search payment category..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-4 py-1.5 border border-slate-100 dark:border-slate-800/80 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a]/50 outline-none transition-all"
+                  className="w-full pl-9 pr-4 py-1.5 border border-slate-100 dark:border-slate-800/80 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-slate-50 dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a]/50 outline-none transition-all"
                 />
               </div>
             </div>
@@ -1807,7 +1809,7 @@ export function PaymentsPage() {
                     <article
                       key={item.id}
                       onClick={() => handleCardClick(item)}
-                      className="bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 shadow-sm hover:shadow-md cursor-pointer group transition-all duration-300 flex flex-col items-center justify-center text-center min-h-[160px] relative overflow-hidden hover:translate-y-[-4px]"
+                      className="bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm hover:shadow-md cursor-pointer group transition-all duration-300 flex flex-col items-center justify-center text-center min-h-[160px] relative overflow-hidden hover:translate-y-[-4px]"
                     >
                       <div className="absolute inset-0 bg-gradient-to-b from-slate-50/10 to-transparent dark:from-slate-900/5 to-transparent pointer-events-none" />
 
@@ -1831,7 +1833,7 @@ export function PaymentsPage() {
                 })}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl text-center shadow-sm">
+              <div className="flex flex-col items-center justify-center p-12 bg-slate-50 dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl text-center shadow-sm">
                 <AlertCircle
                   size={32}
                   className="text-slate-300 dark:text-slate-700 mb-2"
@@ -1848,7 +1850,7 @@ export function PaymentsPage() {
           </div>
         ) : (
           /* FULL PAGE CONFIGURATION MATRIX VIEW ("OPEN NEW PAGE") */
-          <div className="w-full bg-white dark:bg-[#090d16] border border-slate-200 dark:border-slate-900 rounded-3xl p-6 shadow-md transition-all relative overflow-hidden animate-in fade-in duration-200">
+          <div className="w-full bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 shadow-md transition-all relative overflow-hidden animate-in fade-in duration-200">
             {/* Glassmorphic Background Accents */}
             <div className="absolute inset-0 bg-gradient-to-b from-emerald-500/5 to-transparent pointer-events-none" />
 
@@ -1883,7 +1885,7 @@ export function PaymentsPage() {
 
             {/* Configuration Pricing Form Table */}
             <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-              <div className="overflow-x-auto w-full border border-slate-200 dark:border-slate-900/60 rounded-2xl">
+              <div className="overflow-x-auto w-full border-2 border-black dark:border-white rounded-2xl">
                 <table className="w-full min-w-[700px] border-collapse text-left">
                   <thead>
                     <tr className="border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 text-[10px] font-extrabold uppercase tracking-widest bg-slate-50 dark:bg-slate-950/40">
@@ -1946,7 +1948,7 @@ export function PaymentsPage() {
                                     e.target.value,
                                   )
                                 }
-                                className="w-full pl-7 pr-3 py-1.5 text-center border border-slate-200 dark:border-slate-850 rounded-xl bg-slate-50 dark:bg-[#0a0f18]/30 font-extrabold text-slate-800 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a] dark:focus:border-emerald-500 outline-none transition-all"
+                                className="w-full pl-7 pr-3 py-1.5 text-center border border-slate-200 dark:border-slate-850 rounded-xl bg-slate-50 dark:bg-[#0a0f18]/30 font-extrabold text-slate-800 dark:text-slate-200 focus:bg-slate-50 dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a] dark:focus:border-emerald-500 outline-none transition-all"
                               />
                             </div>
                           </td>
@@ -1973,7 +1975,7 @@ export function PaymentsPage() {
                                     e.target.value,
                                   )
                                 }
-                                className="w-full pl-7 pr-3 py-1.5 text-center border border-slate-200 dark:border-slate-850 rounded-xl bg-slate-50 dark:bg-[#0a0f18]/30 font-extrabold text-slate-800 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a] dark:focus:border-emerald-500 outline-none transition-all"
+                                className="w-full pl-7 pr-3 py-1.5 text-center border border-slate-200 dark:border-slate-850 rounded-xl bg-slate-50 dark:bg-[#0a0f18]/30 font-extrabold text-slate-800 dark:text-slate-200 focus:bg-slate-50 dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a] dark:focus:border-emerald-500 outline-none transition-all"
                               />
                             </div>
                           </td>
@@ -2001,7 +2003,7 @@ export function PaymentsPage() {
                                       e.target.value,
                                     )
                                   }
-                                  className="w-full pl-7 pr-3 py-1.5 text-center border border-slate-200 dark:border-slate-850 rounded-xl bg-slate-50 dark:bg-[#0a0f18]/30 font-extrabold text-slate-800 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a] dark:focus:border-emerald-500 outline-none transition-all"
+                                  className="w-full pl-7 pr-3 py-1.5 text-center border border-slate-200 dark:border-slate-850 rounded-xl bg-slate-50 dark:bg-[#0a0f18]/30 font-extrabold text-slate-800 dark:text-slate-200 focus:bg-slate-50 dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a] dark:focus:border-emerald-500 outline-none transition-all"
                                 />
                               </div>
                             </td>
@@ -2029,7 +2031,7 @@ export function PaymentsPage() {
                                     e.target.value,
                                   )
                                 }
-                                className="w-full pl-7 pr-3 py-1.5 text-center border border-slate-200 dark:border-slate-850 rounded-xl bg-slate-50 dark:bg-[#0a0f18]/30 font-extrabold text-slate-800 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a] dark:focus:border-emerald-500 outline-none transition-all"
+                                className="w-full pl-7 pr-3 py-1.5 text-center border border-slate-200 dark:border-slate-850 rounded-xl bg-slate-50 dark:bg-[#0a0f18]/30 font-extrabold text-slate-800 dark:text-slate-200 focus:bg-slate-50 dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a] dark:focus:border-emerald-500 outline-none transition-all"
                               />
                             </div>
                           </td>
@@ -2057,7 +2059,7 @@ export function PaymentsPage() {
                                       e.target.value,
                                     )
                                   }
-                                  className="w-full pl-7 pr-3 py-1.5 text-center border border-slate-200 dark:border-slate-850 rounded-xl bg-slate-50 dark:bg-[#0a0f18]/30 font-extrabold text-slate-800 dark:text-slate-200 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a] dark:focus:border-emerald-500 outline-none transition-all"
+                                  className="w-full pl-7 pr-3 py-1.5 text-center border border-slate-200 dark:border-slate-850 rounded-xl bg-slate-50 dark:bg-[#0a0f18]/30 font-extrabold text-slate-800 dark:text-slate-200 focus:bg-slate-50 dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a] dark:focus:border-emerald-500 outline-none transition-all"
                                 />
                               </div>
                             </td>
@@ -2155,7 +2157,7 @@ export function PaymentsPage() {
               className="absolute inset-0 bg-slate-950/40 backdrop-blur-sm"
               onClick={() => setIsAddModalOpen(false)}
             />
-            <div className="relative w-full max-w-md bg-white dark:bg-[#090d16] border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden p-6 z-10 animate-in fade-in zoom-in-95 duration-200">
+            <div className="relative w-full max-w-md bg-slate-50 dark:bg-[#090d16] border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden p-6 z-10 animate-in fade-in zoom-in-95 duration-200">
               {/* Header */}
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4 mb-4">
                 <h4 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
@@ -2186,9 +2188,13 @@ export function PaymentsPage() {
                       setAddError("");
                     }}
                     placeholder="e.g. Passport Application"
-                    className={`w-full px-4 py-2.5 rounded-xl border ${addError ? 'border-red-500 focus:ring-red-500/25 focus:border-red-500' : 'border-slate-200 dark:border-slate-800 focus:ring-[#005c3a]/25 focus:border-[#005c3a]'} bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 text-xs font-semibold text-slate-800 dark:text-slate-200`}
+                    className={`w-full px-4 py-2.5 rounded-xl border ${addError ? "border-red-500 focus:ring-red-500/25 focus:border-red-500" : "border-slate-200 dark:border-slate-800 focus:ring-[#005c3a]/25 focus:border-[#005c3a]"} bg-slate-50 dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 text-xs font-semibold text-slate-800 dark:text-slate-200`}
                   />
-                  {addError && <p className="text-[10px] text-red-500 font-bold mt-1">{addError}</p>}
+                  {addError && (
+                    <p className="text-[10px] text-red-500 font-bold mt-1">
+                      {addError}
+                    </p>
+                  )}
                 </div>
 
                 {/* Primary Prices Grid */}
@@ -2203,7 +2209,7 @@ export function PaymentsPage() {
                       min="0"
                       value={newAdminPrice}
                       onChange={(e) => setNewAdminPrice(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
                     />
                   </div>
                   <div className="space-y-1">
@@ -2216,7 +2222,7 @@ export function PaymentsPage() {
                       min="0"
                       value={newDistributorPrice}
                       onChange={(e) => setNewDistributorPrice(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
                     />
                   </div>
                 </div>
@@ -2233,7 +2239,7 @@ export function PaymentsPage() {
                       min="0"
                       value={newRetailerPrice}
                       onChange={(e) => setNewRetailerPrice(e.target.value)}
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
                     />
                   </div>
 
@@ -2248,7 +2254,7 @@ export function PaymentsPage() {
                         min="0"
                         value={newCustomerPrice}
                         onChange={(e) => setNewCustomerPrice(e.target.value)}
-                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
                       />
                     </div>
                   ) : (
@@ -2298,7 +2304,7 @@ export function PaymentsPage() {
                       onChange={(e) =>
                         setNewOthersiteAdminPrice(e.target.value)
                       }
-                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
                     />
                   </div>
                 )}

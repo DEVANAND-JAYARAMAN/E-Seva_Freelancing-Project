@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { AppShell } from "../../layouts/AppShell";
 import { useAuth } from "../../store/context/AuthContext";
+import { useRouter } from "next/navigation";
 import {
   Wallet,
   CircleDollarSign,
@@ -22,10 +23,11 @@ export function DashboardPage2({
 }: {
   forceRole?: "retailer" | "distributor";
 }) {
+  const router = useRouter();
   const { user: contextUser, updateWallet, refreshProfile } = useAuth();
   const user = React.useMemo(
     () => (forceRole ? { ...contextUser, role: forceRole } : contextUser),
-    [contextUser, forceRole]
+    [contextUser, forceRole],
   );
 
   // State for wallet request popup
@@ -33,10 +35,7 @@ export function DashboardPage2({
   const [requestAmount, setRequestAmount] = useState("");
   const [requestUtr, setRequestUtr] = useState("");
 
-  const [notifications, setNotifications] = useState<string[]>([
-    "Your wallet request for ₹2500 has been approved.",
-    "System Alert: PAN Card verification server speed optimized.",
-  ]);
+  const [notifications, setNotifications] = useState<string[]>([]);
 
   const handleWalletRequest = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +44,10 @@ export function DashboardPage2({
     const amtNum = Number(requestAmount);
 
     try {
-      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "");
+      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(
+        /(?:\/api|\/)+$/,
+        "",
+      );
       const res = await fetch(`${baseUrl}/api/wallet/recharge/manual`, {
         method: "POST",
         headers: {
@@ -92,30 +94,53 @@ export function DashboardPage2({
   useEffect(() => {
     // Fetch live requests specific to user
     const userFilter = user?.id ? `?userId=${user.id}` : "";
-    fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/requests${userFilter}`)
-      .then(res => res.json())
-      .then(data => {
+    fetch(
+      `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/requests${userFilter}`,
+    )
+      .then((res) => res.json())
+      .then((data) => {
         const dataArray = Array.isArray(data) ? data : [];
-        const sorted = dataArray.sort((a: any, b: any) => 
-          new Date(b.createdDate || "").getTime() - new Date(a.createdDate || "").getTime()
-        ).slice(0, 5); // top 5 recent
+        const sorted = dataArray
+          .sort(
+            (a: any, b: any) =>
+              new Date(b.createdDate || "").getTime() -
+              new Date(a.createdDate || "").getTime(),
+          )
+          .slice(0, 5); // top 5 recent
         setAllRequests(dataArray);
       })
       .catch(console.error);
   }, [user]);
 
-  const resubmitCount = allRequests.filter(r => r.status === "Resubmit").length;
-  const rejectedCount = allRequests.filter(r => r.status === "Rejected").length;
-  const approvedCount = allRequests.filter(r => r.status === "Approved" || r.status === "Completed").length;
+  const pendingCount = allRequests.filter(
+    (r) => r.status === "Pending",
+  ).length;
+  const processCount = allRequests.filter(
+    (r) => r.status === "Process" || r.status === "InProcess" || r.status === "Processing",
+  ).length;
+  const resubmitCount = allRequests.filter(
+    (r) => r.status === "Resubmit",
+  ).length;
+  const rejectedCount = allRequests.filter(
+    (r) => r.status === "Rejected",
+  ).length;
+  const approvedCount = allRequests.filter(
+    (r) => r.status === "Approved" || r.status === "Completed",
+  ).length;
   const totalCount = allRequests.length;
 
-  const recentTransactions = [...allRequests].sort((a: any, b: any) => 
-    new Date(b.createdDate || "").getTime() - new Date(a.createdDate || "").getTime()
-  ).slice(0, 5);
+  const recentTransactions = [...allRequests]
+    .sort(
+      (a: any, b: any) =>
+        new Date(b.createdDate || "").getTime() -
+        new Date(a.createdDate || "").getTime(),
+    )
+    .slice(0, 5);
 
   return (
     <AppShell activePage="Dashboard">
       <div className="flex flex-col gap-6 w-full animate-in fade-in slide-in-from-bottom-4 duration-300">
+
         {/* Welcome Header Hero Banner */}
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-950 via-[#005c3a] to-emerald-900 dark:from-emerald-950 dark:via-[#003822] dark:to-emerald-950 p-6 lg:p-8 text-white shadow-xl">
           <div className="absolute top-[-20%] right-[-5%] w-[35vw] h-[35vw] rounded-full bg-white/5 blur-[80px] pointer-events-none" />
@@ -155,63 +180,12 @@ export function DashboardPage2({
           className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 animate-in fade-in duration-300"
           aria-label="Partner stats"
         >
-          {/* Card 1: RESUBMIT */}
-          <article className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
-            <div className="space-y-1">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                Resubmit
-              </p>
-              <strong className="block text-2xl font-black text-slate-900 dark:text-white">
-                {resubmitCount}
-              </strong>
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
-                Needs Attention
-              </span>
-            </div>
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-purple-50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400">
-              <RefreshCw size={18} />
-            </span>
-          </article>
 
-          {/* Card 4: REJECTED */}
-          <article className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
-            <div className="space-y-1">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                Rejected
-              </p>
-              <strong className="block text-2xl font-black text-slate-900 dark:text-white">
-                {rejectedCount}
-              </strong>
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
-                Declined Submissions
-              </span>
-            </div>
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-red-50 dark:bg-red-950/20 text-red-500 dark:text-red-400">
-              <XCircle size={18} />
-            </span>
-          </article>
-
-          {/* Card 5: APPROVED */}
-          <article className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
-            <div className="space-y-1">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                Approved
-              </p>
-              <strong className="block text-2xl font-black text-slate-900 dark:text-white">
-                {approvedCount}
-              </strong>
-              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
-                Completed Requests
-              </span>
-            </div>
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-450">
-              <CheckCircle size={18} />
-            </span>
-          </article>
-
+          
           {/* Card 6: WALLET */}
           <article
-            className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300"
+            className="flex items-center justify-between bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+            onClick={() => router.push("/wallets")}
           >
             <div className="space-y-1">
               <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
@@ -231,9 +205,114 @@ export function DashboardPage2({
               <Wallet size={18} />
             </span>
           </article>
+{/* Card 1: RESUBMIT */}
+          <article
+            className="flex items-center justify-between bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+            onClick={() => router.push("/status")}
+          >
+            <div className="space-y-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                Resubmit
+              </p>
+              <strong className="block text-2xl font-black text-slate-900 dark:text-white">
+                {resubmitCount}
+              </strong>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
+                Needs Attention
+              </span>
+            </div>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-purple-50 dark:bg-purple-950/20 text-purple-600 dark:text-purple-400">
+              <RefreshCw size={18} />
+            </span>
+          </article>
+
+          {/* Card: PENDING */}
+          <article
+            className="flex items-center justify-between bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+            onClick={() => router.push("/status")}
+          >
+            <div className="space-y-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                Pending
+              </p>
+              <strong className="block text-2xl font-black text-slate-900 dark:text-white">
+                {pendingCount}
+              </strong>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
+                Awaiting Review
+              </span>
+            </div>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400">
+              <Clock size={18} />
+            </span>
+          </article>
+
+          {/* Card: PROCESS */}
+          <article
+            className="flex items-center justify-between bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+            onClick={() => router.push("/status")}
+          >
+            <div className="space-y-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                In Process
+              </p>
+              <strong className="block text-2xl font-black text-slate-900 dark:text-white">
+                {processCount}
+              </strong>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
+                Currently Processing
+              </span>
+            </div>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-950/20 text-blue-600 dark:text-blue-400">
+              <Zap size={18} />
+            </span>
+          </article>
+
+          {/* Card: REJECTED */}
+          <article
+            className="flex items-center justify-between bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+            onClick={() => router.push("/status")}
+          >
+            <div className="space-y-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                Rejected
+              </p>
+              <strong className="block text-2xl font-black text-slate-900 dark:text-white">
+                {rejectedCount}
+              </strong>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
+                Declined Submissions
+              </span>
+            </div>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-red-50 dark:bg-red-950/20 text-red-500 dark:text-red-400">
+              <XCircle size={18} />
+            </span>
+          </article>
+
+          {/* Card 5: APPROVED */}
+          <article
+            className="flex items-center justify-between bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+            onClick={() => router.push("/status")}
+          >
+            <div className="space-y-1">
+              <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                Approved
+              </p>
+              <strong className="block text-2xl font-black text-slate-900 dark:text-white">
+                {approvedCount}
+              </strong>
+              <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold block">
+                Completed Requests
+              </span>
+            </div>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-450">
+              <CheckCircle size={18} />
+            </span>
+          </article>
+
 
           {/* Card 8: TOTAL APPLICATIONS */}
-          <article className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
+          <article className="flex items-center justify-between bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
             <div className="space-y-1">
               <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 Applications
@@ -252,7 +331,10 @@ export function DashboardPage2({
 
           {/* Card 9: RETAILERS (Only for Distributor) */}
           {user?.role === "distributor" && (
-            <article className="flex items-center justify-between bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300">
+            <article
+              className="flex items-center justify-between bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-5 shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+              onClick={() => router.push("/retailers")}
+            >
               <div className="space-y-1">
                 <p className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                   Retailers
@@ -272,7 +354,7 @@ export function DashboardPage2({
         </section>
 
         {/* Our Services Status Table section */}
-        <section className="bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 shadow-sm">
+        <section className="bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm">
           <div className="border-b border-slate-100 dark:border-slate-900/60 pb-3">
             <h3 className="text-sm font-black text-slate-950 dark:text-white uppercase tracking-wider">
               Our Services Status
@@ -285,92 +367,110 @@ export function DashboardPage2({
 
           <div className="mt-6 space-y-4">
             {recentTransactions.length === 0 ? (
-              <div className="text-center p-4 text-sm text-slate-500">No recent transactions found</div>
-            ) : recentTransactions.map((txn) => {
-              // Exact colors matched to standard stages
-              const statusColors: Record<string, string> = {
-                Approved:
-                  "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/20",
-                Pending:
-                  "bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/20",
-                Inprocess:
-                  "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/20",
-                Processing:
-                  "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/20",
-                Resubmit:
-                  "bg-purple-50 dark:bg-purple-950/30 text-purple-650 dark:text-purple-400 border border-purple-100 dark:border-purple-900/20",
-                Rejected:
-                  "bg-red-50 dark:bg-red-950/30 text-red-500 dark:text-red-405 border border-red-100 dark:border-red-900/20",
-                Completed:
-                  "bg-teal-50 dark:bg-teal-950/30 text-teal-600 dark:text-teal-400 border border-teal-100 dark:border-teal-900/20",
-              };
-              const colorClass =
-                statusColors[txn.status] || "bg-slate-50 text-slate-600";
+              <div className="text-center p-4 text-sm text-slate-500">
+                No recent transactions found
+              </div>
+            ) : (
+              recentTransactions.map((txn) => {
+                // Exact colors matched to standard stages
+                const statusColors: Record<string, string> = {
+                  Approved:
+                    "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/20",
+                  Pending:
+                    "bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-900/20",
+                  Inprocess:
+                    "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/20",
+                  Processing:
+                    "bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-blue-900/20",
+                  Resubmit:
+                    "bg-purple-50 dark:bg-purple-950/30 text-purple-650 dark:text-purple-400 border border-purple-100 dark:border-purple-900/20",
+                  Rejected:
+                    "bg-red-50 dark:bg-red-950/30 text-red-500 dark:text-red-405 border border-red-100 dark:border-red-900/20",
+                  Completed:
+                    "bg-teal-50 dark:bg-teal-950/30 text-teal-600 dark:text-teal-400 border border-teal-100 dark:border-teal-900/20",
+                };
+                const colorClass =
+                  statusColors[txn.status] || "bg-slate-50 text-slate-600";
 
-                const pendingCount = allRequests.filter(r => r.status === "Pending").length;
-  const rejectedCount = allRequests.filter(r => r.status === "Rejected").length;
-  const approvedCount = allRequests.filter(r => r.status === "Approved" || r.status === "Completed").length;
-  const totalCount = allRequests.length;
+                const pendingCount = allRequests.filter(
+                  (r) => r.status === "Pending",
+                ).length;
+                const rejectedCount = allRequests.filter(
+                  (r) => r.status === "Rejected",
+                ).length;
+                const approvedCount = allRequests.filter(
+                  (r) => r.status === "Approved" || r.status === "Completed",
+                ).length;
+                const totalCount = allRequests.length;
 
-  const recentTransactions = [...allRequests].sort((a: any, b: any) => 
-    new Date(b.createdDate || "").getTime() - new Date(a.createdDate || "").getTime()
-  ).slice(0, 5);
+                const recentTransactions = [...allRequests]
+                  .sort(
+                    (a: any, b: any) =>
+                      new Date(b.createdDate || "").getTime() -
+                      new Date(a.createdDate || "").getTime(),
+                  )
+                  .slice(0, 5);
 
-  return (
-                <div
-                  key={txn.id}
-                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 border border-slate-50 dark:border-slate-900/50 rounded-2xl hover:bg-slate-50/50 dark:hover:bg-slate-900/10 transition-colors duration-200"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-650 dark:text-slate-400">
-                      {txn.status === "Approved" || txn.status === "Completed" ? (
-                        <CheckCircle size={16} className="text-emerald-500" />
-                      ) : txn.status === "Pending" ? (
-                        <Clock size={16} className="text-amber-500" />
-                      ) : txn.status === "Inprocess" || txn.status === "Processing" ? (
-                        <Zap size={16} className="text-blue-500" />
-                      ) : txn.status === "Resubmit" ? (
-                        <RefreshCw size={16} className="text-purple-500" />
-                      ) : (
-                        <XCircle size={16} className="text-red-500" />
-                      )}
-                    </span>
-                    <div>
-                      <h4 className="text-sm font-bold text-slate-800 dark:text-white">
-                        {txn.serviceName || txn.service}
-                      </h4>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-550 font-semibold block mt-0.5">
-                        {txn.createdDate ? new Date(txn.createdDate).toLocaleDateString() : txn.date}
+                return (
+                  <div
+                    key={txn.id}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 border border-slate-50 dark:border-slate-900/50 rounded-2xl hover:bg-slate-50/50 dark:hover:bg-slate-900/10 transition-colors duration-200"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-50 dark:bg-slate-900 text-slate-650 dark:text-slate-400">
+                        {txn.status === "Approved" ||
+                        txn.status === "Completed" ? (
+                          <CheckCircle size={16} className="text-emerald-500" />
+                        ) : txn.status === "Pending" ? (
+                          <Clock size={16} className="text-amber-500" />
+                        ) : txn.status === "Inprocess" ||
+                          txn.status === "Processing" ? (
+                          <Zap size={16} className="text-blue-500" />
+                        ) : txn.status === "Resubmit" ? (
+                          <RefreshCw size={16} className="text-purple-500" />
+                        ) : (
+                          <XCircle size={16} className="text-red-500" />
+                        )}
+                      </span>
+                      <div>
+                        <h4 className="text-sm font-bold text-slate-800 dark:text-white">
+                          {txn.serviceName || txn.service}
+                        </h4>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-550 font-semibold block mt-0.5">
+                          {txn.createdDate
+                            ? new Date(txn.createdDate).toLocaleDateString()
+                            : txn.date}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
+                      <div className="text-left sm:text-right">
+                        <span className="block text-sm font-extrabold text-slate-900 dark:text-white">
+                          ₹{txn.cost || txn.amount || "0.00"}
+                        </span>
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold tracking-widest block mt-0.5 font-mono">
+                          {txn.id}
+                        </span>
+                      </div>
+
+                      <span
+                        className={`inline-flex items-center justify-center px-3 py-1 rounded-xl text-xs font-black uppercase tracking-wider ${colorClass}`}
+                      >
+                        {txn.status}
                       </span>
                     </div>
                   </div>
-
-                  <div className="flex items-center justify-between sm:justify-end gap-6 w-full sm:w-auto">
-                    <div className="text-left sm:text-right">
-                      <span className="block text-sm font-extrabold text-slate-900 dark:text-white">
-                        ₹{txn.cost || txn.amount || "0.00"}
-                      </span>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-bold tracking-widest block mt-0.5 font-mono">
-                        {txn.id}
-                      </span>
-                    </div>
-
-                    <span
-                      className={`inline-flex items-center justify-center px-3 py-1 rounded-xl text-xs font-black uppercase tracking-wider ${colorClass}`}
-                    >
-                      {txn.status}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })
+            )}
           </div>
         </section>
 
         {/* Modal Dialog: Load Funds / Wallet Request */}
         {showRequestModal && (
           <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white dark:bg-[#0c101d] border border-slate-200 dark:border-slate-800 rounded-3xl max-w-sm w-full p-6 space-y-6 shadow-2xl animate-in zoom-in-95 duration-150">
+            <div className="bg-slate-50 dark:bg-[#0c101d] border border-slate-200 dark:border-slate-800 rounded-3xl max-w-sm w-full p-6 space-y-6 shadow-2xl animate-in zoom-in-95 duration-150">
               <div className="flex items-center gap-3">
                 <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-400 shadow-inner">
                   <Wallet size={18} />

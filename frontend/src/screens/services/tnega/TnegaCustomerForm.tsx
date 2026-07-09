@@ -132,7 +132,7 @@ export function TnegaCustomerForm({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-md p-4 animate-fadeIn">
       {/* Modal Container */}
-      <div className="relative w-full max-w-4xl bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl shadow-xl overflow-hidden animate-slideUp">
+      <div className="relative w-full max-w-4xl bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl shadow-xl overflow-hidden animate-slideUp">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-50 dark:border-slate-900/40">
           <div>
@@ -163,7 +163,9 @@ export function TnegaCustomerForm({
               placeholder="Applicant Name"
               value={formData.applicantName}
               error={errors.applicantName}
-              onChange={(val, file) => handleFieldChange("applicantName", val, file)}
+              onChange={(val, file) =>
+                handleFieldChange("applicantName", val, file)
+              }
             />
             <InputField
               type="date"
@@ -199,10 +201,44 @@ export function TnegaCustomerForm({
               name="district"
               label="District"
               options={[
+                { label: "Ariyalur", value: "Ariyalur" },
+                { label: "Chengalpattu", value: "Chengalpattu" },
                 { label: "Chennai", value: "Chennai" },
                 { label: "Coimbatore", value: "Coimbatore" },
+                { label: "Cuddalore", value: "Cuddalore" },
+                { label: "Dharmapuri", value: "Dharmapuri" },
+                { label: "Dindigul", value: "Dindigul" },
+                { label: "Erode", value: "Erode" },
+                { label: "Kallakurichi", value: "Kallakurichi" },
+                { label: "Kanchipuram", value: "Kanchipuram" },
+                { label: "Kanyakumari", value: "Kanyakumari" },
+                { label: "Karur", value: "Karur" },
+                { label: "Krishnagiri", value: "Krishnagiri" },
                 { label: "Madurai", value: "Madurai" },
-                { label: "Trichy", value: "Trichy" },
+                { label: "Mayiladuthurai", value: "Mayiladuthurai" },
+                { label: "Nagapattinam", value: "Nagapattinam" },
+                { label: "Namakkal", value: "Namakkal" },
+                { label: "Nilgiris", value: "Nilgiris" },
+                { label: "Perambalur", value: "Perambalur" },
+                { label: "Pudukkottai", value: "Pudukkottai" },
+                { label: "Ramanathapuram", value: "Ramanathapuram" },
+                { label: "Ranipet", value: "Ranipet" },
+                { label: "Salem", value: "Salem" },
+                { label: "Sivaganga", value: "Sivaganga" },
+                { label: "Tenkasi", value: "Tenkasi" },
+                { label: "Thanjavur", value: "Thanjavur" },
+                { label: "Theni", value: "Theni" },
+                { label: "Thoothukudi", value: "Thoothukudi" },
+                { label: "Tiruchirappalli (Trichy)", value: "Tiruchirappalli" },
+                { label: "Tirunelveli", value: "Tirunelveli" },
+                { label: "Tirupathur", value: "Tirupathur" },
+                { label: "Tiruppur", value: "Tiruppur" },
+                { label: "Tiruvallur", value: "Tiruvallur" },
+                { label: "Tiruvannamalai", value: "Tiruvannamalai" },
+                { label: "Tiruvarur", value: "Tiruvarur" },
+                { label: "Vellore", value: "Vellore" },
+                { label: "Viluppuram", value: "Viluppuram" },
+                { label: "Virudhunagar", value: "Virudhunagar" },
               ]}
               value={formData.district}
               error={errors.district}
@@ -242,7 +278,9 @@ export function TnegaCustomerForm({
               placeholder="Aadhaar No"
               value={formData.aadhaarNo}
               error={errors.aadhaarNo}
-              onChange={(val, file) => handleFieldChange("aadhaarNo", val, file)}
+              onChange={(val, file) =>
+                handleFieldChange("aadhaarNo", val, file)
+              }
             />
             <InputField
               type="file"
@@ -251,7 +289,9 @@ export function TnegaCustomerForm({
               placeholder="No file chosen"
               value={formData.aadhaarCard}
               error={errors.aadhaarCard}
-              onChange={(val, file) => handleFieldChange("aadhaarCard", val, file)}
+              onChange={(val, file) =>
+                handleFieldChange("aadhaarCard", val, file)
+              }
             />
             <InputField
               type="text"
@@ -260,7 +300,9 @@ export function TnegaCustomerForm({
               placeholder="Smart Card No"
               value={formData.smartCardNo}
               error={errors.smartCardNo}
-              onChange={(val, file) => handleFieldChange("smartCardNo", val, file)}
+              onChange={(val, file) =>
+                handleFieldChange("smartCardNo", val, file)
+              }
             />
             <InputField
               type="file"
@@ -269,7 +311,9 @@ export function TnegaCustomerForm({
               placeholder="No file chosen"
               value={formData.smartCard}
               error={errors.smartCard}
-              onChange={(val, file) => handleFieldChange("smartCard", val, file)}
+              onChange={(val, file) =>
+                handleFieldChange("smartCard", val, file)
+              }
             />
             <InputField
               type="file"
@@ -278,7 +322,9 @@ export function TnegaCustomerForm({
               placeholder="No file chosen"
               value={formData.signature}
               error={errors.signature}
-              onChange={(val, file) => handleFieldChange("signature", val, file)}
+              onChange={(val, file) =>
+                handleFieldChange("signature", val, file)
+              }
             />
             <TextAreaField
               name="address"
@@ -295,7 +341,7 @@ export function TnegaCustomerForm({
             <button
               type="button"
               onClick={onClose}
-              className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-850 bg-white dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all"
+              className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-850 bg-slate-50 dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all"
             >
               CANCEL
             </button>

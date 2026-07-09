@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useFormEdit } from "../../../store/context/FormEditContext";
 import { Plus, Trash2 } from "lucide-react";
 import {
   InputField,
@@ -29,6 +30,7 @@ export const PvcCardPrintForm: React.FC<PvcCardPrintFormProps> = ({
   onSubmit,
   isLoading = false,
 }) => {
+  const { overrides } = useFormEdit();
   const [items, setItems] = useState<PrintItem[]>([]);
   const [currentService, setCurrentService] = useState("");
   const [currentFile, setCurrentFile] = useState<File | null>(null);
@@ -153,7 +155,7 @@ export const PvcCardPrintForm: React.FC<PvcCardPrintFormProps> = ({
         </div>
 
         {/* Dynamic Services Selector Table */}
-        <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-950">
+        <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-950">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs font-semibold">
               <thead>
@@ -242,7 +244,7 @@ export const PvcCardPrintForm: React.FC<PvcCardPrintFormProps> = ({
                 {items.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-850 p-3 rounded-lg shadow-sm"
+                    className="flex items-center justify-between bg-slate-50 dark:bg-slate-900 border border-slate-200/60 dark:border-slate-850 p-3 rounded-lg shadow-sm"
                   >
                     <div className="flex items-center gap-4 text-xs">
                       <div>
@@ -357,12 +359,33 @@ export const PvcCardPrintForm: React.FC<PvcCardPrintFormProps> = ({
       </div>
 
       {/* Button Footer matching MSME dynamic form styling exactly */}
-      <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-900/60 mt-8">
+      
+      {/* Added Extra Fields */}
+      {overrides.addedFields && overrides.addedFields.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+          {overrides.addedFields.map((field) => (
+            <InputField
+              key={field.name}
+              name={field.name}
+              label={field.label}
+              type={(field.type as any) || "text"}
+              placeholder={field.placeholder}
+              value={formData[field.name] || ""}
+              error={errors && errors[field.name]}
+              disabled={isSubmitting}
+              onChange={(val, file) => {
+                handleFieldChange(field.name, val, file);
+              }}
+            />
+          ))}
+        </div>
+      )}
+<div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-900/60 mt-8">
         <button
           type="button"
           onClick={onCancel}
           disabled={isLoading}
-          className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
+          className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
         >
           Cancel
         </button>

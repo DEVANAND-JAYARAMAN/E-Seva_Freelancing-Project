@@ -75,7 +75,7 @@ export function ProfilePage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Quick Metrics Column */}
           <div className="md:col-span-1 space-y-6">
-            <div className="bg-white dark:bg-[#0c101d] border border-slate-200/60 dark:border-slate-800/40 rounded-2xl p-5 space-y-5 shadow-sm">
+            <div className="bg-slate-50 dark:bg-[#0c101d] border border-slate-200/60 dark:border-slate-800/40 rounded-2xl p-5 space-y-5 shadow-sm">
               <h3 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                 Wallet Balance
               </h3>
@@ -114,7 +114,7 @@ export function ProfilePage() {
           <div className="md:col-span-2">
             <form
               onSubmit={handleSubmit}
-              className="bg-white dark:bg-[#0c101d] border border-slate-200/60 dark:border-slate-800/40 rounded-2xl p-6 space-y-6 shadow-sm"
+              className="bg-slate-50 dark:bg-[#0c101d] border border-slate-200/60 dark:border-slate-800/40 rounded-2xl p-6 space-y-6 shadow-sm"
             >
               <div className="border-b border-slate-100 dark:border-slate-800/60 pb-3 flex justify-between items-center">
                 <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">

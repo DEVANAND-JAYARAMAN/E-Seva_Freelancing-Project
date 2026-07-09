@@ -234,7 +234,7 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
   };
 
   return (
-    <main className="min-h-screen bg-white dark:bg-[#090d16] flex flex-col md:flex-row font-sans transition-colors relative overflow-hidden select-none">
+    <main className="min-h-screen bg-slate-50 dark:bg-[#090d16] flex flex-col md:flex-row font-sans transition-colors relative overflow-hidden select-none">
       {/* Absolute Decorative Glow Circles */}
       <div className="absolute top-[-10%] left-[-10%] w-[45vw] h-[45vw] rounded-full bg-emerald-500/5 dark:bg-emerald-500/10 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[45vw] h-[45vw] rounded-full bg-[#005c3a]/5 dark:bg-[#005c3a]/10 blur-[120px] pointer-events-none" />
@@ -279,7 +279,7 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
       </div>
 
       {/* RIGHT PANEL: Interactive forms */}
-      <div className="w-full md:w-1/2 p-8 lg:p-16 flex flex-col justify-center relative bg-white dark:bg-[#090d16] min-h-[60vh] md:min-h-screen">
+      <div className="w-full md:w-1/2 p-8 lg:p-16 flex flex-col justify-center relative bg-slate-50 dark:bg-[#090d16] min-h-[60vh] md:min-h-screen">
         {successMessage ? (
           <div className="py-12 flex flex-col items-center justify-center text-center gap-4 animate-in fade-in duration-200">
             <span className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-400 animate-bounce">

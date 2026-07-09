@@ -8,7 +8,7 @@ export function WalletHealth() {
   const balance = user?.walletBalance || 0;
 
   return (
-    <article className="bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between h-full">
+    <article className="bg-slate-50 dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between h-full">
       <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
         {/* Left side text details */}
         <div className="flex-1">

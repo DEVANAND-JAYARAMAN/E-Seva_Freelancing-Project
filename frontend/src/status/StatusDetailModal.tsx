@@ -108,9 +108,9 @@ export function StatusDetailModal({
   return (
     <div className="fixed inset-0 z-50 flex bg-slate-50 dark:bg-[#04080f] animate-fadeIn">
       {/* Full Page Container */}
-      <div className="relative w-full h-full bg-white dark:bg-[#090d16] shadow-2xl flex flex-col overflow-hidden">
+      <div className="relative w-full h-full bg-slate-50 dark:bg-[#090d16] shadow-2xl flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-slate-900/60 shrink-0 bg-white dark:bg-[#090d16] z-10">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-slate-900/60 shrink-0 bg-slate-50 dark:bg-[#090d16] z-10">
           <div>
             <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">
               Service Request Details
@@ -130,9 +130,9 @@ export function StatusDetailModal({
             {/* Left Column: Details */}
             <div className="space-y-6 lg:col-span-2">
               {/* Core Details Grid */}
-              <div className="grid grid-cols-2 gap-4 bg-slate-50/50 dark:bg-[#0a0f18]/10 p-5 rounded-2xl border border-slate-100 dark:border-slate-900/40">
+              <div className="grid grid-cols-2 gap-4 bg-slate-50/50 dark:bg-[#0a0f18]/10 p-5 rounded-2xl border-2 border-black dark:border-white">
                 {/* Service Name */}
-                <div className="col-span-2">
+                <div className="col-span-2 bg-slate-50 dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                   <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                     Requested Service
                   </span>
@@ -142,7 +142,7 @@ export function StatusDetailModal({
                 </div>
 
                 {/* Retailer */}
-                <div>
+                <div className="bg-slate-50 dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                   <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                     Retailer / Distributor
                   </span>
@@ -157,7 +157,7 @@ export function StatusDetailModal({
                 </div>
 
                 {/* Role */}
-                <div>
+                <div className="bg-slate-50 dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                   <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                     User Role
                   </span>
@@ -167,7 +167,7 @@ export function StatusDetailModal({
                 </div>
 
                 {/* Charge */}
-                <div>
+                <div className="bg-slate-50 dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                   <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                     Processing Charge
                   </span>
@@ -177,7 +177,7 @@ export function StatusDetailModal({
                 </div>
 
                 {/* Current Status */}
-                <div>
+                <div className="bg-slate-50 dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                   <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                     Current Status
                   </span>
@@ -185,6 +185,10 @@ export function StatusDetailModal({
                     className={`inline-flex items-center px-2.5 py-1 mt-1 rounded-lg text-[10px] font-extrabold tracking-wider uppercase ${
                       ticket.status === "Approved"
                         ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400"
+                        : ticket.status === "Process"
+                        ? "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400"
+                        : ticket.status === "Pending"
+                        ? "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400"
                         : ticket.status === "Resubmit"
                           ? "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400"
                           : ticket.status === "Rejected"
@@ -197,7 +201,7 @@ export function StatusDetailModal({
                 </div>
 
                 {/* Created At */}
-                <div>
+                <div className="bg-slate-50 dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                   <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                     Submission Date
                   </span>
@@ -207,7 +211,7 @@ export function StatusDetailModal({
                 </div>
 
                 {/* Last Updated */}
-                <div>
+                <div className="bg-slate-50 dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                   <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                     Last Status Update
                   </span>
@@ -244,7 +248,7 @@ export function StatusDetailModal({
                             type="text"
                             readOnly
                             value={value || ""}
-                            className="w-full bg-white dark:bg-[#090d16] border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 dark:text-slate-200 focus:outline-none shadow-sm cursor-default"
+                            className="w-full bg-slate-50 dark:bg-[#090d16] border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 dark:text-slate-200 focus:outline-none shadow-sm cursor-default"
                           />
                         </div>
                       ))}
@@ -423,11 +427,11 @@ export function StatusDetailModal({
             <div className="space-y-6 lg:col-span-1">
               {/* Remarks Section */}
               {ticket.remarks && (
-                <div className="space-y-2">
-                  <span className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
+                <div className="bg-slate-50/50 dark:bg-[#0a0f18]/10 p-5 rounded-2xl border-2 border-black dark:border-white space-y-3">
+                  <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
                     Admin Remarks
                   </span>
-                  <p className="text-xs font-semibold text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-[#0a0f18]/30 p-4 rounded-xl border border-slate-100 dark:border-slate-800/50">
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-[#090d16] p-4 rounded-xl border border-slate-200 dark:border-slate-800">
                     {ticket.remarks}
                   </p>
                 </div>
@@ -448,7 +452,7 @@ export function StatusDetailModal({
                       }}
                       rows={4}
                       placeholder="Enter custom remarks before updating status..."
-                      className="w-full h-[142px] px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18] text-sm font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 dark:focus:ring-emerald-500/20 transition-all resize-none"
+                      className="w-full h-[142px] px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0a0f18] text-sm font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 dark:focus:ring-emerald-500/20 transition-all resize-none"
                     />
                   </div>
 
@@ -514,7 +518,7 @@ export function StatusDetailModal({
                   <span className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mt-4">
                     Workflow Status Actions
                   </span>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {/* Approve */}
                     <button
                       type="button"
@@ -523,6 +527,16 @@ export function StatusDetailModal({
                     >
                       <Check size={13} />
                       <span>Approve</span>
+                    </button>
+
+                    {/* Process */}
+                    <button
+                      type="button"
+                      onClick={() => handleStatusClick("Process")}
+                      className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-blue-600 hover:bg-blue-500 text-white shadow-sm active:scale-[0.98]`}
+                    >
+                      <Loader size={13} />
+                      <span>Process</span>
                     </button>
 
                     {/* Reject */}

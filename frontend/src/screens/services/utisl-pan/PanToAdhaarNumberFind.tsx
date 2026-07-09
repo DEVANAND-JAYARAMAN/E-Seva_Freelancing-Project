@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useFormEdit } from "../../../store/context/FormEditContext";
 import { CheckCircle2 } from "lucide-react";
 import { InputField, SubmitButton } from "../form/FormFields";
 import { validateField, PATTERNS } from "../form/validators";
@@ -10,6 +11,7 @@ interface PanToAdhaarNumberFindProps {
 export const PanToAdhaarNumberFind: React.FC<PanToAdhaarNumberFindProps> = ({
   onCancel,
 }) => {
+  const { overrides } = useFormEdit();
   const [formData, setFormData] = useState<Record<string, string>>({
     panNo: "",
   });
@@ -86,11 +88,11 @@ export const PanToAdhaarNumberFind: React.FC<PanToAdhaarNumberFindProps> = ({
         </span>
         <div>
           <h5 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-            Search Placed Successfully!
+            Request Submitted Successfully!
           </h5>
           <p className="text-sm text-slate-400 dark:text-slate-555 mt-2 max-w-md leading-relaxed">
-            Your search request for **Pan To Adhaar Number Find** has been
-            registered. The results will be updated soon.
+            Your request for **Pan To Adhaar Number Find** has been
+            registered. The admin will update the status soon.
           </p>
         </div>
       </div>
@@ -132,13 +134,34 @@ export const PanToAdhaarNumberFind: React.FC<PanToAdhaarNumberFindProps> = ({
         </div>
       </div>
 
-      {/* Button Footer */}
+      
+      {/* Added Extra Fields */}
+      {overrides.addedFields && overrides.addedFields.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+          {overrides.addedFields.map((field) => (
+            <InputField
+              key={field.name}
+              name={field.name}
+              label={field.label}
+              type={(field.type as any) || "text"}
+              placeholder={field.placeholder}
+              value={formData[field.name] || ""}
+              error={errors && errors[field.name]}
+              disabled={isSubmitting}
+              onChange={(val, file) => {
+                handleFieldChange(field.name, val, file);
+              }}
+            />
+          ))}
+        </div>
+      )}
+{/* Button Footer */}
       <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-900/60 mt-8">
         <button
           type="button"
           onClick={onCancel}
           disabled={isSubmitting}
-          className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
+          className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
         >
           Cancel
         </button>

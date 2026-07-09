@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useFormEdit } from "../../../store/context/FormEditContext";
 import { CheckCircle2 } from "lucide-react";
 import { InputField, SubmitButton } from "../form/FormFields";
 import { validateField } from "../form/validators";
@@ -10,6 +11,7 @@ interface LegalHeirCertNoFormProps {
 export const LegalHeirCertNoForm: React.FC<LegalHeirCertNoFormProps> = ({
   onCancel,
 }) => {
+  const { overrides } = useFormEdit();
   const [formData, setFormData] = useState<Record<string, string>>({
     applicantName: "",
     aadhaarCard: "",
@@ -175,12 +177,33 @@ export const LegalHeirCertNoForm: React.FC<LegalHeirCertNoFormProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-900/60 mt-8">
+          
+      {/* Added Extra Fields */}
+      {overrides.addedFields && overrides.addedFields.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+          {overrides.addedFields.map((field) => (
+            <InputField
+              key={field.name}
+              name={field.name}
+              label={field.label}
+              type={(field.type as any) || "text"}
+              placeholder={field.placeholder}
+              value={formData[field.name] || ""}
+              error={errors && errors[field.name]}
+              disabled={isSubmitting}
+              onChange={(val, file) => {
+                handleFieldChange(field.name, val, file);
+              }}
+            />
+          ))}
+        </div>
+      )}
+<div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-900/60 mt-8">
             <button
               type="button"
               onClick={onCancel}
               disabled={isSubmitting}
-              className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
+              className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
             >
               Cancel
             </button>

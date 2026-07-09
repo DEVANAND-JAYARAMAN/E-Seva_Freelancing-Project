@@ -13,6 +13,7 @@ import {
   FileText,
   AlertCircle,
   CheckCircle2,
+  ArrowLeft,
 } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
 import { useAuth } from "../../store/context/AuthContext";
@@ -1554,248 +1555,237 @@ export function ServicesPage() {
 
   // List of all 19 services customizer from localStorage
   const [servicesList, setServicesList] = useState<EService[]>([
-      // Top Services Group
-      {
-        id: "pdf-services",
-        name: "PDF Services",
-        color: "text-rose-500 dark:text-rose-400",
-        bgColor: "bg-rose-500",
-        glowColor: "shadow-rose-500/10 dark:shadow-rose-950/20",
-        category: "Top",
-        formFields: ["pdfType", "fileUpload", "customerMobile", "remarks"],
-        price: { retailer: 150, distributor: 150 },
-      },
+    // Top Services Group
+    {
+      id: "pdf-services",
+      name: "PDF Services",
+      color: "text-rose-500 dark:text-rose-400",
+      bgColor: "bg-rose-500",
+      glowColor: "shadow-rose-500/10 dark:shadow-rose-950/20",
+      category: "Top",
+      formFields: ["pdfType", "fileUpload", "customerMobile", "remarks"],
+      price: { retailer: 150, distributor: 150 },
+    },
 
-      // All Services Group
-      {
-        id: "software-keys",
-        name: "Software Keys",
-        color: "text-sky-500 dark:text-sky-400",
-        bgColor: "bg-sky-500",
-        glowColor: "shadow-sky-500/10",
-        category: "All",
-        formFields: ["softwareType", "quantity", "customerEmail"],
-        price: { retailer: 150, distributor: 150 },
-      },
-      {
-        id: "msme",
-        name: "MSME",
-        color: "text-blue-600 dark:text-blue-400",
-        bgColor: "bg-blue-600",
-        glowColor: "shadow-blue-600/10",
-        category: "All",
-        formFields: [
-          "enterpriseName",
-          "ownerName",
-          "aadhaarNo",
-          "businessType",
-        ],
-        price: { retailer: 100, distributor: 100 },
-      },
-      {
-        id: "ration-card",
-        name: "Ration Card",
-        color: "text-emerald-500 dark:text-emerald-400",
-        bgColor: "bg-emerald-500",
-        glowColor: "shadow-emerald-500/10",
-        category: "All",
-        formFields: ["rationType", "headOfFamily", "membersCount", "address"],
-        price: { retailer: 50, distributor: 50 },
-      },
-      {
-        id: "gst",
-        name: "GST",
-        color: "text-amber-600 dark:text-amber-500",
-        bgColor: "bg-amber-600",
-        glowColor: "shadow-amber-600/10",
-        category: "All",
-        formFields: ["gstType", "tradeName", "ownerName", "panNo", "state"],
-        price: { retailer: 1500, distributor: 1500 },
-      },
-      {
-        id: "aadhaar-card-address",
-        name: "Adhaar Card (Adress Correction)",
-        color: "text-rose-500 dark:text-rose-400",
-        bgColor: "bg-rose-500",
-        glowColor: "shadow-rose-500/10",
-        category: "All",
-        formFields: ["aadhaarNo", "fullName", "newAddress", "addressProof"],
-        price: { retailer: 200, distributor: 200 },
-      },
-      {
-        id: "can-edit",
-        name: "CAN EDIT",
-        color: "text-indigo-500 dark:text-indigo-400",
-        bgColor: "bg-indigo-500",
-        glowColor: "shadow-indigo-500/10",
-        category: "All",
-        formFields: ["canNo", "fullName", "dob", "fieldsToEdit"],
-        price: { retailer: 30, distributor: 30 },
-      },
-      {
-        id: "rto-services",
-        name: "RTO Services",
-        color: "text-orange-500 dark:text-orange-400",
-        bgColor: "bg-orange-500",
-        glowColor: "shadow-orange-500/10",
-        category: "All",
-        formFields: ["rtoType", "vehicleNumber", "ownerName", "licenseNo"],
-        price: { retailer: 60, distributor: 60 },
-      },
-      {
-        id: "registration-dept",
-        name: "பதிவு துறை",
-        subName: "Registration Dept",
-        color: "text-pink-500 dark:text-pink-400",
-        bgColor: "bg-pink-500",
-        glowColor: "shadow-pink-500/10",
-        category: "All",
-        formFields: ["documentType", "partiesNames", "stampValue", "district"],
-        price: { retailer: 400, distributor: 400 },
-      },
-      {
-        id: "voter-id",
-        name: "Voter ID",
-        color: "text-cyan-500 dark:text-cyan-400",
-        bgColor: "bg-cyan-500",
-        glowColor: "shadow-cyan-500/10",
-        category: "All",
-        formFields: ["voterType", "epicNo", "fullName", "constituency"],
-        price: { retailer: 60, distributor: 60 },
-      },
-      {
-        id: "fssai",
-        name: "FSSAI",
-        color: "text-lime-500 dark:text-lime-400",
-        bgColor: "bg-lime-500",
-        glowColor: "shadow-lime-500/10",
-        category: "All",
-        formFields: ["fssaiType", "foodBusinessName", "ownerName", "address"],
-        price: { retailer: 300, distributor: 300 },
-      },
-      {
-        id: "certificate-courses",
-        name: "Certificate Courses",
-        color: "text-teal-500 dark:text-teal-400",
-        bgColor: "bg-teal-500",
-        glowColor: "shadow-teal-500/10",
-        category: "All",
-        formFields: ["courseName", "studentName", "qualification", "mobile"],
-        price: { retailer: 150, distributor: 150 },
-      },
-      {
-        id: "employment-services",
-        name: "EMPLOYMENT SERVICES",
-        color: "text-slate-500 dark:text-slate-400",
-        bgColor: "bg-slate-500",
-        glowColor: "shadow-slate-500/10",
-        category: "All",
-        formFields: ["registrationNo", "candidateName", "dob", "qualification"],
-        price: { retailer: 150, distributor: 150 },
-      },
-      {
-        id: "police-verification",
-        name: "Police Verification",
-        color: "text-violet-500 dark:text-violet-400",
-        bgColor: "bg-violet-500",
-        glowColor: "shadow-violet-500/10",
-        category: "All",
-        formFields: ["applicantName", "purpose", "aadhaarNo", "district"],
-        price: { retailer: 150, distributor: 150 },
-      },
-      {
-        id: "utisl-pan",
-        name: "Utisl Pan",
-        color: "text-sky-500 dark:text-sky-400",
-        bgColor: "bg-sky-500",
-        glowColor: "shadow-sky-500/10",
-        category: "All",
-        formFields: ["applicantName", "dob", "aadhaarNo", "couponNumber"],
-        price: { retailer: 150, distributor: 150 },
-      },
-      {
-        id: "agri-stack-pdf",
-        name: "Agri Stack PDF",
-        color: "text-emerald-500 dark:text-emerald-400",
-        bgColor: "bg-emerald-500",
-        glowColor: "shadow-emerald-500/10",
-        category: "All",
-        formFields: [
-          "farmerId",
-          "aadhaarNo",
-          "customerMobile",
-          "aadhaarUpload",
-        ],
-        price: { retailer: 150, distributor: 150 },
-      },
-      {
-        id: "pvc-card-print",
-        name: "PVC CARD PRINT(ALL TYPE)",
-        color: "text-amber-500 dark:text-amber-400",
-        bgColor: "bg-amber-500",
-        glowColor: "shadow-amber-500/10",
-        category: "All",
-        formFields: ["pvcCardType", "fileUpload", "customerMobile"],
-        price: { retailer: 150, distributor: 150 },
-      },
-      {
-        id: "cm-health-card",
-        name: "CM Health Card",
-        color: "text-lime-600 dark:text-lime-500",
-        bgColor: "bg-lime-600",
-        glowColor: "shadow-lime-600/10",
-        category: "All",
-        formFields: [
-          "rationCardNo",
-          "applicantName",
-          "aadhaarNo",
-          "customerMobile",
-          "incomeCertificateUpload",
-        ],
-        price: { retailer: 150, distributor: 150 },
-      },
-      {
-        id: "tnega",
-        name: "TNEGA",
-        color: "text-emerald-600 dark:text-emerald-500",
-        bgColor: "bg-emerald-600",
-        glowColor: "shadow-emerald-600/10",
-        category: "Top",
-        formFields: [
-          "applicantName",
-          "serviceType",
-          "aadhaarNo",
-          "customerMobile",
-        ],
-        price: { retailer: 60, distributor: 60 },
-      },
-      {
-        id: "dharsan",
-        name: "Dharsan",
-        color: "text-sky-500 dark:text-sky-400",
-        bgColor: "bg-sky-500",
-        glowColor: "shadow-sky-500/10",
-        category: "All",
-        formFields: [
-          "devoteeName",
-          "ticketsCount",
-          "bookingDate",
-          "customerMobile",
-        ],
-        price: { retailer: 150, distributor: 150 },
-      },
-      {
-        id: "pancard",
-        name: "PanCard",
-        color: "text-blue-600 dark:text-blue-400",
-        bgColor: "bg-blue-600",
-        glowColor: "shadow-blue-600/10",
-        category: "All",
-        formFields: ["panType", "applicantName", "dob", "mobile"],
-        price: { retailer: 120, distributor: 120 },
-      },
-    ],
-  );
+    // All Services Group
+    {
+      id: "software-keys",
+      name: "Software Keys",
+      color: "text-sky-500 dark:text-sky-400",
+      bgColor: "bg-sky-500",
+      glowColor: "shadow-sky-500/10",
+      category: "All",
+      formFields: ["softwareType", "quantity", "customerEmail"],
+      price: { retailer: 150, distributor: 150 },
+    },
+    {
+      id: "msme",
+      name: "MSME",
+      color: "text-blue-600 dark:text-blue-400",
+      bgColor: "bg-blue-600",
+      glowColor: "shadow-blue-600/10",
+      category: "All",
+      formFields: ["enterpriseName", "ownerName", "aadhaarNo", "businessType"],
+      price: { retailer: 100, distributor: 100 },
+    },
+    {
+      id: "ration-card",
+      name: "Ration Card",
+      color: "text-emerald-500 dark:text-emerald-400",
+      bgColor: "bg-emerald-500",
+      glowColor: "shadow-emerald-500/10",
+      category: "All",
+      formFields: ["rationType", "headOfFamily", "membersCount", "address"],
+      price: { retailer: 50, distributor: 50 },
+    },
+    {
+      id: "gst",
+      name: "GST",
+      color: "text-amber-600 dark:text-amber-500",
+      bgColor: "bg-amber-600",
+      glowColor: "shadow-amber-600/10",
+      category: "All",
+      formFields: ["gstType", "tradeName", "ownerName", "panNo", "state"],
+      price: { retailer: 1500, distributor: 1500 },
+    },
+    {
+      id: "aadhaar-card-address",
+      name: "Adhaar Card (Adress Correction)",
+      color: "text-rose-500 dark:text-rose-400",
+      bgColor: "bg-rose-500",
+      glowColor: "shadow-rose-500/10",
+      category: "All",
+      formFields: ["aadhaarNo", "fullName", "newAddress", "addressProof"],
+      price: { retailer: 200, distributor: 200 },
+    },
+    {
+      id: "can-edit",
+      name: "CAN EDIT",
+      color: "text-indigo-500 dark:text-indigo-400",
+      bgColor: "bg-indigo-500",
+      glowColor: "shadow-indigo-500/10",
+      category: "All",
+      formFields: ["canNo", "fullName", "dob", "fieldsToEdit"],
+      price: { retailer: 30, distributor: 30 },
+    },
+    {
+      id: "rto-services",
+      name: "RTO Services",
+      color: "text-orange-500 dark:text-orange-400",
+      bgColor: "bg-orange-500",
+      glowColor: "shadow-orange-500/10",
+      category: "All",
+      formFields: ["rtoType", "vehicleNumber", "ownerName", "licenseNo"],
+      price: { retailer: 60, distributor: 60 },
+    },
+    {
+      id: "registration-dept",
+      name: "பதிவு துறை",
+      subName: "Registration Dept",
+      color: "text-pink-500 dark:text-pink-400",
+      bgColor: "bg-pink-500",
+      glowColor: "shadow-pink-500/10",
+      category: "All",
+      formFields: ["documentType", "partiesNames", "stampValue", "district"],
+      price: { retailer: 400, distributor: 400 },
+    },
+    {
+      id: "voter-id",
+      name: "Voter ID",
+      color: "text-cyan-500 dark:text-cyan-400",
+      bgColor: "bg-cyan-500",
+      glowColor: "shadow-cyan-500/10",
+      category: "All",
+      formFields: ["voterType", "epicNo", "fullName", "constituency"],
+      price: { retailer: 60, distributor: 60 },
+    },
+    {
+      id: "fssai",
+      name: "FSSAI",
+      color: "text-lime-500 dark:text-lime-400",
+      bgColor: "bg-lime-500",
+      glowColor: "shadow-lime-500/10",
+      category: "All",
+      formFields: ["fssaiType", "foodBusinessName", "ownerName", "address"],
+      price: { retailer: 300, distributor: 300 },
+    },
+    {
+      id: "certificate-courses",
+      name: "Certificate Courses",
+      color: "text-teal-500 dark:text-teal-400",
+      bgColor: "bg-teal-500",
+      glowColor: "shadow-teal-500/10",
+      category: "All",
+      formFields: ["courseName", "studentName", "qualification", "mobile"],
+      price: { retailer: 150, distributor: 150 },
+    },
+    {
+      id: "employment-services",
+      name: "EMPLOYMENT SERVICES",
+      color: "text-slate-500 dark:text-slate-400",
+      bgColor: "bg-slate-500",
+      glowColor: "shadow-slate-500/10",
+      category: "All",
+      formFields: ["registrationNo", "candidateName", "dob", "qualification"],
+      price: { retailer: 150, distributor: 150 },
+    },
+    {
+      id: "police-verification",
+      name: "Police Verification",
+      color: "text-violet-500 dark:text-violet-400",
+      bgColor: "bg-violet-500",
+      glowColor: "shadow-violet-500/10",
+      category: "All",
+      formFields: ["applicantName", "purpose", "aadhaarNo", "district"],
+      price: { retailer: 150, distributor: 150 },
+    },
+    {
+      id: "utisl-pan",
+      name: "Utisl Pan",
+      color: "text-sky-500 dark:text-sky-400",
+      bgColor: "bg-sky-500",
+      glowColor: "shadow-sky-500/10",
+      category: "All",
+      formFields: ["applicantName", "dob", "aadhaarNo", "couponNumber"],
+      price: { retailer: 150, distributor: 150 },
+    },
+    {
+      id: "agri-stack-pdf",
+      name: "Agri Stack PDF",
+      color: "text-emerald-500 dark:text-emerald-400",
+      bgColor: "bg-emerald-500",
+      glowColor: "shadow-emerald-500/10",
+      category: "All",
+      formFields: ["farmerId", "aadhaarNo", "customerMobile", "aadhaarUpload"],
+      price: { retailer: 150, distributor: 150 },
+    },
+    {
+      id: "pvc-card-print",
+      name: "PVC CARD PRINT(ALL TYPE)",
+      color: "text-amber-500 dark:text-amber-400",
+      bgColor: "bg-amber-500",
+      glowColor: "shadow-amber-500/10",
+      category: "All",
+      formFields: ["pvcCardType", "fileUpload", "customerMobile"],
+      price: { retailer: 150, distributor: 150 },
+    },
+    {
+      id: "cm-health-card",
+      name: "CM Health Card",
+      color: "text-lime-600 dark:text-lime-500",
+      bgColor: "bg-lime-600",
+      glowColor: "shadow-lime-600/10",
+      category: "All",
+      formFields: [
+        "rationCardNo",
+        "applicantName",
+        "aadhaarNo",
+        "customerMobile",
+        "incomeCertificateUpload",
+      ],
+      price: { retailer: 150, distributor: 150 },
+    },
+    {
+      id: "tnega",
+      name: "TNEGA",
+      color: "text-emerald-600 dark:text-emerald-500",
+      bgColor: "bg-emerald-600",
+      glowColor: "shadow-emerald-600/10",
+      category: "Top",
+      formFields: [
+        "applicantName",
+        "serviceType",
+        "aadhaarNo",
+        "customerMobile",
+      ],
+      price: { retailer: 60, distributor: 60 },
+    },
+    {
+      id: "dharsan",
+      name: "Dharsan",
+      color: "text-sky-500 dark:text-sky-400",
+      bgColor: "bg-sky-500",
+      glowColor: "shadow-sky-500/10",
+      category: "All",
+      formFields: [
+        "devoteeName",
+        "ticketsCount",
+        "bookingDate",
+        "customerMobile",
+      ],
+      price: { retailer: 150, distributor: 150 },
+    },
+    {
+      id: "pancard",
+      name: "PanCard",
+      color: "text-blue-600 dark:text-blue-400",
+      bgColor: "bg-blue-600",
+      glowColor: "shadow-blue-600/10",
+      category: "All",
+      formFields: ["panType", "applicantName", "dob", "mobile"],
+      price: { retailer: 120, distributor: 120 },
+    },
+  ]);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
@@ -1823,8 +1813,13 @@ export function ServicesPage() {
 
           setServicesList((prev) => {
             const existingIds = new Set(prev.map((p) => p.id));
+            const existingNames = new Set(
+              prev.map((p) => p.name.trim().toLowerCase()),
+            );
             const newServices = dynamicServices.filter(
-              (d) => !existingIds.has(d.id),
+              (d) =>
+                !existingIds.has(d.id) &&
+                !existingNames.has(d.name.trim().toLowerCase()),
             );
             return [...prev, ...newServices];
           });
@@ -1859,7 +1854,10 @@ export function ServicesPage() {
 
       if (response.ok) {
         const createdData = await response.json();
-        setServicesList((prev) => [...prev, { ...newService, id: createdData.id || newService.id }]);
+        setServicesList((prev) => [
+          ...prev,
+          { ...newService, id: createdData.id || newService.id },
+        ]);
       } else {
         console.error("Failed to add dynamic service via API");
         // Fallback to local storage only if API fails, or just show error. Let's add it anyway.
@@ -2046,25 +2044,36 @@ export function ServicesPage() {
         payload.append("serviceName", selectedService.name);
         payload.append("cost", String(selectedService.price?.retailer || 0));
         payload.append("customerWhatsApp", customerWhatsApp || "");
-        payload.append("walletType", user.role === "distributor" ? "Distributor" : "Retailer");
+        payload.append(
+          "walletType",
+          user.role === "distributor" ? "Distributor" : "Retailer",
+        );
         payload.append("formData", JSON.stringify(formData));
 
-        if (typeof selectedFiles !== 'undefined') {
+        if (typeof selectedFiles !== "undefined") {
           selectedFiles.forEach((file: File) => {
             payload.append("documents", file);
           });
         }
 
-        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
+        const apiUrl =
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(
+            /\/api$/,
+            "",
+          );
         const res = await fetch(`${apiUrl}/api/services/request`, {
           method: "POST",
           body: payload,
         });
 
         if (!res.ok) {
-           const errData = await res.json().catch(() => ({}));
-           Swal.fire("Error", errData.error || "Failed to submit request", "error");
-           return;
+          const errData = await res.json().catch(() => ({}));
+          Swal.fire(
+            "Error",
+            errData.error || "Failed to submit request",
+            "error",
+          );
+          return;
         }
       } catch (err) {
         console.error(err);
@@ -2086,7 +2095,7 @@ export function ServicesPage() {
     <AppShell activePage="Our Service">
       <section className="flex flex-col gap-6 w-full pb-8">
         {/* Navigation Breadcrumb Mock Address Bar */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-2xl p-4 shadow-sm">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-2xl p-4 shadow-sm">
           <div className="flex items-center gap-2 text-sm text-slate-500 font-semibold w-full md:w-auto">
             <span className="text-slate-400 dark:text-slate-500 font-bold uppercase text-xs tracking-wider">
               Services Directory
@@ -2103,7 +2112,7 @@ export function ServicesPage() {
                   className={`inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all select-none border border-slate-200 dark:border-slate-800 whitespace-nowrap ${
                     isManageMode
                       ? "bg-amber-500 hover:bg-amber-600 text-white border-transparent"
-                      : "bg-white dark:bg-transparent text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-900"
+                      : "bg-slate-50 dark:bg-transparent text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-900"
                   }`}
                 >
                   <span>
@@ -2132,7 +2141,7 @@ export function ServicesPage() {
                 placeholder="Search utility services..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 border border-slate-100 dark:border-slate-800/80 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a]/50 outline-none transition-all"
+                className="w-full pl-9 pr-4 py-2 border border-slate-100 dark:border-slate-800/80 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-slate-50 dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a]/50 outline-none transition-all"
               />
             </div>
           </div>
@@ -2233,7 +2242,7 @@ export function ServicesPage() {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center p-12 bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl text-center shadow-sm">
+          <div className="flex flex-col items-center justify-center p-12 bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl text-center shadow-sm">
             <AlertCircle
               size={32}
               className="text-slate-300 dark:text-slate-700 mb-2"
@@ -2258,7 +2267,7 @@ export function ServicesPage() {
             />
 
             {/* Modal Dialog */}
-            <div className="relative w-full max-w-md bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-250 z-10 p-6 flex flex-col gap-5">
+            <div className="relative w-full max-w-md bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-250 z-10 p-6 flex flex-col gap-5">
               {/* Form Success State Screen */}
               {paymentPhase === "success" ? (
                 <ServiceSuccessScreen serviceName={selectedService.name} />
@@ -2279,25 +2288,28 @@ export function ServicesPage() {
                 <>
                   {/* Modal Header */}
                   <div className="flex items-center justify-between border-b border-slate-50 dark:border-slate-900/50 pb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="shrink-0">
-                        {renderServiceImage(selectedService.id, "w-10 h-10")}
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wide">
-                          {selectedService.name}
-                        </h4>
-                        <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">
-                          Create E-Seva Application
-                        </p>
+                    <div className="flex items-center gap-4">
+                      <button
+                        type="button"
+                        onClick={() => setIsModalOpen(false)}
+                        className="flex items-center justify-center p-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/50 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-colors shrink-0"
+                      >
+                        <ArrowLeft size={18} strokeWidth={2.5} />
+                      </button>
+                      <div className="flex items-center gap-3">
+                        <div className="shrink-0 hidden sm:block">
+                          {renderServiceImage(selectedService.id, "w-10 h-10")}
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wide">
+                            {selectedService.name}
+                          </h4>
+                          <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest mt-0.5">
+                            Create E-Seva Application
+                          </p>
+                        </div>
                       </div>
                     </div>
-                    <button
-                      onClick={() => setIsModalOpen(false)}
-                      className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
-                    >
-                      <Plus size={14} className="rotate-45" />
-                    </button>
                   </div>
 
                   {/* Dynamic Form Generation */}
@@ -2426,7 +2438,7 @@ export function ServicesPage() {
                               onChange={(e) =>
                                 handleFieldChange(field, e.target.value)
                               }
-                              className="w-full px-4 py-2.8 border border-slate-200 dark:border-slate-850 rounded-xl bg-slate-50/50 dark:bg-[#0a0f18]/30 text-xs font-semibold text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a]/50 outline-none transition-all"
+                              className="w-full px-4 py-2.8 border border-slate-200 dark:border-slate-850 rounded-xl bg-slate-50/50 dark:bg-[#0a0f18]/30 text-xs font-semibold text-slate-700 dark:text-slate-350 focus:bg-slate-50 dark:focus:bg-slate-950 focus:ring-2 focus:ring-[#005c3a]/15 focus:border-[#005c3a]/50 outline-none transition-all"
                             >
                               <option value="">-- Choose Category --</option>
                               {options[field]?.map((opt) => (
@@ -2475,7 +2487,7 @@ export function ServicesPage() {
                                 ? "e.g. 1234 5678 9012"
                                 : `Enter ${label.toLowerCase()}`
                             }
-                            className={`w-full px-4 py-2.5 border rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#005c3a]/15 bg-white dark:bg-[#0a0f18]/30 transition-all ${
+                            className={`w-full px-4 py-2.5 border rounded-xl text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-[#005c3a]/15 bg-slate-50 dark:bg-[#0a0f18]/30 transition-all ${
                               isError
                                 ? "border-rose-400 dark:border-rose-500/50"
                                 : "border-slate-200 dark:border-slate-850 focus:border-[#005c3a]"
@@ -2567,7 +2579,9 @@ function EditServiceModal({
   onSave,
 }: EditServiceModalProps) {
   const [name, setName] = useState(service.name);
-  const [officialCost, setOfficialCost] = useState(String(service.price?.officialCost || "0"));
+  const [officialCost, setOfficialCost] = useState(
+    String(service.price?.officialCost || "0"),
+  );
   const [customImage, setCustomImage] = useState<string | null>(
     service.customImage || null,
   );
@@ -2589,7 +2603,7 @@ function EditServiceModal({
         className="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative w-full max-w-md bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl shadow-xl overflow-hidden p-6 flex flex-col gap-5 z-10 animate-in fade-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-md bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl shadow-xl overflow-hidden p-6 flex flex-col gap-5 z-10 animate-in fade-in zoom-in-95 duration-200">
         <div className="flex items-center justify-between border-b border-slate-50 dark:border-slate-900/50 pb-4">
           <h4 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wide">
             Edit Card Details
@@ -2611,10 +2625,10 @@ function EditServiceModal({
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
             />
           </div>
-          
+
           <div className="space-y-1.5">
             <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider">
               Official Cost (₹)
@@ -2623,7 +2637,7 @@ function EditServiceModal({
               type="number"
               value={officialCost}
               onChange={(e) => setOfficialCost(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
+              className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 text-xs font-semibold focus:border-[#005c3a] text-slate-800 dark:text-slate-200"
             />
           </div>
 
@@ -2675,8 +2689,14 @@ function EditServiceModal({
           <button
             type="button"
             onClick={() => {
-              const prevPrice = service.price || { retailer: 0, distributor: 0 };
-              service.price = { ...prevPrice, officialCost: Number(officialCost) };
+              const prevPrice = service.price || {
+                retailer: 0,
+                distributor: 0,
+              };
+              service.price = {
+                ...prevPrice,
+                officialCost: Number(officialCost),
+              };
               onSave(name, customImage);
             }}
             className="flex-1 px-4 py-2.5 rounded-xl bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] dark:hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider shadow-sm transition-all"

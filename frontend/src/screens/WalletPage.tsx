@@ -155,6 +155,14 @@ export function WalletPage() {
       return;
     }
 
+    if (user?.role === "admin") {
+      setGatewayProcessing(true);
+      setTimeout(() => {
+        handleGatewaySuccess(`admin-manual-${Date.now()}`);
+      }, 500);
+      return;
+    }
+
     if (paymentMode === "UPI") {
       if (!mobileNumber.trim() || mobileNumber.trim().length !== 10) {
         setFormError("Please enter a valid 10-digit mobile number.");
@@ -164,7 +172,7 @@ export function WalletPage() {
       try {
         const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(
           /(?:\/api|\/)+$/,
-          ""
+          "",
         );
         const res = await fetch(`${baseUrl}/api/v1/wallet/recharge/gateway`, {
           method: "POST",
@@ -180,7 +188,7 @@ export function WalletPage() {
               baseUrl +
               "/api/v1/wallet/recharge/return?redirect_url=" +
               encodeURIComponent(
-                window.location.origin + window.location.pathname
+                window.location.origin + window.location.pathname,
               ),
             user_id: user?.id || "",
           }),
@@ -194,7 +202,7 @@ export function WalletPage() {
           const popup = window.open(
             data.data.payment_url,
             "Payment Gateway",
-            `width=${width},height=${height},left=${left},top=${top}`
+            `width=${width},height=${height},left=${left},top=${top}`,
           );
 
           const pollTimer = setInterval(async () => {
@@ -222,7 +230,7 @@ export function WalletPage() {
                     headers: {
                       Authorization: `Bearer ${localStorage.getItem("token")}`,
                     },
-                  }
+                  },
                 );
                 const statusData = await statusRes.json();
 
@@ -235,18 +243,18 @@ export function WalletPage() {
                   handleGatewaySuccess(data.data.order_id);
                 } else if (statusData.status === "Pending") {
                   setFormError(
-                    "Payment is pending or canceled. If deducted, it will be credited soon."
+                    "Payment is pending or canceled. If deducted, it will be credited soon.",
                   );
                 } else {
                   handleGatewayFailed(data.data.order_id, statusData.status);
                   setFormError(
-                    `Payment failed or canceled (Status: ${statusData.status})`
+                    `Payment failed or canceled (Status: ${statusData.status})`,
                   );
                 }
               } catch (err) {
                 setGatewayProcessing(false);
                 setFormError(
-                  "Could not verify payment status. Please check transaction history."
+                  "Could not verify payment status. Please check transaction history.",
                 );
               }
             }
@@ -254,7 +262,7 @@ export function WalletPage() {
         } else {
           setGatewayProcessing(false);
           setFormError(
-            data.error || data.message || "Failed to initiate payment gateway."
+            data.error || data.message || "Failed to initiate payment gateway.",
           );
         }
       } catch (err) {
@@ -433,7 +441,7 @@ export function WalletPage() {
       setFormError(
         error.message || "Something went wrong while saving to database.",
       );
-      
+
       const newTransaction: WalletTransaction = {
         id: `tx-fail-${Date.now()}`,
         date: new Date().toLocaleString("en-US", {
@@ -475,7 +483,7 @@ export function WalletPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-900/60 pb-6">
           <div className="space-y-1.5">
             <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
-              My Wallet Balance & History
+              My Wallet Balance
             </h2>
             <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed max-w-2xl">
               Add balance to your wallets, check real-time service deduction
@@ -525,7 +533,7 @@ export function WalletPage() {
               </span>
               <button
                 onClick={() => openRechargeModal()}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-[#005c3a] hover:bg-emerald-50 text-xs font-extrabold rounded-xl transition-all duration-200 active:scale-95 shadow-sm"
+                className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-50 text-[#005c3a] hover:bg-emerald-50 text-xs font-extrabold rounded-xl transition-all duration-200 active:scale-95 shadow-sm"
               >
                 <Plus size={14} className="stroke-[3]" />
                 Recharge
@@ -571,7 +579,7 @@ export function WalletPage() {
         </div>
 
         {/* Interactive Transaction Ledger Section */}
-        <section className="bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 shadow-sm flex flex-col gap-6">
+        <section className="bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm flex flex-col gap-6">
           {/* Header & Controls bar */}
           <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
             <div className="flex items-center gap-2">
@@ -601,7 +609,7 @@ export function WalletPage() {
                   placeholder="Search ref, desc..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
+                  className="w-full pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-slate-50 dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
                 />
               </div>
 
@@ -611,7 +619,7 @@ export function WalletPage() {
                   onClick={() => setTypeFilter("all")}
                   className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition-all ${
                     typeFilter === "all"
-                      ? "bg-white dark:bg-[#0f1524] text-[#005c3a] dark:text-emerald-400 shadow-sm"
+                      ? "bg-slate-50 dark:bg-[#0f1524] text-[#005c3a] dark:text-emerald-400 shadow-sm"
                       : "text-slate-400 dark:text-slate-500 hover:text-slate-750 dark:hover:text-slate-300"
                   }`}
                 >
@@ -621,7 +629,7 @@ export function WalletPage() {
                   onClick={() => setTypeFilter("credit")}
                   className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition-all ${
                     typeFilter === "credit"
-                      ? "bg-white dark:bg-[#0f1524] text-emerald-600 dark:text-emerald-400 shadow-sm"
+                      ? "bg-slate-50 dark:bg-[#0f1524] text-emerald-600 dark:text-emerald-400 shadow-sm"
                       : "text-slate-400 dark:text-slate-500 hover:text-slate-750 dark:hover:text-slate-300"
                   }`}
                 >
@@ -631,7 +639,7 @@ export function WalletPage() {
                   onClick={() => setTypeFilter("debit")}
                   className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition-all ${
                     typeFilter === "debit"
-                      ? "bg-white dark:bg-[#0f1524] text-rose-600 dark:text-rose-450 shadow-sm"
+                      ? "bg-slate-50 dark:bg-[#0f1524] text-rose-600 dark:text-rose-450 shadow-sm"
                       : "text-slate-400 dark:text-slate-500 hover:text-slate-750 dark:hover:text-slate-300"
                   }`}
                 >
@@ -648,8 +656,8 @@ export function WalletPage() {
           </div>
 
           {/* Ledger Table */}
-          <div className="overflow-x-auto border border-slate-100 dark:border-slate-900/40 rounded-2xl">
-            <table className="w-full text-left border-collapse">
+          <div className="overflow-x-auto border-2 border-black dark:border-white rounded-2xl">
+            <table className="w-full text-left border-collapse border-2 border-black dark:border-white">
               <thead>
                 <tr className="bg-slate-50/50 dark:bg-slate-950/40 border-b border-slate-100 dark:border-slate-900/60 text-slate-400 dark:text-slate-500 text-[10px] uppercase font-extrabold tracking-wider">
                   <th className="py-4 px-5">Date & Time</th>
@@ -771,7 +779,7 @@ export function WalletPage() {
             />
 
             {/* Modal Dialog */}
-            <div className="relative w-full max-w-2xl bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-250 z-10 p-6 flex flex-col gap-5">
+            <div className="relative w-full max-w-2xl bg-slate-50 dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-250 z-10 p-6 flex flex-col gap-5">
               {/* Form Success State Screen */}
               {formSuccess ? (
                 <div className="py-10 flex flex-col items-center justify-center text-center gap-4">
@@ -783,7 +791,8 @@ export function WalletPage() {
                       Recharge Successful!
                     </h5>
                     <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 max-w-xs leading-relaxed">
-                      Your recharge was successful and the amount has been credited directly to your wallet.
+                      Your recharge was successful and the amount has been
+                      credited directly to your wallet.
                     </p>
                   </div>
                 </div>
@@ -810,10 +819,10 @@ export function WalletPage() {
                   {/* Form fields */}
                   <form
                     onSubmit={handleRechargeSubmit}
-                    className="grid grid-cols-1 md:grid-cols-2 gap-6"
+                    className={`grid grid-cols-1 ${user?.role === "admin" ? "" : "md:grid-cols-2"} gap-6`}
                   >
                     {formError && (
-                      <div className="col-span-1 md:col-span-2 flex items-center gap-2 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 p-3 rounded-xl text-xs font-bold animate-in fade-in duration-200">
+                      <div className={`col-span-1 ${user?.role === "admin" ? "" : "md:col-span-2"} flex items-center gap-2 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 p-3 rounded-xl text-xs font-bold animate-in fade-in duration-200`}>
                         <AlertCircle size={14} className="shrink-0" />
                         <span>{formError}</span>
                       </div>
@@ -824,122 +833,127 @@ export function WalletPage() {
                       {/* Amount field */}
                       <div className="space-y-1.5">
                         <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
-                          Amount to Recharge (₹)
+                          Amount to {user?.role === "admin" ? "Add" : "Recharge"} (₹)
                         </label>
                         <input
                           type="number"
                           placeholder="e.g. 1500"
                           value={amount}
                           onChange={(e) => setAmount(e.target.value)}
-                          disabled={utrNumber.trim().length > 0}
-                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                          disabled={user?.role !== "admin" && utrNumber.trim().length > 0}
+                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-slate-50 dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all disabled:opacity-60 disabled:cursor-not-allowed"
                           required
                           min="1"
                         />
                       </div>
 
-                      {/* Payment Mode */}
-                      <div className="space-y-1.5">
-                        <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
-                          Payment Mode / channel
-                        </label>
-                        <select
-                          value={paymentMode}
-                          onChange={(e) => {
-                            setPaymentMode(e.target.value as "UPI" | "QR");
-                            setFormError("");
-                          }}
-                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all appearance-none cursor-pointer"
-                        >
-                          <option value="UPI">UPI ID Request (Gateway)</option>
-                          <option value="QR">Manual QR Scan</option>
-                        </select>
-                      </div>
+                      {user?.role !== "admin" && (
+                        <>
+                          {/* Payment Mode */}
+                          <div className="space-y-1.5">
+                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+                              Payment Mode / channel
+                            </label>
+                            <select
+                              value={paymentMode}
+                              onChange={(e) => {
+                                setPaymentMode(e.target.value as "UPI" | "QR");
+                                setFormError("");
+                              }}
+                              className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-slate-50 dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all appearance-none cursor-pointer"
+                            >
+                              <option value="UPI">UPI ID Request (Gateway)</option>
+                              <option value="QR">Manual QR Scan</option>
+                            </select>
+                          </div>
 
-                      {/* Mobile Number (shown for both modes) */}
-                      <div className="space-y-1.5 animate-in fade-in duration-200">
-                        <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
-                          Mobile Number
-                        </label>
-                        <input
-                          type="tel"
-                          placeholder="Enter 10-digit mobile number"
-                          value={mobileNumber}
-                          onChange={(e) => {
-                            setMobileNumber(e.target.value.replace(/\D/g, ""));
-                            setFormError("");
-                          }}
-                          maxLength={10}
-                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
-                          required
-                        />
-                      </div>
+                          {/* Mobile Number (shown for both modes) */}
+                          <div className="space-y-1.5 animate-in fade-in duration-200">
+                            <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+                              Mobile Number
+                            </label>
+                            <input
+                              type="tel"
+                              placeholder="Enter 10-digit mobile number"
+                              value={mobileNumber}
+                              onChange={(e) => {
+                                setMobileNumber(e.target.value.replace(/\D/g, ""));
+                                setFormError("");
+                              }}
+                              maxLength={10}
+                              className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-slate-50 dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
+                              required
+                            />
+                          </div>
 
-                      {/* UTR reference */}
-                      {paymentMode === "QR" && (
-                        <div className="space-y-1.5 animate-in fade-in duration-200">
-                          <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
-                            Transaction UTR / Ref ID
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="Enter 12-digit UTR/Ref No."
-                            value={utrNumber}
-                            onChange={(e) => {
-                              setUtrNumber(e.target.value);
-                              setFormError("");
-                            }}
-                            className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-white dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
-                          />
-                        </div>
+                          {/* UTR reference */}
+                          {paymentMode === "QR" && (
+                            <div className="space-y-1.5 animate-in fade-in duration-200">
+                              <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wide">
+                                Transaction UTR / Ref ID
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="Enter 12-digit UTR/Ref No."
+                                value={utrNumber}
+                                onChange={(e) => {
+                                  setUtrNumber(e.target.value);
+                                  setFormError("");
+                                }}
+                                className="w-full px-4 py-3 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-slate-50 dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
+                              />
+                            </div>
+                          )}
+                        </>
                       )}
-
                     </div>
 
                     {/* Right Column: Dynamic Info / QR details / Bank Details Card */}
-                    <div className="flex flex-col justify-center h-full">
-                      <div className="bg-slate-50/50 dark:bg-slate-950/25 border border-slate-100 dark:border-slate-900/60 rounded-2xl p-4 flex flex-col items-center justify-center min-h-[280px] text-center">
-                        {paymentMode === "QR" && (
-                          <div className="flex flex-col items-center gap-3.5 animate-in fade-in duration-200">
-                            <div className="p-2.5 bg-white rounded-xl shadow-sm border border-slate-100">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
-                                src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(
-                                  `upi://pay?pa=${process.env.NEXT_PUBLIC_UPI_ID || "mkksriptsami@oksbi"}&pn=Thuruvan%20Communications&am=${amount || 0}&cu=INR&tn=Wallet%20Recharge`
-                                )}`}
-                                alt="Payment QR Code"
-                                className="w-28 h-28 object-contain"
-                              />
+                    {user?.role !== "admin" && (
+                      <div className="flex flex-col justify-center h-full">
+                        <div className="bg-slate-50/50 dark:bg-slate-950/25 border border-slate-100 dark:border-slate-900/60 rounded-2xl p-4 flex flex-col items-center justify-center min-h-[280px] text-center">
+                          {paymentMode === "QR" && (
+                            <div className="flex flex-col items-center gap-3.5 animate-in fade-in duration-200">
+                              <div className="p-2.5 bg-slate-50 rounded-xl shadow-sm border border-slate-100">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={`https://api.qrserver.com/v1/create-qr-code/?size=140x140&data=${encodeURIComponent(
+                                    `upi://pay?pa=${process.env.NEXT_PUBLIC_UPI_ID || "mkksriptsami@oksbi"}&pn=Thuruvan%20Communications&am=${amount || 0}&cu=INR&tn=Wallet%20Recharge`,
+                                  )}`}
+                                  alt="Payment QR Code"
+                                  className="w-28 h-28 object-contain"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-xs font-black text-slate-800 dark:text-slate-200">
+                                  Scan & Pay ₹{amount || "0.00"}
+                                </p>
+                              </div>
                             </div>
-                            <div className="space-y-1">
-                              <p className="text-xs font-black text-slate-800 dark:text-slate-200">
-                                Scan & Pay ₹{amount || "0.00"}
-                              </p>
-                            </div>
-                          </div>
-                        )}
+                          )}
 
-                        {paymentMode === "UPI" && (
-                          <div className="flex flex-col items-center gap-3 text-slate-500 dark:text-slate-400 p-2 animate-in fade-in duration-200">
-                            <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-450 shadow-sm">
-                              <Wallet size={20} />
-                            </span>
-                            <div className="space-y-1">
-                              <h5 className="text-xs font-black text-slate-855 dark:text-slate-200 uppercase tracking-wider">
-                                Payment Gateway
-                              </h5>
-                              <p className="text-[10px] text-slate-450 dark:text-slate-500 max-w-[200px] leading-relaxed">
-                                You will be redirected to the secure payment
-                                gateway to complete the payment via any UPI App.
-                              </p>
+                          {paymentMode === "UPI" && (
+                            <div className="flex flex-col items-center gap-3 text-slate-500 dark:text-slate-400 p-2 animate-in fade-in duration-200">
+                              <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-450 shadow-sm">
+                                <Wallet size={20} />
+                              </span>
+                              <div className="space-y-1">
+                                <h5 className="text-xs font-black text-slate-855 dark:text-slate-200 uppercase tracking-wider">
+                                  Payment Gateway
+                                </h5>
+                                <p className="text-[10px] text-slate-450 dark:text-slate-500 max-w-[200px] leading-relaxed">
+                                  You will be redirected to the secure payment
+                                  gateway to complete the payment via any UPI App.
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        )}
+                          )}
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Bottom Row: Action Buttons */}
-                    <div className="col-span-1 md:col-span-2 flex items-center gap-3 border-t border-slate-50 dark:border-slate-900/50 pt-4 mt-2">
+                    <div className={`col-span-1 ${user?.role === "admin" ? "" : "md:col-span-2"} flex items-center gap-3 border-t border-slate-50 dark:border-slate-900/50 pt-4 mt-2`}>
                       <button
                         type="button"
                         onClick={() => setIsModalOpen(false)}
@@ -955,10 +969,14 @@ export function WalletPage() {
                         {gatewayProcessing ? (
                           <>
                             <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            {paymentMode === "UPI" ? "Connecting to Gateway..." : "Submitting..."}
+                            {paymentMode === "UPI"
+                              ? "Connecting to Gateway..."
+                              : "Submitting..."}
                           </>
+                        ) : paymentMode === "UPI" ? (
+                          "Pay via Gateway"
                         ) : (
-                          paymentMode === "UPI" ? "Pay via Gateway" : "Submit Request"
+                          "Submit Request"
                         )}
                       </button>
                     </div>

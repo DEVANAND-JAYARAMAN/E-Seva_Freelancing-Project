@@ -95,7 +95,7 @@ export function PermissionPage() {
         </div>
 
         {/* Permissions Table Section */}
-        <div className="bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 shadow-sm flex flex-col space-y-6">
+        <div className="bg-slate-50 dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 shadow-sm flex flex-col space-y-6">
           <div className="overflow-x-auto rounded-2xl border border-slate-50 dark:border-slate-900/30">
             <table className="w-full text-left border-collapse">
               <thead>

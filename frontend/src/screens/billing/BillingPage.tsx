@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   TrendingUp,
   TrendingDown,
@@ -9,7 +9,9 @@ import {
   CreditCard,
   Search,
   Save,
-  Settings
+  Settings,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
 import { useAuth } from "../../store/context/AuthContext";
@@ -28,7 +30,7 @@ import {
   Bar,
   PieChart,
   Pie,
-  Cell
+  Cell,
 } from "recharts";
 
 export interface ServiceRequest {
@@ -47,39 +49,30 @@ interface ConfigService {
   id: string;
   name: string;
   officialCost: number;
+  parentId?: string;
 }
 
 export function BillingPage() {
   const { user } = useAuth();
   const [requests, setRequests] = useState<ServiceRequest[]>([]);
   const [configServices, setConfigServices] = useState<ConfigService[]>([]);
+  const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set());
   const [editingCosts, setEditingCosts] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [timeFilter, setTimeFilter] = useState<"day" | "month" | "year">("day");
-  const [chartType, setChartType] = useState<"area" | "bar" | "line" | "pie">("area");
+  const [chartType, setChartType] = useState<"area" | "bar" | "line" | "pie">(
+    "area",
+  );
 
-  const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "");
+  const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(
+    /(?:\/api|\/)+$/,
+    "",
+  );
 
   const fetchData = async () => {
     try {
-      // Fetch Requests
-      const resReq = await fetch(`${baseUrl}/api/services/requests`);
-      if (resReq.ok) {
-        const data = await resReq.json();
-        const mapped = (data || []).map((app: any) => ({
-          id: app.id || app.Id,
-          serviceName: app.serviceName || app.ServiceName || "Unknown Service",
-          cost: parseFloat(app.cost || app.Cost || "0"),
-          officialCost: parseFloat(app.officialCost || app.OfficialCost || "0"),
-          profit: parseFloat(app.profit || app.Profit || "0"),
-          status: app.status || app.Status || "Pending",
-          createdDate: (app.createdDate || app.CreatedDate || "").split("T")[0],
-        }));
-        setRequests(mapped);
-      }
-
-      // Fetch Dynamic Services for Config Table
+      // Fetch Dynamic Services for Config Table First
       const resDyn = await fetch(`${baseUrl}/api/services/dynamic`);
       let dynServices: any[] = [];
       if (resDyn.ok) {
@@ -88,42 +81,109 @@ export function BillingPage() {
 
       const dynMap = new Map();
       dynServices.forEach((s) => {
-        dynMap.set(s.id, s.officialCost || 0);
+        if (s.id) dynMap.set(s.id, s.officialCost || 0);
+        if (s.name) dynMap.set(s.name.toLowerCase().trim(), s.officialCost || 0);
       });
 
-      // Combine Static + Dynamic
+      // Fetch Requests first to find all sub-services
+      let reqUrl = `${baseUrl}/api/services/requests`;
+      if (user?.role && user.role !== "admin") {
+        reqUrl += `?userId=${user.id}`;
+      }
+      const resReq = await fetch(reqUrl);
+      let rawRequests: any[] = [];
+      if (resReq.ok) {
+        rawRequests = await resReq.json() || [];
+      }
+
       const combined: ConfigService[] = [];
       const seenIds = new Set();
+      
+      // Helper to add a service to config list safely
+      const addConfigService = (id: string, name: string, parentId?: string) => {
+        const tempId = id || name.toLowerCase().replace(/[^a-z0-9]/g, "-");
+        if (!seenIds.has(tempId)) {
+          let cost = dynMap.get(tempId);
+          if (cost === undefined) cost = dynMap.get(name.toLowerCase().trim());
+          combined.push({
+            id: tempId,
+            name: name,
+            officialCost: cost || 0,
+            parentId: parentId,
+          });
+          seenIds.add(tempId);
+        }
+      };
 
-      // Add statics
-      defaultStaticServices.forEach(s => {
-        combined.push({
-          id: s.id,
-          name: s.name,
-          officialCost: dynMap.get(s.id) || 0
-        });
-        seenIds.add(s.id);
+      // 1. Add statics
+      defaultStaticServices.forEach((s) => {
+        addConfigService(s.id, s.name, (s as any).parentId);
       });
 
-      // Add remaining dynamics
+      // 2. Add remaining dynamics
       dynServices.forEach((s) => {
-        if (!seenIds.has(s.id)) {
-          combined.push({
-            id: s.id,
-            name: s.name,
-            officialCost: s.officialCost || 0
-          });
+        addConfigService(s.id, s.name);
+      });
+
+      // 3. Add ALL unique serviceNames from Requests (these are the Sub-Services)
+      rawRequests.forEach((app: any) => {
+        const sName = (app.serviceName || app.ServiceName || "").trim();
+        if (sName) {
+           addConfigService("", sName);
         }
       });
 
       setConfigServices(combined);
-      
+
       const initCosts: Record<string, string> = {};
-      combined.forEach(s => {
+      combined.forEach((s) => {
         initCosts[s.id] = String(s.officialCost || 0);
       });
       setEditingCosts(initCosts);
 
+      // Now apply official cost to the requests for profit calculation
+      const mapped = rawRequests.map((app: any) => {
+        const rawSId = app.serviceId || app.ServiceId || "";
+        const sName = (app.serviceName || app.ServiceName || "").trim();
+        const sNameKey = sName.toLowerCase();
+
+        // Map older legacy IDs to the new standard IDs used in configServices
+        const legacyIdMap: Record<string, string> = {
+          sabarimala_dharsan_booking: "dharsan",
+          sabarimala: "dharsan",
+          aadhaar_address_update: "aadhaar-card-address",
+          long_adhaar_setup: "pdf-services", // Fallback for old PDF/Print services if any
+        };
+
+        const sId = legacyIdMap[rawSId] || rawSId;
+        const generatedId = sNameKey.replace(/[^a-z0-9]/g, "-");
+
+        // Hierarchy of finding cost: 
+        // 1. By exact sub-service name (generated ID)
+        // 2. By exact sub-service name (string)
+        // 3. By parent service ID
+        let currentOfficialCost = dynMap.get(generatedId);
+        if (currentOfficialCost === undefined) currentOfficialCost = dynMap.get(sNameKey);
+        if (currentOfficialCost === undefined) currentOfficialCost = dynMap.get(sId);
+        if (currentOfficialCost === undefined) {
+          currentOfficialCost = parseFloat(app.officialCost || app.OfficialCost || "0");
+        }
+
+        const cost = parseFloat(app.cost || app.Cost || "0");
+        const calculatedProfit = cost - currentOfficialCost;
+
+        return {
+          id: app.id || app.Id,
+          serviceName: sName || "Unknown Service",
+          cost: cost,
+          officialCost: currentOfficialCost,
+          profit: calculatedProfit,
+          status: app.status || app.Status || "Pending",
+          createdDate: (app.createdDate || app.CreatedDate || "").split("T")[0],
+        };
+      });
+      
+      setRequests(mapped);
     } catch (err) {
       console.error("Failed to fetch data", err);
     } finally {
@@ -142,7 +202,7 @@ export function BillingPage() {
       const res = await fetch(`${baseUrl}/api/services/dynamic/${id}/cost`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, officialCost: val })
+        body: JSON.stringify({ name, officialCost: val }),
       });
       if (res.ok) {
         // Refresh data to update profits in table and chart
@@ -160,7 +220,9 @@ export function BillingPage() {
   const filteredRequests = useMemo(() => {
     return requests
       .filter((r) => r.status === "Completed") // Focus only on completed services for profit
-      .filter((r) => r.serviceName.toLowerCase().includes(searchTerm.toLowerCase()));
+      .filter((r) =>
+        r.serviceName.toLowerCase().includes(searchTerm.toLowerCase()),
+      );
   }, [requests, searchTerm]);
 
   const totalServiceCharge = useMemo(() => {
@@ -174,12 +236,15 @@ export function BillingPage() {
   const netProfit = useMemo(() => {
     return filteredRequests.reduce((sum, r) => sum + r.profit, 0);
   }, [filteredRequests]);
-  
+
   const isProfitPositive = netProfit >= 0;
 
   // Chart Data preparation
   const chartData = useMemo(() => {
-    const groupedByTime: Record<string, { serviceCharge: number; officialCost: number; profit: number }> = {};
+    const groupedByTime: Record<
+      string,
+      { serviceCharge: number; officialCost: number; profit: number }
+    > = {};
 
     filteredRequests.forEach((req) => {
       let timeKey = req.createdDate;
@@ -194,7 +259,11 @@ export function BillingPage() {
       const profit = req.profit;
 
       if (!groupedByTime[timeKey]) {
-        groupedByTime[timeKey] = { serviceCharge: 0, officialCost: 0, profit: 0 };
+        groupedByTime[timeKey] = {
+          serviceCharge: 0,
+          officialCost: 0,
+          profit: 0,
+        };
       }
       groupedByTime[timeKey].serviceCharge += serviceCharge;
       groupedByTime[timeKey].officialCost += officialCost;
@@ -222,14 +291,15 @@ export function BillingPage() {
               Billing
             </h2>
             <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed max-w-2xl">
-              Track the official service cost versus how much we charged to calculate net profit.
+              Track the official service cost versus how much we charged to
+              calculate net profit.
             </p>
           </div>
         </div>
 
         {/* Financial Metrics */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#0b101e] border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col gap-3">
+          <div className="p-6 rounded-3xl bg-slate-50 dark:bg-[#0b101e] border-2 border-black dark:border-white shadow-sm flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                 Total Official Cost
@@ -243,7 +313,7 @@ export function BillingPage() {
             </span>
           </div>
 
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#0b101e] border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col gap-3">
+          <div className="p-6 rounded-3xl bg-slate-50 dark:bg-[#0b101e] border-2 border-black dark:border-white shadow-sm flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                 Total Service Charge (Revenue)
@@ -257,7 +327,7 @@ export function BillingPage() {
             </span>
           </div>
 
-          <div className="p-6 rounded-3xl bg-white dark:bg-[#0b101e] border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col gap-3">
+          <div className="p-6 rounded-3xl bg-slate-50 dark:bg-[#0b101e] border-2 border-black dark:border-white shadow-sm flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                 Net Profit
@@ -269,12 +339,18 @@ export function BillingPage() {
                     : "bg-rose-50 dark:bg-rose-950/30 text-rose-500"
                 }`}
               >
-                {isProfitPositive ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
+                {isProfitPositive ? (
+                  <TrendingUp size={16} />
+                ) : (
+                  <TrendingDown size={16} />
+                )}
               </div>
             </div>
             <span
               className={`text-3xl font-black ${
-                isProfitPositive ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+                isProfitPositive
+                  ? "text-emerald-600 dark:text-emerald-400"
+                  : "text-rose-600 dark:text-rose-400"
               }`}
             >
               ₹{netProfit.toLocaleString()}
@@ -283,18 +359,23 @@ export function BillingPage() {
         </div>
 
         {/* Official Costs Configuration Section */}
-        <div className="flex flex-col gap-6 bg-white dark:bg-[#0b101e] border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
+        <div className="flex flex-col gap-6 bg-slate-50 dark:bg-[#0b101e] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
-              <Settings size={20} className="text-[#005c3a] dark:text-emerald-500" />
+              <Settings
+                size={20}
+                className="text-[#005c3a] dark:text-emerald-500"
+              />
               Official Costs Configuration
             </h3>
             <p className="text-sm text-slate-500 max-w-sm">
-              Configure the exact official processing cost for each service here. This is subtracted from the user charge to calculate real profit.
+              Configure the exact official processing cost for each service
+              here. This is subtracted from the user charge to calculate real
+              profit.
             </p>
           </div>
-          <div className="overflow-x-auto max-h-96 rounded-2xl border border-slate-100 dark:border-slate-800">
-            <table className="w-full text-left border-collapse">
+          <div className="overflow-x-auto max-h-96 rounded-2xl border-2 border-black dark:border-white">
+            <table className="w-full text-left border-collapse border-2 border-black dark:border-white">
               <thead className="sticky top-0 bg-slate-50 dark:bg-slate-900 z-10 shadow-sm">
                 <tr className="border-b border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-500 uppercase tracking-wider">
                   <th className="py-4 px-4 w-1/2">Service Name</th>
@@ -305,51 +386,144 @@ export function BillingPage() {
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={3} className="py-8 text-center text-slate-400 font-semibold">Loading data...</td>
-                  </tr>
-                ) : configServices.map((svc) => (
-                  <tr key={svc.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/20 transition-colors">
-                    <td className="py-4 px-4 font-bold text-slate-800 dark:text-white">
-                      {svc.name}
-                    </td>
-                    <td className="py-4 px-4 text-center">
-                      <div className="flex items-center justify-center">
-                        <span className="text-slate-400 mr-2 font-bold">₹</span>
-                        <input
-                          type="number"
-                          min="0"
-                          value={editingCosts[svc.id] || ""}
-                          onChange={(e) => setEditingCosts(prev => ({ ...prev, [svc.id]: e.target.value }))}
-                          placeholder="0"
-                          className="w-24 px-3 py-1.5 text-center font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#0a0f18] text-slate-800 dark:text-white focus:outline-none focus:border-[#005c3a] dark:focus:border-emerald-500 shadow-sm"
-                        />
-                      </div>
-                    </td>
-                    <td className="py-4 px-4 text-right">
-                      <button
-                        onClick={() => handleSaveOfficialCost(svc.id, svc.name)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-[#005c3a] hover:bg-[#004a2e] dark:bg-emerald-600 dark:hover:bg-emerald-700 rounded-lg transition-colors shadow-sm"
-                      >
-                        <Save size={14} />
-                        Save
-                      </button>
+                    <td
+                      colSpan={3}
+                      className="py-8 text-center text-slate-400 font-semibold"
+                    >
+                      Loading data...
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  configServices.filter(svc => !svc.parentId).map((svc) => {
+                    const children = configServices.filter(child => child.parentId === svc.id);
+                    const hasChildren = children.length > 0;
+                    const isExpanded = expandedParents.has(svc.id);
+                    
+                    return (
+                      <React.Fragment key={svc.id}>
+                        <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-900/20 transition-colors">
+                          <td className="py-4 px-4 font-bold text-slate-800 dark:text-white">
+                            <div className="flex items-center gap-2">
+                              {hasChildren ? (
+                                <button
+                                  onClick={() => {
+                                    setExpandedParents(prev => {
+                                      const next = new Set(prev);
+                                      if (next.has(svc.id)) next.delete(svc.id);
+                                      else next.add(svc.id);
+                                      return next;
+                                    });
+                                  }}
+                                  className="p-1 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg text-slate-500 transition-colors"
+                                >
+                                  {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                                </button>
+                              ) : (
+                                <div className="w-6" /> // spacer
+                              )}
+                              {svc.name}
+                            </div>
+                          </td>
+                          <td className="py-4 px-4 text-center">
+                            <div className="flex items-center justify-center">
+                              <span className="text-slate-400 mr-2 font-bold">
+                                ₹
+                              </span>
+                              <input
+                                type="number"
+                                min="0"
+                                value={editingCosts[svc.id] || ""}
+                                onChange={(e) =>
+                                  setEditingCosts((prev) => ({
+                                    ...prev,
+                                    [svc.id]: e.target.value,
+                                  }))
+                                }
+                                placeholder="0"
+                                className="w-24 px-3 py-1.5 text-center font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#0a0f18] text-slate-800 dark:text-white focus:outline-none focus:border-[#005c3a] dark:focus:border-emerald-500 shadow-sm"
+                              />
+                            </div>
+                          </td>
+                          <td className="py-4 px-4 text-right">
+                            <button
+                              onClick={() =>
+                                handleSaveOfficialCost(svc.id, svc.name)
+                              }
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-[#005c3a] hover:bg-[#004a2e] dark:bg-emerald-600 dark:hover:bg-emerald-700 rounded-lg transition-colors shadow-sm"
+                            >
+                              <Save size={14} />
+                              Save
+                            </button>
+                          </td>
+                        </tr>
+                        {isExpanded && children.map(child => (
+                          <tr
+                            key={child.id}
+                            className="bg-slate-50/30 dark:bg-slate-900/10 hover:bg-slate-50/80 dark:hover:bg-slate-900/30 transition-colors"
+                          >
+                            <td className="py-3 px-4 pl-12 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                              <div className="flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+                                {child.name}
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <div className="flex items-center justify-center">
+                                <span className="text-slate-400 mr-2 font-bold">
+                                  ₹
+                                </span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  value={editingCosts[child.id] || ""}
+                                  onChange={(e) =>
+                                    setEditingCosts((prev) => ({
+                                      ...prev,
+                                      [child.id]: e.target.value,
+                                    }))
+                                  }
+                                  placeholder="0"
+                                  className="w-24 px-3 py-1.5 text-center font-bold rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#0a0f18] text-slate-800 dark:text-white focus:outline-none focus:border-[#005c3a] dark:focus:border-emerald-500 shadow-sm"
+                                />
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <button
+                                onClick={() =>
+                                  handleSaveOfficialCost(child.id, child.name)
+                                }
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-50 dark:bg-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg transition-colors shadow-sm"
+                              >
+                                <Save size={14} />
+                                Save
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </React.Fragment>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
         </div>
 
         {/* Table Section */}
-        <div className="flex flex-col gap-6 bg-white dark:bg-[#0b101e] border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
+        <div className="flex flex-col gap-6 bg-slate-50 dark:bg-[#0b101e] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
-              <Activity size={20} className="text-[#005c3a] dark:text-emerald-500" />
+              <Activity
+                size={20}
+                className="text-[#005c3a] dark:text-emerald-500"
+              />
               Completed Services
             </h3>
             <div className="relative max-w-sm w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                size={16}
+              />
               <input
                 type="text"
                 placeholder="Search services..."
@@ -360,8 +534,8 @@ export function BillingPage() {
             </div>
           </div>
 
-          <div className="overflow-x-auto rounded-2xl border border-slate-100 dark:border-slate-800">
-            <table className="w-full text-left border-collapse">
+          <div className="overflow-x-auto rounded-2xl border-2 border-black dark:border-white">
+            <table className="w-full text-left border-collapse border-2 border-black dark:border-white">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 text-xs font-bold text-slate-500 uppercase tracking-wider">
                   <th className="py-4 px-4">Date</th>
@@ -374,15 +548,23 @@ export function BillingPage() {
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-slate-400 font-semibold">
+                    <td
+                      colSpan={5}
+                      className="py-12 text-center text-slate-400 font-semibold"
+                    >
                       Loading data...
                     </td>
                   </tr>
                 ) : filteredRequests.length > 0 ? (
                   filteredRequests.map((req) => {
                     return (
-                      <tr key={req.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/20 transition-colors">
-                        <td className="py-4 px-4 font-semibold text-slate-500">{req.createdDate}</td>
+                      <tr
+                        key={req.id}
+                        className="hover:bg-slate-50/50 dark:hover:bg-slate-900/20 transition-colors"
+                      >
+                        <td className="py-4 px-4 font-semibold text-slate-500">
+                          {req.createdDate}
+                        </td>
                         <td className="py-4 px-4 font-bold text-slate-800 dark:text-white">
                           {req.serviceName}
                         </td>
@@ -393,8 +575,15 @@ export function BillingPage() {
                           ₹{req.officialCost.toLocaleString()}
                         </td>
                         <td className="py-4 px-4 text-right font-black">
-                          <span className={req.profit >= 0 ? "text-emerald-500" : "text-rose-500"}>
-                            {req.profit > 0 ? "+" : ""}₹{req.profit.toLocaleString()}
+                          <span
+                            className={
+                              req.profit >= 0
+                                ? "text-emerald-500"
+                                : "text-rose-500"
+                            }
+                          >
+                            {req.profit > 0 ? "+" : ""}₹
+                            {req.profit.toLocaleString()}
                           </span>
                         </td>
                       </tr>
@@ -402,7 +591,10 @@ export function BillingPage() {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={5} className="py-12 text-center text-slate-400 font-semibold">
+                    <td
+                      colSpan={5}
+                      className="py-12 text-center text-slate-400 font-semibold"
+                    >
                       No completed services found.
                     </td>
                   </tr>
@@ -414,10 +606,13 @@ export function BillingPage() {
 
         {/* Chart Section */}
         {chartData.length > 0 && (
-          <div className="flex flex-col gap-6 bg-white dark:bg-[#0b101e] border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
+          <div className="flex flex-col gap-6 bg-slate-50 dark:bg-[#0b101e] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
-                <TrendingUp size={20} className="text-[#005c3a] dark:text-emerald-500" />
+                <TrendingUp
+                  size={20}
+                  className="text-[#005c3a] dark:text-emerald-500"
+                />
                 Profit Analysis Chart
               </h3>
               <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900/50 p-1 rounded-xl">
@@ -425,7 +620,7 @@ export function BillingPage() {
                   onClick={() => setTimeFilter("day")}
                   className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
                     timeFilter === "day"
-                      ? "bg-white dark:bg-slate-800 shadow-sm text-emerald-600 dark:text-emerald-400"
+                      ? "bg-slate-50 dark:bg-slate-800 shadow-sm text-emerald-600 dark:text-emerald-400"
                       : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                   }`}
                 >
@@ -435,7 +630,7 @@ export function BillingPage() {
                   onClick={() => setTimeFilter("month")}
                   className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
                     timeFilter === "month"
-                      ? "bg-white dark:bg-slate-800 shadow-sm text-emerald-600 dark:text-emerald-400"
+                      ? "bg-slate-50 dark:bg-slate-800 shadow-sm text-emerald-600 dark:text-emerald-400"
                       : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                   }`}
                 >
@@ -445,7 +640,7 @@ export function BillingPage() {
                   onClick={() => setTimeFilter("year")}
                   className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
                     timeFilter === "year"
-                      ? "bg-white dark:bg-slate-800 shadow-sm text-emerald-600 dark:text-emerald-400"
+                      ? "bg-slate-50 dark:bg-slate-800 shadow-sm text-emerald-600 dark:text-emerald-400"
                       : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                   }`}
                 >
@@ -459,7 +654,7 @@ export function BillingPage() {
                     onClick={() => setChartType(type as any)}
                     className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all capitalize ${
                       chartType === type
-                        ? "bg-white dark:bg-slate-800 shadow-sm text-[#005c3a] dark:text-emerald-500"
+                        ? "bg-slate-50 dark:bg-slate-800 shadow-sm text-[#005c3a] dark:text-emerald-500"
                         : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
                     }`}
                   >
@@ -471,64 +666,261 @@ export function BillingPage() {
             <div className="w-full h-80 mt-4">
               <ResponsiveContainer width="100%" height="100%">
                 {chartType === "area" ? (
-                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <AreaChart
+                    data={chartData}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  >
                     <defs>
-                      <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                      <linearGradient
+                        id="colorProfit"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#10b981"
+                          stopOpacity={0.3}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#10b981"
+                          stopOpacity={0}
+                        />
                       </linearGradient>
-                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                      <linearGradient
+                        id="colorRevenue"
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop
+                          offset="5%"
+                          stopColor="#3b82f6"
+                          stopOpacity={0.3}
+                        />
+                        <stop
+                          offset="95%"
+                          stopColor="#3b82f6"
+                          stopOpacity={0}
+                        />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.3} />
-                    <XAxis dataKey="date" tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={{ backgroundColor: "#0f172a", border: "none", borderRadius: "12px", color: "#fff" }} />
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#334155"
+                      opacity={0.3}
+                    />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fill: "#64748b", fontSize: 12 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fill: "#64748b", fontSize: 12 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#0f172a",
+                        border: "none",
+                        borderRadius: "12px",
+                        color: "#fff",
+                      }}
+                    />
                     <Legend wrapperStyle={{ paddingTop: "20px" }} />
-                    <Area type="monotone" dataKey="Service Charge" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
-                    <Line type="monotone" dataKey="Official Cost" stroke="#ef4444" strokeWidth={2} strokeDasharray="5 5" dot={false} />
-                    <Area type="monotone" dataKey="Net Profit" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorProfit)" />
+                    <Area
+                      type="monotone"
+                      dataKey="Service Charge"
+                      stroke="#3b82f6"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#colorRevenue)"
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="Official Cost"
+                      stroke="#ef4444"
+                      strokeWidth={2}
+                      strokeDasharray="5 5"
+                      dot={false}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="Net Profit"
+                      stroke="#10b981"
+                      strokeWidth={3}
+                      fillOpacity={1}
+                      fill="url(#colorProfit)"
+                    />
                   </AreaChart>
                 ) : chartType === "bar" ? (
-                  <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.3} />
-                    <XAxis dataKey="date" tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={{ backgroundColor: "#0f172a", border: "none", borderRadius: "12px", color: "#fff" }} />
+                  <BarChart
+                    data={chartData}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#334155"
+                      opacity={0.3}
+                    />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fill: "#64748b", fontSize: 12 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fill: "#64748b", fontSize: 12 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#0f172a",
+                        border: "none",
+                        borderRadius: "12px",
+                        color: "#fff",
+                      }}
+                    />
                     <Legend wrapperStyle={{ paddingTop: "20px" }} />
-                    <Bar dataKey="Service Charge" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="Official Cost" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="Net Profit" fill="#10b981" radius={[4, 4, 0, 0]} />
+                    <Bar
+                      dataKey="Service Charge"
+                      fill="#3b82f6"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="Official Cost"
+                      fill="#ef4444"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="Net Profit"
+                      fill="#10b981"
+                      radius={[4, 4, 0, 0]}
+                    />
                   </BarChart>
                 ) : chartType === "line" ? (
-                  <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.3} />
-                    <XAxis dataKey="date" tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: "#64748b", fontSize: 12 }} axisLine={false} tickLine={false} />
-                    <Tooltip contentStyle={{ backgroundColor: "#0f172a", border: "none", borderRadius: "12px", color: "#fff" }} />
+                  <LineChart
+                    data={chartData}
+                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      vertical={false}
+                      stroke="#334155"
+                      opacity={0.3}
+                    />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fill: "#64748b", fontSize: 12 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fill: "#64748b", fontSize: 12 }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#0f172a",
+                        border: "none",
+                        borderRadius: "12px",
+                        color: "#fff",
+                      }}
+                    />
                     <Legend wrapperStyle={{ paddingTop: "20px" }} />
-                    <Line type="monotone" dataKey="Service Charge" stroke="#3b82f6" strokeWidth={3} />
-                    <Line type="monotone" dataKey="Official Cost" stroke="#ef4444" strokeWidth={3} />
-                    <Line type="monotone" dataKey="Net Profit" stroke="#10b981" strokeWidth={3} />
+                    <Line
+                      type="linear"
+                      dataKey="Service Charge"
+                      stroke="#3b82f6"
+                      strokeWidth={3}
+                      activeDot={{ r: 8 }}
+                      dot={{ r: 4, strokeWidth: 2 }}
+                    />
+                    <Line
+                      type="linear"
+                      dataKey="Official Cost"
+                      stroke="#ef4444"
+                      strokeWidth={3}
+                      activeDot={{ r: 8 }}
+                      dot={{ r: 4, strokeWidth: 2 }}
+                    />
+                    <Line
+                      type="linear"
+                      dataKey="Net Profit"
+                      stroke="#10b981"
+                      strokeWidth={3}
+                      activeDot={{ r: 8 }}
+                      dot={{ r: 4, strokeWidth: 2 }}
+                    />
                   </LineChart>
                 ) : (
                   <PieChart>
                     <Pie
-                      data={chartData.filter(d => d["Net Profit"] > 0)}
-                      dataKey="Net Profit"
-                      nameKey="date"
+                      data={[
+                        {
+                          name: "Service Charge",
+                          value: totalServiceCharge,
+                          fill: "#3b82f6",
+                        },
+                        {
+                          name: "Official Cost",
+                          value: totalOfficialCost,
+                          fill: "#ef4444",
+                        },
+                        {
+                          name: netProfit >= 0 ? "Net Profit" : "Net Loss",
+                          value: Math.abs(netProfit),
+                          fill: netProfit >= 0 ? "#10b981" : "#f43f5e",
+                        },
+                      ].filter((d) => d.value > 0)}
+                      dataKey="value"
+                      nameKey="name"
                       cx="50%"
                       cy="50%"
                       outerRadius={100}
-                      label={({ name, percent }) => `${name} (${((percent || 0) * 100).toFixed(0)}%)`}
+                      label={({ name, percent }) =>
+                        `${name} (${((percent || 0) * 100).toFixed(0)}%)`
+                      }
                     >
-                      {chartData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444'][index % 5]} />
-                      ))}
+                      {[
+                        {
+                          name: "Service Charge",
+                          value: totalServiceCharge,
+                          fill: "#3b82f6",
+                        },
+                        {
+                          name: "Official Cost",
+                          value: totalOfficialCost,
+                          fill: "#ef4444",
+                        },
+                        {
+                          name: netProfit >= 0 ? "Net Profit" : "Net Loss",
+                          value: Math.abs(netProfit),
+                          fill: netProfit >= 0 ? "#10b981" : "#f43f5e",
+                        },
+                      ]
+                        .filter((d) => d.value > 0)
+                        .map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
                     </Pie>
-                    <Tooltip contentStyle={{ backgroundColor: "#0f172a", border: "none", borderRadius: "12px", color: "#fff" }} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "#0f172a",
+                        border: "none",
+                        borderRadius: "12px",
+                        color: "#fff",
+                      }}
+                    />
                     <Legend wrapperStyle={{ paddingTop: "20px" }} />
                   </PieChart>
                 )}

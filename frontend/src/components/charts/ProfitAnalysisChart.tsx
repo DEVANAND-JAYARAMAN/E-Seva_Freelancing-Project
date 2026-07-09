@@ -118,7 +118,7 @@ export function ProfitAnalysisChart({ profitByDate = [], profitByService = [] }:
               onClick={() => setChartType('bar')}
               className={`px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all ${
                 chartType === 'bar'
-                  ? 'bg-white dark:bg-slate-800 text-slate-800 dark:text-white shadow-sm'
+                  ? 'bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white shadow-sm'
                   : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
               }`}
             >
@@ -128,7 +128,7 @@ export function ProfitAnalysisChart({ profitByDate = [], profitByService = [] }:
               onClick={() => setChartType('line')}
               className={`px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all ${
                 chartType === 'line'
-                  ? 'bg-white dark:bg-slate-800 text-slate-800 dark:text-white shadow-sm'
+                  ? 'bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white shadow-sm'
                   : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
               }`}
             >
@@ -138,7 +138,7 @@ export function ProfitAnalysisChart({ profitByDate = [], profitByService = [] }:
               onClick={() => setChartType('pie')}
               className={`px-3 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md transition-all ${
                 chartType === 'pie'
-                  ? 'bg-white dark:bg-slate-800 text-slate-800 dark:text-white shadow-sm'
+                  ? 'bg-slate-50 dark:bg-slate-800 text-slate-800 dark:text-white shadow-sm'
                   : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
               }`}
             >

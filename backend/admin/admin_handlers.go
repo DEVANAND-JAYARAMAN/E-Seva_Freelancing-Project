@@ -129,7 +129,7 @@ func GetDashboardStats(c *gin.Context) {
 			
 		} else if status == "Resubmit" {
 			stats.Resubmit++
-		} else if status == "In Process" || status == "InProcess" || status == "Processing" {
+		} else if status == "In Process" || status == "InProcess" || status == "Processing" || status == "Process" {
 			stats.InProcess++
 		} else if status == "Rejected" {
 			stats.Rejected++

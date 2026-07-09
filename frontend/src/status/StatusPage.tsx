@@ -14,6 +14,7 @@ import { StatusStats } from "./StatusStats";
 import { useEffect } from "react";
 import { StatusDetailModal } from "./StatusDetailModal";
 import type { StatusTicket, TicketStatus } from "./types";
+import { useAuth } from "../store/context/AuthContext";
 
 // Seed data with precisely the 5 statuses requested by the user
 const seedTickets: StatusTicket[] = [
@@ -50,8 +51,7 @@ const seedTickets: StatusTicket[] = [
     status: "Resubmit",
     createdDate: "2026-05-21",
     lastUpdated: "2026-05-22",
-    remarks:
-      "Awaiting processing.",
+    remarks: "Awaiting processing.",
     userRole: "Retailer",
   },
   {
@@ -81,38 +81,70 @@ const seedTickets: StatusTicket[] = [
 ];
 
 export function StatusPage() {
+  const { user } = useAuth();
   const [tickets, setTickets] = useState<StatusTicket[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<TicketStatus | "All">("All");
-  const [selectedTicket, setSelectedTicket] = useState<StatusTicket | null>(null);
+  const [selectedTicket, setSelectedTicket] = useState<StatusTicket | null>(
+    null,
+  );
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isModalEditMode, setIsModalEditMode] = useState(false);
 
   // Fetch real data from backend
   const fetchTickets = async () => {
     try {
-      const res = await fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/requests`);
+      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(
+        /(?:\/api|\/)+$/,
+        "",
+      );
+      let url = `${baseUrl}/api/services/requests`;
+      if (user?.role && user.role !== "admin") {
+        url += `?userId=${user.id}`;
+      }
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
-        const sortedData = (data || []).sort((a: any, b: any) => 
-          new Date(b.createdDate || b.CreatedDate || "").getTime() - new Date(a.createdDate || a.CreatedDate || "").getTime()
+        const sortedData = (data || []).sort(
+          (a: any, b: any) =>
+            new Date(b.createdDate || b.CreatedDate || "").getTime() -
+            new Date(a.createdDate || a.CreatedDate || "").getTime(),
         );
         // map backend model to StatusTicket
         const mapped: StatusTicket[] = sortedData.map((app: any) => ({
           id: app.id || app.Id,
           transactionId: app.id || app.Id,
           serviceName: app.serviceName || app.ServiceName || "Unknown Service",
-          retailerName: app.retailerName || app.RetailerName || app.retailerId || app.RetailerId || "Unknown", 
+          retailerName:
+            app.retailerName ||
+            app.RetailerName ||
+            app.retailerId ||
+            app.RetailerId ||
+            "Unknown",
           retailerMobile: app.retailerMobile || app.RetailerMobile || "-",
           amount: app.cost || app.Cost || 0,
           status: (app.status || app.Status || "Resubmit") as TicketStatus,
           createdDate: (app.createdDate || app.CreatedDate || "").split("T")[0],
           lastUpdated: (app.lastUpdated || app.LastUpdated || "").split("T")[0],
           remarks: app.adminRemarks || app.AdminRemarks || "No remarks.",
-          formData: typeof (app.formData || app.FormData) === "string" ? JSON.parse(app.formData || app.FormData || "{}") : (app.formData || app.FormData || {}),
-          documents: typeof (app.documents || app.Documents) === "string" ? JSON.parse(app.documents || app.Documents || "[]") : (app.documents || app.Documents || []),
-          ackFiles: typeof (app.ackFiles || app.AckFiles) === "string" ? JSON.parse(app.ackFiles || app.AckFiles || "[]") : (app.ackFiles || app.AckFiles || []),
-          customerName: app.retailerName || app.RetailerName || app.retailerId || app.RetailerId || "Unknown",
+          formData:
+            typeof (app.formData || app.FormData) === "string"
+              ? JSON.parse(app.formData || app.FormData || "{}")
+              : app.formData || app.FormData || {},
+          documents:
+            typeof (app.documents || app.Documents) === "string"
+              ? JSON.parse(app.documents || app.Documents || "[]")
+              : app.documents || app.Documents || [],
+          ackFiles:
+            typeof (app.ackFiles || app.AckFiles) === "string"
+              ? JSON.parse(app.ackFiles || app.AckFiles || "[]")
+              : app.ackFiles || app.AckFiles || [],
+          customerName:
+            app.retailerName ||
+            app.RetailerName ||
+            app.retailerId ||
+            app.RetailerId ||
+            "Unknown",
           mobileNumber: app.retailerMobile || app.RetailerMobile || "-",
         }));
         setTickets(mapped);
@@ -125,31 +157,36 @@ export function StatusPage() {
   };
 
   useEffect(() => {
-    fetchTickets();
-  }, []);
+    if (user?.id) {
+      fetchTickets();
+    }
+  }, [user?.id]);
 
   // Update status and remarks via API
   const handleUpdateStatus = async (
     id: string,
     newStatus: TicketStatus,
     remarks: string,
-    ackFiles?: File[]
+    ackFiles?: File[],
   ) => {
     try {
       const formData = new FormData();
       formData.append("status", newStatus);
       formData.append("adminRemarks", remarks);
-      
+
       if (ackFiles && ackFiles.length > 0) {
-        ackFiles.forEach(file => {
+        ackFiles.forEach((file) => {
           formData.append("ackFiles", file);
         });
       }
 
-      const res = await fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/${id}/status`, {
-        method: "POST",
-        body: formData,
-      });
+      const res = await fetch(
+        `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/${id}/status`,
+        {
+          method: "POST",
+          body: formData,
+        },
+      );
       if (res.ok) {
         fetchTickets(); // Refresh data
         setIsDetailOpen(false);
@@ -170,31 +207,6 @@ export function StatusPage() {
   return (
     <AppShell activePage="Services Status">
       <section className="flex flex-col gap-8 w-full">
-        {/* Header Block */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-50 dark:border-slate-900/30 pb-6">
-          <div className="space-y-1.5">
-            <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
-              Service Status Operations
-            </h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed max-w-2xl">
-              Seamlessly track, manage, and transition the operational lifecycle
-              of service requests across standard stages:{" "}
-              <strong className="font-extrabold text-slate-700 dark:text-slate-300">
-                Resubmit
-              </strong>{" "}
-              review,{" "}
-              <strong className="font-extrabold text-slate-700 dark:text-slate-300">
-                Rejected
-              </strong>
-              , and{" "}
-              <strong className="font-extrabold text-slate-700 dark:text-slate-300">
-                Approved
-              </strong>
-              .
-            </p>
-          </div>
-        </div>
-
         {/* Dynamic Metric Tabs */}
         <StatusStats
           tickets={tickets}

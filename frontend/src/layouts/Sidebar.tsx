@@ -47,7 +47,7 @@ export function Sidebar({ activePage, isOpen, onClose }: SidebarProps) {
 
       {/* Sidebar Container */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-white dark:bg-[#090d16] text-slate-800 dark:text-slate-200 border-r border-slate-100 dark:border-slate-900/80 backdrop-blur-xl transition-all duration-300 ease-in-out lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-slate-50 dark:bg-[#090d16] text-slate-800 dark:text-slate-200 border-r border-slate-100 dark:border-slate-900/80 backdrop-blur-xl transition-all duration-300 ease-in-out lg:translate-x-0 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >

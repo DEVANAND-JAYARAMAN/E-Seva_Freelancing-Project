@@ -9,19 +9,25 @@ import {
   Mail,
   MapPin,
   Fingerprint,
+  Activity,
+  Wallet,
 } from "lucide-react";
+import Link from "next/link";
+import Swal from "sweetalert2";
 import type { Retailer } from "./types";
 
 type RetailerTableProps = {
   retailers: Retailer[];
   onEdit: (retailer: Retailer) => void;
   onToggleStatus: (id: string) => void;
+  onAddMoney: (id: string, amount: number) => Promise<boolean>;
 };
 
 export function RetailerTable({
   retailers,
   onEdit,
   onToggleStatus,
+  onAddMoney,
 }: RetailerTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<
@@ -43,7 +49,7 @@ export function RetailerTable({
   });
 
   return (
-    <div className="bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 shadow-sm flex flex-col space-y-6">
+    <div className="bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm flex flex-col space-y-6">
       {/* Search and Filter Panel */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="relative flex-1">
@@ -71,7 +77,7 @@ export function RetailerTable({
                 onClick={() => setStatusFilter(filter)}
                 className={`px-4 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 ${
                   statusFilter === filter
-                    ? "bg-white dark:bg-[#090d16] text-[#005c3a] dark:text-emerald-400 shadow-sm border border-slate-100 dark:border-slate-850/50"
+                    ? "bg-slate-50 dark:bg-[#090d16] text-[#005c3a] dark:text-emerald-400 shadow-sm border border-slate-100 dark:border-slate-850/50"
                     : "text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
                 }`}
               >
@@ -83,8 +89,8 @@ export function RetailerTable({
       </div>
 
       {/* Table Section */}
-      <div className="overflow-x-auto rounded-2xl border border-slate-50 dark:border-slate-900/30">
-        <table className="w-full text-left border-collapse">
+      <div className="overflow-x-auto rounded-2xl border-2 border-black dark:border-white">
+        <table className="w-full text-left border-collapse border-2 border-black dark:border-white">
           <thead>
             <tr className="bg-slate-50/40 dark:bg-[#090d16]/30 border-b border-slate-50 dark:border-slate-900/30">
               <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
@@ -94,10 +100,16 @@ export function RetailerTable({
                 Contact Details
               </th>
               <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                Id & Password
+              </th>
+              <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                 Location
               </th>
               <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-right">
                 Wallet Balance
+              </th>
+              <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">
+                Transaction
               </th>
               <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">
                 Status
@@ -154,6 +166,29 @@ export function RetailerTable({
                     )}
                   </td>
 
+                  {/* Id & Password */}
+                  <td className="py-4 px-6 space-y-1">
+                    <div className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                      <span className="text-[10px] uppercase text-slate-400 font-bold mr-1">
+                        ID:
+                      </span>
+                      <span className="font-mono bg-slate-50 dark:bg-slate-900/60 px-1.5 py-0.5 rounded">
+                        {retailer.id}
+                      </span>
+                    </div>
+                    <div className="text-xs font-semibold text-slate-600 dark:text-slate-400">
+                      <span className="text-[10px] uppercase text-slate-400 font-bold mr-1">
+                        PWD:
+                      </span>
+                      <span className="font-mono bg-slate-50 dark:bg-slate-900/60 px-1.5 py-0.5 rounded">
+                        {!retailer.rawPassword ||
+                        retailer.rawPassword.toLowerCase() === "n/a"
+                          ? "-"
+                          : retailer.rawPassword}
+                      </span>
+                    </div>
+                  </td>
+
                   {/* Location */}
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-400">
@@ -171,6 +206,17 @@ export function RetailerTable({
                         maximumFractionDigits: 2,
                       })}
                     </span>
+                  </td>
+
+                  {/* Transaction */}
+                  <td className="py-4 px-6 text-center">
+                    <Link
+                      href={`/transactions?userId=${encodeURIComponent(retailer.id)}&name=${encodeURIComponent(retailer.name)}`}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-900/50 hover:bg-[#e8f5e9]/50 dark:hover:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-400 border border-slate-100 dark:border-slate-900 text-xs font-bold transition-all duration-200"
+                    >
+                      <Activity size={12} />
+                      <span>Transactions</span>
+                    </Link>
                   </td>
 
                   {/* Status Badges */}
@@ -215,13 +261,62 @@ export function RetailerTable({
                           <UserCheck size={13} />
                         )}
                       </button>
+                      <button
+                        onClick={() => {
+                          if (retailer.status !== "Active") return;
+                          Swal.fire({
+                            title: `Add money to ${retailer.name}`,
+                            input: 'number',
+                            inputLabel: 'Amount (₹)',
+                            inputPlaceholder: 'Enter amount',
+                            inputAttributes: {
+                              min: "1"
+                            },
+                            showCancelButton: true,
+                            confirmButtonText: 'Add Balance',
+                            confirmButtonColor: '#005c3a',
+                            showLoaderOnConfirm: true,
+                            preConfirm: async (amount) => {
+                              if (!amount || Number(amount) <= 0) {
+                                Swal.showValidationMessage('Please enter a valid amount');
+                                return false;
+                              }
+                              const success = await onAddMoney(retailer.id, Number(amount));
+                              if (!success) {
+                                Swal.showValidationMessage('Failed to add money. Please try again.');
+                                return false;
+                              }
+                              return amount;
+                            },
+                            allowOutsideClick: () => !Swal.isLoading()
+                          }).then((result) => {
+                            if (result.isConfirmed) {
+                              Swal.fire({
+                                title: 'Success!',
+                                text: `Added ₹${result.value} to ${retailer.name}'s wallet.`,
+                                icon: 'success',
+                                confirmButtonColor: '#005c3a'
+                              });
+                            }
+                          });
+                        }}
+                        disabled={retailer.status !== "Active"}
+                        className={`flex h-8 w-8 items-center justify-center rounded-lg border transition-colors ${
+                          retailer.status === "Active"
+                            ? "border-blue-100 dark:border-blue-900/30 hover:bg-blue-50 dark:hover:bg-blue-950/20 text-blue-600 hover:text-blue-700"
+                            : "border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 text-slate-300 dark:text-slate-600 cursor-not-allowed"
+                        }`}
+                        title="Add Money"
+                      >
+                        <Wallet size={13} />
+                      </button>
                     </div>
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={6} className="py-12 text-center">
+                <td colSpan={8} className="py-12 text-center">
                   <div className="flex flex-col items-center justify-center space-y-2 text-slate-400">
                     <AlertCircle
                       size={24}

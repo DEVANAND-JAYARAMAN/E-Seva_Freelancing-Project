@@ -20,7 +20,7 @@ export function DashboardOverview({ stats }: { stats?: any }) {
       </div>
 
       {/* Today collection card */}
-      <div className="bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 text-slate-800 dark:text-slate-100 rounded-3xl p-6 shadow-sm hover:shadow-md flex flex-col justify-between min-h-[250px] transition-all duration-300">
+      <div className="bg-slate-50 dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 text-slate-800 dark:text-slate-100 rounded-3xl p-6 shadow-sm hover:shadow-md flex flex-col justify-between min-h-[250px] transition-all duration-300">
         {/* Top row */}
         <div className="flex justify-between items-start">
           <span className="text-xs font-semibold text-slate-400">

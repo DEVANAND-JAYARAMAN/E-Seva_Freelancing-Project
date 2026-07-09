@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Home, Plus } from "lucide-react";
-import Link from "next/link";
 import { AppShell } from "../../../layouts/AppShell";
+import { ServiceNavigation } from "../../../components/ServiceNavigation/ServiceNavigation";
 import { useLocalStorage } from "../../../hooks/useLocalStorage";
 import { TnegaCustomerTable } from "./TnegaCustomerTable";
 import { TnegaCustomerForm } from "./TnegaCustomerForm";
@@ -117,6 +117,14 @@ export function TnegaPage() {
   return (
     <AppShell activePage="Our Service">
       <section className="flex flex-col gap-8 w-full">
+        {/* Navigation Breadcrumb Bar */}
+        <ServiceNavigation
+          pageName="TNEGA"
+          activeForm={isFormOpen ? "form" : null}
+          setActiveForm={() => setIsFormOpen(false)}
+          activeFormLabel={isFormOpen ? (selectedCustomer ? "Edit Customer" : "Add Customer") : undefined}
+        />
+
         {/* Header Block matching Retailer style */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-50 dark:border-slate-900/30 pb-6">
           <div className="space-y-1.5">

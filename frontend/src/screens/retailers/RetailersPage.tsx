@@ -53,7 +53,11 @@ export function RetailersPage() {
   const handleFormSubmit = async (
     data: Omit<Retailer, "id" | "createdDate"> & { id?: string },
   ) => {
-    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
+    const apiUrl =
+      `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(
+        /\/api$/,
+        "",
+      );
     if (data.id) {
       // Edit mode (API Call)
       try {
@@ -72,7 +76,9 @@ export function RetailersPage() {
         });
         if (res.ok) {
           setRetailers((prev) =>
-            prev.map((item) => (item.id === data.id ? { ...item, ...data } : item)),
+            prev.map((item) =>
+              item.id === data.id ? { ...item, ...data } : item,
+            ),
           );
         } else {
           const errData = await res.json().catch(() => ({}));
@@ -91,14 +97,14 @@ export function RetailersPage() {
           email: data.email,
           mobile: data.phone,
           role: "retailer",
-          password: "password123", // default password
+          password: (data as any).rawPassword,
         };
         const res = await fetch(`${apiUrl}/api/auth/signup`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-        
+
         if (res.ok) {
           const result = await res.json();
           const newRetailer: Retailer = {
@@ -125,7 +131,11 @@ export function RetailersPage() {
     if (!retailer) return;
 
     const newStatus = retailer.status === "Active" ? "Suspended" : "Active";
-    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
+    const apiUrl =
+      `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(
+        /\/api$/,
+        "",
+      );
 
     try {
       const res = await fetch(`${apiUrl}/api/users/${id}`, {
@@ -149,6 +159,36 @@ export function RetailersPage() {
     }
   };
 
+  // Add money to wallet handler
+  const handleAddMoney = async (userId: string, amount: number) => {
+    const apiUrl =
+      `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(
+        /\/api$/,
+        "",
+      );
+    try {
+      const res = await fetch(`${apiUrl}/api/admin/wallet/credit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, amount }),
+      });
+      if (res.ok) {
+        setRetailers((prev) =>
+          prev.map((item) =>
+            item.id === userId
+              ? { ...item, balance: Number(item.balance || 0) + amount }
+              : item,
+          ),
+        );
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error("Failed to add money", err);
+      return false;
+    }
+  };
+
   // Trigger form for Edit
   const handleEditClick = (retailer: Retailer) => {
     setSelectedRetailer(retailer);
@@ -166,17 +206,6 @@ export function RetailersPage() {
       <section className="flex flex-col gap-8 w-full">
         {/* Header Block */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-50 dark:border-slate-900/30 pb-6">
-          <div className="space-y-1.5">
-            <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
-              Retailers Directory
-            </h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed max-w-2xl">
-              Register, manage, status-guard and balance-audit all authorized
-              client merchants and e-seva agents from a single real-time
-              console.
-            </p>
-          </div>
-
           <button
             onClick={handleAddClick}
             className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] dark:hover:bg-emerald-500 text-white font-extrabold text-sm shadow-sm active:scale-[0.98] transition-all duration-200"
@@ -194,6 +223,7 @@ export function RetailersPage() {
           retailers={retailers}
           onEdit={handleEditClick}
           onToggleStatus={handleToggleStatus}
+          onAddMoney={handleAddMoney}
         />
 
         {/* Add/Edit Form Modal */}

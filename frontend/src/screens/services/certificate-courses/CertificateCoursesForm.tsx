@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useFormEdit } from "../../../store/context/FormEditContext";
 import { InputField, SelectField, SubmitButton } from "../form/FormFields";
 import { Upload, FileText } from "lucide-react";
 
@@ -99,6 +100,7 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
   onSubmit,
   isLoading = false,
 }) => {
+  const { overrides } = useFormEdit();
   const courseOptions = GET_COURSE_OPTIONS(courseName);
   const [formData, setFormData] = useState<Record<string, string>>({
     name: "",
@@ -327,7 +329,7 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
               Photo
             </label>
             <div
-              className={`relative flex items-center justify-between border rounded-xl px-4 py-2 bg-white dark:bg-[#0a0f18]/30 transition-all ${
+              className={`relative flex items-center justify-between border rounded-xl px-4 py-2 bg-slate-50 dark:bg-[#0a0f18]/30 transition-all ${
                 errors.photo
                   ? "border-red-500"
                   : "border-slate-250 dark:border-slate-800/80"
@@ -367,12 +369,33 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
         </div>
       </div>
 
-      <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-900/60 mt-8">
+      
+      {/* Added Extra Fields */}
+      {overrides.addedFields && overrides.addedFields.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+          {overrides.addedFields.map((field) => (
+            <InputField
+              key={field.name}
+              name={field.name}
+              label={field.label}
+              type={(field.type as any) || "text"}
+              placeholder={field.placeholder}
+              value={formData[field.name] || ""}
+              error={errors && errors[field.name]}
+              disabled={isSubmitting}
+              onChange={(val, file) => {
+                handleFieldChange(field.name, val, file);
+              }}
+            />
+          ))}
+        </div>
+      )}
+<div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-900/60 mt-8">
         <button
           type="button"
           onClick={onCancel}
           disabled={isLoading}
-          className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-880 bg-white dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
+          className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-880 bg-slate-50 dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
         >
           Cancel
         </button>

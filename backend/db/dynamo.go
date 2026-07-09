@@ -96,6 +96,38 @@ func ensureTables() {
 		},
 		BillingMode: types.BillingModePayPerRequest,
 	})
+
+	ensureTable("GlobalAlerts", &dynamodb.CreateTableInput{
+		TableName: aws.String("GlobalAlerts"),
+		KeySchema: []types.KeySchemaElement{
+			{AttributeName: aws.String("ID"), KeyType: types.KeyTypeHash},
+		},
+		AttributeDefinitions: []types.AttributeDefinition{
+			{AttributeName: aws.String("ID"), AttributeType: types.ScalarAttributeTypeS},
+		},
+		BillingMode: types.BillingModePayPerRequest,
+	})
+
+	ensureTable("ServiceMessages", &dynamodb.CreateTableInput{
+		TableName: aws.String("ServiceMessages"),
+		KeySchema: []types.KeySchemaElement{
+			{AttributeName: aws.String("ID"), KeyType: types.KeyTypeHash},
+		},
+		AttributeDefinitions: []types.AttributeDefinition{
+			{AttributeName: aws.String("ID"), AttributeType: types.ScalarAttributeTypeS},
+			{AttributeName: aws.String("ServiceID"), AttributeType: types.ScalarAttributeTypeS},
+		},
+		BillingMode: types.BillingModePayPerRequest,
+		GlobalSecondaryIndexes: []types.GlobalSecondaryIndex{
+			{
+				IndexName: aws.String("GSI-ServiceID"),
+				KeySchema: []types.KeySchemaElement{
+					{AttributeName: aws.String("ServiceID"), KeyType: types.KeyTypeHash},
+				},
+				Projection: &types.Projection{ProjectionType: types.ProjectionTypeAll},
+			},
+		},
+	})
 }
 
 func ensureTable(name string, input *dynamodb.CreateTableInput) {

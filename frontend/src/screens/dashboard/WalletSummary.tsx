@@ -1,9 +1,10 @@
 import { walletCards } from "../../config/data";
-
 import { useAuth } from "../../store/context/AuthContext";
+import { useRouter } from "next/navigation";
 
 export function WalletSummary({ stats }: { stats?: any }) {
   const { user } = useAuth();
+  const router = useRouter();
 
   const descMap: Record<string, string> = {
     "main wallet": "Available balance",
@@ -38,58 +39,78 @@ export function WalletSummary({ stats }: { stats?: any }) {
 
   return (
     <>
-      {walletCards.map((card) => {
-        const Icon = card.icon;
-        const labelLower = card.label.toLowerCase();
-        const isMoney = labelLower.includes("wallet");
-        const description = descMap[labelLower] || "Stat overview";
-        const bgStyle =
-          cardBg[labelLower] || "bg-gradient-to-br from-slate-500 to-slate-400";
-        const iconStyle = iconTone[labelLower] || "bg-white/20 text-white";
+      {walletCards
+        .filter(
+          (card) =>
+            !["wallet request", "customers"].includes(card.label.toLowerCase()),
+        )
+        .map((card) => {
+          const Icon = card.icon;
+          const labelLower = card.label.toLowerCase();
+          const isMoney = labelLower.includes("wallet");
+          const description = descMap[labelLower] || "Stat overview";
+          const bgStyle =
+            cardBg[labelLower] ||
+            "bg-gradient-to-br from-slate-500 to-slate-400";
+          const iconStyle = iconTone[labelLower] || "bg-white/20 text-white";
 
-        let dynamicValue = card.value;
-        if (labelLower === "main wallet") {
-          dynamicValue = user?.walletBalance !== undefined ? user.walletBalance.toFixed(2) : "0.00";
-        } else if (stats) {
-          if (labelLower === "wallet request")
-            dynamicValue = String(stats.walletRequest ?? "0");
-          if (labelLower === "customers")
-            dynamicValue = String(stats.customers ?? "0");
-          if (labelLower === "retailers")
-            dynamicValue = String(stats.retailers ?? "0");
-          if (labelLower === "distributors")
-            dynamicValue = String(stats.distributors ?? "0");
-        }
+          let dynamicValue = card.value;
+          if (labelLower === "main wallet") {
+            dynamicValue =
+              user?.walletBalance !== undefined
+                ? user.walletBalance.toFixed(2)
+                : "0.00";
+          } else if (stats) {
+            if (labelLower === "wallet request")
+              dynamicValue = String(stats.walletRequest ?? "0");
+            if (labelLower === "customers")
+              dynamicValue = String(stats.customers ?? "0");
+            if (labelLower === "retailers")
+              dynamicValue = String(stats.retailers ?? "0");
+            if (labelLower === "distributors")
+              dynamicValue = String(stats.distributors ?? "0");
+          }
 
-        return (
-          <article
-            className={`flex items-center justify-between ${bgStyle} rounded-3xl p-5 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}
-            key={card.label}
-          >
-            <div className="space-y-1 min-w-0">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-white/70 truncate">
-                {card.label}
-              </p>
-              <strong className="block text-2xl font-black text-white tracking-tight">
-                {isMoney && (
-                  <span className="text-sm font-semibold text-white/80 mr-0.5">
-                    ₹
-                  </span>
-                )}
-                {dynamicValue}
-              </strong>
-              <span className="text-[10px] text-white/70 font-semibold block truncate">
-                {description}
-              </span>
-            </div>
-            <span
-              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-white`}
+          // Redirect paths mapping
+          let targetPath = "";
+          if (labelLower === "main wallet") {
+            targetPath = "/wallets";
+          } else if (labelLower === "retailers") {
+            targetPath = "/retailers";
+          } else if (labelLower === "distributors") {
+            targetPath = "/distributors";
+          }
+
+          return (
+            <article
+              className={`flex items-center justify-between ${bgStyle} rounded-3xl p-5 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer`}
+              key={card.label}
+              onClick={() => targetPath && router.push(targetPath)}
             >
-              <Icon size={18} />
-            </span>
-          </article>
-        );
-      })}
+              <div className="space-y-1 min-w-0">
+                <p className="text-[10px] font-extrabold uppercase tracking-wider text-white/70 truncate">
+                  {card.label}
+                </p>
+                <strong className="block text-2xl font-black text-white tracking-tight">
+                  {isMoney && (
+                    <span className="text-sm font-semibold text-white/80 mr-0.5">
+                      ₹
+                    </span>
+                  )}
+                  {dynamicValue}
+                </strong>
+                <span className="text-[10px] text-white/70 font-semibold block truncate">
+                  {description}
+                </span>
+              </div>
+              <span
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-white`}
+              >
+                <Icon size={18} />
+              </span>
+            </article>
+          );
+        })}
     </>
   );
 }

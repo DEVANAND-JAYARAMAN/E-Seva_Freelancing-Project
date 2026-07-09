@@ -13,6 +13,7 @@ import {
   Store,
   Receipt,
   Server,
+  Bell,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -53,11 +54,14 @@ export const navItems: NavItem[] = [
   { label: "Retailers", href: "/retailers", icon: Store },
   { label: "Billing", href: "/billing", icon: Receipt },
   { label: "Wallet", href: "/wallets", icon: Wallet },
+  { label: "Notifications", href: "/admin/notifications", icon: Bell },
   { label: "Server Control", href: "/admin", icon: Server },
 ];
 
 export const stats: StatCard[] = [
   { label: "Today Payment", value: "50.00", change: "+12%", tone: "mint" },
+  { label: "Pending", value: "0", change: "Awaiting", tone: "amber" },
+  { label: "In process", value: "0", change: "Processing", tone: "sky" },
   { label: "Approved", value: "2575", change: "+34", tone: "green" },
   { label: "Projected", value: "215", change: "Review", tone: "rose" },
   { label: "Resubmit", value: "32", change: "Follow up", tone: "violet" },
@@ -66,8 +70,6 @@ export const stats: StatCard[] = [
 
 export const walletCards: WalletCard[] = [
   { label: "Main Wallet", value: "0.00", icon: Wallet },
-  { label: "Wallet Request", value: "0", icon: UserCheck },
-  { label: "Customers", value: "0", icon: Users },
   { label: "Retailers", value: "0", icon: Store },
   { label: "Distributors", value: "0", icon: Building2 },
 ];

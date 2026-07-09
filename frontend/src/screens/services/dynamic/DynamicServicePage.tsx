@@ -9,6 +9,7 @@ import {
   ServicePaymentScreen,
   ServiceSuccessScreen,
 } from "../../../components/ServicePaymentScreen";
+import { ServiceMessageManager } from "../../../components/ServiceMessageManager";
 import { EService } from "../ServicesPage";
 
 export function DynamicServicePage({ serviceId }: { serviceId: string }) {
@@ -170,7 +171,9 @@ export function DynamicServicePage({ serviceId }: { serviceId: string }) {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#0b101e] border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
+        <div className="bg-slate-50 dark:bg-[#0b101e] border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
+          <ServiceMessageManager serviceId={service.id} serviceName={service.name} />
+          
           {paymentPhase === "success" ? (
             <ServiceSuccessScreen serviceName={service.name} />
           ) : paymentPhase === "payment" ? (
@@ -255,7 +258,7 @@ export function DynamicServicePage({ serviceId }: { serviceId: string }) {
                         isError
                           ? "border-rose-300 dark:border-rose-900 focus:border-rose-500 focus:ring-rose-500/20"
                           : "border-slate-200 dark:border-slate-800 focus:border-[#005c3a] focus:ring-[#005c3a]/20"
-                      } bg-white dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 text-sm font-semibold text-slate-800 dark:text-slate-200`}
+                      } bg-slate-50 dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 text-sm font-semibold text-slate-800 dark:text-slate-200`}
                     />
                     {isError && (
                       <p className="text-[10px] font-bold text-rose-500 mt-1">

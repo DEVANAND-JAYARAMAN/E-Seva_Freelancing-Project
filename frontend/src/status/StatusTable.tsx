@@ -28,10 +28,20 @@ export function StatusTable({
 }: StatusTableProps) {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      return params.get("search") || "";
+    }
+    return "";
+  });
 
   const getStatusColor = (status: TicketStatus) => {
     switch (status) {
+      case "Pending":
+        return "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400";
+      case "Process":
+        return "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400";
       case "Resubmit":
         return "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400";
       case "Rejected":
@@ -57,7 +67,7 @@ export function StatusTable({
   });
 
   return (
-    <div className="bg-white dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 shadow-sm flex flex-col space-y-6">
+    <div className="bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 shadow-sm flex flex-col space-y-6">
       {/* Search Input Bar */}
       <div className="relative w-full">
         <span className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
@@ -73,8 +83,8 @@ export function StatusTable({
       </div>
 
       {/* Table Section */}
-      <div className="overflow-x-auto rounded-2xl border border-slate-50 dark:border-slate-900/30">
-        <table className="w-full text-left border-collapse">
+      <div className="overflow-x-auto rounded-2xl border-2 border-black dark:border-white">
+        <table className="w-full text-left border-collapse border-2 border-black dark:border-white">
           <thead>
             <tr className="bg-slate-50/40 dark:bg-[#090d16]/30 border-b border-slate-50 dark:border-slate-900/30">
               <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
@@ -190,15 +200,6 @@ export function StatusTable({
                             <Edit2 size={13} />
                           </button>
                         )}
-                      {isAdmin && (
-                        <button
-                          onClick={() => onDeleteTicket?.(ticket)}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-rose-200/60 dark:border-rose-900/40 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-rose-500 dark:text-rose-400 transition-colors"
-                          title="Delete ticket"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      )}
                     </div>
                   </td>
                 </tr>

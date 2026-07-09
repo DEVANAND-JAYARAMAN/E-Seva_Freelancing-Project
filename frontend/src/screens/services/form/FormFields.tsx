@@ -91,7 +91,7 @@ export const FieldWrapper: React.FC<FieldWrapperProps> = ({
               value={tempLabel}
               onChange={(e) => setTempLabel(e.target.value)}
               placeholder="Field Label"
-              className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-250 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/50 text-slate-855 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#005c3a]"
+              className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-250 dark:border-slate-800 bg-slate-50 dark:bg-[#0a0f18]/50 text-slate-855 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#005c3a]"
             />
           </div>
           {defaultPlaceholder !== undefined && (
@@ -104,7 +104,7 @@ export const FieldWrapper: React.FC<FieldWrapperProps> = ({
                 value={tempPlaceholder}
                 onChange={(e) => setTempPlaceholder(e.target.value)}
                 placeholder="Field Placeholder"
-                className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-250 dark:border-slate-800 bg-white dark:bg-[#0a0f18]/50 text-slate-855 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#005c3a]"
+                className="w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-250 dark:border-slate-800 bg-slate-50 dark:bg-[#0a0f18]/50 text-slate-855 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-[#005c3a]"
               />
             </div>
           )}
@@ -177,7 +177,7 @@ export const InputField: React.FC<InputFieldProps> = ({
                 {label}
               </label>
               <div
-                className={`relative flex items-center justify-between border rounded-xl px-4 py-2 bg-white dark:bg-[#0a0f18]/30 transition-all ${
+                className={`relative flex items-center justify-between border rounded-xl px-4 py-2 bg-slate-50 dark:bg-[#0a0f18]/30 transition-all ${
                   error
                     ? "border-red-500"
                     : "border-slate-250 dark:border-slate-800/80"
@@ -235,7 +235,7 @@ export const InputField: React.FC<InputFieldProps> = ({
                 value={value}
                 disabled={disabled}
                 onChange={(e) => onChange(e.target.value)}
-                className={`w-full ${type === "password" ? "pl-4 pr-11" : "px-4"} py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/20 dark:focus:ring-emerald-500/20 bg-white dark:bg-[#0a0f18]/30 ${
+                className={`w-full ${type === "password" ? "pl-4 pr-11" : "px-4"} py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/20 dark:focus:ring-emerald-500/20 bg-slate-50 dark:bg-[#0a0f18]/30 ${
                   error
                     ? "border-red-500"
                     : "border-slate-250 dark:border-slate-800/80 focus:border-[#005c3a] dark:focus:border-emerald-500"
@@ -305,7 +305,7 @@ export const TextAreaField: React.FC<TextAreaFieldProps> = ({
             rows={rows}
             disabled={disabled}
             onChange={(e) => onChange(e.target.value)}
-            className={`w-full px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/20 dark:focus:ring-emerald-500/20 bg-white dark:bg-[#0a0f18]/30 resize-none ${
+            className={`w-full px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/20 dark:focus:ring-emerald-500/20 bg-slate-50 dark:bg-[#0a0f18]/30 resize-none ${
               error
                 ? "border-red-500"
                 : "border-slate-250 dark:border-slate-800/80 focus:border-[#005c3a] dark:focus:border-emerald-500"
@@ -353,7 +353,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
             value={value}
             disabled={disabled}
             onChange={(e) => onChange(e.target.value)}
-            className={`w-full px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/20 dark:focus:ring-emerald-500/20 bg-white dark:bg-[#0a0f18]/30 ${
+            className={`w-full px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/20 dark:focus:ring-emerald-500/20 bg-slate-50 dark:bg-[#0a0f18]/30 ${
               error
                 ? "border-red-500"
                 : "border-slate-250 dark:border-slate-800/80 focus:border-[#005c3a] dark:focus:border-emerald-500"
@@ -416,7 +416,7 @@ export const PhoneField: React.FC<PhoneFieldProps> = ({
               onChange={(e) =>
                 onChange(e.target.value.replace(/\D/g, "").substring(0, 10))
               }
-              className={`w-full pl-12 pr-4 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/20 dark:focus:ring-emerald-500/20 bg-white dark:bg-[#0a0f18]/30 ${
+              className={`w-full pl-12 pr-4 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/20 dark:focus:ring-emerald-500/20 bg-slate-50 dark:bg-[#0a0f18]/30 ${
                 error
                   ? "border-red-500"
                   : "border-slate-250 dark:border-slate-800/80 focus:border-[#005c3a] dark:focus:border-emerald-500"

@@ -8,8 +8,11 @@ import {
   Cpu,
   XCircle,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export function StatsGrid({ stats }: { stats?: any }) {
+  const router = useRouter();
+
   const iconMap: Record<string, any> = {
     "today payment": Zap,
     "total profit": TrendingUp,
@@ -54,7 +57,9 @@ export function StatsGrid({ stats }: { stats?: any }) {
         const bgStyle =
           cardBg[stat.tone] || "bg-gradient-to-br from-slate-500 to-slate-400";
         const isMoney =
-          labelLower.includes("payment") || labelLower.includes("collection") || labelLower.includes("profit");
+          labelLower.includes("payment") ||
+          labelLower.includes("collection") ||
+          labelLower.includes("profit");
 
         let dynamicValue = stat.value;
         if (stats) {
@@ -76,10 +81,27 @@ export function StatsGrid({ stats }: { stats?: any }) {
           return null;
         }
 
+        // Redirect paths mapping
+        let targetPath = "";
+        if (labelLower === "today payment") {
+          targetPath = "/wallets";
+        } else if (
+          [
+            "pending",
+            "in process",
+            "approved",
+            "resubmit",
+            "rejected",
+          ].includes(labelLower)
+        ) {
+          targetPath = "/status";
+        }
+
         return (
           <article
-            className={`flex items-center justify-between ${bgStyle} rounded-3xl p-5 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}
+            className={`flex items-center justify-between ${bgStyle} rounded-3xl p-5 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer`}
             key={stat.label}
+            onClick={() => targetPath && router.push(targetPath)}
           >
             <div className="space-y-1 min-w-0">
               <p className="text-[10px] font-extrabold uppercase tracking-wider text-white/70 truncate">
