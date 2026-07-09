@@ -158,6 +158,36 @@ export function DistributorsPage() {
     }
   };
 
+  // Add money to wallet handler
+  const handleAddMoney = async (userId: string, amount: number) => {
+    const apiUrl =
+      `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(
+        /\/api$/,
+        "",
+      );
+    try {
+      const res = await fetch(`${apiUrl}/api/admin/wallet/credit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, amount }),
+      });
+      if (res.ok) {
+        setDistributors((prev) =>
+          prev.map((item) =>
+            item.id === userId
+              ? { ...item, balance: Number(item.balance || 0) + amount }
+              : item,
+          ),
+        );
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error("Failed to add money", err);
+      return false;
+    }
+  };
+
   // Trigger form for Edit
   const handleEditClick = (distributor: Distributor) => {
     setSelectedDistributor(distributor);
@@ -192,6 +222,7 @@ export function DistributorsPage() {
           distributors={distributors}
           onEdit={handleEditClick}
           onToggleStatus={handleToggleStatus}
+          onAddMoney={handleAddMoney}
         />
 
         {/* Add/Edit Form Modal */}

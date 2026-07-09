@@ -10,20 +10,24 @@ import {
   MapPin,
   Fingerprint,
   Activity,
+  Wallet,
 } from "lucide-react";
 import Link from "next/link";
+import Swal from "sweetalert2";
 import type { Distributor } from "./types";
 
 type DistributorTableProps = {
   distributors: Distributor[];
   onEdit: (distributor: Distributor) => void;
   onToggleStatus: (id: string) => void;
+  onAddMoney: (id: string, amount: number) => Promise<boolean>;
 };
 
 export function DistributorTable({
   distributors,
   onEdit,
   onToggleStatus,
+  onAddMoney,
 }: DistributorTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<
@@ -258,6 +262,55 @@ export function DistributorTable({
                         ) : (
                           <UserCheck size={13} />
                         )}
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (distributor.status !== "Active") return;
+                          Swal.fire({
+                            title: `Add money to ${distributor.name}`,
+                            input: 'number',
+                            inputLabel: 'Amount (₹)',
+                            inputPlaceholder: 'Enter amount',
+                            inputAttributes: {
+                              min: "1"
+                            },
+                            showCancelButton: true,
+                            confirmButtonText: 'Add Balance',
+                            confirmButtonColor: '#005c3a',
+                            showLoaderOnConfirm: true,
+                            preConfirm: async (amount) => {
+                              if (!amount || Number(amount) <= 0) {
+                                Swal.showValidationMessage('Please enter a valid amount');
+                                return false;
+                              }
+                              const success = await onAddMoney(distributor.id, Number(amount));
+                              if (!success) {
+                                Swal.showValidationMessage('Failed to add money. Please try again.');
+                                return false;
+                              }
+                              return amount;
+                            },
+                            allowOutsideClick: () => !Swal.isLoading()
+                          }).then((result) => {
+                            if (result.isConfirmed) {
+                              Swal.fire({
+                                title: 'Success!',
+                                text: `Added ₹${result.value} to ${distributor.name}'s wallet.`,
+                                icon: 'success',
+                                confirmButtonColor: '#005c3a'
+                              });
+                            }
+                          });
+                        }}
+                        disabled={distributor.status !== "Active"}
+                        className={`flex h-8 w-8 items-center justify-center rounded-lg border transition-colors ${
+                          distributor.status === "Active"
+                            ? "border-blue-100 dark:border-blue-900/30 hover:bg-blue-50 dark:hover:bg-blue-950/20 text-blue-600 hover:text-blue-700"
+                            : "border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 text-slate-300 dark:text-slate-600 cursor-not-allowed"
+                        }`}
+                        title="Add Money"
+                      >
+                        <Wallet size={13} />
                       </button>
                     </div>
                   </td>
