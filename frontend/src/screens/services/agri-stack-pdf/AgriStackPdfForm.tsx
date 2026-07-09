@@ -110,7 +110,7 @@ export const AgriStackPdfForm: React.FC<AgriStackPdfFormProps> = ({
           disabled={isLoading}
           className="px-6 py-2 rounded-xl bg-[#005c3a] dark:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider hover:bg-[#004d30] dark:hover:bg-emerald-600 transition-all select-none shadow"
         >
-          {isLoading ? "SEARCHING..." : "SEARCH DETAILS"}
+          {isLoading ? "SUBMITTING..." : "SUBMIT REQUEST"}
         </button>
       </div>
     </form>

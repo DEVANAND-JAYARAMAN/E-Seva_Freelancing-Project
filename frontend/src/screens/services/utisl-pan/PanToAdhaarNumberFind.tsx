@@ -88,11 +88,11 @@ export const PanToAdhaarNumberFind: React.FC<PanToAdhaarNumberFindProps> = ({
         </span>
         <div>
           <h5 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-            Search Placed Successfully!
+            Request Submitted Successfully!
           </h5>
           <p className="text-sm text-slate-400 dark:text-slate-555 mt-2 max-w-md leading-relaxed">
-            Your search request for **Pan To Adhaar Number Find** has been
-            registered. The results will be updated soon.
+            Your request for **Pan To Adhaar Number Find** has been
+            registered. The admin will update the status soon.
           </p>
         </div>
       </div>

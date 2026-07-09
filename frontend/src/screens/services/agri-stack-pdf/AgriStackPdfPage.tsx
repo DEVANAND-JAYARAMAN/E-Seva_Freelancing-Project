@@ -83,11 +83,11 @@ export function AgriStackPdfPage() {
                 </span>
                 <div>
                   <h5 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                    Registration Submitted Successfully!
+                    Request Submitted Successfully!
                   </h5>
                   <p className="text-sm text-slate-450 dark:text-slate-550 mt-2 max-w-md leading-relaxed">
-                    Your application for the **Agri Stack PDF / Farmer ID Card**
-                    has been registered successfully.
+                    Your request for the **Agri Stack PDF / Farmer ID Card**
+                    has been registered successfully. The admin will update the status soon.
                   </p>
                 </div>
               </div>

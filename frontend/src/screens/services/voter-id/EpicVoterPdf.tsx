@@ -75,10 +75,10 @@ export const EpicVoterPdf: React.FC<EpicVoterPdfProps> = ({ onCancel }) => {
         </span>
         <div>
           <h5 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-            PDF Generated Successfully!
+            Request Submitted Successfully!
           </h5>
           <p className="text-sm text-slate-400 dark:text-slate-555 mt-2 max-w-md leading-relaxed">
-            Your request for **Epic Voter PDF (Without OTP)** has been successfully processed. The document will be available for download in status.
+            Your request for **Epic Voter PDF (Without OTP)** has been successfully processed. The admin will update the status soon.
           </p>
         </div>
       </div>
@@ -165,7 +165,7 @@ export const EpicVoterPdf: React.FC<EpicVoterPdfProps> = ({ onCancel }) => {
           Cancel
         </button>
         <SubmitButton
-          text="Download PDF"
+          text="Submit Request"
           loading={isSubmitting}
           disabled={isSubmitting}
         />
