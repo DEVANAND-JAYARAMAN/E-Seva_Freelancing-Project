@@ -270,9 +270,9 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
               placeholder={field.placeholder}
               value={formData[field.name] || ""}
               error={errors && errors[field.name]}
-              disabled={isSubmitting}
-              onChange={(val, file) => {
-                handleFieldChange(field.name, val, file);
+              disabled={isLoading}
+              onChange={(val) => {
+                handleFieldChange(field.name, val as string);
               }}
             />
           ))}

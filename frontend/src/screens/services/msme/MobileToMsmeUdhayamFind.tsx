@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useFormEdit } from "../../../store/context/FormEditContext";
 import { CheckCircle2 } from "lucide-react";
-import { PhoneField, SubmitButton } from "../form/FormFields";
+import { PhoneField, SubmitButton, InputField } from "../form/FormFields";
 import { validateField, PATTERNS } from "../form/validators";
 
 interface MobileToMsmeUdhayamFindProps {
@@ -151,7 +151,7 @@ export const MobileToMsmeUdhayamFind: React.FC<
               value={formData[field.name] || ""}
               error={errors && errors[field.name]}
               disabled={isSubmitting}
-              onChange={(val, file) => {
+              onChange={(val: string, file?: File) => {
                 handleFieldChange(field.name, val, file);
               }}
             />

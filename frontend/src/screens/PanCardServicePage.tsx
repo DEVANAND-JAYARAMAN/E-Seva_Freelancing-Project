@@ -156,10 +156,10 @@ export function PanCardServicePage() {
                   name="applicationType"
                   label="Application Type"
                   options={[
-                    "New PAN Card (Form 49A)",
-                    "PAN Correction / Update",
-                    "Duplicate PAN Card",
-                    "Minor to Major PAN Update"
+                    { label: "New PAN Card (Form 49A)", value: "New PAN Card (Form 49A)" },
+                    { label: "PAN Correction / Update", value: "PAN Correction / Update" },
+                    { label: "Duplicate PAN Card", value: "Duplicate PAN Card" },
+                    { label: "Minor to Major PAN Update", value: "Minor to Major PAN Update" }
                   ]}
                   value={formData.applicationType || ""}
                   onChange={(val) => handleFieldChange("applicationType", val)}
@@ -210,7 +210,11 @@ export function PanCardServicePage() {
                 <SelectField
                   name="gender"
                   label="Gender"
-                  options={["Male", "Female", "Transgender"]}
+                  options={[
+                    { label: "Male", value: "Male" },
+                    { label: "Female", value: "Female" },
+                    { label: "Transgender", value: "Transgender" }
+                  ]}
                   value={formData.gender || ""}
                   onChange={(val) => handleFieldChange("gender", val)}
                   error={errors.gender}
@@ -274,6 +278,7 @@ export function PanCardServicePage() {
                   name="aadhaarFront"
                   label="Aadhaar Card (Front)"
                   type="file"
+                  value={formData.aadhaarFront || ""}
                   onChange={(val, file) => handleFieldChange("aadhaarFront", file?.name || "")}
                   disabled={isSubmitting}
                 />
@@ -281,6 +286,7 @@ export function PanCardServicePage() {
                   name="aadhaarBack"
                   label="Aadhaar Card (Back)"
                   type="file"
+                  value={formData.aadhaarBack || ""}
                   onChange={(val, file) => handleFieldChange("aadhaarBack", file?.name || "")}
                   disabled={isSubmitting}
                 />
@@ -288,6 +294,7 @@ export function PanCardServicePage() {
                   name="photo"
                   label="Passport Size Photo"
                   type="file"
+                  value={formData.photo || ""}
                   onChange={(val, file) => handleFieldChange("photo", file?.name || "")}
                   disabled={isSubmitting}
                 />
@@ -295,6 +302,7 @@ export function PanCardServicePage() {
                   name="signature"
                   label="Signature (Black Ink)"
                   type="file"
+                  value={formData.signature || ""}
                   onChange={(val, file) => handleFieldChange("signature", file?.name || "")}
                   disabled={isSubmitting}
                 />

@@ -36,11 +36,12 @@ export function DistributorTable({
 
   // Filter distributors based on search and status selects
   const filteredDistributors = distributors.filter((distributor) => {
+    const searchLower = searchTerm.toLowerCase();
     const matchesSearch =
-      distributor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      distributor.shopName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      distributor.phone.includes(searchTerm) ||
-      distributor.city.toLowerCase().includes(searchTerm.toLowerCase());
+      (distributor.name?.toLowerCase() || "").includes(searchLower) ||
+      (distributor.shopName?.toLowerCase() || "").includes(searchLower) ||
+      (distributor.phone || "").includes(searchTerm) ||
+      (distributor.city?.toLowerCase() || "").includes(searchLower);
 
     const matchesStatus =
       statusFilter === "All" ? true : distributor.status === statusFilter;

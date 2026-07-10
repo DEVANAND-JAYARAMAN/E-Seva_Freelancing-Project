@@ -36,11 +36,12 @@ export function RetailerTable({
 
   // Filter retailers based on search and status selects
   const filteredRetailers = retailers.filter((retailer) => {
+    const searchLower = searchTerm.toLowerCase();
     const matchesSearch =
-      retailer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      retailer.shopName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      retailer.phone.includes(searchTerm) ||
-      retailer.city.toLowerCase().includes(searchTerm.toLowerCase());
+      (retailer.name?.toLowerCase() || "").includes(searchLower) ||
+      (retailer.shopName?.toLowerCase() || "").includes(searchLower) ||
+      (retailer.phone || "").includes(searchTerm) ||
+      (retailer.city?.toLowerCase() || "").includes(searchLower);
 
     const matchesStatus =
       statusFilter === "All" ? true : retailer.status === statusFilter;

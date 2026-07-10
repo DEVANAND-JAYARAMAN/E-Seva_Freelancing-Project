@@ -382,7 +382,7 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
               placeholder={field.placeholder}
               value={formData[field.name] || ""}
               error={errors && errors[field.name]}
-              disabled={isSubmitting}
+              disabled={isLoading}
               onChange={(val, file) => {
                 handleFieldChange(field.name, val, file);
               }}

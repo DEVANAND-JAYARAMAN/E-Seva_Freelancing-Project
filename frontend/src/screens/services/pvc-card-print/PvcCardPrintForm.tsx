@@ -44,6 +44,18 @@ export const PvcCardPrintForm: React.FC<PvcCardPrintFormProps> = ({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [formData, setFormData] = useState<Record<string, string>>({});
+
+  const handleFieldChange = (name: string, value: string, file?: File) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors((prev) => {
+        const copy = { ...prev };
+        delete copy[name];
+        return copy;
+      });
+    }
+  };
 
   const handleAddService = () => {
     const serviceErrors: Record<string, string> = {};
@@ -372,7 +384,7 @@ export const PvcCardPrintForm: React.FC<PvcCardPrintFormProps> = ({
               placeholder={field.placeholder}
               value={formData[field.name] || ""}
               error={errors && errors[field.name]}
-              disabled={isSubmitting}
+              disabled={isLoading}
               onChange={(val, file) => {
                 handleFieldChange(field.name, val, file);
               }}
