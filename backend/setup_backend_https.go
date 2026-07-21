@@ -17,7 +17,7 @@ import (
 const (
 	domain    = "thuruvancommunications.com"
 	apiDomain = "api.thuruvancommunications.com"
-	ec2IP     = "3.108.235.150"
+	ec2IP     = "65.2.4.89"
 )
 
 var r53c *route53.Client
