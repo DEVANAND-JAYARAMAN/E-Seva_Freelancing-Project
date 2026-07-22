@@ -523,41 +523,45 @@ export function StatusDetailModal({
                     <button
                       type="button"
                       onClick={() => handleStatusClick("Approved")}
-                      className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm active:scale-[0.98]`}
+                      className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm active:scale-[0.98] ${ticket.status === "Approved" ? "col-span-2 sm:col-span-4" : ""}`}
                     >
                       <Check size={13} />
-                      <span>Approve</span>
+                      <span>{ticket.status === "Approved" ? "Update Acknowledgement" : "Approve"}</span>
                     </button>
 
-                    {/* Process */}
-                    <button
-                      type="button"
-                      onClick={() => handleStatusClick("Process")}
-                      className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-blue-600 hover:bg-blue-500 text-white shadow-sm active:scale-[0.98]`}
-                    >
-                      <Loader size={13} />
-                      <span>Process</span>
-                    </button>
+                    {ticket.status !== "Approved" && (
+                      <>
+                        {/* Process */}
+                        <button
+                          type="button"
+                          onClick={() => handleStatusClick("Process")}
+                          className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-blue-600 hover:bg-blue-500 text-white shadow-sm active:scale-[0.98]`}
+                        >
+                          <Loader size={13} />
+                          <span>Process</span>
+                        </button>
 
-                    {/* Reject */}
-                    <button
-                      type="button"
-                      onClick={() => handleStatusClick("Rejected")}
-                      className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-rose-600 hover:bg-rose-500 text-white shadow-sm active:scale-[0.98]`}
-                    >
-                      <AlertOctagon size={13} />
-                      <span>Reject</span>
-                    </button>
+                        {/* Reject */}
+                        <button
+                          type="button"
+                          onClick={() => handleStatusClick("Rejected")}
+                          className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-rose-600 hover:bg-rose-500 text-white shadow-sm active:scale-[0.98]`}
+                        >
+                          <AlertOctagon size={13} />
+                          <span>Reject</span>
+                        </button>
 
-                    {/* Resubmit */}
-                    <button
-                      type="button"
-                      onClick={() => handleStatusClick("Resubmit")}
-                      className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-purple-600 hover:bg-purple-500 text-white shadow-sm active:scale-[0.98]`}
-                    >
-                      <RefreshCw size={13} />
-                      <span>Resubmit</span>
-                    </button>
+                        {/* Resubmit */}
+                        <button
+                          type="button"
+                          onClick={() => handleStatusClick("Resubmit")}
+                          className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-purple-600 hover:bg-purple-500 text-white shadow-sm active:scale-[0.98]`}
+                        >
+                          <RefreshCw size={13} />
+                          <span>Resubmit</span>
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               )}

@@ -334,14 +334,22 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 	var app models.ServiceApplication
 	attributevalue.UnmarshalMap(out.Item, &app)
 
-	if app.Status == "Approved" || app.Status == "Completed" || app.Status == "Rejected" {
+	var isAlreadyApproved bool
+	if app.Status == "Approved" || app.Status == "Completed" {
+		if status == "Approved" {
+			isAlreadyApproved = true
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Request is already in a final state"})
+			return
+		}
+	} else if app.Status == "Rejected" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Request is already in a final state"})
 		return
 	}
 
 	now := time.Now().UTC().Format(time.RFC3339)
 
-	if status == "Approved" {
+	if status == "Approved" && !isAlreadyApproved {
 		crmId := generateId("CRM")
 		invoiceId := generateId("INV")
 			
@@ -418,8 +426,23 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 			return
 		}
 
-		// WhatsApp message is handled at the end of the function
-
+	} else if isAlreadyApproved {
+		_, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+			TableName: aws.String("ServiceApplications"),
+			Key: map[string]types.AttributeValue{
+				"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
+				"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+			},
+			UpdateExpression: aws.String("SET lastUpdated = :time, adminRemarks = :remarks"),
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":time":    &types.AttributeValueMemberS{Value: now},
+				":remarks": &types.AttributeValueMemberS{Value: adminRemarks},
+			},
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update request remarks"})
+			return
+		}
 	} else if status == "Rejected" {
 		walletPK := "WALLET#" + app.RetailerId
 		txId := generateId("TX")

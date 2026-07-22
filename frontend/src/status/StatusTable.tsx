@@ -190,7 +190,6 @@ export function StatusTable({
                         <Eye size={13} />
                       </button>
                       {isAdmin &&
-                        ticket.status !== "Approved" &&
                         ticket.status !== "Rejected" && (
                           <button
                             onClick={() => onSelectTicket(ticket, true)}
