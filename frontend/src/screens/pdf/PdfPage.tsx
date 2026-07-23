@@ -103,7 +103,12 @@ export function PdfPage() {
     const fetchServices = async () => {
       try {
         const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
-        const response = await fetch(`${apiUrl}/api/services/pdf-pricing`);
+        const response = await fetch(`${apiUrl}/api/services/pdf-pricing?t=${Date.now()}`, {
+          headers: {
+            "Cache-Control": "no-cache",
+            Pragma: "no-cache",
+          },
+        });
         if (response.ok) {
           const data = await response.json();
           if (data && Array.isArray(data) && data.length > 0) {

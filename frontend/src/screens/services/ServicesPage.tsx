@@ -1793,7 +1793,13 @@ export function ServicesPage() {
   const fetchDynamicServices = async () => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/dynamic`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/dynamic?t=${Date.now()}`,
+        {
+          headers: {
+            "Cache-Control": "no-cache",
+            Pragma: "no-cache",
+          },
+        }
       );
       if (response.ok) {
         const data = await response.json();
