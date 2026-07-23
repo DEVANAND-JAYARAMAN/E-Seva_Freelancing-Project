@@ -23,6 +23,7 @@ func CreateDynamicService(c *gin.Context) {
 		DistributorCharge float64  `json:"distributorCharge"`
 		OfficialCost      float64  `json:"officialCost"`
 		FormFields        []string `json:"formFields"`
+		CustomImage       string   `json:"customImage"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -42,6 +43,7 @@ func CreateDynamicService(c *gin.Context) {
 		DistributorCharge: req.DistributorCharge,
 		OfficialCost:      req.OfficialCost,
 		FormFields:        req.FormFields,
+		CustomImage:       req.CustomImage,
 		CreatedDate:       time.Now().Format(time.RFC3339),
 	}
 
@@ -68,17 +70,31 @@ func CreateDynamicService(c *gin.Context) {
 }
 
 func GetDynamicServices(c *gin.Context) {
-	out, err := db.DynamoClient.Scan(context.TODO(), &dynamodb.ScanInput{
-		TableName: aws.String("DynamicServices"),
-	})
+	var allItems []map[string]types.AttributeValue
+	var lastEvaluatedKey map[string]types.AttributeValue
 
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch dynamic services", "details": err.Error()})
-		return
+	for {
+		scanInput := &dynamodb.ScanInput{
+			TableName:         aws.String("DynamicServices"),
+			ExclusiveStartKey: lastEvaluatedKey,
+		}
+
+		out, err := db.DynamoClient.Scan(context.TODO(), scanInput)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch dynamic services", "details": err.Error()})
+			return
+		}
+
+		allItems = append(allItems, out.Items...)
+
+		if len(out.LastEvaluatedKey) == 0 {
+			break
+		}
+		lastEvaluatedKey = out.LastEvaluatedKey
 	}
 
 	var services []models.DynamicService
-	if err := attributevalue.UnmarshalListOfMaps(out.Items, &services); err != nil {
+	if err := attributevalue.UnmarshalListOfMaps(allItems, &services); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to unmarshal data"})
 		return
 	}
