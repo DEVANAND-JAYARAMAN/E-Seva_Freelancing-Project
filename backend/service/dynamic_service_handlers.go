@@ -99,5 +99,18 @@ func GetDynamicServices(c *gin.Context) {
 		return
 	}
 
+	// Fallback to extract ID from PK if it is missing in the item
+	for i := range services {
+		if services[i].ID == "" {
+			if pkVal, ok := allItems[i]["PK"]; ok {
+				if pkStr, ok := pkVal.(*types.AttributeValueMemberS); ok {
+					if len(pkStr.Value) > 16 && pkStr.Value[:16] == "DYNAMIC_SERVICE#" {
+						services[i].ID = pkStr.Value[16:]
+					}
+				}
+			}
+		}
+	}
+
 	c.JSON(http.StatusOK, services)
 }

@@ -7,6 +7,6 @@ type DynamicService struct {
 	DistributorCharge float64  `dynamodbav:"distributorCharge" json:"distributorCharge"`
 	OfficialCost      float64  `dynamodbav:"officialCost" json:"officialCost"`
 	FormFields        []string `dynamodbav:"formFields" json:"formFields"`
-	CustomImage       string   `dynamodbav:"customImage" json:"customImage"`
-	CreatedDate       string   `dynamodbav:"createdDate" json:"createdDate"`
+	CustomImage       string   `dynamodbav:"customImage,omitempty" json:"customImage"`
+	CreatedDate       string   `dynamodbav:"createdDate,omitempty" json:"createdDate"`
 }
