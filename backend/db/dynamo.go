@@ -42,6 +42,19 @@ func ensureTables() {
 		BillingMode: types.BillingModePayPerRequest,
 	})
 
+	ensureTable("Settings", &dynamodb.CreateTableInput{
+		TableName: aws.String("Settings"),
+		KeySchema: []types.KeySchemaElement{
+			{AttributeName: aws.String("PK"), KeyType: types.KeyTypeHash},
+			{AttributeName: aws.String("SK"), KeyType: types.KeyTypeRange},
+		},
+		AttributeDefinitions: []types.AttributeDefinition{
+			{AttributeName: aws.String("PK"), AttributeType: types.ScalarAttributeTypeS},
+			{AttributeName: aws.String("SK"), AttributeType: types.ScalarAttributeTypeS},
+		},
+		BillingMode: types.BillingModePayPerRequest,
+	})
+
 	ensureTable("WalletTransactions", &dynamodb.CreateTableInput{
 		TableName: aws.String("WalletTransactions"),
 		KeySchema: []types.KeySchemaElement{
