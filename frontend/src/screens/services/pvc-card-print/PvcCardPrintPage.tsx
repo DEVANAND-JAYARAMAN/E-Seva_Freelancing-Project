@@ -2,6 +2,7 @@
 
 import { ServiceNavigation } from "../../../components/ServiceNavigation/ServiceNavigation";
 import { useState } from "react";
+import { useCategoryServices } from "../../../hooks/useCategoryServices";
 import { useRouter } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
@@ -30,9 +31,12 @@ export function PvcCardPrintPage() {
     {},
   );
 
-  const [servicesList, setServicesList] = useState<PvcService[]>([
+  const [servicesList, setServicesList] = useCategoryServices<PvcService>(
+    "pvc-card-print",
+    [
     { id: "pvc-card-print", name: "PVC CARD PRINT(ALL TYPE)" },
-  ]);
+  ]
+  );
 
   const handleEditCard = (id: string, currentName: string) => {
     Swal.fire({

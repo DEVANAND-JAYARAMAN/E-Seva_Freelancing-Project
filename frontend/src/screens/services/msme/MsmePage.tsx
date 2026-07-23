@@ -2,6 +2,7 @@
 
 import { ServiceNavigation } from "../../../components/ServiceNavigation/ServiceNavigation";
 import { useState } from "react";
+import { useCategoryServices } from "../../../hooks/useCategoryServices";
 import { CheckCircle2, X } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { DynamicForm } from "../form/DynamicForm";
@@ -26,7 +27,9 @@ export function MsmePage() {
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [msmeServicesList, setMsmeServicesList] = useState<MsmeService[]>([
+  const [msmeServicesList, setMsmeServicesList] = useCategoryServices<MsmeService>(
+    "msme",
+    [
     {
       id: "msme-main",
       name: "MSME",
@@ -40,7 +43,8 @@ export function MsmePage() {
       id: "msme-mobile",
       name: "Mobile To Msme Udhayam Find",
     },
-  ]);
+  ]
+  );
 
   const handleCardClick = (service: MsmeService) => {
     setSubmissionSuccess(false);

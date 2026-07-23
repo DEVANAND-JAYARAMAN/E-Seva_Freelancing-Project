@@ -2,6 +2,7 @@
 
 import { ServiceNavigation } from "../../../components/ServiceNavigation/ServiceNavigation";
 import { useState } from "react";
+import { useCategoryServices } from "../../../hooks/useCategoryServices";
 import { CheckCircle2 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { CanEditForms } from "./CanEditForms";
@@ -20,9 +21,9 @@ export function CanEditPage() {
   const [activeForm, setActiveForm] = useState<string | null>(null);
   const [activeFormName, setActiveFormName] = useState<string>("");
 
-  const [canEditServicesList, setCanEditServicesList] = useState<
-    CanEditService[]
-  >([
+  const [canEditServicesList, setCanEditServicesList] = useCategoryServices<CanEditService>(
+    "can-edit",
+    [
     { id: "new-can-reg", name: "New Can Registration" },
     { id: "name-correction", name: "Name Correction" },
     { id: "dob-correction", name: "DOB Correction" },
@@ -39,7 +40,8 @@ export function CanEditPage() {
     { id: "return-app-removed", name: "Return Application Removed" },
     { id: "father-name-correction", name: "Father Name Correction" },
     { id: "address-correction", name: "Adress Correction" },
-  ]);
+  ]
+  );
 
   const handleCardClick = (service: CanEditService) => {
     setActiveForm(service.id);

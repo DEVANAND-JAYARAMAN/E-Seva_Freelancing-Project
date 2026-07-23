@@ -2,6 +2,7 @@
 
 import { ServiceNavigation } from "../../../components/ServiceNavigation/ServiceNavigation";
 import { useState } from "react";
+import { useCategoryServices } from "../../../hooks/useCategoryServices";
 import { CheckCircle2 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { CertificateCoursesForm } from "./CertificateCoursesForm";
@@ -32,7 +33,9 @@ export function CertificateCoursesPage() {
     {},
   );
 
-  const [servicesList, setServicesList] = useState<CertificateService[]>([
+  const [servicesList, setServicesList] = useCategoryServices<CertificateService>(
+    "certificate-courses",
+    [
     {
       id: "course-tailoring",
       name: "Tailoring Certificate",
@@ -51,7 +54,8 @@ export function CertificateCoursesPage() {
       priceKey: "course-beautician",
       defaultPrice: 300.0,
     },
-  ]);
+  ]
+  );
 
   const handleEditCard = (id: string, currentName: string) => {
     Swal.fire({

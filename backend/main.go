@@ -90,6 +90,12 @@ func main() {
 		api.PUT("/service-messages/:id", notification.ToggleServiceMessage)
 		api.DELETE("/service-messages/:id", notification.DeleteServiceMessage)
 
+		settingsGroup := api.Group("/settings")
+		{
+			settingsGroup.GET("/:key", service.GetSetting)
+			settingsGroup.PUT("/:key", service.UpdateSetting)
+		}
+
 		serviceGroup := api.Group("/services")
 		{
 			serviceGroup.POST("/request", service.CreateServiceRequest)

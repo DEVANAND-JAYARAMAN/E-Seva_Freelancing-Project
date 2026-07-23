@@ -2,6 +2,7 @@
 
 import { ServiceNavigation } from "../../../components/ServiceNavigation/ServiceNavigation";
 import { useState } from "react";
+import { useCategoryServices } from "../../../hooks/useCategoryServices";
 import { ArrowLeft } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { RationToAdhaar } from "./RationToAdhaar";
@@ -20,12 +21,13 @@ export function RationCardPage() {
   const isAdmin = user?.role === "admin";
   const [activeForm, setActiveForm] = useState<string | null>(null);
 
-  const [rationCardServicesList, setRationCardServicesList] = useState<
-    RationCardService[]
-  >([
+  const [rationCardServicesList, setRationCardServicesList] = useCategoryServices<RationCardService>(
+    "ration-card",
+    [
     { id: "ration-to-adhaar", name: "Ration Number To Adhaar Number Find" },
     { id: "adhaar-to-ration", name: "Adhaar To Ration Number Find" },
-  ]);
+  ]
+  );
 
   const handleCardClick = (service: RationCardService) => {
     if (service.id === "ration-to-adhaar") {

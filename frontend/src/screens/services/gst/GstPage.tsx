@@ -2,6 +2,7 @@
 
 import { ServiceNavigation } from "../../../components/ServiceNavigation/ServiceNavigation";
 import { useState } from "react";
+import { useCategoryServices } from "../../../hooks/useCategoryServices";
 import { CheckCircle2 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { ServiceCard } from "../ServiceCard";
@@ -25,9 +26,12 @@ export function GstPage() {
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [gstServicesList, setGstServicesList] = useState<GstServiceItem[]>([
+  const [gstServicesList, setGstServicesList] = useCategoryServices<GstServiceItem>(
+    "gst",
+    [
     { id: "gst-reg", name: "GST Registration", price: 2000.0 },
-  ]);
+  ]
+  );
 
   const handleCardClick = (service: GstServiceItem) => {
     setSelectedService(service);

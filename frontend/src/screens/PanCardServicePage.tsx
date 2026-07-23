@@ -5,11 +5,13 @@ import { AppShell } from "../layouts/AppShell";
 import { CheckCircle2, CreditCard, ArrowLeft } from "lucide-react";
 import { InputField, SubmitButton, SelectField } from "./services/form/FormFields";
 import { useAuth } from "../store/context/AuthContext";
+import { useFormEdit } from "../store/context/FormEditContext";
 import { useRouter } from "next/navigation";
 
 export function PanCardServicePage() {
   const { user } = useAuth();
   const router = useRouter();
+  const { overrides } = useFormEdit();
   const [formData, setFormData] = useState<Record<string, string>>({
     applicationType: "New PAN Card (Form 49A)",
   });
@@ -303,11 +305,35 @@ export function PanCardServicePage() {
                   label="Signature (Black Ink)"
                   type="file"
                   value={formData.signature || ""}
-                  onChange={(val, file) => handleFieldChange("signature", file?.name || "")}
+                  onChange={(val, file) => handleFieldChange("signature", file?.name || "", file)}
                   disabled={isSubmitting}
                 />
               </div>
             </div>
+
+            {/* Added Extra Fields */}
+            {overrides.addedFields && overrides.addedFields.length > 0 && (
+              <div className="pt-4 mt-6 border-t border-slate-100 dark:border-slate-900/50">
+                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest mb-4">
+                  Additional Information
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  {overrides.addedFields.map((field) => (
+                    <InputField
+                      key={field.name}
+                      name={field.name}
+                      label={field.label}
+                      type={(field.type as any) || "text"}
+                      placeholder={field.placeholder}
+                      value={formData[field.name] || ""}
+                      error={errors && errors[field.name]}
+                      disabled={isSubmitting}
+                      onChange={(val, file) => handleFieldChange(field.name, val as string, file)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Action Buttons */}

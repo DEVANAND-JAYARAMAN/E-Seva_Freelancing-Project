@@ -2,6 +2,7 @@
 
 import { ServiceNavigation } from "../../../components/ServiceNavigation/ServiceNavigation";
 import { useState } from "react";
+import { useCategoryServices } from "../../../hooks/useCategoryServices";
 import { CheckCircle2 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { DocumentCopy } from "./DocumentCopy";
@@ -21,9 +22,10 @@ export function RegistrationDeptPage() {
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [registrationServicesList, setRegistrationServicesList] = useState<
-    RegistrationService[]
-  >([{ id: "document-copy", name: "பத்திர நகல்" }]);
+  const [registrationServicesList, setRegistrationServicesList] = useCategoryServices<RegistrationService>(
+    "registration-dept",
+    [{ id: "document-copy", name: "பத்திர நகல்" }]
+  );
 
   const handleCardClick = (service: RegistrationService) => {
     setSubmissionSuccess(false);

@@ -2,6 +2,7 @@
 
 import { ServiceNavigation } from "../../../components/ServiceNavigation/ServiceNavigation";
 import { useState } from "react";
+import { useCategoryServices } from "../../../hooks/useCategoryServices";
 import { CheckCircle2 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { AddressCorrectionAbove18 } from "./AddressCorrectionAbove18";
@@ -24,9 +25,9 @@ export function AadhaarAddressPage() {
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [aadhaarServicesList, setAadhaarServicesList] = useState<
-    AadhaarService[]
-  >([
+  const [aadhaarServicesList, setAadhaarServicesList] = useCategoryServices<AadhaarService>(
+    "aadhaar-card-address",
+    [
     { id: "address-correction-above-18", name: "Adress Correction (above 18)" },
     {
       id: "address-correction-below-18",
@@ -34,7 +35,8 @@ export function AadhaarAddressPage() {
     },
     { id: "eid-to-aadhaar-pdf", name: "EID to Adhaar PDF Apply" },
     { id: "aadhaar-to-pdf", name: "Adhaar Number to Adhaar PDF Apply" },
-  ]);
+  ]
+  );
 
   const handleCardClick = (service: AadhaarService) => {
     setSubmissionSuccess(false);

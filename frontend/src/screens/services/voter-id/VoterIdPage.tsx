@@ -2,6 +2,7 @@
 
 import { ServiceNavigation } from "../../../components/ServiceNavigation/ServiceNavigation";
 import { useState } from "react";
+import { useCategoryServices } from "../../../hooks/useCategoryServices";
 import { CheckCircle2 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { EpicVoterPdf } from "./EpicVoterPdf";
@@ -23,11 +24,14 @@ export function VoterIdPage() {
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [voterServicesList, setVoterServicesList] = useState<VoterService[]>([
+  const [voterServicesList, setVoterServicesList] = useCategoryServices<VoterService>(
+    "voter-id",
+    [
     { id: "epic-voter-pdf", name: "Epic Voter PDF (Without OTP)" },
     { id: "update-cell-one-otp", name: "Update Cell Number (With One OTP)" },
     { id: "update-cell-no-otp", name: "Update Cell Number (Without OTP)" },
-  ]);
+  ]
+  );
 
   const handleCardClick = (service: VoterService) => {
     setSubmissionSuccess(false);

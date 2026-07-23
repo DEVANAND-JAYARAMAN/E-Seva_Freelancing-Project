@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useCategoryServices } from "../../../hooks/useCategoryServices";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
@@ -25,7 +26,7 @@ export function RtoServicesPage() {
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [rtoServicesList, setRtoServicesList] = useState<RtoService[]>([
+  const [rtoServicesList, setRtoServicesList] = useCategoryServices<RtoService>("rto-services", [
     { id: "chassis-to-rc", name: "Chassis Number To Rc Find" },
     { id: "engine-to-rc", name: "Engine Number To Rc Find" },
     { id: "dl-to-cell", name: "Driving License - Cell No Find" },

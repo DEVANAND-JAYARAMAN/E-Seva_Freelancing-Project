@@ -2,6 +2,7 @@
 
 import { ServiceNavigation } from "../../../components/ServiceNavigation/ServiceNavigation";
 import { useState } from "react";
+import { useCategoryServices } from "../../../hooks/useCategoryServices";
 import { CheckCircle2 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { PoliceVerificationForm } from "./PoliceVerificationForm";
@@ -24,7 +25,7 @@ export function PoliceVerificationPage() {
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [servicesList, setServicesList] = useState<PoliceVerificationService[]>(
+  const [servicesList, setServicesList] = useCategoryServices<PoliceVerificationService>("police-verification",
     [
       {
         id: "police-verification-request",

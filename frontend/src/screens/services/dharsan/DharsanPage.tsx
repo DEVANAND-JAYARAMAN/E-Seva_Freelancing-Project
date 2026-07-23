@@ -2,6 +2,7 @@
 
 import { ServiceNavigation } from "../../../components/ServiceNavigation/ServiceNavigation";
 import { useState } from "react";
+import { useCategoryServices } from "../../../hooks/useCategoryServices";
 import { CreditCard } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { ServiceCard } from "../ServiceCard";
@@ -47,16 +48,17 @@ export function DharsanPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
-  const [dharsanServicesList, setDharsanServicesList] = useState<
-    DharsanSubService[]
-  >([
+  const [dharsanServicesList, setDharsanServicesList] = useCategoryServices<DharsanSubService>(
+    "dharsan",
+    [
     {
       id: "sabarimala",
       name: "சபரிமலை",
       subName: "Sabarimala Dharsan",
       price: { retailer: 150, distributor: 150 },
     },
-  ]);
+  ]
+  );
 
   const handleEditCard = (id: string, currentName: string) => {
     Swal.fire({

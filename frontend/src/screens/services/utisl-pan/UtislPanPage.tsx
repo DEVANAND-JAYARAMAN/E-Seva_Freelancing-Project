@@ -2,6 +2,7 @@
 
 import { ServiceNavigation } from "../../../components/ServiceNavigation/ServiceNavigation";
 import { useState } from "react";
+import { useCategoryServices } from "../../../hooks/useCategoryServices";
 import { CheckCircle2 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { PanToAdhaarNumberFind } from "./PanToAdhaarNumberFind";
@@ -21,9 +22,10 @@ export function UtislPanPage() {
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [utislPanServicesList, setUtislPanServicesList] = useState<
-    UtislPanService[]
-  >([{ id: "pan-to-adhaar", name: "Pan To Adhaar Number Find" }]);
+  const [utislPanServicesList, setUtislPanServicesList] = useCategoryServices<UtislPanService>(
+    "utisl-pan",
+    [{ id: "pan-to-adhaar", name: "Pan To Adhaar Number Find" }]
+  );
 
   const handleCardClick = (service: UtislPanService) => {
     setSubmissionSuccess(false);

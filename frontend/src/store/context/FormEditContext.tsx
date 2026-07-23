@@ -72,25 +72,41 @@ export const FormEditProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [pathname, prevPath, isEditMode]);
 
-  // Load overrides from localStorage on mount
+  // Load overrides from backend on mount
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("form_overrides");
-      if (stored) {
-        setAllOverrides(JSON.parse(stored));
+    let isMounted = true;
+    const fetchOverrides = async () => {
+      try {
+        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
+        const res = await fetch(`${apiUrl}/api/settings/form_overrides`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && Object.keys(data).length > 0 && isMounted) {
+            setAllOverrides(data);
+          }
+        }
+      } catch (e) {
+        console.error("Failed to load form overrides from backend:", e);
       }
-    } catch (e) {
-      console.error("Failed to load form overrides:", e);
-    }
+    };
+    fetchOverrides();
+    return () => { isMounted = false; };
   }, []);
 
   // Save overrides helper
-  const saveOverrides = (updated: Record<string, FormOverrides>) => {
+  const saveOverrides = async (updated: Record<string, FormOverrides>) => {
     setAllOverrides(updated);
     try {
-      localStorage.setItem("form_overrides", JSON.stringify(updated));
+      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
+      await fetch(`${apiUrl}/api/settings/form_overrides`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updated),
+      });
     } catch (e) {
-      console.error("Failed to save form overrides:", e);
+      console.error("Failed to save form overrides to backend:", e);
     }
   };
 

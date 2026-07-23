@@ -2,6 +2,7 @@
 
 import { ServiceNavigation } from "../../../components/ServiceNavigation/ServiceNavigation";
 import { useState } from "react";
+import { useCategoryServices } from "../../../hooks/useCategoryServices";
 import { CheckCircle2 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { LapsedRegistrationRenewal } from "./LapsedRegistrationRenewal";
@@ -21,9 +22,8 @@ export function EmploymentServicesPage() {
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [employmentServicesList, setEmploymentServicesList] = useState<
-    EmploymentService[]
-  >([{ id: "lapsed-renewal", name: "Lapsed Registration Renewal" }]);
+  const [employmentServicesList, setEmploymentServicesList] = useCategoryServices<EmploymentService>("employment-services",
+    [{ id: "lapsed-renewal", name: "Lapsed Registration Renewal" }]);
 
   const handleCardClick = (service: EmploymentService) => {
     setSubmissionSuccess(false);

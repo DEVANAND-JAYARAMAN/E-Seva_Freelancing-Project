@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useCategoryServices } from "../../../hooks/useCategoryServices";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -58,7 +59,9 @@ export function SoftwareKeysPage() {
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const [softwareList, setSoftwareList] = useState<SoftwareCardItem[]>([
+  const [softwareList, setSoftwareList] = useCategoryServices<SoftwareCardItem>(
+    "software-keys",
+    [
     {
       id: "tn-health-qr",
       name: "TN - Health Card Maker With QR",
@@ -137,7 +140,8 @@ export function SoftwareKeysPage() {
       price: 400.0,
       iconBg: "bg-sky-100 dark:bg-sky-950/30",
     },
-  ]);
+  ]
+  );
 
   const filteredSoftware = useMemo(() => {
     return softwareList.filter((s) =>

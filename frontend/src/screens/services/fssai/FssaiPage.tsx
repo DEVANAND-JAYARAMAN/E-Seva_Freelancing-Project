@@ -2,6 +2,7 @@
 
 import { ServiceNavigation } from "../../../components/ServiceNavigation/ServiceNavigation";
 import { useState } from "react";
+import { useCategoryServices } from "../../../hooks/useCategoryServices";
 import { CheckCircle2 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { NewFssaiRegistration } from "./NewFssaiRegistration";
@@ -21,12 +22,15 @@ export function FssaiPage() {
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [fssaiServicesList, setFssaiServicesList] = useState<FssaiService[]>([
+  const [fssaiServicesList, setFssaiServicesList] = useCategoryServices<FssaiService>(
+    "fssai",
+    [
     {
       id: "new-registration",
       name: "New FSSAI Registration (Food service)",
     },
-  ]);
+  ]
+  );
 
   const handleCardClick = (service: FssaiService) => {
     setSubmissionSuccess(false);
