@@ -37,7 +37,7 @@ jobs:
           IP=$(curl -s https://daqpqxq9zg.execute-api.ap-south-1.amazonaws.com/prod/ip | jq -r .public_ip)
           echo "EC2_IP=$IP" >> $GITHUB_ENV
 
-      - name: Copy binary to EC2
+      - name: Copy binary to EC2 (Temp path)
         continue-on-error: true
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -46,7 +46,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_SSH_PORT }}
           source: "backend/eservice-backend"
-          target: "/opt/eservice/"
+          target: "/tmp/eservice-backend-new"
 
       - name: Deploy to EC2
         continue-on-error: true
@@ -68,8 +68,20 @@ jobs:
             MUGAVAI_USERNAME=${{ secrets.MUGAVAI_USERNAME }}
             MUGAVAI_API_KEY=${{ secrets.MUGAVAI_API_KEY }}
             EOF
+            
+            # Kill existing process to avoid 'text file busy' errors
             sudo fuser -k 8080/tcp || true
             sleep 2
+            
+            # Move the newly uploaded binary to the correct location and make it executable
+            # Note: scp action preserves the path tree (backend/eservice-backend) inside the target directory
+            mv /tmp/eservice-backend-new/backend/eservice-backend /opt/eservice/backend/eservice-backend
+            chmod +x /opt/eservice/backend/eservice-backend
+            
+            # Clean up temp folder
+            rm -rf /tmp/eservice-backend-new
+            
+            # Start the new process
             nohup /opt/eservice/backend/eservice-backend > /tmp/eservice.log 2>&1 &
             sleep 3
-            pgrep -f eservice-backend && echo "Service is running"
+            pgrep -f eservice-backend && echo "Service is running successfully"
