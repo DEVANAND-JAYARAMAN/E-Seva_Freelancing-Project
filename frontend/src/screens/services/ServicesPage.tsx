@@ -1498,6 +1498,7 @@ export function ServicesPage() {
             distributorCharge: Number(editingService.price?.distributor) || 0,
             officialCost: Number(editingService.price?.officialCost) || 0,
             formFields: editingService.formFields,
+            customImage: customImage || editingService.customImage,
           }),
         },
       );
@@ -1792,7 +1793,7 @@ export function ServicesPage() {
   const fetchDynamicServices = async () => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/dynamic`,
+        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/dynamic?t=${Date.now()}`
       );
       if (response.ok) {
         const data = await response.json();
@@ -1805,13 +1806,35 @@ export function ServicesPage() {
             glowColor: "shadow-blue-500/10",
             category: "All",
             formFields: d.formFields,
+            customImage: d.customImage,
             price: {
               retailer: d.retailerCharge,
               distributor: d.distributorCharge,
+              officialCost: d.officialCost,
             },
           }));
 
           setServicesList((prev) => {
+            const dynamicMap = new Map();
+            dynamicServices.forEach((d) => dynamicMap.set(d.id, d));
+
+            const updatedExisting = prev.map((p) => {
+              if (dynamicMap.has(p.id)) {
+                const override = dynamicMap.get(p.id);
+                return {
+                  ...p,
+                  name: override.name,
+                  price: override.price,
+                  customImage: override.customImage || p.customImage,
+                  formFields:
+                    override.formFields && override.formFields.length > 0
+                      ? override.formFields
+                      : p.formFields,
+                };
+              }
+              return p;
+            });
+
             const existingIds = new Set(prev.map((p) => p.id));
             const existingNames = new Set(
               prev.map((p) => p.name.trim().toLowerCase()),
@@ -1821,7 +1844,7 @@ export function ServicesPage() {
                 !existingIds.has(d.id) &&
                 !existingNames.has(d.name.trim().toLowerCase()),
             );
-            return [...prev, ...newServices];
+            return [...updatedExisting, ...newServices];
           });
         }
       }
@@ -1847,7 +1870,9 @@ export function ServicesPage() {
             name: newService.name,
             retailerCharge: Number(newService.price?.retailer) || 0,
             distributorCharge: Number(newService.price?.distributor) || 0,
+            officialCost: Number(newService.price?.officialCost) || 0,
             formFields: newService.formFields,
+            customImage: newService.customImage,
           }),
         },
       );
@@ -1860,12 +1885,21 @@ export function ServicesPage() {
         ]);
       } else {
         console.error("Failed to add dynamic service via API");
-        // Fallback to local storage only if API fails, or just show error. Let's add it anyway.
-        setServicesList((prev) => [...prev, newService]);
+        Swal.fire({
+          title: "Error!",
+          text: "Failed to create new service.",
+          icon: "error",
+          confirmButtonColor: "#005C3A",
+        });
       }
     } catch (error) {
-      console.error("Failed to call API, adding locally", error);
-      setServicesList((prev) => [...prev, newService]);
+      console.error("Failed to call API", error);
+      Swal.fire({
+        title: "Error!",
+        text: "Error connecting to backend.",
+        icon: "error",
+        confirmButtonColor: "#005C3A",
+      });
     }
 
     setIsAddModalOpen(false);
@@ -2591,7 +2625,32 @@ function EditServiceModal({
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setCustomImage(reader.result as string);
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const MAX_WIDTH = 200;
+          const MAX_HEIGHT = 200;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx?.drawImage(img, 0, 0, width, height);
+          setCustomImage(canvas.toDataURL("image/jpeg", 0.7));
+        };
+        img.src = reader.result as string;
       };
       reader.readAsDataURL(file);
     }
