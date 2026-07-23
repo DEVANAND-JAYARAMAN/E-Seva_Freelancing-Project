@@ -22,6 +22,7 @@ export interface StatusTicket {
   formData?: Record<string, string>;
   documents?: string[];
   ackFiles?: string[];
+  ackText?: string;
 }
 
 export interface StatusStatsData {

@@ -139,6 +139,7 @@ export function StatusPage() {
             typeof (app.ackFiles || app.AckFiles) === "string"
               ? JSON.parse(app.ackFiles || app.AckFiles || "[]")
               : app.ackFiles || app.AckFiles || [],
+          ackText: app.ackText || app.AckText || "",
           customerName:
             app.retailerName ||
             app.RetailerName ||
@@ -168,6 +169,7 @@ export function StatusPage() {
     newStatus: TicketStatus,
     remarks: string,
     ackFiles?: File[],
+    ackText?: string,
   ) => {
     try {
       const formData = new FormData();
@@ -178,6 +180,9 @@ export function StatusPage() {
         ackFiles.forEach((file) => {
           formData.append("ackFiles", file);
         });
+      }
+      if (ackText) {
+        formData.append("ackText", ackText);
       }
 
       const res = await fetch(

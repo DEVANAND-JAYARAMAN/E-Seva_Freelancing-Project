@@ -291,6 +291,7 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 	// Handle Form Data instead of JSON to support file uploads
 	status := c.PostForm("status")
 	adminRemarks := c.PostForm("adminRemarks")
+	ackText := c.PostForm("ackText")
 
 	if status == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Status is required"})
@@ -542,7 +543,7 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 		}
 	}
 
-	// Update ackFiles if any were uploaded
+	// Update ackFiles or ackText if any were uploaded/entered
 	if len(ackFiles) > 0 {
 		ackFilesAttr, _ := attributevalue.MarshalList(ackFiles)
 		_, _ = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
@@ -551,9 +552,24 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 				"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
 				"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
 			},
-			UpdateExpression: aws.String("SET ackFiles = :ackFiles"),
+			UpdateExpression: aws.String("SET ackFiles = :ackFiles, ackText = :ackText"),
 			ExpressionAttributeValues: map[string]types.AttributeValue{
 				":ackFiles": &types.AttributeValueMemberL{Value: ackFilesAttr},
+				":ackText":  &types.AttributeValueMemberS{Value: ""},
+			},
+		})
+	} else if ackText != "" {
+		emptyFilesAttr, _ := attributevalue.MarshalList([]string{})
+		_, _ = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+			TableName: aws.String("ServiceApplications"),
+			Key: map[string]types.AttributeValue{
+				"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
+				"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+			},
+			UpdateExpression: aws.String("SET ackText = :ackText, ackFiles = :ackFiles"),
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":ackText":  &types.AttributeValueMemberS{Value: ackText},
+				":ackFiles": &types.AttributeValueMemberL{Value: emptyFilesAttr},
 			},
 		})
 	}
@@ -603,7 +619,15 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 
 	if (status == "Approved" || status == "Completed") && app.CustomerWhatsApp != "" {
 		ackLinks := ""
-		if len(ackFiles) > 0 {
+		effectiveAckFiles := ackFiles
+		effectiveAckText := ackText
+
+		if len(effectiveAckFiles) == 0 && effectiveAckText == "" {
+			effectiveAckFiles = app.AckFiles
+			effectiveAckText = app.AckText
+		}
+
+		if len(effectiveAckFiles) > 0 {
 			baseURL := os.Getenv("NEXT_PUBLIC_API_URL")
 			if baseURL == "" {
 				baseURL = "http://localhost:8080" // fallback
@@ -611,9 +635,11 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 			baseURL = strings.TrimSuffix(baseURL, "/api")
 			
 			ackLinks = "\n\nAcknowledgement Document(s):\n"
-			for i, file := range ackFiles {
+			for i, file := range effectiveAckFiles {
 				ackLinks += fmt.Sprintf("%d. %s/api%s\n", i+1, baseURL, file)
 			}
+		} else if effectiveAckText != "" {
+			ackLinks = fmt.Sprintf("\n\nAcknowledgement Details:\n%s\n", effectiveAckText)
 		}
 
 		message := fmt.Sprintf("Your service '%s' is successfully %s.%s", app.ServiceName, strings.ToLower(status), ackLinks)

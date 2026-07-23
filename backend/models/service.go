@@ -18,6 +18,7 @@ type ServiceApplication struct {
 	Status           string            `dynamodbav:"status" json:"status"` // Pending, Approved, Rejected, Completed
 	AdminRemarks     string            `dynamodbav:"adminRemarks" json:"adminRemarks"`
 	AckFiles         []string          `dynamodbav:"ackFiles" json:"ackFiles"`
+	AckText          string            `dynamodbav:"ackText" json:"ackText"`
 	CreatedDate      string            `dynamodbav:"createdDate" json:"createdDate"`
 	LastUpdated      string            `dynamodbav:"lastUpdated" json:"lastUpdated"`
 }

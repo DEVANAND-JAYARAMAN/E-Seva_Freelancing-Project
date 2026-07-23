@@ -24,6 +24,7 @@ type StatusDetailModalProps = {
     newStatus: TicketStatus,
     remarks: string,
     ackFiles?: File[],
+    ackText?: string,
   ) => void;
   isEditMode: boolean;
 };
@@ -41,6 +42,8 @@ export function StatusDetailModal({
   const [remarks, setRemarks] = useState("");
   const [isCustomRemarks, setIsCustomRemarks] = useState(false);
   const [ackFiles, setAckFiles] = useState<File[]>([]);
+  const [ackType, setAckType] = useState<"file" | "text">("file");
+  const [ackText, setAckText] = useState("");
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -48,6 +51,8 @@ export function StatusDetailModal({
     if (ticket) {
       setRemarks(ticket.remarks || "");
       setAckFiles([]);
+      setAckText(ticket.ackText || "");
+      setAckType(ticket.ackText ? "text" : "file");
     }
     setIsCustomRemarks(false);
   }, [ticket, isOpen]);
@@ -67,7 +72,13 @@ export function StatusDetailModal({
       if (newStatus === "Rejected")
         finalRemarks = "Rejected due to invalid documents or mismatch.";
     }
-    onUpdateStatus(ticket.id, newStatus, finalRemarks, ackFiles);
+    onUpdateStatus(
+      ticket.id,
+      newStatus,
+      finalRemarks,
+      ackType === "file" ? ackFiles : [],
+      ackType === "text" ? ackText : "",
+    );
     onClose();
   };
 
@@ -349,13 +360,19 @@ export function StatusDetailModal({
                   </div>
                 )}
 
-              {/* Acknowledgement Documents - Rendered for all */}
-              {!isEditMode && ticket.ackFiles && ticket.ackFiles.length > 0 && (
+              {/* Acknowledgement Documents & Details - Rendered for all */}
+              {!isEditMode && ((ticket.ackFiles && ticket.ackFiles.length > 0) || ticket.ackText) && (
                 <div className="space-y-3">
                   <span className="text-[11px] font-extrabold text-emerald-600 dark:text-emerald-500 uppercase tracking-widest block">
-                    ✅ Acknowledgement Document(s)
+                    ✅ Acknowledgement Details
                   </span>
-                  <div className="space-y-3">
+                  {ticket.ackText && (
+                    <div className="bg-emerald-50/50 dark:bg-[#0a0f18]/30 p-4 rounded-xl border border-emerald-100 dark:border-emerald-800/50 text-sm font-semibold text-slate-800 dark:text-slate-200 whitespace-pre-wrap">
+                      {ticket.ackText}
+                    </div>
+                  )}
+                  {ticket.ackFiles && ticket.ackFiles.length > 0 && (
+                    <div className="space-y-3">
                     {ticket.ackFiles.map((doc, idx) => {
                       const fullUrl = `${baseUrl}/api${doc}`;
                       const fileName = getFileName(doc);
@@ -476,36 +493,69 @@ export function StatusDetailModal({
                       </div>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <span className="text-[11px] font-extrabold text-emerald-600 dark:text-emerald-500 uppercase tracking-widest block">
                         Upload Acknowledgement
                       </span>
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={(e) => {
-                          if (e.target.files) {
-                            setAckFiles(Array.from(e.target.files));
-                          }
-                        }}
-                        multiple
-                        className="hidden"
-                        accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.mp4"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-dashed border-emerald-300 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-900/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors text-xs font-bold uppercase tracking-wider"
-                      >
-                        <Upload size={16} />
-                        {ackFiles.length > 0
-                          ? `${ackFiles.length} File(s) Selected`
-                          : "Select Files"}
-                      </button>
-                      {ackFiles.length > 0 && (
-                        <p className="text-[10px] text-emerald-600/70 font-semibold truncate">
-                          {ackFiles.map((f) => f.name).join(", ")}
-                        </p>
+                      
+                      {/* Segmented Toggle for Text / File */}
+                      <div className="flex bg-slate-100 dark:bg-[#0a0f18] p-1 rounded-xl border border-slate-200 dark:border-slate-800">
+                        <button
+                          type="button"
+                          onClick={() => setAckType("file")}
+                          className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${ackType === "file" ? "bg-white dark:bg-slate-800 text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+                        >
+                          File Upload
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setAckType("text")}
+                          className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${ackType === "text" ? "bg-white dark:bg-slate-800 text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
+                        >
+                          Text Input
+                        </button>
+                      </div>
+
+                      {ackType === "file" ? (
+                        <div className="space-y-2">
+                          <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={(e) => {
+                              if (e.target.files) {
+                                setAckFiles(Array.from(e.target.files));
+                              }
+                            }}
+                            multiple
+                            className="hidden"
+                            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.mp4"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-dashed border-emerald-300 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-900/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors text-xs font-bold uppercase tracking-wider"
+                          >
+                            <Upload size={16} />
+                            {ackFiles.length > 0
+                              ? `${ackFiles.length} File(s) Selected`
+                              : "Select Files"}
+                          </button>
+                          {ackFiles.length > 0 && (
+                            <p className="text-[10px] text-emerald-600/70 font-semibold truncate">
+                              {ackFiles.map((f) => f.name).join(", ")}
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          <textarea
+                            value={ackText}
+                            onChange={(e) => setAckText(e.target.value)}
+                            rows={3}
+                            placeholder="Enter acknowledgement text/details..."
+                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0a0f18] text-sm font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all resize-none"
+                          />
+                        </div>
                       )}
                     </div>
                   </div>
