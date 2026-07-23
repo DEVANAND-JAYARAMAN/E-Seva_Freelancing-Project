@@ -1498,6 +1498,7 @@ export function ServicesPage() {
             distributorCharge: Number(editingService.price?.distributor) || 0,
             officialCost: Number(editingService.price?.officialCost) || 0,
             formFields: editingService.formFields,
+            customImage: customImage || editingService.customImage,
           }),
         },
       );
@@ -1805,13 +1806,35 @@ export function ServicesPage() {
             glowColor: "shadow-blue-500/10",
             category: "All",
             formFields: d.formFields,
+            customImage: d.customImage,
             price: {
               retailer: d.retailerCharge,
               distributor: d.distributorCharge,
+              officialCost: d.officialCost,
             },
           }));
 
           setServicesList((prev) => {
+            const dynamicMap = new Map();
+            dynamicServices.forEach((d) => dynamicMap.set(d.id, d));
+
+            const updatedExisting = prev.map((p) => {
+              if (dynamicMap.has(p.id)) {
+                const override = dynamicMap.get(p.id);
+                return {
+                  ...p,
+                  name: override.name,
+                  price: override.price,
+                  customImage: override.customImage || p.customImage,
+                  formFields:
+                    override.formFields && override.formFields.length > 0
+                      ? override.formFields
+                      : p.formFields,
+                };
+              }
+              return p;
+            });
+
             const existingIds = new Set(prev.map((p) => p.id));
             const existingNames = new Set(
               prev.map((p) => p.name.trim().toLowerCase()),
@@ -1821,7 +1844,7 @@ export function ServicesPage() {
                 !existingIds.has(d.id) &&
                 !existingNames.has(d.name.trim().toLowerCase()),
             );
-            return [...prev, ...newServices];
+            return [...updatedExisting, ...newServices];
           });
         }
       }
@@ -1847,7 +1870,9 @@ export function ServicesPage() {
             name: newService.name,
             retailerCharge: Number(newService.price?.retailer) || 0,
             distributorCharge: Number(newService.price?.distributor) || 0,
+            officialCost: Number(newService.price?.officialCost) || 0,
             formFields: newService.formFields,
+            customImage: newService.customImage,
           }),
         },
       );

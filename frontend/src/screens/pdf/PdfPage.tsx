@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -99,18 +99,49 @@ export function PdfPage() {
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
+        const response = await fetch(`${apiUrl}/api/services/pdf-pricing`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data && Array.isArray(data) && data.length > 0) {
+            setServicesList(data);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch PDF services", error);
+      }
+    };
+    fetchServices();
+  }, []);
+
+  const saveServicesToDb = async (updatedList: PdfService[]) => {
+    try {
+        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
+        await fetch(`${apiUrl}/api/services/pdf-pricing`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updatedList)
+        });
+    } catch(err) {
+       console.error("Error saving services", err);
+    }
+  };
+
   const handleSaveService = (
     name: string,
     customImage: string | null,
     amount: number = 0,
   ) => {
-    setServicesList((prev) =>
-      prev.map((s) =>
+    const updated = servicesList.map((s) =>
         s.id === editingService?.id
           ? { ...s, name, customImage, amount: amount || s.amount }
           : s,
-      ),
-    );
+      );
+    setServicesList(updated);
+    saveServicesToDb(updated);
     setEditModalOpen(false);
     setEditingService(null);
   };
@@ -121,13 +152,17 @@ export function PdfPage() {
     amount: number,
   ) => {
     const id = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    setServicesList((prev) => [...prev, { id, name, customImage, amount }]);
+    const updated = [...servicesList, { id, name, customImage, amount }];
+    setServicesList(updated);
+    saveServicesToDb(updated);
     setIsAddModalOpen(false);
   };
 
   const handleDeleteService = (id: string) => {
     if (confirm("Are you sure you want to delete this PDF service?")) {
-      setServicesList((prev) => prev.filter((s) => s.id !== id));
+      const updated = servicesList.filter((s) => s.id !== id);
+      setServicesList(updated);
+      saveServicesToDb(updated);
     }
   };
 
@@ -730,7 +765,7 @@ export function PdfPage() {
                           setEditingService(service);
                           setEditModalOpen(true);
                         }}
-                        className="p-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-150 dark:border-slate-800 text-slate-400 hover:text-[#005c3a] dark:hover:text-emerald-400 transition-all active:scale-[0.95]"
+                        className="p-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-black dark:border-slate-400 text-slate-400 hover:text-[#005c3a] dark:hover:text-emerald-400 transition-all active:scale-[0.95]"
                         title="Edit card details"
                       >
                         <Pencil size={11} />
@@ -740,7 +775,7 @@ export function PdfPage() {
                           e.stopPropagation();
                           handleDeleteService(service.id);
                         }}
-                        className="p-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-slate-150 dark:border-slate-800 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-all active:scale-[0.95]"
+                        className="p-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-black dark:border-slate-400 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-all active:scale-[0.95]"
                         title="Delete card"
                       >
                         <Trash size={11} />
