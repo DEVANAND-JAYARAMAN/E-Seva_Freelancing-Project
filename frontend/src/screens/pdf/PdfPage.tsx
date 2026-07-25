@@ -92,7 +92,7 @@ const pdfServicesList: PdfService[] = [
 
 export function PdfPage() {
   const { user } = useAuth();
-  const { overrides } = useFormEdit();
+  const { overrides, setFormScope } = useFormEdit();
   const isAdmin = user?.role === "admin";
 
   const [servicesList, setServicesList] =
@@ -177,6 +177,12 @@ export function PdfPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
+
+  // Bind form field edits to the selected PDF service only
+  useEffect(() => {
+    setFormScope(activeForm);
+    return () => setFormScope(null);
+  }, [activeForm, setFormScope]);
 
   // Initialize a mock request log tracking database
   const [requestLogs, setRequestLogs] = useState<PdfRequestLog[]>([

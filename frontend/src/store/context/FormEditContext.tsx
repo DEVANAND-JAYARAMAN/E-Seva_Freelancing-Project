@@ -260,18 +260,17 @@ export const FormEditProvider: React.FC<{ children: React.ReactNode }> = ({
     const scoped = map[id];
     if (scoped) return { ...EMPTY_OVERRIDES, ...scoped };
 
+    // Scoped form IDs (path::serviceId) must NOT inherit another service's
+    // custom fields from the unscoped base key.
     if (id.includes("::")) {
-      const base = id.split("::")[0];
-      if (map[base]) return { ...EMPTY_OVERRIDES, ...map[base] };
+      return { ...EMPTY_OVERRIDES };
     }
     return { ...EMPTY_OVERRIDES };
   }, []);
 
   const currentOverrides: FormOverrides = allOverrides[formId]
     ? { ...EMPTY_OVERRIDES, ...allOverrides[formId] }
-    : formScope && allOverrides[baseFormId]
-      ? { ...EMPTY_OVERRIDES, ...allOverrides[baseFormId] }
-      : { ...EMPTY_OVERRIDES };
+    : { ...EMPTY_OVERRIDES };
 
   const deleteField = (fieldName: string) => {
     const formConfig = { ...getFormConfig(formId) };
