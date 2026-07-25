@@ -31,6 +31,7 @@ interface SoftwareCardItem {
   name: string;
   price: number;
   iconBg: string;
+  iconBase64?: string;
 }
 
 export function SoftwareKeysPage() {
@@ -47,8 +48,8 @@ export function SoftwareKeysPage() {
   >("form");
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [newService, setNewService] = useState({ name: "", price: "" });
+  const [editingService, setEditingService] = useState<SoftwareCardItem | "new" | null>(null);
+  const [editingServiceForm, setEditingServiceForm] = useState({ name: "", price: "", iconBase64: "" });
 
   const [softwareList, setSoftwareList] = useCategoryServices<SoftwareCardItem>(
     "software-keys",
@@ -140,23 +141,48 @@ export function SoftwareKeysPage() {
     );
   }, [searchTerm, softwareList]);
 
-  const handleEditCard = (id: string, currentName: string) => {
-    Swal.fire({
-      title: "Rename Service",
-      input: "text",
-      inputValue: currentName,
-      showCancelButton: true,
-      confirmButtonColor: "#005C3A",
-      confirmButtonText: "Save",
-    }).then((result) => {
-      if (result.isConfirmed && result.value?.trim()) {
-        setSoftwareList((prev) =>
-          prev.map((s) =>
-            s.id === id ? { ...s, name: result.value.trim() } : s,
-          ),
-        );
-      }
-    });
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new window.Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const MAX_WIDTH = 120;
+        const MAX_HEIGHT = 120;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        const dataUrl = canvas.toDataURL("image/webp", 0.8);
+        setEditingServiceForm(p => ({ ...p, iconBase64: dataUrl }));
+      };
+      img.src = event.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleEditCard = (software: SoftwareCardItem) => {
+    setEditingService(software);
+    setEditingServiceForm({ name: software.name, price: software.price.toString(), iconBase64: software.iconBase64 || "" });
   };
 
   const handleDeleteCard = (id: string) => {
@@ -182,33 +208,35 @@ export function SoftwareKeysPage() {
     });
   };
 
-  const handleAddService = (e: React.FormEvent) => {
+  const handleSaveService = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newService.name.trim() || !newService.price.trim()) return;
+    if (!editingServiceForm.name.trim() || !editingServiceForm.price.trim()) return;
 
-    const newId = newService.name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "");
+    if (editingService === 'new') {
+      const newId = editingServiceForm.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+      const newServiceObj: SoftwareCardItem = {
+        id: newId || `service-${Date.now()}`,
+        name: editingServiceForm.name.trim(),
+        price: parseFloat(editingServiceForm.price),
+        iconBg: "bg-emerald-50 dark:bg-emerald-950/20", // Default bg
+        iconBase64: editingServiceForm.iconBase64,
+      };
 
-    const newServiceObj: SoftwareCardItem = {
-      id: newId || `service-${Date.now()}`,
-      name: newService.name.trim(),
-      price: parseFloat(newService.price),
-      iconBg: "bg-emerald-50 dark:bg-emerald-950/20", // Default bg
-    };
-
-    setSoftwareList((prev) => [...prev, newServiceObj]);
-    setIsAddModalOpen(false);
-    setNewService({ name: "", price: "" });
-    Swal.fire({
-      title: "Success",
-      text: "Service added successfully!",
-      icon: "success",
-      confirmButtonColor: "#005C3A",
-      timer: 1500,
-      showConfirmButton: false,
-    });
+      setSoftwareList((prev) => [...prev, newServiceObj]);
+      setEditingService(null);
+      setEditingServiceForm({ name: "", price: "", iconBase64: "" });
+      Swal.fire({ title: "Success", text: "Service added successfully!", icon: "success", confirmButtonColor: "#005C3A", timer: 1500, showConfirmButton: false });
+    } else if (editingService) {
+      setSoftwareList((prev) =>
+        prev.map((s) =>
+          s.id === editingService.id
+            ? { ...s, name: editingServiceForm.name.trim(), price: parseFloat(editingServiceForm.price), iconBase64: editingServiceForm.iconBase64 }
+            : s,
+        ),
+      );
+      setEditingService(null);
+      Swal.fire({ title: "Success", text: "Service updated successfully!", icon: "success", confirmButtonColor: "#005C3A", timer: 1500, showConfirmButton: false });
+    }
   };
 
   const handleCardClick = (software: SoftwareCardItem) => {
@@ -262,7 +290,17 @@ export function SoftwareKeysPage() {
     }, 3000);
   };
 
-  const renderSoftwareIcon = (id: string, className = "w-16 h-16") => {
+  const renderSoftwareIcon = (id: string, className: string = "w-10 h-10") => {
+    const software = softwareList.find(s => s.id === id);
+    if (software?.iconBase64) {
+      return (
+        <img
+          src={software.iconBase64}
+          alt={software.name}
+          className={`${className} object-contain rounded-full shadow-sm bg-white dark:bg-slate-800`}
+        />
+      );
+    }
     const uniqueId = `${id}-${Math.random().toString(36).substr(2, 9)}`;
 
     switch (id) {
@@ -1205,8 +1243,11 @@ export function SoftwareKeysPage() {
 
             {isAdmin && !activeForm && (
               <button
-                onClick={() => setIsAddModalOpen(true)}
-                className="flex items-center justify-center gap-1.5 h-9 px-4 rounded-xl bg-[#005c3a] hover:bg-[#004a2e] text-white text-xs font-bold transition-colors shrink-0"
+                onClick={() => {
+                  setEditingService("new");
+                  setEditingServiceForm({ name: "", price: "", iconBase64: "" });
+                }}
+                className="flex items-center gap-1.5 h-9 px-4 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 text-[#005c3a] dark:text-emerald-400 font-bold text-xs hover:bg-[#005c3a] hover:text-white dark:hover:bg-emerald-500 transition-colors"
               >
                 <Plus size={13} />
                 <span>Add Service</span>
@@ -1257,10 +1298,10 @@ export function SoftwareKeysPage() {
                     >
                       <button
                         onClick={() =>
-                          handleEditCard(software.id, software.name)
+                          handleEditCard(software)
                         }
                         className="p-1 rounded-full bg-white/80 dark:bg-slate-800/80 text-slate-500 hover:text-[#005C3A] hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors shadow-sm"
-                        title="Rename"
+                        title="Edit"
                       >
                         <Pencil size={12} />
                       </button>
@@ -1454,27 +1495,53 @@ export function SoftwareKeysPage() {
           </div>
         )}
 
-        {/* ADD SERVICE MODAL (Admin Only) */}
-        {isAddModalOpen && isAdmin && (
+        {/* ADD / EDIT SERVICE MODAL (Admin Only) */}
+        {editingService && isAdmin && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div
               className="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
-              onClick={() => setIsAddModalOpen(false)}
+              onClick={() => setEditingService(null)}
             />
-            <div className="relative w-full max-w-sm bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl shadow-xl p-6 flex flex-col gap-5 z-10">
+            <div className="relative w-full max-w-sm bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl shadow-xl p-6 flex flex-col gap-5 z-10 animate-in fade-in zoom-in-95 duration-200">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-4">
                 <h3 className="font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-sm">
-                  Add New Service
+                  {editingService === 'new' ? "Add New Service" : "Edit Service"}
                 </h3>
                 <button
-                  onClick={() => setIsAddModalOpen(false)}
+                  onClick={() => setEditingService(null)}
                   className="p-1 rounded-md text-slate-400 hover:text-slate-600 transition-colors"
                 >
                   <Plus size={16} className="rotate-45" />
                 </button>
               </div>
 
-              <form onSubmit={handleAddService} className="flex flex-col gap-4">
+              <form onSubmit={handleSaveService} className="flex flex-col gap-4">
+                {/* Icon Image Upload */}
+                <div className="space-y-1.5 flex flex-col items-center">
+                  <label className="block text-xs font-bold text-slate-500 uppercase">
+                    Service Icon
+                  </label>
+                  <div className="relative group cursor-pointer w-20 h-20 rounded-full border-2 border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center justify-center overflow-hidden bg-slate-50 dark:bg-slate-900/50">
+                    {editingServiceForm.iconBase64 ? (
+                      <img src={editingServiceForm.iconBase64} alt="Preview" className="w-full h-full object-contain bg-white dark:bg-slate-800" />
+                    ) : (
+                      <>
+                        <Upload size={20} className="text-slate-400" />
+                        <span className="text-[9px] font-bold text-slate-400 mt-1 uppercase">Upload</span>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                    />
+                    <div className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center">
+                      <span className="text-white text-[10px] font-bold uppercase">Change</span>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="space-y-1.5">
                   <label className="block text-xs font-bold text-slate-500 uppercase">
                     Service Name
@@ -1482,9 +1549,9 @@ export function SoftwareKeysPage() {
                   <input
                     type="text"
                     required
-                    value={newService.name}
+                    value={editingServiceForm.name}
                     onChange={(e) =>
-                      setNewService((p) => ({ ...p, name: e.target.value }))
+                      setEditingServiceForm((p) => ({ ...p, name: e.target.value }))
                     }
                     className="w-full px-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/50 text-sm focus:outline-none focus:border-[#005c3a]"
                     placeholder="e.g. MS Office Key"
@@ -1497,27 +1564,28 @@ export function SoftwareKeysPage() {
                   <input
                     type="number"
                     required
-                    value={newService.price}
+                    value={editingServiceForm.price}
                     onChange={(e) =>
-                      setNewService((p) => ({ ...p, price: e.target.value }))
+                      setEditingServiceForm((p) => ({ ...p, price: e.target.value }))
                     }
                     className="w-full px-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/50 text-sm focus:outline-none focus:border-[#005c3a]"
-                    placeholder="e.g. 199"
+                    placeholder="e.g. 500"
                   />
                 </div>
-                <div className="flex gap-3 pt-2">
+
+                <div className="flex items-center justify-end gap-3 mt-4 border-t border-slate-100 dark:border-slate-800 pt-4">
                   <button
                     type="button"
-                    onClick={() => setIsAddModalOpen(false)}
-                    className="flex-1 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-500 font-bold text-xs uppercase"
+                    onClick={() => setEditingService(null)}
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-900 transition-colors"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-2 rounded-xl bg-[#005c3a] text-white font-bold text-xs uppercase"
+                    className="px-5 py-2 rounded-xl bg-[#005c3a] hover:bg-[#004d30] text-white text-xs font-bold transition-colors"
                   >
-                    Add Service
+                    Save Service
                   </button>
                 </div>
               </form>
