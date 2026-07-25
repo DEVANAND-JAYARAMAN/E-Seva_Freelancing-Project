@@ -118,7 +118,7 @@ export function DistributorTable({
               <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">
                 Status
               </th>
-              <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">
+              <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center min-w-[12rem]">
                 Actions
               </th>
             </tr>
@@ -239,8 +239,8 @@ export function DistributorTable({
                   </td>
 
                   {/* Action Buttons */}
-                  <td className="py-4 px-6">
-                    <div className="flex items-center justify-center gap-2">
+                  <td className="py-4 px-6 min-w-[12rem]">
+                    <div className="flex flex-wrap items-center justify-center gap-1.5">
                       <button
                         onClick={() => onEdit(distributor)}
                         className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200/60 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 transition-colors"
@@ -350,10 +350,11 @@ export function DistributorTable({
                             }
                           });
                         }}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-rose-100 dark:border-rose-900/30 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-rose-600 hover:text-rose-700 transition-colors"
+                        className="inline-flex h-8 items-center gap-1 rounded-lg border border-rose-200 dark:border-rose-900/40 bg-rose-50 dark:bg-rose-950/30 px-2.5 text-[10px] font-bold uppercase tracking-wide text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-950/50 transition-colors"
                         title="Delete distributor"
                       >
                         <Trash2 size={13} />
+                        <span>Delete</span>
                       </button>
                     </div>
                   </td>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { X, Save } from "lucide-react";
 import type { Retailer } from "./types";
+import { RESERVED_ADMIN_EMAILS } from "../../config/tempLogins";
 
 type RetailerFormProps = {
   isOpen: boolean;
@@ -67,6 +68,9 @@ export function RetailerForm({
       newErrors.email = "Email address is required";
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       newErrors.email = "Please enter a valid email address";
+    } else if (RESERVED_ADMIN_EMAILS.has(email.toLowerCase().trim())) {
+      newErrors.email =
+        "This email is reserved for admin. Use a different retailer email.";
     }
 
     if (!phone.trim()) {
