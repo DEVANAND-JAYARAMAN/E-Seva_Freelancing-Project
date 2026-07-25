@@ -445,6 +445,7 @@ export function RtoServicesPage() {
                 <DynamicForm 
                   formId={activeForm}
                   schema={{ 
+                    id: activeForm,
                     title: rtoServicesList.find(s => s.id === activeForm)?.name || "Custom Service", 
                     sections: [{ title: "Additional Details", fields: [] }] 
                   }} 

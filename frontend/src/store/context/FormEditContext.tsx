@@ -142,7 +142,24 @@ export const FormEditProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-export const useFormEdit = (customFormId?: string | null): FormEditContextType => {
+export const FormEditScope: React.FC<{
+  formId: string;
+  children: React.ReactNode;
+}> = ({ formId, children }) => {
+  const context = useContext(FormEditContext);
+  if (!context) {
+    return <>{children}</>;
+  }
+  return (
+    <FormEditContext.Provider value={{ ...context, defaultFormId: formId }}>
+      {children}
+    </FormEditContext.Provider>
+  );
+};
+
+export const useFormEdit = (
+  customFormId?: string | null,
+): FormEditContextType => {
   const context = useContext(FormEditContext);
   if (!context) {
     throw new Error("useFormEdit must be used within a FormEditProvider");

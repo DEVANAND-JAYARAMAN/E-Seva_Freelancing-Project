@@ -21,7 +21,7 @@ import { InputField, SubmitButton } from "../services/form/FormFields";
 import { validateField, PATTERNS } from "../services/form/validators";
 import { ServiceNavigation } from "../../components/ServiceNavigation/ServiceNavigation";
 import { useAuth } from "../../store/context/AuthContext";
-import { useFormEdit } from "../../store/context/FormEditContext";
+import { useFormEdit, FormEditScope } from "../../store/context/FormEditContext";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
 
 // Interface for PDF services definition
@@ -861,10 +861,11 @@ export function PdfPage() {
                   </div>
                 </div>
               ) : (
-                <form
-                  onSubmit={(e) => handleFormSubmit(e, activeServiceObj)}
-                  className="space-y-8 w-full"
-                >
+                <FormEditScope formId={activeServiceObj.id}>
+                  <form
+                    onSubmit={(e) => handleFormSubmit(e, activeServiceObj)}
+                    className="space-y-8 w-full"
+                  >
                   {/* Form Header */}
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between border-b border-slate-100 dark:border-slate-900/50 pb-4 gap-2">
                     <div>
@@ -1112,7 +1113,8 @@ export function PdfPage() {
                       disabled={isSubmitting}
                     />
                   </div>
-                </form>
+                  </form>
+                </FormEditScope>
               )}
             </div>
           </div>

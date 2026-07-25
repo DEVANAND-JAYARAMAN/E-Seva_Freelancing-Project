@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { useFormEdit } from "../../../store/context/FormEditContext";
+import {
+  useFormEdit,
+  FormEditScope,
+} from "../../../store/context/FormEditContext";
 import { FormSchema } from "./types";
 import { validateField } from "./validators";
 import {
@@ -20,7 +23,18 @@ interface DynamicFormProps {
   isLoading?: boolean;
 }
 
-export const DynamicForm: React.FC<DynamicFormProps> = ({
+export const DynamicForm: React.FC<DynamicFormProps> = (props) => {
+  if (props.formId) {
+    return (
+      <FormEditScope formId={props.formId}>
+        <DynamicFormInner {...props} />
+      </FormEditScope>
+    );
+  }
+  return <DynamicFormInner {...props} />;
+};
+
+const DynamicFormInner: React.FC<DynamicFormProps> = ({
   formId,
   schema,
   onSubmit,
@@ -47,7 +61,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
     const stringValue =
       typeof value === "boolean" ? (value ? "true" : "false") : value;
 
-    setFormData((prev) => {
+    setFormData((prev: Record<string, string>) => {
       const updated = { ...prev, [name]: stringValue };
 
       // Perform validation instantly on change if an error was previously present
@@ -68,7 +82,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
           fieldConfig?.validation,
           updated,
         );
-        setErrors((prevErrors) => {
+        setErrors((prevErrors: Record<string, string>) => {
           const next = { ...prevErrors };
           if (errorMsg) {
             next[name] = errorMsg;

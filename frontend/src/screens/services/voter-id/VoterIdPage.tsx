@@ -4,6 +4,7 @@ import { ServiceNavigation } from "../../../components/ServiceNavigation/Service
 import { useState } from "react";
 import { useCategoryServices } from "../../../hooks/useCategoryServices";
 import { CheckCircle2 } from "lucide-react";
+import { FormEditScope } from "../../../store/context/FormEditContext";
 import { AppShell } from "../../../layouts/AppShell";
 import { EpicVoterPdf } from "./EpicVoterPdf";
 import { UpdateCellNumberWithOtp } from "./UpdateCellNumberWithOtp";
@@ -226,15 +227,17 @@ export function VoterIdPage() {
           /* ELEGANT & PROFESSIONAL ENTERPRISE DESIGN FOR INLINE FORM */
           <div className="w-full">
             <div className="w-full bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 md:p-8 shadow-sm flex flex-col gap-6 relative overflow-hidden animate-in fade-in duration-200">
-              {activeForm === "epic-voter-pdf" ? (
-                <EpicVoterPdf onCancel={() => setActiveForm(null)} />
-              ) : activeForm === "update-cell-one-otp" ? (
-                <UpdateCellNumberWithOtp onCancel={() => setActiveForm(null)} />
-              ) : (
-                <UpdateCellNumberWithoutOtp
-                  onCancel={() => setActiveForm(null)}
-                />
-              )}
+              <FormEditScope formId={activeForm}>
+                {activeForm === "epic-voter-pdf" ? (
+                  <EpicVoterPdf onCancel={() => setActiveForm(null)} />
+                ) : activeForm === "update-cell-one-otp" ? (
+                  <UpdateCellNumberWithOtp onCancel={() => setActiveForm(null)} />
+                ) : (
+                  <UpdateCellNumberWithoutOtp
+                    onCancel={() => setActiveForm(null)}
+                  />
+                )}
+              </FormEditScope>
             </div>
           </div>
         )}

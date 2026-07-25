@@ -1119,14 +1119,9 @@ export function SoftwareKeysPage() {
       <DynamicForm
         formId={selectedSoftware.id}
         schema={{
+          id: selectedSoftware.id,
           title: selectedSoftware.name,
           subtitle: `Register ${selectedSoftware.name} software key.`,
-          paymentLabel: (
-            <div className="flex items-center gap-1.5">
-              <CreditCard size={13} className="text-[#005c3a] dark:text-emerald-400" />
-              <span>Service Charge : ₹ {selectedSoftware.price.toFixed(2)}</span>
-            </div>
-          ),
           sections: [
             {
               title: "Details",
@@ -1135,21 +1130,21 @@ export function SoftwareKeysPage() {
                   name: "mobileNumber",
                   label: "Mobile Number",
                   type: "phone",
-                  required: true,
+                  validation: { required: true },
                 },
                 {
                   name: "deviceName",
                   label: "Device Name",
                   type: "text",
                   placeholder: "e.g., Desktop-PC",
-                  required: true,
+                  validation: { required: true },
                 }
               ]
             }
           ]
         }}
-        onSubmit={props.onSubmit}
-        onCancel={props.onCancel}
+        onSubmit={formProps.onSubmit}
+        onCancel={formProps.onCancel}
       />
     );
   };
