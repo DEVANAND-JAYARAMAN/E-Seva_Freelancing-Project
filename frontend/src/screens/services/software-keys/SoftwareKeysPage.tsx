@@ -1163,7 +1163,7 @@ export function SoftwareKeysPage() {
     return (
       <SoftwareKeyForm
         title={selectedSoftware.name}
-        description={Register  software key.}
+        description="Register software key."
         price={selectedSoftware.price}
         onSubmit={props.onSubmit}
         onCancel={props.onCancel}
