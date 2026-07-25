@@ -17,9 +17,29 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { AppShell } from "../layouts/AppShell";
-import { useLocalStorage } from "../hooks/useLocalStorage";
 import { useAuth } from "../store/context/AuthContext";
 import { type WalletTransaction, type PaymentRequest } from "../config/data";
+import { apiUrl } from "../utils/apiBase";
+
+function mapTx(raw: any): WalletTransaction {
+  const typeRaw = String(raw.type || "").toLowerCase();
+  const type: "credit" | "debit" = typeRaw === "debit" ? "debit" : "credit";
+  const statusRaw = String(raw.status || "Success");
+  const status =
+    statusRaw === "Failed" || statusRaw === "Pending"
+      ? statusRaw
+      : ("Success" as const);
+  return {
+    id: String(raw.id || raw.SK || `tx-${Date.now()}`),
+    date: String(raw.date || raw.createdAt || ""),
+    type,
+    description: String(raw.description || ""),
+    amount: Number(raw.amount || 0),
+    reference: String(raw.reference || raw.partnerRef || ""),
+    status,
+    walletType: raw.walletType === "API" ? "API" : "Main",
+  };
+}
 
 export function WalletPage() {
   const { user, updateWallet, refreshProfile } = useAuth();
@@ -31,34 +51,31 @@ export function WalletPage() {
   // Balances
   const mainBalance = user?.walletBalance || 0;
 
-  // Transactions list via local storage
+  // Transactions list via API
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
 
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(
-          /(?:\/api|\/)+$/,
-          "",
-        );
-        const res = await fetch(
-          `${baseUrl}/api/wallet/transactions?userId=${user?.id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
+        const endpoint =
+          user?.role === "admin"
+            ? apiUrl("admin/wallet/transactions")
+            : `${apiUrl("wallet/transactions")}?userId=${encodeURIComponent(user?.id || "")}`;
+        const res = await fetch(endpoint, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        );
+        });
         if (res.ok) {
           const data = await res.json();
-          setTransactions(data || []);
+          setTransactions((Array.isArray(data) ? data : []).map(mapTx));
         }
       } catch (err) {
         console.error(err);
       }
     };
-    if (user?.id) fetchTransactions();
-  }, [user?.id]);
+    if (user?.id || user?.role === "admin") fetchTransactions();
+  }, [user?.id, user?.role]);
 
   // Payment Requests list via local storage (to sync with Admin Verification panel)
   const [paymentRequests, setPaymentRequests] = useState<PaymentRequest[]>([]);

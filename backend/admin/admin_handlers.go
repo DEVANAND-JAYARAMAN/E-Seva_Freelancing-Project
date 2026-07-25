@@ -228,3 +228,88 @@ func GetDashboardStats(c *gin.Context) {
 
 	c.JSON(http.StatusOK, stats)
 }
+
+// GetAdminWalletTransactions returns ledger rows for the resolved admin Main Wallet.
+func GetAdminWalletTransactions(c *gin.Context) {
+	adminId := ResolveAdminUserId()
+	if adminId == "" {
+		c.JSON(http.StatusOK, []any{})
+		return
+	}
+
+	out, err := db.DynamoClient.Query(context.TODO(), &dynamodb.QueryInput{
+		TableName:              aws.String("WalletTransactions"),
+		KeyConditionExpression: aws.String("PK = :pk"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":pk": &types.AttributeValueMemberS{Value: "WALLET#" + adminId},
+		},
+		ScanIndexForward: aws.Bool(false),
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch admin transactions"})
+		return
+	}
+
+	type txOut struct {
+		Id          string  `json:"id"`
+		Date        string  `json:"date"`
+		Type        string  `json:"type"`
+		Description string  `json:"description"`
+		Amount      float64 `json:"amount"`
+		Reference   string  `json:"reference"`
+		Status      string  `json:"status"`
+		WalletType  string  `json:"walletType"`
+		CreatedAt   string  `json:"createdAt"`
+	}
+
+	list := make([]txOut, 0, len(out.Items))
+	for _, item := range out.Items {
+		sk := ""
+		if v, ok := item["SK"].(*types.AttributeValueMemberS); ok {
+			sk = v.Value
+		}
+		// Skip non-ledger rows
+		if len(sk) < 3 || sk[:3] != "TX#" {
+			continue
+		}
+
+		row := txOut{WalletType: "Main", Status: "Success"}
+		if v, ok := item["id"].(*types.AttributeValueMemberS); ok {
+			row.Id = v.Value
+		} else {
+			row.Id = sk
+		}
+		if v, ok := item["date"].(*types.AttributeValueMemberS); ok {
+			row.Date = v.Value
+		}
+		if v, ok := item["type"].(*types.AttributeValueMemberS); ok {
+			row.Type = v.Value
+		}
+		if v, ok := item["description"].(*types.AttributeValueMemberS); ok {
+			row.Description = v.Value
+		}
+		if v, ok := item["reference"].(*types.AttributeValueMemberS); ok {
+			row.Reference = v.Value
+		}
+		if v, ok := item["status"].(*types.AttributeValueMemberS); ok {
+			row.Status = v.Value
+		}
+		if v, ok := item["walletType"].(*types.AttributeValueMemberS); ok && v.Value != "" {
+			row.WalletType = v.Value
+		}
+		if v, ok := item["createdAt"].(*types.AttributeValueMemberS); ok {
+			row.CreatedAt = v.Value
+			if row.Date == "" {
+				row.Date = v.Value
+			}
+		}
+		if v, ok := item["amount"].(*types.AttributeValueMemberN); ok {
+			row.Amount, _ = strconv.ParseFloat(v.Value, 64)
+		} else if v, ok := item["amount"].(*types.AttributeValueMemberS); ok {
+			row.Amount, _ = strconv.ParseFloat(v.Value, 64)
+		}
+		list = append(list, row)
+	}
+
+	c.JSON(http.StatusOK, list)
+}
