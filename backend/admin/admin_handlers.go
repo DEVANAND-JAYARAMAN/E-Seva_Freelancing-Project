@@ -15,19 +15,41 @@ import (
 )
 
 type DashboardStats struct {
-	TodayPayment float64 `json:"todayPayment"`
-	Pending      int     `json:"pending"`
-	Approved     int     `json:"approved"`
-	Projected    float64 `json:"projected"`
-	Resubmit     int     `json:"resubmit"`
-	InProcess    int     `json:"inProcess"`
-	Rejected     int     `json:"rejected"`
-	Customers    int     `json:"customers"`
-	Retailers    int     `json:"retailers"`
-	Distributors int     `json:"distributors"`
-	TotalProfit  float64 `json:"totalProfit"`
-	ProfitByDate map[string]float64 `json:"profitByDate"`
+	TodayPayment    float64            `json:"todayPayment"`
+	TodayTopups     float64            `json:"todayTopups"`
+	Pending         int                `json:"pending"`
+	Approved        int                `json:"approved"`
+	Projected       float64            `json:"projected"`
+	Resubmit        int                `json:"resubmit"`
+	InProcess       int                `json:"inProcess"`
+	Rejected        int                `json:"rejected"`
+	Customers       int                `json:"customers"`
+	Retailers       int                `json:"retailers"`
+	Distributors    int                `json:"distributors"`
+	TotalProfit     float64            `json:"totalProfit"`
+	ProfitByDate    map[string]float64 `json:"profitByDate"`
 	ProfitByService map[string]float64 `json:"profitByService"`
+}
+
+func istToday() (loc *time.Location, todayStr string) {
+	loc, err := time.LoadLocation("Asia/Kolkata")
+	if err != nil {
+		loc = time.FixedZone("IST", 5*3600+30*60)
+	}
+	return loc, time.Now().In(loc).Format("2006-01-02")
+}
+
+func dateKeyInLoc(raw string, loc *time.Location) string {
+	if raw == "" {
+		return ""
+	}
+	if t, err := time.Parse(time.RFC3339, raw); err == nil {
+		return t.In(loc).Format("2006-01-02")
+	}
+	if len(raw) >= 10 {
+		return raw[:10]
+	}
+	return ""
 }
 
 func GetDashboardStats(c *gin.Context) {
@@ -45,7 +67,7 @@ func GetDashboardStats(c *gin.Context) {
 		ProfitByDate:    make(map[string]float64),
 		ProfitByService: make(map[string]float64),
 	}
-	todayStr := time.Now().Format("2006-01-02")
+	loc, todayStr := istToday()
 
 	// Fetch dynamic services for profit calculation
 	dsOut, err := db.DynamoClient.Scan(context.TODO(), &dynamodb.ScanInput{
@@ -74,12 +96,12 @@ func GetDashboardStats(c *gin.Context) {
 		if val, ok := item["status"].(*types.AttributeValueMemberS); ok {
 			status = val.Value
 		}
-		
+
 		createdDate := ""
 		if val, ok := item["createdDate"].(*types.AttributeValueMemberS); ok {
 			createdDate = val.Value
 		}
-		
+
 		cost := 0.0
 		if val, ok := item["cost"].(*types.AttributeValueMemberN); ok {
 			importStr := val.Value
@@ -102,11 +124,11 @@ func GetDashboardStats(c *gin.Context) {
 			stats.Projected += cost
 		} else if status == "Approved" || status == "Completed" {
 			stats.Approved++
-			// if created/updated today, add to todayPayment
-			if len(createdDate) >= 10 && createdDate[:10] == todayStr {
+			// Service collections created today (IST)
+			if dateKeyInLoc(createdDate, loc) == todayStr {
 				stats.TodayPayment += cost
 			}
-			
+
 			// Calculate profit
 			officialCost := dsMap[serviceId]
 			if officialCost == 0 {
@@ -114,25 +136,82 @@ func GetDashboardStats(c *gin.Context) {
 			}
 			profit := cost - officialCost
 			stats.TotalProfit += profit
-			
+
 			dateKey := "Unknown"
-			if len(createdDate) >= 10 {
-				dateKey = createdDate[:10]
+			if dk := dateKeyInLoc(createdDate, loc); dk != "" {
+				dateKey = dk
 			}
 			stats.ProfitByDate[dateKey] += profit
-			
+
 			svcKey := serviceName
 			if svcKey == "" {
 				svcKey = "Unknown"
 			}
 			stats.ProfitByService[svcKey] += profit
-			
+
 		} else if status == "Resubmit" {
 			stats.Resubmit++
 		} else if status == "In Process" || status == "InProcess" || status == "Processing" || status == "Process" {
 			stats.InProcess++
 		} else if status == "Rejected" {
 			stats.Rejected++
+		}
+	}
+
+	// Include today's admin wallet topups (retailer/distributor credits) in Today Payment
+	outTx, err := db.DynamoClient.Scan(context.TODO(), &dynamodb.ScanInput{
+		TableName: aws.String("WalletTransactions"),
+	})
+	if err == nil {
+		for _, item := range outTx.Items {
+			txType := ""
+			if val, ok := item["type"].(*types.AttributeValueMemberS); ok {
+				txType = val.Value
+			}
+			if txType != "credit" {
+				continue
+			}
+
+			status := ""
+			if val, ok := item["status"].(*types.AttributeValueMemberS); ok {
+				status = val.Value
+			}
+			if status != "" && status != "Success" {
+				continue
+			}
+
+			createdAt := ""
+			if val, ok := item["createdAt"].(*types.AttributeValueMemberS); ok {
+				createdAt = val.Value
+			}
+			if dateKeyInLoc(createdAt, loc) != todayStr {
+				continue
+			}
+
+			amount := 0.0
+			if val, ok := item["amount"].(*types.AttributeValueMemberN); ok {
+				amount, _ = strconv.ParseFloat(val.Value, 64)
+			} else if val, ok := item["amount"].(*types.AttributeValueMemberS); ok {
+				amount, _ = strconv.ParseFloat(val.Value, 64)
+			}
+			if amount <= 0 {
+				continue
+			}
+
+			// Prefer admin topups; also count generic Success credits for today
+			ref := ""
+			if val, ok := item["reference"].(*types.AttributeValueMemberS); ok {
+				ref = val.Value
+			}
+			desc := ""
+			if val, ok := item["description"].(*types.AttributeValueMemberS); ok {
+				desc = val.Value
+			}
+			isAdminTopup := ref == "ADMIN" || desc == "Admin credit"
+			if isAdminTopup {
+				stats.TodayTopups += amount
+				stats.TodayPayment += amount
+			}
 		}
 	}
 
