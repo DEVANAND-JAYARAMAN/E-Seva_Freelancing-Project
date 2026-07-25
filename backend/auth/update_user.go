@@ -158,3 +158,95 @@ func UpdateUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "User updated successfully"})
 }
+
+// DeleteUser removes a user from Users and their Retailers/Distributors profile row.
+func DeleteUser(c *gin.Context) {
+	userId := c.Param("id")
+	if userId == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "User ID is required"})
+		return
+	}
+
+	role := c.Query("role")
+	if role == "" {
+		role = c.Query("Role")
+	}
+
+	transactItems := []types.TransactWriteItem{
+		{
+			Delete: &types.Delete{
+				TableName: aws.String("Users"),
+				Key: map[string]types.AttributeValue{
+					"PK": &types.AttributeValueMemberS{Value: "USER#" + userId},
+					"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+				},
+			},
+		},
+	}
+
+	switch role {
+	case "retailer":
+		transactItems = append(transactItems, types.TransactWriteItem{
+			Delete: &types.Delete{
+				TableName: aws.String("Retailers"),
+				Key: map[string]types.AttributeValue{
+					"PK": &types.AttributeValueMemberS{Value: "RETAILER#" + userId},
+					"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+				},
+			},
+		})
+	case "distributor":
+		transactItems = append(transactItems, types.TransactWriteItem{
+			Delete: &types.Delete{
+				TableName: aws.String("Distributors"),
+				Key: map[string]types.AttributeValue{
+					"PK": &types.AttributeValueMemberS{Value: "DISTRIBUTOR#" + userId},
+					"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+				},
+			},
+		})
+	default:
+		// Best-effort: try both role tables (non-transactional fallbacks below)
+	}
+
+	_, err := db.DynamoClient.TransactWriteItems(context.TODO(), &dynamodb.TransactWriteItemsInput{
+		TransactItems: transactItems,
+	})
+	if err != nil {
+		// Fall back to sequential deletes if transaction fails (e.g. missing role row)
+		log.Printf("DeleteUser transact failed for %s: %v — falling back", userId, err)
+		_, userErr := db.DynamoClient.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
+			TableName: aws.String("Users"),
+			Key: map[string]types.AttributeValue{
+				"PK": &types.AttributeValueMemberS{Value: "USER#" + userId},
+				"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+			},
+		})
+		if userErr != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete user", "details": userErr.Error()})
+			return
+		}
+	}
+
+	// Always attempt role-table cleanup (idempotent)
+	if role == "retailer" || role == "" {
+		_, _ = db.DynamoClient.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
+			TableName: aws.String("Retailers"),
+			Key: map[string]types.AttributeValue{
+				"PK": &types.AttributeValueMemberS{Value: "RETAILER#" + userId},
+				"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+			},
+		})
+	}
+	if role == "distributor" || role == "" {
+		_, _ = db.DynamoClient.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
+			TableName: aws.String("Distributors"),
+			Key: map[string]types.AttributeValue{
+				"PK": &types.AttributeValueMemberS{Value: "DISTRIBUTOR#" + userId},
+				"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+			},
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
+}

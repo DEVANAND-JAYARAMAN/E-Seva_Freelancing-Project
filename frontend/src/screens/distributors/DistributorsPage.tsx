@@ -8,6 +8,7 @@ import { DistributorStats } from "./DistributorStats";
 import { DistributorTable } from "./DistributorTable";
 import { DistributorForm } from "./DistributorForm";
 import type { Distributor } from "./types";
+import { apiUrl } from "../../utils/apiBase";
 
 // Premium Initial Seed Mockup Data for Distributors
 const initialDistributorsList: Distributor[] = [];
@@ -188,6 +189,24 @@ export function DistributorsPage() {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`${apiUrl(`users/${id}`)}?role=distributor`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setDistributors((prev) => prev.filter((item) => item.id !== id));
+        return true;
+      }
+      const errData = await res.json().catch(() => ({}));
+      console.error("Failed to delete distributor:", res.status, errData);
+      return false;
+    } catch (err) {
+      console.error("Failed to delete distributor", err);
+      return false;
+    }
+  };
+
   // Trigger form for Edit
   const handleEditClick = (distributor: Distributor) => {
     setSelectedDistributor(distributor);
@@ -223,6 +242,7 @@ export function DistributorsPage() {
           onEdit={handleEditClick}
           onToggleStatus={handleToggleStatus}
           onAddMoney={handleAddMoney}
+          onDelete={handleDelete}
         />
 
         {/* Add/Edit Form Modal */}

@@ -65,6 +65,9 @@ func main() {
 		api.GET("/retailers", auth.GetRetailers)
 		api.GET("/distributors", auth.GetDistributors)
 		api.PUT("/users/:id", auth.UpdateUser)
+		api.PUT("/users/:id/", auth.UpdateUser)
+		api.DELETE("/users/:id", auth.DeleteUser)
+		api.DELETE("/users/:id/", auth.DeleteUser)
 
 		crmGroup := api.Group("/crm")
 		{

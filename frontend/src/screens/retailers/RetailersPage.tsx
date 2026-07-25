@@ -8,6 +8,7 @@ import { RetailerStats } from "./RetailerStats";
 import { RetailerTable } from "./RetailerTable";
 import { RetailerForm } from "./RetailerForm";
 import type { Retailer } from "./types";
+import { apiUrl } from "../../utils/apiBase";
 
 // Premium Initial Seed Mockup Data
 const initialRetailersList: Retailer[] = [];
@@ -189,6 +190,24 @@ export function RetailersPage() {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`${apiUrl(`users/${id}`)}?role=retailer`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setRetailers((prev) => prev.filter((item) => item.id !== id));
+        return true;
+      }
+      const errData = await res.json().catch(() => ({}));
+      console.error("Failed to delete retailer:", res.status, errData);
+      return false;
+    } catch (err) {
+      console.error("Failed to delete retailer", err);
+      return false;
+    }
+  };
+
   // Trigger form for Edit
   const handleEditClick = (retailer: Retailer) => {
     setSelectedRetailer(retailer);
@@ -224,6 +243,7 @@ export function RetailersPage() {
           onEdit={handleEditClick}
           onToggleStatus={handleToggleStatus}
           onAddMoney={handleAddMoney}
+          onDelete={handleDelete}
         />
 
         {/* Add/Edit Form Modal */}

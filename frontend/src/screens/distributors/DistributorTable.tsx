@@ -11,6 +11,7 @@ import {
   Fingerprint,
   Activity,
   Wallet,
+  Trash2,
 } from "lucide-react";
 import Link from "next/link";
 import Swal from "sweetalert2";
@@ -21,6 +22,7 @@ type DistributorTableProps = {
   onEdit: (distributor: Distributor) => void;
   onToggleStatus: (id: string) => void;
   onAddMoney: (id: string, amount: number) => Promise<boolean>;
+  onDelete: (id: string) => Promise<boolean> | void;
 };
 
 export function DistributorTable({
@@ -28,6 +30,7 @@ export function DistributorTable({
   onEdit,
   onToggleStatus,
   onAddMoney,
+  onDelete,
 }: DistributorTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<
@@ -312,6 +315,45 @@ export function DistributorTable({
                         title="Add Money"
                       >
                         <Wallet size={13} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          Swal.fire({
+                            title: "Delete distributor?",
+                            text: `Remove ${distributor.name}? This cannot be undone.`,
+                            icon: "warning",
+                            showCancelButton: true,
+                            confirmButtonColor: "#b91c1c",
+                            cancelButtonColor: "#64748b",
+                            confirmButtonText: "Yes, delete",
+                            showLoaderOnConfirm: true,
+                            preConfirm: async () => {
+                              const ok = await onDelete(distributor.id);
+                              if (!ok) {
+                                Swal.showValidationMessage(
+                                  "Failed to delete distributor.",
+                                );
+                                return false;
+                              }
+                              return true;
+                            },
+                            allowOutsideClick: () => !Swal.isLoading(),
+                          }).then((result) => {
+                            if (result.isConfirmed) {
+                              Swal.fire({
+                                title: "Deleted!",
+                                text: `${distributor.name} has been removed.`,
+                                icon: "success",
+                                confirmButtonColor: "#005c3a",
+                              });
+                            }
+                          });
+                        }}
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-rose-100 dark:border-rose-900/30 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-rose-600 hover:text-rose-700 transition-colors"
+                        title="Delete distributor"
+                      >
+                        <Trash2 size={13} />
                       </button>
                     </div>
                   </td>
