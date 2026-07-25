@@ -25,7 +25,7 @@ export function StatsGrid({ stats }: { stats?: any }) {
   };
 
   const descMap: Record<string, string> = {
-    "today payment": "Daily collection",
+    "today payment": "Collected today only",
     "total profit": "Overall Earnings",
     pending: "Awaiting Verification",
     "in process": "Currently Processing",
@@ -35,17 +35,17 @@ export function StatsGrid({ stats }: { stats?: any }) {
     rejected: "Declined Requests",
   };
 
-  // Unique gradient per card label
+  // Brand-aligned tones — Today Payment = blue (not green like Main Wallet)
   const cardBg: Record<string, string> = {
-    mint: "bg-gradient-to-br from-[#005c3a] to-[#004229] dark:from-[#08291c] dark:to-[#02150e]",
+    mint: "bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] dark:from-[#1e3a8a] dark:to-[#172554]",
     amber:
-      "bg-gradient-to-br from-[#7c2d12] to-[#451a03] dark:from-[#431407] dark:to-[#270b04]",
-    sky: "bg-gradient-to-br from-[#005274] to-[#003850] dark:from-[#002e42] dark:to-[#001c29]",
+      "bg-gradient-to-br from-[#d97706] to-[#b45309] dark:from-[#92400e] dark:to-[#78350f]",
+    sky: "bg-gradient-to-br from-[#0284c7] to-[#0369a1] dark:from-[#075985] dark:to-[#0c4a6e]",
     green:
-      "bg-gradient-to-br from-[#047857] to-[#064e3b] dark:from-[#064e3b] dark:to-[#022c22]",
-    rose: "bg-gradient-to-br from-[#881337] to-[#4c0519] dark:from-[#4c0519] dark:to-[#2c030e]",
+      "bg-gradient-to-br from-[#10b981] to-[#059669] dark:from-[#047857] dark:to-[#065f46]",
+    rose: "bg-gradient-to-br from-[#e11d48] to-[#be123c] dark:from-[#9f1239] dark:to-[#881337]",
     violet:
-      "bg-gradient-to-br from-[#4c1d95] to-[#2e1065] dark:from-[#2e1065] dark:to-[#1e0b3e]",
+      "bg-gradient-to-br from-[#ea580c] to-[#c2410c] dark:from-[#9a3412] dark:to-[#7c2d12]",
   };
 
   return (
@@ -99,28 +99,39 @@ export function StatsGrid({ stats }: { stats?: any }) {
 
         return (
           <article
-            className={`flex items-center justify-between ${bgStyle} rounded-3xl p-5 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer`}
+            className={`flex items-center justify-between ${bgStyle} rounded-2xl px-4 py-4 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 cursor-pointer min-h-[5.5rem] ${
+              labelLower === "today payment"
+                ? "ring-2 ring-[#93c5fd]/50 ring-offset-2 ring-offset-[#e4f1ee] dark:ring-offset-[#070b13]"
+                : ""
+            }`}
             key={stat.label}
             onClick={() => targetPath && router.push(targetPath)}
           >
             <div className="space-y-1 min-w-0">
-              <p className="text-[10px] font-extrabold uppercase tracking-wider text-white/70 truncate">
-                {stat.label}
-              </p>
-              <strong className="block text-2xl font-black text-white tracking-tight">
+              <div className="flex items-center gap-2">
+                <p className="text-[11px] font-black uppercase tracking-wider text-white truncate">
+                  {stat.label}
+                </p>
+                {labelLower === "today payment" && (
+                  <span className="shrink-0 rounded-md bg-white/20 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-white">
+                    Today
+                  </span>
+                )}
+              </div>
+              <strong className="block text-2xl font-black text-white tracking-tight leading-tight">
                 {isMoney && (
-                  <span className="text-sm font-semibold text-white/80 mr-0.5">
+                  <span className="text-base font-black text-white mr-0.5">
                     ₹
                   </span>
                 )}
                 {dynamicValue}
               </strong>
-              <span className="text-[10px] text-white/70 font-semibold block truncate">
+              <span className="text-[11px] text-white font-bold block truncate">
                 {description}
               </span>
             </div>
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-white">
-              <Icon size={18} />
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white">
+              <Icon size={20} />
             </span>
           </article>
         );

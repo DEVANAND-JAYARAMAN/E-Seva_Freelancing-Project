@@ -504,17 +504,17 @@ export function WalletPage() {
         </div>
 
         {/* Balance Cards Display */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           {/* Main Wallet Card */}
-          <article className="relative overflow-hidden bg-gradient-to-br from-[#005c3a] to-[#004229] dark:from-[#08291c] dark:to-[#02150e] text-white rounded-3xl p-6 shadow-md shadow-emerald-900/10 flex flex-col justify-between min-h-[175px] group">
-            <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 h-32 w-32 rounded-full bg-white/5 pointer-events-none group-hover:scale-110 transition-transform duration-500" />
+          <article className="relative overflow-hidden bg-gradient-to-br from-[#005c3a] to-[#004229] dark:from-[#08291c] dark:to-[#02150e] text-white rounded-2xl px-4 py-3.5 shadow-md shadow-emerald-900/10 flex flex-col justify-between min-h-[7.5rem] group">
+            <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 h-24 w-24 rounded-full bg-white/5 pointer-events-none group-hover:scale-110 transition-transform duration-500" />
             <div className="flex justify-between items-start">
               <div>
-                <p className="text-xs font-extrabold tracking-widest text-emerald-200/80 uppercase">
+                <p className="text-[10px] font-extrabold tracking-widest text-emerald-200/80 uppercase">
                   MAIN WALLET
                 </p>
-                <h3 className="text-3xl font-black mt-2 tracking-tight">
-                  <span className="text-xl font-bold text-emerald-300 mr-0.5">
+                <h3 className="text-xl font-black mt-1 tracking-tight">
+                  <span className="text-sm font-bold text-emerald-300 mr-0.5">
                     ₹
                   </span>
                   {mainBalance.toLocaleString("en-IN", {
@@ -522,36 +522,36 @@ export function WalletPage() {
                   })}
                 </h3>
               </div>
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-white backdrop-blur-md">
-                <Wallet size={18} />
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white backdrop-blur-md">
+                <Wallet size={15} />
               </span>
             </div>
 
-            <div className="flex justify-between items-end mt-4">
-              <span className="text-[10px] font-bold text-emerald-300 bg-white/10 px-2.5 py-1 rounded-lg">
-                🟢 Active Account
+            <div className="flex justify-between items-end mt-2.5">
+              <span className="text-[9px] font-bold text-emerald-300 bg-white/10 px-2 py-0.5 rounded-md">
+                Active Account
               </span>
               <button
                 onClick={() => openRechargeModal()}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-50 text-[#005c3a] hover:bg-emerald-50 text-xs font-extrabold rounded-xl transition-all duration-200 active:scale-95 shadow-sm"
+                className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-50 text-[#005c3a] hover:bg-emerald-50 text-[10px] font-extrabold rounded-lg transition-all duration-200 active:scale-95 shadow-sm"
               >
-                <Plus size={14} className="stroke-[3]" />
+                <Plus size={12} className="stroke-[3]" />
                 Recharge
               </button>
             </div>
           </article>
 
           {/* Aggregate Total Credit Card */}
-          <article className="flex items-center gap-4 bg-gradient-to-br from-[#005c3a] to-[#004229] dark:from-[#08291c] dark:to-[#02150e] rounded-3xl p-5 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-white">
-              <ArrowUpRight size={22} className="stroke-[2.5]" />
+          <article className="flex items-center gap-3 bg-gradient-to-br from-[#005c3a] to-[#004229] dark:from-[#08291c] dark:to-[#02150e] rounded-2xl px-4 py-3.5 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 min-h-[7.5rem]">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white">
+              <ArrowUpRight size={17} className="stroke-[2.5]" />
             </span>
             <div className="min-w-0">
-              <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-white/70">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-white/70">
                 TOTAL CREDITS
               </p>
-              <strong className="block text-xl sm:text-2xl font-extrabold text-white tracking-tight mt-0.5">
-                <span className="text-sm font-semibold text-white/70 mr-0.5">
+              <strong className="block text-lg font-extrabold text-white tracking-tight mt-0.5">
+                <span className="text-xs font-semibold text-white/70 mr-0.5">
                   ₹
                 </span>
                 {stats.totalCredits.toLocaleString("en-IN")}
@@ -560,16 +560,16 @@ export function WalletPage() {
           </article>
 
           {/* Aggregate Total Debit Card */}
-          <article className="flex items-center gap-4 bg-gradient-to-br from-[#881337] to-[#4c0519] dark:from-[#4c0519] dark:to-[#2c030e] rounded-3xl p-5 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-white">
-              <ArrowDownLeft size={22} className="stroke-[2.5]" />
+          <article className="flex items-center gap-3 bg-gradient-to-br from-[#881337] to-[#4c0519] dark:from-[#4c0519] dark:to-[#2c030e] rounded-2xl px-4 py-3.5 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 min-h-[7.5rem]">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white">
+              <ArrowDownLeft size={17} className="stroke-[2.5]" />
             </span>
             <div className="min-w-0">
-              <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-white/70">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-white/70">
                 TOTAL DEBITS
               </p>
-              <strong className="block text-xl sm:text-2xl font-extrabold text-white tracking-tight mt-0.5">
-                <span className="text-sm font-semibold text-white/70 mr-0.5">
+              <strong className="block text-lg font-extrabold text-white tracking-tight mt-0.5">
+                <span className="text-xs font-semibold text-white/70 mr-0.5">
                   ₹
                 </span>
                 {stats.totalDebits.toLocaleString("en-IN")}

@@ -2,6 +2,17 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .sidebar-shell {
+    background: linear-gradient(180deg, #f7fbf8 0%, #eef6f1 42%, #f4faf6 100%);
+  }
+
+  .dark .sidebar-shell {
+    background: linear-gradient(180deg, #0a1210 0%, #090d16 50%, #0b1411 100%);
+  }
+}
+
+
 @layer base {
   body {
     @apply text-slate-900 dark:text-slate-100 antialiased selection:bg-emerald-100 selection:text-emerald-900 min-h-screen transition-colors duration-300;
