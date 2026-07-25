@@ -123,9 +123,11 @@ func CreditAdminFromPartnerRecharge(amount float64, fromUserId, reference, descr
 		"amount":      amount,
 		"reference":   "PARTNER_RECHARGE",
 		"partnerRef":  reference,
+		"title":       "Partner Recharge",
 		"status":      "Success",
 		"walletType":  "Main",
 		"fromUserId":  fromUserId,
+		"toUserId":    adminId,
 		"createdAt":   now.Format(time.RFC3339),
 	}
 	item, _ := attributevalue.MarshalMap(txRecord)
@@ -137,6 +139,81 @@ func CreditAdminFromPartnerRecharge(amount float64, fromUserId, reference, descr
 	}
 
 	log.Printf("Credited admin %s with ₹%.2f from partner recharge %s", adminId, amount, fromUserId)
+}
+
+// AdminAddDummyMoney credits admin Main Wallet with a manual/dummy amount (ADD MONEY).
+func AdminAddDummyMoney(amount float64) (float64, error) {
+	if amount <= 0 {
+		return 0, fmt.Errorf("invalid amount")
+	}
+	adminId := ResolveAdminUserId()
+	if adminId == "" {
+		return 0, fmt.Errorf("admin wallet not found")
+	}
+
+	now := time.Now().UTC()
+	amt := strconv.FormatFloat(amount, 'f', 2, 64)
+	ownerPK := "WALLET#" + adminId
+
+	_, err := db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+		TableName: aws.String("Wallets"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: ownerPK},
+			"SK": &types.AttributeValueMemberS{Value: "TYPE#Main"},
+		},
+		UpdateExpression: aws.String("ADD balance :amt, totalCredits :amt SET updatedAt = :ts"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":amt": &types.AttributeValueMemberN{Value: amt},
+			":ts":  &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
+		},
+	})
+	if err != nil {
+		return 0, fmt.Errorf("admin wallet credit failed: %w", err)
+	}
+
+	_, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+		TableName: aws.String("Users"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: "USER#" + adminId},
+			"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+		},
+		UpdateExpression: aws.String("SET walletBalance = if_not_exists(walletBalance, :zero) + :amt, updatedAt = :ts"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":amt":  &types.AttributeValueMemberN{Value: amt},
+			":zero": &types.AttributeValueMemberN{Value: "0"},
+			":ts":   &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
+		},
+	})
+	if err != nil {
+		log.Printf("AdminAddDummyMoney user balance failed: %v", err)
+	}
+
+	txId := "TX#" + now.Format("20060102150405") + "#ADD"
+	txRecord := map[string]interface{}{
+		"PK":          ownerPK,
+		"SK":          txId,
+		"id":          txId,
+		"date":        now.Format("2006-01-02 15:04:05"),
+		"type":        "credit",
+		"title":       "ADD MONEY",
+		"description": "ADD MONEY",
+		"amount":      amount,
+		"reference":   "ADMIN_DUMMY",
+		"status":      "Success",
+		"walletType":  "Main",
+		"fromUserId":  "ADMIN",
+		"toUserId":    adminId,
+		"createdAt":   now.Format(time.RFC3339),
+	}
+	item, _ := attributevalue.MarshalMap(txRecord)
+	_, _ = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+		TableName: aws.String("WalletTransactions"),
+		Item:      item,
+	})
+
+	bal := GetAdminWalletBalance()
+	log.Printf("Admin dummy ADD MONEY ₹%.2f — balance now ₹%.2f", amount, bal)
+	return bal, nil
 }
 
 // DebitAdminForPartnerCredit removes amount from admin wallet when admin tops up a retailer/distributor.
@@ -206,8 +283,10 @@ func DebitAdminForPartnerCredit(amount float64, toUserId string) error {
 		"description": fmt.Sprintf("Transfer to partner %s", toUserId),
 		"amount":      amount,
 		"reference":   "ADMIN_TRANSFER",
+		"title":       "Transfer to Partner",
 		"status":      "Success",
 		"walletType":  "Main",
+		"fromUserId":  adminId,
 		"toUserId":    toUserId,
 		"createdAt":   now.Format(time.RFC3339),
 	}

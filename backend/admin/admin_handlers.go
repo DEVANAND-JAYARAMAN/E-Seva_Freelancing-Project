@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"eservice-backend/db"
@@ -233,7 +234,7 @@ func GetDashboardStats(c *gin.Context) {
 func GetAdminWalletTransactions(c *gin.Context) {
 	adminId := ResolveAdminUserId()
 	if adminId == "" {
-		c.JSON(http.StatusOK, []any{})
+		c.JSON(http.StatusOK, gin.H{"balance": 0, "transactions": []any{}})
 		return
 	}
 
@@ -251,15 +252,22 @@ func GetAdminWalletTransactions(c *gin.Context) {
 	}
 
 	type txOut struct {
-		Id          string  `json:"id"`
-		Date        string  `json:"date"`
-		Type        string  `json:"type"`
-		Description string  `json:"description"`
-		Amount      float64 `json:"amount"`
-		Reference   string  `json:"reference"`
-		Status      string  `json:"status"`
-		WalletType  string  `json:"walletType"`
-		CreatedAt   string  `json:"createdAt"`
+		Id               string  `json:"id"`
+		Date             string  `json:"date"`
+		DateTime         string  `json:"dateTime"`
+		Type             string  `json:"type"`
+		Title            string  `json:"title"`
+		Description      string  `json:"description"`
+		Amount           float64 `json:"amount"`
+		Debit            float64 `json:"debit"`
+		Credit           float64 `json:"credit"`
+		AvailableBalance float64 `json:"availableBalance"`
+		Reference        string  `json:"reference"`
+		Status           string  `json:"status"`
+		WalletType       string  `json:"walletType"`
+		FromUserId       string  `json:"fromUserId"`
+		ToUserId         string  `json:"toUserId"`
+		CreatedAt        string  `json:"createdAt"`
 	}
 
 	list := make([]txOut, 0, len(out.Items))
@@ -268,7 +276,6 @@ func GetAdminWalletTransactions(c *gin.Context) {
 		if v, ok := item["SK"].(*types.AttributeValueMemberS); ok {
 			sk = v.Value
 		}
-		// Skip non-ledger rows
 		if len(sk) < 3 || sk[:3] != "TX#" {
 			continue
 		}
@@ -281,12 +288,19 @@ func GetAdminWalletTransactions(c *gin.Context) {
 		}
 		if v, ok := item["date"].(*types.AttributeValueMemberS); ok {
 			row.Date = v.Value
+			row.DateTime = v.Value
 		}
 		if v, ok := item["type"].(*types.AttributeValueMemberS); ok {
 			row.Type = v.Value
 		}
+		if v, ok := item["title"].(*types.AttributeValueMemberS); ok {
+			row.Title = v.Value
+		}
 		if v, ok := item["description"].(*types.AttributeValueMemberS); ok {
 			row.Description = v.Value
+			if row.Title == "" {
+				row.Title = v.Value
+			}
 		}
 		if v, ok := item["reference"].(*types.AttributeValueMemberS); ok {
 			row.Reference = v.Value
@@ -297,10 +311,23 @@ func GetAdminWalletTransactions(c *gin.Context) {
 		if v, ok := item["walletType"].(*types.AttributeValueMemberS); ok && v.Value != "" {
 			row.WalletType = v.Value
 		}
+		if v, ok := item["fromUserId"].(*types.AttributeValueMemberS); ok {
+			row.FromUserId = v.Value
+		}
+		if v, ok := item["toUserId"].(*types.AttributeValueMemberS); ok {
+			row.ToUserId = v.Value
+		}
 		if v, ok := item["createdAt"].(*types.AttributeValueMemberS); ok {
 			row.CreatedAt = v.Value
+			if row.DateTime == "" {
+				if t, err := time.Parse(time.RFC3339, v.Value); err == nil {
+					row.DateTime = t.In(time.FixedZone("IST", 5*3600+30*60)).Format("2006-01-02 15:04:05")
+				} else {
+					row.DateTime = v.Value
+				}
+			}
 			if row.Date == "" {
-				row.Date = v.Value
+				row.Date = row.DateTime
 			}
 		}
 		if v, ok := item["amount"].(*types.AttributeValueMemberN); ok {
@@ -308,10 +335,60 @@ func GetAdminWalletTransactions(c *gin.Context) {
 		} else if v, ok := item["amount"].(*types.AttributeValueMemberS); ok {
 			row.Amount, _ = strconv.ParseFloat(v.Value, 64)
 		}
+		if strings.EqualFold(row.Type, "debit") {
+			row.Debit = row.Amount
+		} else {
+			row.Credit = row.Amount
+			row.Type = "credit"
+		}
+		if row.FromUserId == "" && row.Reference == "ADMIN_DUMMY" {
+			row.FromUserId = "ADMIN"
+		}
+		if row.ToUserId == "" {
+			row.ToUserId = adminId
+		}
+		if row.Title == "" {
+			row.Title = row.Description
+		}
 		list = append(list, row)
 	}
 
-	c.JSON(http.StatusOK, list)
+	// Running available balance (newest first)
+	bal := GetAdminWalletBalance()
+	for i := range list {
+		list[i].AvailableBalance = bal
+		if strings.EqualFold(list[i].Type, "credit") {
+			bal -= list[i].Amount
+		} else {
+			bal += list[i].Amount
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"balance":      GetAdminWalletBalance(),
+		"transactions": list,
+	})
+}
+
+// AdminAddMoneyHandler POST /api/admin/wallet/add-money  { "amount": 100 }
+func AdminAddMoneyHandler(c *gin.Context) {
+	var req struct {
+		Amount float64 `json:"amount" binding:"required,gt=0"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	bal, err := AdminAddDummyMoney(req.Amount)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"message":            "Money added to admin wallet",
+		"amount":             req.Amount,
+		"adminWalletBalance": bal,
+	})
 }
 
 // GetDailyPayments aggregates successful partner recharges by IST calendar day.
