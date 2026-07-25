@@ -21,6 +21,7 @@ import { InputField, SubmitButton } from "../services/form/FormFields";
 import { validateField, PATTERNS } from "../services/form/validators";
 import { ServiceNavigation } from "../../components/ServiceNavigation/ServiceNavigation";
 import { useAuth } from "../../store/context/AuthContext";
+import { useFormEdit } from "../../store/context/FormEditContext";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
 
 // Interface for PDF services definition
@@ -90,6 +91,9 @@ const pdfServicesList: PdfService[] = [
 export function PdfPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
+  const [activeForm, setActiveForm] = useState<string | null>(null);
+  
+  const { overrides } = useFormEdit(activeForm || undefined);
 
   const [servicesList, setServicesList] =
     useState<PdfService[]>(pdfServicesList);
@@ -167,7 +171,6 @@ export function PdfPage() {
   };
 
   // Tab/Screen navigation states
-  const [activeForm, setActiveForm] = useState<string | null>(null);
   const [activeListView, setActiveListView] = useState<string | null>(null); // To view the list for a specific service
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -1072,6 +1075,24 @@ export function PdfPage() {
                           </div>
                         </>
                       )}
+                      
+                      {/* Dynamically Added Fields from FormEditContext */}
+                      {overrides?.addedFields?.map((field) => (
+                        <div key={field.name} className="md:col-span-2">
+                          <InputField
+                            name={field.name}
+                            label={field.label}
+                            type={(field.type as any) || "text"}
+                            placeholder={field.placeholder}
+                            value={formData[field.name] || ""}
+                            onChange={(val) =>
+                              handleFieldChange(field.name, val as string)
+                            }
+                            error={errors[field.name]}
+                            disabled={isSubmitting}
+                          />
+                        </div>
+                      ))}
                     </div>
                   </div>
 

@@ -13,6 +13,7 @@ import {
 } from "./FormFields";
 
 interface DynamicFormProps {
+  formId?: string;
   schema: FormSchema;
   onSubmit: (data: Record<string, string>) => void;
   onCancel: () => void;
@@ -20,12 +21,13 @@ interface DynamicFormProps {
 }
 
 export const DynamicForm: React.FC<DynamicFormProps> = ({
+  formId,
   schema,
   onSubmit,
   onCancel,
   isLoading = false,
 }) => {
-  const { overrides } = useFormEdit();
+  const { overrides } = useFormEdit(formId);
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
 

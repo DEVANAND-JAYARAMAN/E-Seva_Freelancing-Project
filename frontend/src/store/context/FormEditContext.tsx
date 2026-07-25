@@ -22,7 +22,16 @@ export interface FormOverrides {
   addedFields?: AddedField[];
 }
 
-interface FormEditContextType {
+interface FormEditContextState {
+  isEditMode: boolean;
+  setIsEditMode: (mode: boolean) => void;
+  isAdmin: boolean;
+  allOverrides: Record<string, FormOverrides>;
+  saveOverrides: (updated: Record<string, FormOverrides>) => void;
+  defaultFormId: string;
+}
+
+export interface FormEditContextType {
   isEditMode: boolean;
   setIsEditMode: (mode: boolean) => void;
   isAdmin: boolean;
@@ -34,7 +43,7 @@ interface FormEditContextType {
   addField: (label: string, placeholder: string, type: string) => void;
 }
 
-const FormEditContext = createContext<FormEditContextType | undefined>(
+const FormEditContext = createContext<FormEditContextState | undefined>(
   undefined,
 );
 
@@ -52,7 +61,7 @@ export const FormEditProvider: React.FC<{ children: React.ReactNode }> = ({
   const isAdmin = user?.role === "admin";
 
   // Use pathname as the unique identifier for the current form/page
-  const formId = pathname || "default";
+  const defaultFormId = pathname || "default";
 
   // Turn off edit mode and show SweetAlert on route navigation
   useEffect(() => {
@@ -109,6 +118,46 @@ export const FormEditProvider: React.FC<{ children: React.ReactNode }> = ({
       console.error("Failed to save form overrides to backend:", e);
     }
   };
+
+  // Automatically turn off edit mode if user changes or log out
+  useEffect(() => {
+    if (!isAdmin) {
+      setIsEditMode(false);
+    }
+  }, [isAdmin]);
+
+  return (
+    <FormEditContext.Provider
+      value={{
+        isEditMode,
+        setIsEditMode,
+        isAdmin,
+        allOverrides,
+        saveOverrides,
+        defaultFormId,
+      }}
+    >
+      {children}
+    </FormEditContext.Provider>
+  );
+};
+
+export const useFormEdit = (customFormId?: string | null): FormEditContextType => {
+  const context = useContext(FormEditContext);
+  if (!context) {
+    throw new Error("useFormEdit must be used within a FormEditProvider");
+  }
+
+  const {
+    allOverrides,
+    saveOverrides,
+    defaultFormId,
+    isEditMode,
+    setIsEditMode,
+    isAdmin,
+  } = context;
+
+  const formId = customFormId || defaultFormId;
 
   // Get current form overrides or fallback to empty structure
   const currentOverrides: FormOverrides = allOverrides[formId] || {
@@ -197,36 +246,15 @@ export const FormEditProvider: React.FC<{ children: React.ReactNode }> = ({
     saveOverrides(updated);
   };
 
-  // Automatically turn off edit mode if user changes or log out
-  useEffect(() => {
-    if (!isAdmin) {
-      setIsEditMode(false);
-    }
-  }, [isAdmin]);
-
-  return (
-    <FormEditContext.Provider
-      value={{
-        isEditMode,
-        setIsEditMode,
-        isAdmin,
-        overrides: currentOverrides,
-        deleteField,
-        restoreField,
-        editField,
-        resetFormConfig,
-        addField,
-      }}
-    >
-      {children}
-    </FormEditContext.Provider>
-  );
-};
-
-export const useFormEdit = () => {
-  const context = useContext(FormEditContext);
-  if (!context) {
-    throw new Error("useFormEdit must be used within a FormEditProvider");
-  }
-  return context;
+  return {
+    isEditMode,
+    setIsEditMode,
+    isAdmin,
+    overrides: currentOverrides,
+    deleteField,
+    restoreField,
+    editField,
+    resetFormConfig,
+    addField,
+  };
 };

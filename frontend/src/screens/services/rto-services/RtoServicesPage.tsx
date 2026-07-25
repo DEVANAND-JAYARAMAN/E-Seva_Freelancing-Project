@@ -12,6 +12,7 @@ import { DlToCell } from "./DlToCell";
 import { ServiceCard } from "../ServiceCard";
 import { useAuth } from "../../../store/context/AuthContext";
 import Swal from "sweetalert2";
+import { DynamicForm } from "../form/DynamicForm";
 
 interface RtoService {
   id: string;
@@ -438,8 +439,18 @@ export function RtoServicesPage() {
                 <ChassisToRc onCancel={() => setActiveForm(null)} />
               ) : activeForm === "engine-to-rc" ? (
                 <EngineToRc onCancel={() => setActiveForm(null)} />
-              ) : (
+              ) : activeForm === "dl-to-cell" ? (
                 <DlToCell onCancel={() => setActiveForm(null)} />
+              ) : (
+                <DynamicForm 
+                  formId={activeForm}
+                  schema={{ 
+                    title: rtoServicesList.find(s => s.id === activeForm)?.name || "Custom Service", 
+                    sections: [{ title: "Additional Details", fields: [] }] 
+                  }} 
+                  onSubmit={() => setActiveForm(null)} 
+                  onCancel={() => setActiveForm(null)} 
+                />
               )}
             </div>
           </div>
