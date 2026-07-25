@@ -13,20 +13,25 @@ export function DashboardPage({
 }: {
   forceRole?: "admin" | "retailer" | "distributor";
 }) {
-  const { user } = useAuth();
+  const { user, updateWallet } = useAuth();
   const role = forceRole || user?.role;
   const [stats, setStats] = useState<any>(null);
 
   useEffect(() => {
     if (role === "admin") {
       fetch(
-        `${(process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8080").replace(/(?:\/api|\/)+$/, "")}/api/admin/dashboard`,
+        `${(process.env.NEXT_PUBLIC_API_URL || "https://api.thuruvancommunications.com").replace(/(?:\/api|\/)+$/, "")}/api/admin/dashboard`,
       )
         .then((res) => res.json())
-        .then((data) => setStats(data))
+        .then((data) => {
+          setStats(data);
+          if (typeof data?.adminWalletBalance === "number") {
+            updateWallet(Number(data.adminWalletBalance));
+          }
+        })
         .catch((err) => console.error("Failed to load dashboard stats", err));
     }
-  }, [role]);
+  }, [role, updateWallet]);
 
   // Fail closed: only admin sees admin dashboard
   if (role !== "admin") {

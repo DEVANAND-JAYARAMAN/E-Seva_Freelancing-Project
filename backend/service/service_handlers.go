@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"eservice-backend/admin"
 	"eservice-backend/db"
 	"eservice-backend/models"
 
@@ -1056,7 +1057,15 @@ func ProcessMugavaiPayment(c *gin.Context) (bool, string) {
 	})
 
 	log.Printf("[Payment Processing] Successfully credited ₹%.2f to user %s", parsedAmount, userId)
-	
+
+	// Mirror partner UPI recharge into admin Main Wallet
+	admin.CreditAdminFromPartnerRecharge(
+		parsedAmount,
+		userId,
+		actualUTR,
+		fmt.Sprintf("Partner gateway recharge (UTR: %s) from %s", actualUTR, userId),
+	)
+
 	notifId := generateId("NOTIF")
 	notif := models.Notification{
 		PK:        "USER#ADMIN",
@@ -1064,11 +1073,11 @@ func ProcessMugavaiPayment(c *gin.Context) (bool, string) {
 		Id:        notifId,
 		UserId:    "ADMIN",
 		Title:     "Wallet Recharged",
-		Message:   fmt.Sprintf("User %s recharged wallet with %.2f (UTR: %s)", userId, parsedAmount, actualUTR),
+		Message:   fmt.Sprintf("User %s recharged wallet with %.2f (UTR: %s) — credited to admin wallet", userId, parsedAmount, actualUTR),
 		Type:      "success",
 		IsRead:    false,
 		CreatedAt: now.Format(time.RFC3339),
-		Link:      "/status", 
+		Link:      "/wallets",
 	}
 	notifItem, _ := attributevalue.MarshalMap(notif)
 	_, _ = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{

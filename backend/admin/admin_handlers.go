@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"eservice-backend/db"
@@ -15,20 +16,21 @@ import (
 )
 
 type DashboardStats struct {
-	TodayPayment    float64            `json:"todayPayment"`
-	TodayTopups     float64            `json:"todayTopups"`
-	Pending         int                `json:"pending"`
-	Approved        int                `json:"approved"`
-	Projected       float64            `json:"projected"`
-	Resubmit        int                `json:"resubmit"`
-	InProcess       int                `json:"inProcess"`
-	Rejected        int                `json:"rejected"`
-	Customers       int                `json:"customers"`
-	Retailers       int                `json:"retailers"`
-	Distributors    int                `json:"distributors"`
-	TotalProfit     float64            `json:"totalProfit"`
-	ProfitByDate    map[string]float64 `json:"profitByDate"`
-	ProfitByService map[string]float64 `json:"profitByService"`
+	TodayPayment       float64            `json:"todayPayment"`
+	TodayTopups        float64            `json:"todayTopups"`
+	AdminWalletBalance float64            `json:"adminWalletBalance"`
+	Pending            int                `json:"pending"`
+	Approved           int                `json:"approved"`
+	Projected          float64            `json:"projected"`
+	Resubmit           int                `json:"resubmit"`
+	InProcess          int                `json:"inProcess"`
+	Rejected           int                `json:"rejected"`
+	Customers          int                `json:"customers"`
+	Retailers          int                `json:"retailers"`
+	Distributors       int                `json:"distributors"`
+	TotalProfit        float64            `json:"totalProfit"`
+	ProfitByDate       map[string]float64 `json:"profitByDate"`
+	ProfitByService    map[string]float64 `json:"profitByService"`
 }
 
 func istToday() (loc *time.Location, todayStr string) {
@@ -198,17 +200,16 @@ func GetDashboardStats(c *gin.Context) {
 				continue
 			}
 
-			// Prefer admin topups; also count generic Success credits for today
-			ref := ""
-			if val, ok := item["reference"].(*types.AttributeValueMemberS); ok {
-				ref = val.Value
-			}
-			desc := ""
-			if val, ok := item["description"].(*types.AttributeValueMemberS); ok {
-				desc = val.Value
-			}
 			isAdminTopup := ref == "ADMIN" || desc == "Admin credit"
+			isPartnerRechargeMirror :=
+				ref == "PARTNER_RECHARGE" ||
+					strings.HasPrefix(desc, "Partner recharge") ||
+					strings.HasPrefix(desc, "Partner gateway")
+			_, hasFrom := item["fromUserId"]
 			if isAdminTopup {
+				stats.TodayTopups += amount
+				stats.TodayPayment += amount
+			} else if isPartnerRechargeMirror || hasFrom {
 				stats.TodayTopups += amount
 				stats.TodayPayment += amount
 			}
@@ -234,6 +235,8 @@ func GetDashboardStats(c *gin.Context) {
 			}
 		}
 	}
+
+	stats.AdminWalletBalance = GetAdminWalletBalance()
 
 	c.JSON(http.StatusOK, stats)
 }

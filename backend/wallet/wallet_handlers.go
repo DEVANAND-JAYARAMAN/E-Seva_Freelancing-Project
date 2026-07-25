@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"time"
 
+	"eservice-backend/admin"
 	"eservice-backend/db"
 	"eservice-backend/service"
 
@@ -215,6 +216,14 @@ func ManualRecharge(c *gin.Context) {
 		log.Printf("Failed to write manual tx record: %v", err)
 	}
 
+	// Mirror partner recharge into admin Main Wallet
+	admin.CreditAdminFromPartnerRecharge(
+		req.Amount,
+		req.UserId,
+		req.UtrNumber,
+		fmt.Sprintf("Partner recharge (UTR: %s) from %s", req.UtrNumber, req.UserId),
+	)
+
 	// Create Notification for ADMIN
 	notifId := "NOTIF" + now.Format("20060102150405")
 	notif := map[string]interface{}{
@@ -223,11 +232,11 @@ func ManualRecharge(c *gin.Context) {
 		"id":        notifId,
 		"userId":    "ADMIN",
 		"title":     "Manual Wallet Recharge",
-		"message":   fmt.Sprintf("User %s requested a manual wallet recharge of %v (UTR: %s)", req.UserId, req.Amount, req.UtrNumber),
+		"message":   fmt.Sprintf("User %s recharged ₹%v (UTR: %s) — credited to admin wallet", req.UserId, req.Amount, req.UtrNumber),
 		"type":      "info",
 		"isRead":    false,
 		"createdAt": now.Format(time.RFC3339),
-		"link":      "/admin/wallet",
+		"link":      "/wallets",
 	}
 	notifItem, _ := attributevalue.MarshalMap(notif)
 	_, _ = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
@@ -257,8 +266,8 @@ func AdminCreditWallet(c *gin.Context) {
 	ownerPK := "WALLET#" + req.UserId
 	walletSK := "TYPE#Main"
 
-	// Credit the wallet balance (source of truth) and return new balance
-	walletOut, err := db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+	// Credit the wallet balance directly
+	_, err := db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
 		TableName: aws.String("Wallets"),
 		Key: map[string]types.AttributeValue{
 			"PK": &types.AttributeValueMemberS{Value: ownerPK},
@@ -269,7 +278,6 @@ func AdminCreditWallet(c *gin.Context) {
 			":amt": &types.AttributeValueMemberN{Value: strconv.FormatFloat(req.Amount, 'f', 2, 64)},
 			":ts":  &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
 		},
-		ReturnValues: types.ReturnValueAllNew,
 	})
 	if err != nil {
 		log.Printf("Failed to credit wallet for admin credit %s: %v", req.UserId, err)
@@ -277,27 +285,20 @@ func AdminCreditWallet(c *gin.Context) {
 		return
 	}
 
-	newBalance := 0.0
-	if balAttr, ok := walletOut.Attributes["balance"].(*types.AttributeValueMemberN); ok {
-		newBalance, _ = strconv.ParseFloat(balAttr.Value, 64)
-	}
-
-	// Mirror absolute wallet balance onto Users so admin list stays in sync
-	_, userErr := db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+	// Credit Users.walletBalance
+	_, _ = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
 		TableName: aws.String("Users"),
 		Key: map[string]types.AttributeValue{
 			"PK": &types.AttributeValueMemberS{Value: "USER#" + req.UserId},
 			"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
 		},
-		UpdateExpression: aws.String("SET walletBalance = :bal, updatedAt = :ts"),
+		UpdateExpression: aws.String("SET walletBalance = if_not_exists(walletBalance, :zero) + :amt, updatedAt = :ts"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":bal": &types.AttributeValueMemberN{Value: strconv.FormatFloat(newBalance, 'f', 2, 64)},
-			":ts":  &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
+			":amt":  &types.AttributeValueMemberN{Value: strconv.FormatFloat(req.Amount, 'f', 2, 64)},
+			":zero": &types.AttributeValueMemberN{Value: "0"},
+			":ts":   &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
 		},
 	})
-	if userErr != nil {
-		log.Printf("Failed to sync Users.walletBalance for %s: %v", req.UserId, userErr)
-	}
 
 	// Write transaction record
 	txId := "TX#" + now.Format("20060102150405") + "#ADMIN"
@@ -345,8 +346,7 @@ func AdminCreditWallet(c *gin.Context) {
 	})
 
 	c.JSON(http.StatusOK, gin.H{
-		"message":       "Recharge successful",
-		"amount":        req.Amount,
-		"walletBalance": newBalance,
+		"message": "Recharge successful",
+		"amount":  req.Amount,
 	})
 }

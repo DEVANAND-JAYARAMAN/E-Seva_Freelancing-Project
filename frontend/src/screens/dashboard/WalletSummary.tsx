@@ -57,9 +57,11 @@ export function WalletSummary({ stats }: { stats?: any }) {
           let dynamicValue = card.value;
           if (labelLower === "main wallet") {
             dynamicValue =
-              user?.walletBalance !== undefined
-                ? user.walletBalance.toFixed(2)
-                : "0.00";
+              stats?.adminWalletBalance !== undefined
+                ? Number(stats.adminWalletBalance).toFixed(2)
+                : user?.walletBalance !== undefined
+                  ? user.walletBalance.toFixed(2)
+                  : "0.00";
           } else if (stats) {
             if (labelLower === "wallet request")
               dynamicValue = String(stats.walletRequest ?? "0");

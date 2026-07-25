@@ -186,8 +186,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshProfile = useCallback(async () => {
     if (!user?.email) return;
-    if (user.role === "admin") return;
     try {
+      if (user.role === "admin") {
+        const res = await fetch(apiUrl("admin/dashboard"));
+        if (res.ok) {
+          const data = await res.json();
+          if (typeof data?.adminWalletBalance === "number") {
+            updateWallet(Number(data.adminWalletBalance));
+          }
+        }
+        return;
+      }
       const endpoint =
         user.role === "retailer" ? "retailers" : "distributors";
       const res = await fetch(apiUrl(endpoint));
