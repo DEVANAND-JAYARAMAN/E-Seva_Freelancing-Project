@@ -25,7 +25,7 @@ export function StatsGrid({ stats }: { stats?: any }) {
   };
 
   const descMap: Record<string, string> = {
-    "today payment": "Topups + collections today",
+    "today payment": "Partner recharges today",
     "total profit": "Overall Earnings",
     pending: "Awaiting Verification",
     "in process": "Currently Processing",

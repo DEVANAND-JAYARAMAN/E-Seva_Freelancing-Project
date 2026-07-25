@@ -23,7 +23,6 @@ var (
 )
 
 // ResolveAdminUserId finds the real admin userId (USR...).
-// Prefers ADMIN_USER_ID env, else first Users row with role=admin.
 func ResolveAdminUserId() string {
 	adminIDOnce.Do(func() {
 		if envID := os.Getenv("ADMIN_USER_ID"); envID != "" {
@@ -58,15 +57,14 @@ func ResolveAdminUserId() string {
 	return cachedAdmin
 }
 
-// CreditAdminFromPartnerRecharge mirrors retailer/distributor recharge into the admin wallet.
-// Best-effort: partner credit should already have succeeded; errors are logged only.
+// CreditAdminFromPartnerRecharge adds partner UTR/UPI recharge into admin Main Wallet.
 func CreditAdminFromPartnerRecharge(amount float64, fromUserId, reference, description string) {
 	if amount <= 0 {
 		return
 	}
 	adminId := ResolveAdminUserId()
 	if adminId == "" {
-		log.Printf("CreditAdminFromPartnerRecharge: no admin userId found — skipped ₹%.2f from %s", amount, fromUserId)
+		log.Printf("CreditAdminFromPartnerRecharge: no admin userId — skipped ₹%.2f from %s", amount, fromUserId)
 		return
 	}
 	if fromUserId == adminId {
@@ -113,12 +111,9 @@ func CreditAdminFromPartnerRecharge(amount float64, fromUserId, reference, descr
 	if description == "" {
 		description = fmt.Sprintf("Partner wallet recharge from %s", fromUserId)
 	}
-	if reference == "" {
-		reference = "PARTNER_RECHARGE"
-	}
 
 	txId := "TX#" + now.Format("20060102150405") + "#PR#" + fromUserId
-			txRecord := map[string]interface{}{
+	txRecord := map[string]interface{}{
 		"PK":          ownerPK,
 		"SK":          txId,
 		"id":          txId,
@@ -134,15 +129,96 @@ func CreditAdminFromPartnerRecharge(amount float64, fromUserId, reference, descr
 		"createdAt":   now.Format(time.RFC3339),
 	}
 	item, _ := attributevalue.MarshalMap(txRecord)
-	_, err = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+	if _, err = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
 		TableName: aws.String("WalletTransactions"),
 		Item:      item,
-	})
-	if err != nil {
+	}); err != nil {
 		log.Printf("CreditAdminFromPartnerRecharge tx write failed: %v", err)
 	}
 
 	log.Printf("Credited admin %s with ₹%.2f from partner recharge %s", adminId, amount, fromUserId)
+}
+
+// DebitAdminForPartnerCredit removes amount from admin wallet when admin tops up a retailer/distributor.
+func DebitAdminForPartnerCredit(amount float64, toUserId string) error {
+	if amount <= 0 {
+		return fmt.Errorf("invalid amount")
+	}
+	adminId := ResolveAdminUserId()
+	if adminId == "" {
+		return fmt.Errorf("admin wallet not found")
+	}
+	if toUserId == adminId {
+		return fmt.Errorf("cannot credit admin from admin wallet")
+	}
+
+	bal := GetAdminWalletBalance()
+	if bal < amount {
+		return fmt.Errorf("insufficient admin wallet balance (₹%.2f available)", bal)
+	}
+
+	now := time.Now().UTC()
+	amt := strconv.FormatFloat(amount, 'f', 2, 64)
+	neg := strconv.FormatFloat(-amount, 'f', 2, 64)
+	ownerPK := "WALLET#" + adminId
+
+	_, err := db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+		TableName: aws.String("Wallets"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: ownerPK},
+			"SK": &types.AttributeValueMemberS{Value: "TYPE#Main"},
+		},
+		UpdateExpression: aws.String("ADD balance :neg, totalDebits :amt SET updatedAt = :ts"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":neg": &types.AttributeValueMemberN{Value: neg},
+			":amt": &types.AttributeValueMemberN{Value: amt},
+			":ts":  &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("admin wallet debit failed: %w", err)
+	}
+
+	_, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+		TableName: aws.String("Users"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: "USER#" + adminId},
+			"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+		},
+		UpdateExpression: aws.String("SET walletBalance = if_not_exists(walletBalance, :zero) + :neg, updatedAt = :ts"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":neg":  &types.AttributeValueMemberN{Value: neg},
+			":zero": &types.AttributeValueMemberN{Value: "0"},
+			":ts":   &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
+		},
+	})
+	if err != nil {
+		log.Printf("DebitAdminForPartnerCredit user balance failed: %v", err)
+	}
+
+	txId := "TX#" + now.Format("20060102150405") + "#OUT#" + toUserId
+	txRecord := map[string]interface{}{
+		"PK":          ownerPK,
+		"SK":          txId,
+		"id":          txId,
+		"date":        now.Format("01/02/2006, 03:04 PM"),
+		"type":        "debit",
+		"description": fmt.Sprintf("Transfer to partner %s", toUserId),
+		"amount":      amount,
+		"reference":   "ADMIN_TRANSFER",
+		"status":      "Success",
+		"walletType":  "Main",
+		"toUserId":    toUserId,
+		"createdAt":   now.Format(time.RFC3339),
+	}
+	item, _ := attributevalue.MarshalMap(txRecord)
+	_, _ = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+		TableName: aws.String("WalletTransactions"),
+		Item:      item,
+	})
+
+	log.Printf("Debited admin %s ₹%.2f for transfer to %s", adminId, amount, toUserId)
+	return nil
 }
 
 // GetAdminWalletBalance returns the admin Users.walletBalance (0 if unknown).

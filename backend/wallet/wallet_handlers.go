@@ -262,11 +262,17 @@ func AdminCreditWallet(c *gin.Context) {
 		return
 	}
 
+	// Admin → partner transfer: debit admin wallet first (not a Today Payment)
+	if err := admin.DebitAdminForPartnerCredit(req.Amount, req.UserId); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
+		return
+	}
+
 	now := time.Now().UTC()
 	ownerPK := "WALLET#" + req.UserId
 	walletSK := "TYPE#Main"
 
-	// Credit the wallet balance directly
+	// Credit the partner wallet
 	_, err := db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
 		TableName: aws.String("Wallets"),
 		Key: map[string]types.AttributeValue{
@@ -300,7 +306,7 @@ func AdminCreditWallet(c *gin.Context) {
 		},
 	})
 
-	// Write transaction record
+	// Write transaction record on partner wallet
 	txId := "TX#" + now.Format("20060102150405") + "#ADMIN"
 	txRecord := map[string]interface{}{
 		"PK":          ownerPK,
@@ -346,7 +352,8 @@ func AdminCreditWallet(c *gin.Context) {
 	})
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Recharge successful",
-		"amount":  req.Amount,
+		"message":            "Recharge successful",
+		"amount":             req.Amount,
+		"adminWalletBalance": admin.GetAdminWalletBalance(),
 	})
 }

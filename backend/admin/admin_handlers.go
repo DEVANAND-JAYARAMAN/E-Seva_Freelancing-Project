@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"eservice-backend/db"
@@ -55,8 +54,6 @@ func dateKeyInLoc(raw string, loc *time.Location) string {
 }
 
 func GetDashboardStats(c *gin.Context) {
-	// Simple broad scan for demo/prototype purposes.
-	// In production, we'd use indexes or aggregated counters.
 	outApps, err := db.DynamoClient.Scan(context.TODO(), &dynamodb.ScanInput{
 		TableName: aws.String("ServiceApplications"),
 	})
@@ -71,7 +68,6 @@ func GetDashboardStats(c *gin.Context) {
 	}
 	loc, todayStr := istToday()
 
-	// Fetch dynamic services for profit calculation
 	dsOut, err := db.DynamoClient.Scan(context.TODO(), &dynamodb.ScanInput{
 		TableName: aws.String("DynamicServices"),
 	})
@@ -106,8 +102,7 @@ func GetDashboardStats(c *gin.Context) {
 
 		cost := 0.0
 		if val, ok := item["cost"].(*types.AttributeValueMemberN); ok {
-			importStr := val.Value
-			if parsed, err := strconv.ParseFloat(importStr, 64); err == nil {
+			if parsed, err := strconv.ParseFloat(val.Value, 64); err == nil {
 				cost = parsed
 			}
 		}
@@ -126,12 +121,8 @@ func GetDashboardStats(c *gin.Context) {
 			stats.Projected += cost
 		} else if status == "Approved" || status == "Completed" {
 			stats.Approved++
-			// Service collections created today (IST)
-			if dateKeyInLoc(createdDate, loc) == todayStr {
-				stats.TodayPayment += cost
-			}
+			// NOTE: Today Payment is NOT service cost — see partner recharges below.
 
-			// Calculate profit
 			officialCost := dsMap[serviceId]
 			if officialCost == 0 {
 				officialCost = dsMap[serviceName]
@@ -160,7 +151,8 @@ func GetDashboardStats(c *gin.Context) {
 		}
 	}
 
-	// Include today's admin wallet topups (retailer/distributor credits) in Today Payment
+	// Today Payment = today's partner (retailer/distributor) recharges credited to admin wallet.
+	// Does NOT include admin→partner transfers or service application amounts.
 	outTx, err := db.DynamoClient.Scan(context.TODO(), &dynamodb.ScanInput{
 		TableName: aws.String("WalletTransactions"),
 	})
@@ -171,6 +163,14 @@ func GetDashboardStats(c *gin.Context) {
 				txType = val.Value
 			}
 			if txType != "credit" {
+				continue
+			}
+
+			ref := ""
+			if val, ok := item["reference"].(*types.AttributeValueMemberS); ok {
+				ref = val.Value
+			}
+			if ref != "PARTNER_RECHARGE" {
 				continue
 			}
 
@@ -200,23 +200,11 @@ func GetDashboardStats(c *gin.Context) {
 				continue
 			}
 
-			isAdminTopup := ref == "ADMIN" || desc == "Admin credit"
-			isPartnerRechargeMirror :=
-				ref == "PARTNER_RECHARGE" ||
-					strings.HasPrefix(desc, "Partner recharge") ||
-					strings.HasPrefix(desc, "Partner gateway")
-			_, hasFrom := item["fromUserId"]
-			if isAdminTopup {
-				stats.TodayTopups += amount
-				stats.TodayPayment += amount
-			} else if isPartnerRechargeMirror || hasFrom {
-				stats.TodayTopups += amount
-				stats.TodayPayment += amount
-			}
+			stats.TodayPayment += amount
+			stats.TodayTopups += amount
 		}
 	}
 
-	// Fetch users to count retailers, distributors, customers
 	outUsers, err := db.DynamoClient.Scan(context.TODO(), &dynamodb.ScanInput{
 		TableName: aws.String("Users"),
 	})
