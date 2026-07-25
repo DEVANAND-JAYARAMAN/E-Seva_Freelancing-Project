@@ -361,7 +361,14 @@ export function GstPage() {
                   icon={renderServiceIcon(service.id, "w-20 h-20")}
                   onClick={() => handleCardClick(service)}
                   isAdmin={isAdmin}
-                  onEditClick={() => handleEditCard(service.id, service.name)}
+                  logoUrl={service.logoUrl}
+                  onEditSave={(data) =>
+                    setGstServicesList((prev) =>
+                      prev.map((s) =>
+                        s.id === service.id ? { ...s, ...data } : s,
+                      ),
+                    )
+                  }
                   onDeleteClick={() => handleDeleteCard(service.id)}
                 />
               ))}

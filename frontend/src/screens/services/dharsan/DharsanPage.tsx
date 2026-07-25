@@ -306,7 +306,14 @@ export function DharsanPage() {
                   icon={renderServiceIcon(service.id, "w-16 h-16")}
                   onClick={() => handleCardClick(service)}
                   isAdmin={isAdmin}
-                  onEditClick={() => handleEditCard(service.id, service.name)}
+                  logoUrl={service.logoUrl}
+                  onEditSave={(data) =>
+                    setDharsanServicesList((prev) =>
+                      prev.map((s) =>
+                        s.id === service.id ? { ...s, ...data } : s,
+                      ),
+                    )
+                  }
                   onDeleteClick={() => handleDeleteCard(service.id)}
                 />
               ))}

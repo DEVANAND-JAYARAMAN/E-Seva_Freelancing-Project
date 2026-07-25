@@ -3,7 +3,7 @@
 import { ServiceNavigation } from "../../../components/ServiceNavigation/ServiceNavigation";
 import { useState } from "react";
 import { useCategoryServices } from "../../../hooks/useCategoryServices";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Plus } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { CertificateCoursesForm } from "./CertificateCoursesForm";
 import { ServiceCard } from "../ServiceCard";
@@ -16,6 +16,7 @@ interface CertificateService {
   name: string;
   priceKey: string;
   defaultPrice: number;
+  logoUrl?: string;
 }
 
 export function CertificateCoursesPage() {
@@ -57,21 +58,38 @@ export function CertificateCoursesPage() {
   ]
   );
 
-  const handleEditCard = (id: string, currentName: string) => {
+  const handleAddService = () => {
     Swal.fire({
-      title: "Rename Service",
+      title: "Add Service",
       input: "text",
-      inputValue: currentName,
+      inputPlaceholder: "Enter service name",
       showCancelButton: true,
       confirmButtonColor: "#005C3A",
-      confirmButtonText: "Save",
+      confirmButtonText: "Add",
+      inputValidator: (value) => {
+        if (!value?.trim()) return "Service name is required";
+        return null;
+      },
     }).then((result) => {
       if (result.isConfirmed && result.value?.trim()) {
-        setServicesList((prev) =>
-          prev.map((s) =>
-            s.id === id ? { ...s, name: result.value.trim() } : s,
-          ),
-        );
+        const name = result.value.trim();
+        const id = `custom-${name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "")}-${Date.now().toString().slice(-5)}`;
+
+        setServicesList((prev) => [
+          ...prev,
+          { id, name, priceKey: id, defaultPrice: 300.0 },
+        ]);
+        Swal.fire({
+          title: "Service Added",
+          text: `"${name}" has been added.`,
+          icon: "success",
+          confirmButtonColor: "#005C3A",
+          timer: 1500,
+          showConfirmButton: false,
+        });
       }
     });
   };
@@ -88,6 +106,10 @@ export function CertificateCoursesPage() {
     }).then((result) => {
       if (result.isConfirmed) {
         setServicesList((prev) => prev.filter((s) => s.id !== id));
+        if (activeForm === id) {
+          setActiveForm(null);
+          setSelectedService(null);
+        }
         Swal.fire({
           title: "Deleted!",
           icon: "success",
@@ -648,22 +670,43 @@ export function CertificateCoursesPage() {
   return (
     <AppShell activePage="Our Service">
       <section className="flex flex-col gap-6 w-full pb-8">
-        {/* Navigation Breadcrumb Bar */}
         <ServiceNavigation
           pageName="Certificate Courses"
           activeForm={activeForm}
           setActiveForm={setActiveForm}
           activeFormLabel={selectedService?.name}
-        />
+        >
+          {isAdmin && !activeForm && (
+            <button
+              type="button"
+              onClick={handleAddService}
+              className="inline-flex items-center justify-center gap-1 h-7 px-2.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider border border-transparent bg-[#005c3a] hover:bg-[#004d30] text-white"
+            >
+              <Plus size={12} />
+              <span>Add Service</span>
+            </button>
+          )}
+        </ServiceNavigation>
 
-        {/* CONDITIONALLY RENDER CARDS DIRECTORY OR THE FORM */}
         {!activeForm ? (
           <div className="space-y-4">
-            <div className="flex items-center gap-2 border-b border-slate-50 dark:border-slate-900/40 pb-3">
-              <span className="flex h-2 w-2 rounded-full bg-[#005c3a] animate-pulse" />
-              <h3 className="text-sm font-bold text-slate-400 dark:text-slate-550 uppercase tracking-widest">
-                Available Courses
-              </h3>
+            <div className="flex items-center justify-between gap-3 border-b border-slate-50 dark:border-slate-900/40 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="flex h-2 w-2 rounded-full bg-[#005c3a] animate-pulse" />
+                <h3 className="text-sm font-bold text-slate-400 dark:text-slate-550 uppercase tracking-widest">
+                  Available Courses
+                </h3>
+              </div>
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={handleAddService}
+                  className="inline-flex items-center justify-center gap-1 h-7 px-2.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider border border-transparent bg-[#005c3a] hover:bg-[#004d30] text-white"
+                >
+                  <Plus size={12} />
+                  <span>Add Service</span>
+                </button>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -675,7 +718,17 @@ export function CertificateCoursesPage() {
                   icon={renderServiceIcon(service.id, "w-24 h-24")}
                   onClick={() => handleCardClick(service)}
                   isAdmin={isAdmin}
-                  onEditClick={() => handleEditCard(service.id, service.name)}
+                  logoUrl={service.logoUrl}
+                  onEditSave={(data) => {
+                    setServicesList((prev) =>
+                      prev.map((s) =>
+                        s.id === service.id ? { ...s, ...data } : s,
+                      ),
+                    );
+                    setSelectedService((prev) =>
+                      prev?.id === service.id ? { ...prev, ...data } : prev,
+                    );
+                  }}
                   onDeleteClick={() => handleDeleteCard(service.id)}
                 />
               ))}

@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useCategoryServices } from "../../../hooks/useCategoryServices";
 import { useRouter } from "next/navigation";
+import { openServiceCardEditor } from "../../../utils/serviceCardEditor";
 import {
   ArrowLeft,
   Search,
@@ -13,6 +14,7 @@ import {
   CheckCircle2,
   Pencil,
   Trash2,
+  ImagePlus,
 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { PATHS } from "../../../routes/paths";
@@ -22,31 +24,22 @@ import {
   ServiceSuccessScreen,
 } from "../../../components/ServicePaymentScreen";
 import { useAuth } from "../../../store/context/AuthContext";
+import { useFormEdit } from "../../../store/context/FormEditContext";
 import Swal from "sweetalert2";
-import { TnHealthCardForm } from "./TnHealthCardForm";
-import { LongAadhaarForm } from "./LongAadhaarForm";
-import { TnpdsSmartCardForm } from "./TnpdsSmartCardForm";
-import { PanManualMakerForm } from "./PanManualMakerForm";
-import { EshramIdForm } from "./EshramIdForm";
-import { EpicVoterIdForm } from "./EpicVoterIdForm";
-import { PahalAadhaarPdfForm } from "./PahalAadhaarPdfForm";
-import { PassportSizePhotoForm } from "./PassportSizePhotoForm";
-import { RcPvcForm } from "./RcPvcForm";
-import { DlPvcForm } from "./DlPvcForm";
-import { TamilAstrologyForm } from "./TamilAstrologyForm";
-import { FishermanCardForm } from "./FishermanCardForm";
-import { InstantPanCardForm } from "./InstantPanCardForm";
+import { SoftwareKeyForm } from "./SoftwareKeyForm";
 
 interface SoftwareCardItem {
   id: string;
   name: string;
   price: number;
   iconBg: string;
+  logoUrl?: string;
 }
 
 export function SoftwareKeysPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { setFormScope } = useFormEdit();
   const isAdmin = user?.role === "admin";
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSoftware, setSelectedSoftware] =
@@ -58,6 +51,12 @@ export function SoftwareKeysPage() {
   >("form");
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Scope form-field edits per software key (so Add Field is per service)
+  useEffect(() => {
+    setFormScope(activeForm);
+    return () => setFormScope(null);
+  }, [activeForm, setFormScope]);
 
   const [softwareList, setSoftwareList] = useCategoryServices<SoftwareCardItem>(
     "software-keys",
@@ -149,21 +148,55 @@ export function SoftwareKeysPage() {
     );
   }, [searchTerm, softwareList]);
 
-  const handleEditCard = (id: string, currentName: string) => {
+  const handleEditCard = async (id: string, currentName: string, logoUrl?: string) => {
+    const next = await openServiceCardEditor({ name: currentName, logoUrl });
+    if (next) {
+      setSoftwareList((prev) =>
+        prev.map((s) => (s.id === id ? { ...s, ...next } : s)),
+      );
+      setSelectedSoftware((prev) =>
+        prev?.id === id ? { ...prev, ...next } : prev,
+      );
+    }
+  };
+
+  const handleAddService = () => {
     Swal.fire({
-      title: "Rename Service",
+      title: "Add Service",
       input: "text",
-      inputValue: currentName,
+      inputPlaceholder: "Enter service name",
       showCancelButton: true,
       confirmButtonColor: "#005C3A",
-      confirmButtonText: "Save",
+      confirmButtonText: "Add",
+      inputValidator: (value) => {
+        if (!value?.trim()) return "Service name is required";
+        return null;
+      },
     }).then((result) => {
       if (result.isConfirmed && result.value?.trim()) {
-        setSoftwareList((prev) =>
-          prev.map((s) =>
-            s.id === id ? { ...s, name: result.value.trim() } : s,
-          ),
-        );
+        const name = result.value.trim();
+        const id = `custom-${name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "")}-${Date.now().toString().slice(-5)}`;
+
+        setSoftwareList((prev) => [
+          ...prev,
+          {
+            id,
+            name,
+            price: 400.0,
+            iconBg: "bg-slate-50 dark:bg-slate-950/20",
+          },
+        ]);
+        Swal.fire({
+          title: "Service Added",
+          text: `"${name}" has been added.`,
+          icon: "success",
+          confirmButtonColor: "#005C3A",
+          timer: 1500,
+          showConfirmButton: false,
+        });
       }
     });
   };
@@ -180,6 +213,7 @@ export function SoftwareKeysPage() {
     }).then((result) => {
       if (result.isConfirmed) {
         setSoftwareList((prev) => prev.filter((s) => s.id !== id));
+        if (activeForm === id) setActiveForm(null);
         Swal.fire({
           title: "Deleted!",
           icon: "success",
@@ -1085,46 +1119,20 @@ export function SoftwareKeysPage() {
   };
 
   const renderActiveForm = () => {
-    if (!selectedSoftware) return null;
-    const props = {
-      price: selectedSoftware.price,
-      onSubmit: (data: any) => {
-        setFormData(data);
-        setPaymentPhase("payment");
-      },
-      onCancel: () => setActiveForm(null),
-    };
+    if (!selectedSoftware || !activeForm) return null;
 
-    switch (activeForm) {
-      case "tn-health-qr":
-        return <TnHealthCardForm {...props} />;
-      case "long-aadhaar":
-        return <LongAadhaarForm {...props} />;
-      case "tnpds-smart-pvc":
-        return <TnpdsSmartCardForm {...props} />;
-      case "pan-nsdl-uti-manual":
-        return <PanManualMakerForm {...props} />;
-      case "eshram-id":
-        return <EshramIdForm {...props} />;
-      case "epic-voter-id":
-        return <EpicVoterIdForm {...props} />;
-      case "pahal-aadhaar-pdf":
-        return <PahalAadhaarPdfForm {...props} />;
-      case "passport-photo":
-        return <PassportSizePhotoForm {...props} />;
-      case "rc-pvc":
-        return <RcPvcForm {...props} />;
-      case "dl-pvc":
-        return <DlPvcForm {...props} />;
-      case "tamil-astrology":
-        return <TamilAstrologyForm {...props} />;
-      case "fisherman-card":
-        return <FishermanCardForm {...props} />;
-      case "instant-pan":
-        return <InstantPanCardForm {...props} />;
-      default:
-        return null;
-    }
+    return (
+      <SoftwareKeyForm
+        title={selectedSoftware.name}
+        description={`Register ${selectedSoftware.name} software key.`}
+        price={selectedSoftware.price}
+        onSubmit={(data) => {
+          setFormData(data);
+          setPaymentPhase("payment");
+        }}
+        onCancel={() => setActiveForm(null)}
+      />
+    );
   };
 
   return (
@@ -1180,6 +1188,16 @@ export function SoftwareKeysPage() {
                 />
               </div>
             )}
+            {isAdmin && !activeForm && (
+              <button
+                type="button"
+                onClick={handleAddService}
+                className="inline-flex items-center justify-center gap-1 h-7 px-2.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider border border-transparent bg-[#005c3a] hover:bg-[#004d30] text-white whitespace-nowrap"
+              >
+                <Plus size={12} />
+                <span>Add Service</span>
+              </button>
+            )}
             <button
               onClick={() => {
                 if (activeForm) {
@@ -1188,9 +1206,9 @@ export function SoftwareKeysPage() {
                   router.push(PATHS.SERVICES);
                 }
               }}
-              className="flex items-center justify-center gap-1.5 h-9 px-4 rounded-xl border border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-900 text-xs font-bold text-slate-500 hover:text-slate-755 transition-colors"
+              className="flex items-center justify-center gap-1 h-7 px-2.5 rounded-lg border border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-900 text-[10px] font-bold text-slate-500 hover:text-slate-755 transition-colors"
             >
-              <ArrowLeft size={13} />
+              <ArrowLeft size={12} />
               <span>Back</span>
             </button>
           </div>
@@ -1200,11 +1218,23 @@ export function SoftwareKeysPage() {
         {!activeForm ? (
           /* CARDS DIRECTORY GRID */
           <div className="space-y-4">
-            <div className="flex items-center gap-2 border-b border-slate-50 dark:border-slate-900/40 pb-3">
-              <span className="flex h-2 w-2 rounded-full bg-[#005c3a] animate-pulse" />
-              <h3 className="text-sm font-bold text-slate-400 dark:text-slate-555 uppercase tracking-widest">
-                Available Softwares & Makers
-              </h3>
+            <div className="flex items-center justify-between gap-3 border-b border-slate-50 dark:border-slate-900/40 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="flex h-2 w-2 rounded-full bg-[#005c3a] animate-pulse" />
+                <h3 className="text-sm font-bold text-slate-400 dark:text-slate-555 uppercase tracking-widest">
+                  Available Softwares & Makers
+                </h3>
+              </div>
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={handleAddService}
+                  className="inline-flex items-center justify-center gap-1 h-7 px-2.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider border border-transparent bg-[#005c3a] hover:bg-[#004d30] text-white"
+                >
+                  <Plus size={12} />
+                  <span>Add Service</span>
+                </button>
+              )}
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
@@ -1224,12 +1254,29 @@ export function SoftwareKeysPage() {
                     >
                       <button
                         onClick={() =>
-                          handleEditCard(software.id, software.name)
+                          handleEditCard(
+                            software.id,
+                            software.name,
+                            software.logoUrl,
+                          )
                         }
                         className="p-1 rounded-full bg-white/80 dark:bg-slate-800/80 text-slate-500 hover:text-[#005C3A] hover:bg-emerald-50 dark:hover:bg-emerald-950/30 transition-colors shadow-sm"
-                        title="Rename"
+                        title="Rename / change logo"
                       >
                         <Pencil size={12} />
+                      </button>
+                      <button
+                        onClick={() =>
+                          handleEditCard(
+                            software.id,
+                            software.name,
+                            software.logoUrl,
+                          )
+                        }
+                        className="p-1 rounded-full bg-white/80 dark:bg-slate-800/80 text-sky-500 hover:text-sky-700 hover:bg-sky-50 dark:hover:bg-sky-950/30 transition-colors shadow-sm"
+                        title="Change logo"
+                      >
+                        <ImagePlus size={12} />
                       </button>
                       <button
                         onClick={() => handleDeleteCard(software.id)}
@@ -1242,9 +1289,18 @@ export function SoftwareKeysPage() {
                   )}
 
                   <div
-                    className={`h-24 w-24 rounded-full flex items-center justify-center ${software.iconBg} group-hover:scale-105 transition-transform duration-300 p-2 shadow-inner`}
+                    className={`h-24 w-24 rounded-full flex items-center justify-center ${software.iconBg} group-hover:scale-105 transition-transform duration-300 p-2 shadow-inner overflow-hidden`}
                   >
-                    {renderSoftwareIcon(software.id, "w-20 h-20")}
+                    {software.logoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={software.logoUrl}
+                        alt=""
+                        className="h-full w-full object-contain"
+                      />
+                    ) : (
+                      renderSoftwareIcon(software.id, "w-20 h-20")
+                    )}
                   </div>
 
                   <div className="space-y-1 mt-4">

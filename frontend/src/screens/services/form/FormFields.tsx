@@ -530,7 +530,132 @@ export const RadioField: React.FC<RadioFieldProps> = ({
   );
 };
 
-// 7. SubmitButton (With Edit toggle button aligned on the far left side)
+// 7. EditableFormHeader — rename title/subtitle in edit mode
+interface EditableFormHeaderProps {
+  defaultTitle: string;
+  defaultSubtitle?: string;
+  rightContent?: React.ReactNode;
+}
+
+export const EditableFormHeader: React.FC<EditableFormHeaderProps> = ({
+  defaultTitle,
+  defaultSubtitle = "",
+  rightContent,
+}) => {
+  const { overrides, isEditMode, isAdmin, editFormHeader } = useFormEdit();
+  const title = overrides.title?.trim() || defaultTitle;
+  const subtitle =
+    overrides.subtitle !== undefined ? overrides.subtitle : defaultSubtitle;
+
+  const handleRename = () => {
+    import("sweetalert2").then((Swal) => {
+      Swal.default
+        .fire({
+          title: "Rename Form Header",
+          html: `
+          <div style="display: flex; flex-direction: column; gap: 15px; text-align: left; padding: 10px;">
+            <div>
+              <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #64748b;">Title</label>
+              <input id="swal-form-title" class="swal2-input" placeholder="Form title" style="margin: 5px 0 0 0; width: 100%; height: 38px; font-size: 14px; border-radius: 10px; box-sizing: border-box;">
+            </div>
+            <div>
+              <label style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: #64748b;">Subtitle</label>
+              <input id="swal-form-subtitle" class="swal2-input" placeholder="Form subtitle" style="margin: 5px 0 0 0; width: 100%; height: 38px; font-size: 14px; border-radius: 10px; box-sizing: border-box;">
+            </div>
+          </div>
+        `,
+          focusConfirm: false,
+          showCancelButton: true,
+          confirmButtonText: "Save",
+          confirmButtonColor: "#005c3a",
+          cancelButtonColor: "#6c757d",
+          didOpen: () => {
+            const titleEl = document.getElementById(
+              "swal-form-title",
+            ) as HTMLInputElement | null;
+            const subtitleEl = document.getElementById(
+              "swal-form-subtitle",
+            ) as HTMLInputElement | null;
+            if (titleEl) titleEl.value = title;
+            if (subtitleEl) subtitleEl.value = subtitle;
+          },
+          preConfirm: () => {
+            const newTitle = (
+              document.getElementById("swal-form-title") as HTMLInputElement
+            )?.value?.trim();
+            const newSubtitle = (
+              document.getElementById("swal-form-subtitle") as HTMLInputElement
+            )?.value?.trim();
+            if (!newTitle) {
+              Swal.default.showValidationMessage("Title is required");
+              return false;
+            }
+            return { title: newTitle, subtitle: newSubtitle || "" };
+          },
+        })
+        .then(async (result) => {
+          if (result.isConfirmed && result.value) {
+            const ok = await editFormHeader(
+              result.value.title,
+              result.value.subtitle,
+            );
+            if (ok) {
+              Swal.default.fire({
+                title: "Renamed",
+                text: "Form header updated successfully",
+                icon: "success",
+                timer: 1200,
+                showConfirmButton: false,
+              });
+            }
+          }
+        });
+    });
+  };
+
+  return (
+    <div
+      className={`flex flex-col sm:flex-row sm:items-start justify-between border-b border-slate-100 dark:border-slate-900/50 pb-4 gap-2 ${
+        isEditMode
+          ? "p-2.5 rounded-2xl border border-amber-400/50 dark:border-amber-500/30 bg-amber-500/[0.02]"
+          : ""
+      }`}
+    >
+      <div className="min-w-0 flex-1">
+        {isAdmin && (
+          <div className="flex items-center justify-between mb-1.5 pb-1 border-b border-dashed border-amber-400/20">
+            <span className="text-[9px] font-extrabold text-amber-500 dark:text-amber-400 uppercase tracking-widest select-none">
+              Form Header
+            </span>
+            <button
+              type="button"
+              onClick={handleRename}
+              className="p-1 text-sky-500 hover:text-sky-600 dark:text-sky-400 hover:bg-sky-50 dark:hover:bg-sky-950/20 rounded-md transition-colors"
+              title="Rename title / subtitle"
+            >
+              <Pencil size={12} />
+            </button>
+          </div>
+        )}
+        <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
+          {title}
+        </h2>
+        {subtitle ? (
+          <p className="text-xs text-slate-450 dark:text-slate-555 mt-0.5">
+            {subtitle}
+          </p>
+        ) : null}
+      </div>
+      {rightContent ? (
+        <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none">
+          {rightContent}
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
+// 8. SubmitButton (With Edit toggle button aligned on the far left side)
 interface SubmitButtonProps {
   text: string;
   loading?: boolean;

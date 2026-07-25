@@ -3,19 +3,21 @@
 import { ServiceNavigation } from "../../../components/ServiceNavigation/ServiceNavigation";
 import { useState } from "react";
 import { useCategoryServices } from "../../../hooks/useCategoryServices";
-import { CheckCircle2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { AddressCorrectionAbove18 } from "./AddressCorrectionAbove18";
 import { AddressCorrectionBelow18 } from "./AddressCorrectionBelow18";
 import { EidToAadhaarPdf } from "./EidToAadhaarPdf";
 import { AadhaarToPdf } from "./AadhaarToPdf";
 import { ServiceCard } from "../ServiceCard";
+import { GenericServiceForm } from "../form/GenericServiceForm";
 import { useAuth } from "../../../store/context/AuthContext";
 import Swal from "sweetalert2";
 
 interface AadhaarService {
   id: string;
   name: string;
+  logoUrl?: string;
 }
 
 export function AadhaarAddressPage() {
@@ -38,36 +40,42 @@ export function AadhaarAddressPage() {
   ]
   );
 
-  const handleCardClick = (service: AadhaarService) => {
-    setSubmissionSuccess(false);
-    if (service.id === "address-correction-above-18") {
-      setActiveForm("address-correction-above-18");
-    } else if (service.id === "address-correction-below-18") {
-      setActiveForm("address-correction-below-18");
-    } else if (service.id === "eid-to-aadhaar-pdf") {
-      setActiveForm("eid-to-aadhaar-pdf");
-    } else if (service.id === "aadhaar-to-pdf") {
-      setActiveForm("aadhaar-to-pdf");
-    }
-  };
-
-  const handleEditCard = (id: string, currentName: string) => {
+  const handleAddService = () => {
     Swal.fire({
-      title: "Rename Service",
+      title: "Add Service",
       input: "text",
-      inputValue: currentName,
+      inputPlaceholder: "Enter service name",
       showCancelButton: true,
       confirmButtonColor: "#005C3A",
-      confirmButtonText: "Save",
+      confirmButtonText: "Add",
+      inputValidator: (value) => {
+        if (!value?.trim()) return "Service name is required";
+        return null;
+      },
     }).then((result) => {
       if (result.isConfirmed && result.value?.trim()) {
-        setAadhaarServicesList((prev) =>
-          prev.map((s) =>
-            s.id === id ? { ...s, name: result.value.trim() } : s,
-          ),
-        );
+        const name = result.value.trim();
+        const id = `custom-${name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "")}-${Date.now().toString().slice(-5)}`;
+
+        setAadhaarServicesList((prev) => [...prev, { id, name }]);
+        Swal.fire({
+          title: "Service Added",
+          text: `"${name}" has been added.`,
+          icon: "success",
+          confirmButtonColor: "#005C3A",
+          timer: 1500,
+          showConfirmButton: false,
+        });
       }
     });
+  };
+
+  const handleCardClick = (service: AadhaarService) => {
+    setSubmissionSuccess(false);
+    setActiveForm(service.id);
   };
 
   const handleDeleteCard = (id: string) => {
@@ -82,6 +90,7 @@ export function AadhaarAddressPage() {
     }).then((result) => {
       if (result.isConfirmed) {
         setAadhaarServicesList((prev) => prev.filter((s) => s.id !== id));
+        if (activeForm === id) setActiveForm(null);
         Swal.fire({
           title: "Deleted!",
           icon: "success",
@@ -356,6 +365,8 @@ export function AadhaarAddressPage() {
     }
   };
 
+  const activeService = aadhaarServicesList.find((s) => s.id === activeForm);
+
   const getBreadcrumbLabel = () => {
     if (activeForm === "address-correction-above-18")
       return "Adress Correction (above 18)";
@@ -364,29 +375,68 @@ export function AadhaarAddressPage() {
     if (activeForm === "eid-to-aadhaar-pdf") return "EID to Adhaar PDF Apply";
     if (activeForm === "aadhaar-to-pdf")
       return "Adhaar Number to Adhaar PDF Apply";
-    return "";
+    return activeService?.name || "";
+  };
+
+  const renderActiveForm = () => {
+    if (!activeForm) return null;
+    const onCancel = () => setActiveForm(null);
+    if (activeForm === "address-correction-above-18")
+      return <AddressCorrectionAbove18 onCancel={onCancel} />;
+    if (activeForm === "address-correction-below-18")
+      return <AddressCorrectionBelow18 onCancel={onCancel} />;
+    if (activeForm === "eid-to-aadhaar-pdf")
+      return <EidToAadhaarPdf onCancel={onCancel} />;
+    if (activeForm === "aadhaar-to-pdf")
+      return <AadhaarToPdf onCancel={onCancel} />;
+    return (
+      <GenericServiceForm
+        title={activeService?.name || "New Service"}
+        onCancel={onCancel}
+      />
+    );
   };
 
   return (
     <AppShell activePage="Our Service">
       <section className="flex flex-col gap-6 w-full pb-8">
-        {/* Navigation Breadcrumb Bar */}
         <ServiceNavigation
           pageName="Aadhaar Card Address"
           activeForm={activeForm}
           setActiveForm={setActiveForm}
           activeFormLabel={getBreadcrumbLabel()}
-        />
+        >
+          {isAdmin && !activeForm && (
+            <button
+              type="button"
+              onClick={handleAddService}
+              className="inline-flex items-center justify-center gap-1 h-7 px-2.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider border border-transparent bg-[#005c3a] hover:bg-[#004d30] text-white"
+            >
+              <Plus size={12} />
+              <span>Add Service</span>
+            </button>
+          )}
+        </ServiceNavigation>
 
-        {/* CONDITIONALLY RENDER CARDS DIRECTORY OR THE DETAILED DYNAMIC INLINE FORM */}
         {!activeForm ? (
-          /* APPLY SERVICE SECTION WITH CARDS */
           <div className="space-y-4">
-            <div className="flex items-center gap-2 border-b border-slate-50 dark:border-slate-900/40 pb-3">
-              <span className="flex h-2 w-2 rounded-full bg-[#005c3a] animate-pulse" />
-              <h3 className="text-sm font-bold text-slate-400 dark:text-slate-555 uppercase tracking-widest">
-                Apply Service
-              </h3>
+            <div className="flex items-center justify-between gap-3 border-b border-slate-50 dark:border-slate-900/40 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="flex h-2 w-2 rounded-full bg-[#005c3a] animate-pulse" />
+                <h3 className="text-sm font-bold text-slate-400 dark:text-slate-555 uppercase tracking-widest">
+                  Apply Service
+                </h3>
+              </div>
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={handleAddService}
+                  className="inline-flex items-center justify-center gap-1 h-7 px-2.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider border border-transparent bg-[#005c3a] hover:bg-[#004d30] text-white"
+                >
+                  <Plus size={12} />
+                  <span>Add Service</span>
+                </button>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -398,29 +448,23 @@ export function AadhaarAddressPage() {
                   icon={renderServiceIcon(service.id, "w-16 h-16")}
                   onClick={() => handleCardClick(service)}
                   isAdmin={isAdmin}
-                  onEditClick={() => handleEditCard(service.id, service.name)}
+                  logoUrl={service.logoUrl}
+                  onEditSave={(data) =>
+                    setAadhaarServicesList((prev) =>
+                      prev.map((s) =>
+                        s.id === service.id ? { ...s, ...data } : s,
+                      ),
+                    )
+                  }
                   onDeleteClick={() => handleDeleteCard(service.id)}
                 />
               ))}
             </div>
           </div>
         ) : (
-          /* ELEGANT & PROFESSIONAL ENTERPRISE DESIGN FOR INLINE FORM */
           <div className="w-full">
             <div className="w-full bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 md:p-8 shadow-sm flex flex-col gap-6 relative overflow-hidden animate-in fade-in duration-200">
-              {activeForm === "address-correction-above-18" ? (
-                <AddressCorrectionAbove18
-                  onCancel={() => setActiveForm(null)}
-                />
-              ) : activeForm === "address-correction-below-18" ? (
-                <AddressCorrectionBelow18
-                  onCancel={() => setActiveForm(null)}
-                />
-              ) : activeForm === "eid-to-aadhaar-pdf" ? (
-                <EidToAadhaarPdf onCancel={() => setActiveForm(null)} />
-              ) : (
-                <AadhaarToPdf onCancel={() => setActiveForm(null)} />
-              )}
+              {renderActiveForm()}
             </div>
           </div>
         )}

@@ -3,19 +3,21 @@
 import { useState } from "react";
 import { useCategoryServices } from "../../../hooks/useCategoryServices";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { PATHS } from "../../../routes/paths";
 import { ChassisToRc } from "./ChassisToRc";
 import { EngineToRc } from "./EngineToRc";
 import { DlToCell } from "./DlToCell";
 import { ServiceCard } from "../ServiceCard";
+import { GenericServiceForm } from "../form/GenericServiceForm";
 import { useAuth } from "../../../store/context/AuthContext";
 import Swal from "sweetalert2";
 
 interface RtoService {
   id: string;
   name: string;
+  logoUrl?: string;
 }
 
 export function RtoServicesPage() {
@@ -32,34 +34,42 @@ export function RtoServicesPage() {
     { id: "dl-to-cell", name: "Driving License - Cell No Find" },
   ]);
 
-  const handleCardClick = (service: RtoService) => {
-    setSubmissionSuccess(false);
-    if (service.id === "chassis-to-rc") {
-      setActiveForm("chassis-to-rc");
-    } else if (service.id === "engine-to-rc") {
-      setActiveForm("engine-to-rc");
-    } else if (service.id === "dl-to-cell") {
-      setActiveForm("dl-to-cell");
-    }
-  };
-
-  const handleEditCard = (id: string, currentName: string) => {
+  const handleAddService = () => {
     Swal.fire({
-      title: "Rename Service",
+      title: "Add Service",
       input: "text",
-      inputValue: currentName,
+      inputPlaceholder: "Enter service name",
       showCancelButton: true,
       confirmButtonColor: "#005C3A",
-      confirmButtonText: "Save",
+      confirmButtonText: "Add",
+      inputValidator: (value) => {
+        if (!value?.trim()) return "Service name is required";
+        return null;
+      },
     }).then((result) => {
       if (result.isConfirmed && result.value?.trim()) {
-        setRtoServicesList((prev) =>
-          prev.map((s) =>
-            s.id === id ? { ...s, name: result.value.trim() } : s,
-          ),
-        );
+        const name = result.value.trim();
+        const id = `custom-${name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "")}-${Date.now().toString().slice(-5)}`;
+
+        setRtoServicesList((prev) => [...prev, { id, name }]);
+        Swal.fire({
+          title: "Service Added",
+          text: `"${name}" has been added.`,
+          icon: "success",
+          confirmButtonColor: "#005C3A",
+          timer: 1500,
+          showConfirmButton: false,
+        });
       }
     });
+  };
+
+  const handleCardClick = (service: RtoService) => {
+    setSubmissionSuccess(false);
+    setActiveForm(service.id);
   };
 
   const handleDeleteCard = (id: string) => {
@@ -74,6 +84,7 @@ export function RtoServicesPage() {
     }).then((result) => {
       if (result.isConfirmed) {
         setRtoServicesList((prev) => prev.filter((s) => s.id !== id));
+        if (activeForm === id) setActiveForm(null);
         Swal.fire({
           title: "Deleted!",
           icon: "success",
@@ -348,17 +359,32 @@ export function RtoServicesPage() {
     }
   };
 
+  const activeService = rtoServicesList.find((s) => s.id === activeForm);
+
   const getBreadcrumbLabel = () => {
     if (activeForm === "chassis-to-rc") return "Chassis Number To Rc Find";
     if (activeForm === "engine-to-rc") return "Engine Number To Rc Find";
     if (activeForm === "dl-to-cell") return "Driving License - Cell No Find";
-    return "";
+    return activeService?.name || "";
+  };
+
+  const renderActiveForm = () => {
+    if (!activeForm) return null;
+    const onCancel = () => setActiveForm(null);
+    if (activeForm === "chassis-to-rc") return <ChassisToRc onCancel={onCancel} />;
+    if (activeForm === "engine-to-rc") return <EngineToRc onCancel={onCancel} />;
+    if (activeForm === "dl-to-cell") return <DlToCell onCancel={onCancel} />;
+    return (
+      <GenericServiceForm
+        title={activeService?.name || "New Service"}
+        onCancel={onCancel}
+      />
+    );
   };
 
   return (
     <AppShell activePage="Our Service">
       <section className="flex flex-col gap-6 w-full pb-8">
-        {/* Navigation Breadcrumb Bar */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-2xl p-4 shadow-sm">
           <div className="flex items-center gap-2 text-sm text-slate-500 font-semibold w-full md:w-auto">
             <span
@@ -388,6 +414,16 @@ export function RtoServicesPage() {
           </div>
 
           <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto">
+            {isAdmin && !activeForm && (
+              <button
+                type="button"
+                onClick={handleAddService}
+                className="inline-flex items-center justify-center gap-1 h-7 px-2.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider border border-transparent bg-[#005c3a] hover:bg-[#004d30] text-white"
+              >
+                <Plus size={12} />
+                <span>Add Service</span>
+              </button>
+            )}
             <button
               onClick={() => {
                 if (activeForm) {
@@ -396,23 +432,33 @@ export function RtoServicesPage() {
                   router.push(PATHS.SERVICES);
                 }
               }}
-              className="flex items-center justify-center gap-1.5 h-9 px-4 rounded-xl border border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-900 text-xs font-bold text-slate-500 hover:text-slate-700 transition-colors"
+              className="flex items-center justify-center gap-1 h-7 px-2.5 rounded-lg border border-slate-200 dark:border-slate-850 hover:bg-slate-50 dark:hover:bg-slate-900 text-[10px] font-bold text-slate-500 hover:text-slate-700 transition-colors"
             >
-              <ArrowLeft size={13} />
+              <ArrowLeft size={12} />
               <span>Back</span>
             </button>
           </div>
         </div>
 
-        {/* CONDITIONALLY RENDER CARDS DIRECTORY OR THE DETAILED DYNAMIC INLINE FORM */}
         {!activeForm ? (
-          /* APPLY SERVICE SECTION WITH CARDS */
           <div className="space-y-4">
-            <div className="flex items-center gap-2 border-b border-slate-50 dark:border-slate-900/40 pb-3">
-              <span className="flex h-2 w-2 rounded-full bg-[#005c3a] animate-pulse" />
-              <h3 className="text-sm font-bold text-slate-400 dark:text-slate-555 uppercase tracking-widest">
-                Apply Service
-              </h3>
+            <div className="flex items-center justify-between gap-3 border-b border-slate-50 dark:border-slate-900/40 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="flex h-2 w-2 rounded-full bg-[#005c3a] animate-pulse" />
+                <h3 className="text-sm font-bold text-slate-400 dark:text-slate-555 uppercase tracking-widest">
+                  Apply Service
+                </h3>
+              </div>
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={handleAddService}
+                  className="inline-flex items-center justify-center gap-1 h-7 px-2.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider border border-transparent bg-[#005c3a] hover:bg-[#004d30] text-white"
+                >
+                  <Plus size={12} />
+                  <span>Add Service</span>
+                </button>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -424,23 +470,23 @@ export function RtoServicesPage() {
                   icon={renderServiceIcon(service.id, "w-20 h-20")}
                   onClick={() => handleCardClick(service)}
                   isAdmin={isAdmin}
-                  onEditClick={() => handleEditCard(service.id, service.name)}
+                  logoUrl={service.logoUrl}
+                  onEditSave={(data) =>
+                    setRtoServicesList((prev) =>
+                      prev.map((s) =>
+                        s.id === service.id ? { ...s, ...data } : s,
+                      ),
+                    )
+                  }
                   onDeleteClick={() => handleDeleteCard(service.id)}
                 />
               ))}
             </div>
           </div>
         ) : (
-          /* ELEGANT & PROFESSIONAL ENTERPRISE DESIGN FOR INLINE FORM */
           <div className="w-full">
             <div className="w-full bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 md:p-8 shadow-sm flex flex-col gap-6 relative overflow-hidden animate-in fade-in duration-200">
-              {activeForm === "chassis-to-rc" ? (
-                <ChassisToRc onCancel={() => setActiveForm(null)} />
-              ) : activeForm === "engine-to-rc" ? (
-                <EngineToRc onCancel={() => setActiveForm(null)} />
-              ) : (
-                <DlToCell onCancel={() => setActiveForm(null)} />
-              )}
+              {renderActiveForm()}
             </div>
           </div>
         )}
