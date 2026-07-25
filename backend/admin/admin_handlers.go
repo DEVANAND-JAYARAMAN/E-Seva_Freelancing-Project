@@ -313,3 +313,113 @@ func GetAdminWalletTransactions(c *gin.Context) {
 
 	c.JSON(http.StatusOK, list)
 }
+
+// GetDailyPayments aggregates successful partner recharges by IST calendar day.
+// Modelled after reference Daily Payments (onlinepayment) page.
+func GetDailyPayments(c *gin.Context) {
+	loc, todayStr := istToday()
+
+	out, err := db.DynamoClient.Scan(context.TODO(), &dynamodb.ScanInput{
+		TableName: aws.String("WalletTransactions"),
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch payments"})
+		return
+	}
+
+	type dayAgg struct {
+		Date         string  `json:"date"`         // YYYY-MM-DD
+		DateLabel    string  `json:"dateLabel"`    // e.g. 25 Jul 2026
+		NoOfPayments int     `json:"noOfPayments"`
+		Amount       float64 `json:"amount"`
+	}
+
+	byDay := map[string]*dayAgg{}
+	totalSuccess := 0
+	totalAmount := 0.0
+	todayAmount := 0.0
+
+	for _, item := range out.Items {
+		txType := ""
+		if v, ok := item["type"].(*types.AttributeValueMemberS); ok {
+			txType = v.Value
+		}
+		if txType != "credit" {
+			continue
+		}
+
+		ref := ""
+		if v, ok := item["reference"].(*types.AttributeValueMemberS); ok {
+			ref = v.Value
+		}
+		// Partner recharges into admin wallet (success payments)
+		if ref != "PARTNER_RECHARGE" {
+			continue
+		}
+
+		status := ""
+		if v, ok := item["status"].(*types.AttributeValueMemberS); ok {
+			status = v.Value
+		}
+		if status != "" && status != "Success" {
+			continue
+		}
+
+		createdAt := ""
+		if v, ok := item["createdAt"].(*types.AttributeValueMemberS); ok {
+			createdAt = v.Value
+		}
+		dayKey := dateKeyInLoc(createdAt, loc)
+		if dayKey == "" {
+			continue
+		}
+
+		amount := 0.0
+		if v, ok := item["amount"].(*types.AttributeValueMemberN); ok {
+			amount, _ = strconv.ParseFloat(v.Value, 64)
+		} else if v, ok := item["amount"].(*types.AttributeValueMemberS); ok {
+			amount, _ = strconv.ParseFloat(v.Value, 64)
+		}
+		if amount <= 0 {
+			continue
+		}
+
+		agg, ok := byDay[dayKey]
+		if !ok {
+			label := dayKey
+			if t, err := time.ParseInLocation("2006-01-02", dayKey, loc); err == nil {
+				label = t.Format("02 Jan 2006")
+			}
+			agg = &dayAgg{Date: dayKey, DateLabel: label}
+			byDay[dayKey] = agg
+		}
+		agg.NoOfPayments++
+		agg.Amount += amount
+
+		totalSuccess++
+		totalAmount += amount
+		if dayKey == todayStr {
+			todayAmount += amount
+		}
+	}
+
+	days := make([]dayAgg, 0, len(byDay))
+	for _, v := range byDay {
+		days = append(days, *v)
+	}
+	// Newest date first
+	for i := 0; i < len(days); i++ {
+		for j := i + 1; j < len(days); j++ {
+			if days[j].Date > days[i].Date {
+				days[i], days[j] = days[j], days[i]
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"totalSuccessPayments": totalSuccess,
+		"totalAmount":          totalAmount,
+		"todayAmount":          todayAmount,
+		"days":                 days,
+	})
+}

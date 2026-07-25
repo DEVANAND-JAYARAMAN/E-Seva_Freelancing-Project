@@ -84,7 +84,7 @@ export function StatsGrid({ stats }: { stats?: any }) {
         // Redirect paths mapping
         let targetPath = "";
         if (labelLower === "today payment") {
-          targetPath = "/wallets";
+          targetPath = "/daily-payments";
         } else if (
           [
             "pending",

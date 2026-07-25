@@ -135,6 +135,7 @@ func main() {
 		{
 			adminGroup.GET("/dashboard", admin.GetDashboardStats)
 			adminGroup.GET("/wallet/transactions", admin.GetAdminWalletTransactions)
+			adminGroup.GET("/daily-payments", admin.GetDailyPayments)
 			adminGroup.POST("/wallet/credit", wallet.AdminCreditWallet)
 		}
 

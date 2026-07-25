@@ -26,7 +26,7 @@ const NAV_GROUPS: { title: string; labels: string[] }[] = [
   },
   {
     title: "Finance",
-    labels: ["Billing", "Wallet"],
+    labels: ["Billing", "Daily Payments", "Wallet"],
   },
   {
     title: "System",
