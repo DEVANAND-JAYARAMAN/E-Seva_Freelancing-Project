@@ -45,7 +45,9 @@ export function AdminWalletPage() {
   const loadLedger = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(apiUrl("admin/wallet/transactions"));
+      const res = await fetch(apiUrl("admin/wallet/transactions"), {
+        cache: "no-store",
+      });
       if (!res.ok) return;
       const data = await res.json();
       const list = Array.isArray(data) ? data : data.transactions || [];
@@ -322,7 +324,7 @@ export function AdminWalletPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-50 dark:divide-slate-900/40">
-                {loading ? (
+                {loading && filtered.length === 0 ? (
                   <tr>
                     <td
                       colSpan={8}
