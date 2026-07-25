@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { History, Search, ArrowLeft, Activity, Download } from "lucide-react";
 import { AppShell } from "../layouts/AppShell";
 import { useAuth } from "../store/context/AuthContext";
+import { formatTxnDateTime } from "../utils/formatters";
 
 interface WalletTransaction {
   id: string;
@@ -16,6 +17,8 @@ interface WalletTransaction {
   description: string;
   walletType: string;
   date?: string;
+  dateTime?: string;
+  createdAt?: string;
   createdDate?: string;
 }
 
@@ -54,7 +57,15 @@ export function TransactionsPage() {
         );
         if (res.ok) {
           const data = await res.json();
-          setTransactions(data || []);
+          const list = Array.isArray(data) ? data : [];
+          setTransactions(
+            list.map((tx: WalletTransaction) => ({
+              ...tx,
+              date: formatTxnDateTime(
+                tx.dateTime || tx.createdAt || tx.date || tx.createdDate || "",
+              ),
+            })),
+          );
         }
       } catch (err) {
         console.error(err);
@@ -260,7 +271,10 @@ export function TransactionsPage() {
                         className="hover:bg-slate-50/30 dark:hover:bg-slate-900/10 transition-colors"
                       >
                         <td className="py-4 px-5 font-semibold text-slate-450 dark:text-slate-500 shrink-0">
-                          {tx.date || tx.createdDate || "-"}
+                          {tx.date ||
+                            formatTxnDateTime(
+                              tx.dateTime || tx.createdAt || tx.createdDate || "",
+                            )}
                         </td>
                         <td className="py-4 px-5 font-mono text-slate-600 dark:text-slate-400 font-medium">
                           {tx.reference || "-"}

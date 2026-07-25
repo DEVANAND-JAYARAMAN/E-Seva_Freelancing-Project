@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"eservice-backend/db"
+	"eservice-backend/timeutil"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
@@ -117,7 +118,7 @@ func CreditAdminFromPartnerRecharge(amount float64, fromUserId, reference, descr
 		"PK":          ownerPK,
 		"SK":          txId,
 		"id":          txId,
-		"date":        now.Format("01/02/2006, 03:04 PM"),
+		"date":        timeutil.FormatIST(now),
 		"type":        "credit",
 		"description": description,
 		"amount":      amount,
@@ -193,7 +194,7 @@ func AdminAddDummyMoney(amount float64) (float64, error) {
 		"PK":          ownerPK,
 		"SK":          txId,
 		"id":          txId,
-		"date":        now.Format("2006-01-02 15:04:05"),
+		"date":        timeutil.FormatIST(now),
 		"type":        "credit",
 		"title":       "ADD MONEY",
 		"description": "ADD MONEY",
@@ -278,7 +279,7 @@ func DebitAdminForPartnerCredit(amount float64, toUserId string) error {
 		"PK":          ownerPK,
 		"SK":          txId,
 		"id":          txId,
-		"date":        now.Format("01/02/2006, 03:04 PM"),
+		"date":        timeutil.FormatIST(now),
 		"type":        "debit",
 		"description": fmt.Sprintf("Transfer to partner %s", toUserId),
 		"amount":      amount,

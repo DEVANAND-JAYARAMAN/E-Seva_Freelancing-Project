@@ -16,6 +16,7 @@ import (
 	"eservice-backend/admin"
 	"eservice-backend/db"
 	"eservice-backend/models"
+	"eservice-backend/timeutil"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
@@ -123,15 +124,17 @@ func CreateServiceRequest(c *gin.Context) {
 		now := time.Now().UTC().Format(time.RFC3339)
 		txId := generateId("TX")
 		failedTx := models.WalletTransaction{
-			PK:         walletPK,
-			SK:         "TX#" + now + "#" + txId,
-			Id:         txId,
-			WalletType: req.WalletType,
-			Amount:     req.Cost,
-			Type:       "Debit",
-			Status:     "Failure",
-			Reference:  req.ServiceId,
-			CreatedAt:  now,
+			PK:          walletPK,
+			SK:          "TX#" + now + "#" + txId,
+			Id:          txId,
+			WalletType:  req.WalletType,
+			Amount:      req.Cost,
+			Type:        "Debit",
+			Status:      "Failure",
+			Reference:   req.ServiceId,
+			CreatedAt:   now,
+			Date:        timeutil.FormatRFC3339AsIST(now),
+			Description: "Service payment (failed)",
 		}
 		failedTxItem, _ := attributevalue.MarshalMap(failedTx)
 		db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
@@ -215,15 +218,17 @@ func CreateServiceRequest(c *gin.Context) {
 
 	txId := generateId("TX")
 	successTx := models.WalletTransaction{
-		PK:         walletPK,
-		SK:         "TX#" + now + "#" + txId,
-		Id:         txId,
-		WalletType: req.WalletType,
-		Amount:     req.Cost,
-		Type:       "Debit",
-		Status:     "Success",
-		Reference:  req.ServiceId,
-		CreatedAt:  now,
+		PK:          walletPK,
+		SK:          "TX#" + now + "#" + txId,
+		Id:          txId,
+		WalletType:  req.WalletType,
+		Amount:      req.Cost,
+		Type:        "Debit",
+		Status:      "Success",
+		Reference:   req.ServiceId,
+		CreatedAt:   now,
+		Date:        timeutil.FormatRFC3339AsIST(now),
+		Description: "Service payment",
 	}
 	successTxItem, _ := attributevalue.MarshalMap(successTx)
 
@@ -449,15 +454,17 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 		walletPK := "WALLET#" + app.RetailerId
 		txId := generateId("TX")
 		refundTx := models.WalletTransaction{
-			PK:         walletPK,
-			SK:         "TX#" + now + "#" + txId,
-			Id:         txId,
-			WalletType: "Main",
-			Amount:     app.Cost,
-			Type:       "Credit",
-			Status:     "Success",
-			Reference:  app.ServiceId + "-REFUND",
-			CreatedAt:  now,
+			PK:          walletPK,
+			SK:          "TX#" + now + "#" + txId,
+			Id:          txId,
+			WalletType:  "Main",
+			Amount:      app.Cost,
+			Type:        "Credit",
+			Status:      "Success",
+			Reference:   app.ServiceId + "-REFUND",
+			CreatedAt:   now,
+			Date:        timeutil.FormatRFC3339AsIST(now),
+			Description: "Service refund",
 		}
 		refundTxItem, _ := attributevalue.MarshalMap(refundTx)
 
@@ -783,6 +790,16 @@ func GetWalletTransactions(c *gin.Context) {
 	var transactions []models.WalletTransaction
 	attributevalue.UnmarshalListOfMaps(out.Items, &transactions)
 
+	for i := range transactions {
+		ist := timeutil.FormatRFC3339AsIST(transactions[i].CreatedAt)
+		if ist != "" {
+			transactions[i].Date = ist
+			transactions[i].DateTime = ist
+		} else if transactions[i].Date != "" {
+			transactions[i].DateTime = transactions[i].Date
+		}
+	}
+
 	c.JSON(http.StatusOK, transactions)
 }
 
@@ -1052,7 +1069,7 @@ func ProcessMugavaiPayment(c *gin.Context) (bool, string) {
 			"status":      &types.AttributeValueMemberS{Value: "Success"},
 			"walletType":  &types.AttributeValueMemberS{Value: "Main"},
 			"createdAt":   &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
-			"date":        &types.AttributeValueMemberS{Value: now.Format("01/02/2006, 03:04 PM")},
+			"date":        &types.AttributeValueMemberS{Value: timeutil.FormatIST(now)},
 		},
 	})
 

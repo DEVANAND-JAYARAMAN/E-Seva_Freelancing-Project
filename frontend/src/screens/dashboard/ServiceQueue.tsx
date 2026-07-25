@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { FileText, User, Wallet } from "lucide-react";
 import { useAuth } from "../../store/context/AuthContext";
+import { formatTxnDateTime } from "../../utils/formatters";
 
 export function ServiceQueue() {
   const { user } = useAuth();
@@ -125,7 +126,7 @@ export function ServiceQueue() {
                   </span>
                   <span className="block text-[11px] text-slate-400 dark:text-slate-500 font-semibold mt-0.5">
                     {service.createdDate
-                      ? new Date(service.createdDate).toLocaleDateString()
+                      ? formatTxnDateTime(service.createdDate)
                       : service.time || "Just now"}
                   </span>
                 </div>

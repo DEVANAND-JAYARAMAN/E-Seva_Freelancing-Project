@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { AppShell } from "../../layouts/AppShell";
 import { Plus, Trash2, CheckCircle2, AlertCircle } from "lucide-react";
 import Swal from "sweetalert2";
+import { formatTxnDateTime } from "../../utils/formatters";
 
 interface GlobalAlert {
   id: string;
@@ -191,7 +192,7 @@ export function AdminNotificationsPage() {
                         </span>
                       )}
                       <span className="text-[10px] text-slate-400">
-                        {new Date(alert.createdAt).toLocaleString()}
+                        {formatTxnDateTime(alert.createdAt)}
                       </span>
                     </div>
                     <p className={`text-sm ${alert.status === "Active" ? 'font-bold text-slate-900 dark:text-white' : 'font-medium text-slate-600 dark:text-slate-400'}`}>

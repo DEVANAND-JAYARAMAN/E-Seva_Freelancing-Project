@@ -15,6 +15,7 @@ import {
 import { useTheme } from "../store/context/ThemeProvider";
 import { useAuth } from "../store/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { formatTxnDateTime } from "../utils/formatters";
 
 type Notification = {
   id: string;
@@ -268,7 +269,7 @@ export function TopBar({ onMenuClick, activePage }: TopBarProps) {
                         {notif.message}
                       </p>
                       <span className="text-[9px] font-semibold text-slate-400 dark:text-slate-500 mt-1">
-                        {new Date(notif.createdAt).toLocaleString()}
+                        {formatTxnDateTime(notif.createdAt)}
                       </span>
                     </div>
                   ))

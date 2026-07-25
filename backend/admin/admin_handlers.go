@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"eservice-backend/db"
+	"eservice-backend/timeutil"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -286,10 +287,6 @@ func GetAdminWalletTransactions(c *gin.Context) {
 		} else {
 			row.Id = sk
 		}
-		if v, ok := item["date"].(*types.AttributeValueMemberS); ok {
-			row.Date = v.Value
-			row.DateTime = v.Value
-		}
 		if v, ok := item["type"].(*types.AttributeValueMemberS); ok {
 			row.Type = v.Value
 		}
@@ -319,16 +316,12 @@ func GetAdminWalletTransactions(c *gin.Context) {
 		}
 		if v, ok := item["createdAt"].(*types.AttributeValueMemberS); ok {
 			row.CreatedAt = v.Value
-			if row.DateTime == "" {
-				if t, err := time.Parse(time.RFC3339, v.Value); err == nil {
-					row.DateTime = t.In(time.FixedZone("IST", 5*3600+30*60)).Format("2006-01-02 15:04:05")
-				} else {
-					row.DateTime = v.Value
-				}
-			}
-			if row.Date == "" {
-				row.Date = row.DateTime
-			}
+			// Always derive live IST display from createdAt (source of truth).
+			row.DateTime = timeutil.FormatRFC3339AsIST(v.Value)
+			row.Date = row.DateTime
+		} else if v, ok := item["date"].(*types.AttributeValueMemberS); ok {
+			row.Date = v.Value
+			row.DateTime = v.Value
 		}
 		if v, ok := item["amount"].(*types.AttributeValueMemberN); ok {
 			row.Amount, _ = strconv.ParseFloat(v.Value, 64)

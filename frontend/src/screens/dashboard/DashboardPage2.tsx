@@ -17,6 +17,7 @@ import {
   XCircle,
   Store,
 } from "lucide-react";
+import { formatTxnDateTime } from "../../utils/formatters";
 
 export function DashboardPage2({
   forceRole,
@@ -438,8 +439,8 @@ export function DashboardPage2({
                         </h4>
                         <span className="text-[10px] text-slate-400 dark:text-slate-550 font-semibold block mt-0.5">
                           {txn.createdDate
-                            ? new Date(txn.createdDate).toLocaleDateString()
-                            : txn.date}
+                            ? formatTxnDateTime(txn.createdDate)
+                            : formatTxnDateTime(txn.date)}
                         </span>
                       </div>
                     </div>

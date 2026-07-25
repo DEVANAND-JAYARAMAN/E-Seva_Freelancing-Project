@@ -20,6 +20,7 @@ import { AppShell } from "../layouts/AppShell";
 import { useAuth } from "../store/context/AuthContext";
 import { type WalletTransaction, type PaymentRequest } from "../config/data";
 import { apiUrl } from "../utils/apiBase";
+import { formatTxnDateTime, nowTxnDateTime } from "../utils/formatters";
 
 function mapTx(raw: any): WalletTransaction {
   const typeRaw = String(raw.type || "").toLowerCase();
@@ -31,7 +32,7 @@ function mapTx(raw: any): WalletTransaction {
       : ("Success" as const);
   return {
     id: String(raw.id || raw.SK || `tx-${Date.now()}`),
-    date: String(raw.date || raw.createdAt || ""),
+    date: formatTxnDateTime(raw.dateTime || raw.createdAt || raw.date || ""),
     type,
     description: String(raw.description || ""),
     amount: Number(raw.amount || 0),
@@ -302,14 +303,7 @@ export function WalletPage() {
     const amtNum = parseFloat(amount);
     const newTransaction: WalletTransaction = {
       id: `tx-gw-fail-${Date.now()}`,
-      date: new Date().toLocaleString("en-US", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      }),
+      date: nowTxnDateTime(),
       type: "credit",
       description: `Wallet Recharge via Gateway (${status})`,
       amount: amtNum,
@@ -326,14 +320,7 @@ export function WalletPage() {
     // Add transaction to ledger as Success
     const newTransaction: WalletTransaction = {
       id: `tx-gw-${Date.now()}`,
-      date: new Date().toLocaleString("en-US", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      }),
+      date: nowTxnDateTime(),
       type: "credit",
       description: `Wallet Recharge via Mugavai Gateway`,
       amount: amtNum,
@@ -407,14 +394,7 @@ export function WalletPage() {
         paymentMode,
         utrNumber: finalUtr,
         status: "Success",
-        requestDate: new Date().toLocaleString("en-US", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        }),
+        requestDate: nowTxnDateTime(),
         walletType: selectedWalletType,
         remarks: remarks.trim() || undefined,
       };
@@ -425,14 +405,7 @@ export function WalletPage() {
       // Add a corresponding "Success" transaction inside the user's ledger
       const newTransaction: WalletTransaction = {
         id: `tx-req-${Date.now()}`,
-        date: new Date().toLocaleString("en-US", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        }),
+        date: nowTxnDateTime(),
         type: "credit",
         description: `Wallet Recharge (${paymentMode})`,
         amount: amtNum,
@@ -461,14 +434,7 @@ export function WalletPage() {
 
       const newTransaction: WalletTransaction = {
         id: `tx-fail-${Date.now()}`,
-        date: new Date().toLocaleString("en-US", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        }),
+        date: nowTxnDateTime(),
         type: "credit",
         description: `Wallet Recharge QR (Failed/Invalid)`,
         amount: parseFloat(amount),

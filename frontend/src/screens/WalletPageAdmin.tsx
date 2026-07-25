@@ -13,6 +13,7 @@ import {
 import { AppShell } from "../layouts/AppShell";
 import { useAuth } from "../store/context/AuthContext";
 import { apiUrl } from "../utils/apiBase";
+import { formatTxnDateTime } from "../utils/formatters";
 import Swal from "sweetalert2";
 
 type LedgerRow = {
@@ -60,7 +61,9 @@ export function AdminWalletPage() {
       setRows(
         list.map((t: any) => ({
           id: String(t.id || ""),
-          dateTime: String(t.dateTime || t.date || t.createdAt || ""),
+          dateTime: formatTxnDateTime(
+            t.dateTime || t.createdAt || t.date || "",
+          ),
           title: String(t.title || t.description || "—"),
           status: String(t.status || "Success"),
           debit: Number(t.debit || 0),
@@ -100,7 +103,11 @@ export function AdminWalletPage() {
         r.toUserId.toLowerCase().includes(q) ||
         r.reference.toLowerCase().includes(q);
 
-      const day = (r.createdAt || r.dateTime).slice(0, 10);
+      const day = (
+        r.createdAt
+          ? formatTxnDateTime(r.createdAt)
+          : r.dateTime
+      ).slice(0, 10);
       const matchesFrom = !fromDate || day >= fromDate;
       const matchesTo = !toDate || day <= toDate;
       return matchesSearch && matchesFrom && matchesTo;

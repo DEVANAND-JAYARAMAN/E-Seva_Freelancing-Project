@@ -42,5 +42,6 @@ type WalletTransaction struct {
 	Reference   string  `dynamodbav:"reference" json:"reference"` // ServiceApp ID
 	CreatedAt   string  `dynamodbav:"createdAt" json:"createdAt"`
 	Date        string  `dynamodbav:"date" json:"date"`
+	DateTime    string  `dynamodbav:"-" json:"dateTime,omitempty"`
 	Description string  `dynamodbav:"description" json:"description"`
 }

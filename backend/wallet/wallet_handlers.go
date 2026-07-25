@@ -15,6 +15,7 @@ import (
 	"eservice-backend/admin"
 	"eservice-backend/db"
 	"eservice-backend/service"
+	"eservice-backend/timeutil"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue"
@@ -197,7 +198,7 @@ func ManualRecharge(c *gin.Context) {
 		"PK":          ownerPK,
 		"SK":          txId,
 		"id":          txId,
-		"date":        now.Format("01/02/2006, 03:04 PM"),
+		"date":        timeutil.FormatIST(now),
 		"type":        "credit",
 		"description": fmt.Sprintf("Manual Recharge (UTR: %s)", req.UtrNumber),
 		"amount":      req.Amount,
@@ -312,7 +313,7 @@ func AdminCreditWallet(c *gin.Context) {
 		"PK":          ownerPK,
 		"SK":          txId,
 		"id":          txId,
-		"date":        now.Format("01/02/2006, 03:04 PM"),
+		"date":        timeutil.FormatIST(now),
 		"type":        "credit",
 		"description": "Admin credit",
 		"amount":      req.Amount,
