@@ -1143,8 +1143,8 @@ export function SoftwareKeysPage() {
             }
           ]
         }}
-        onSubmit={formProps.onSubmit}
-        onCancel={formProps.onCancel}
+        onSubmit={props.onSubmit}
+        onCancel={props.onCancel}
       />
     );
   };
