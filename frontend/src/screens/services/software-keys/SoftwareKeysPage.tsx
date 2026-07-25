@@ -1534,9 +1534,9 @@ export function SoftwareKeysPage() {
                       type="file"
                       accept="image/*"
                       onChange={handleImageUpload}
-                      className="absolute inset-0 opacity-0 cursor-pointer"
+                      className="absolute inset-0 opacity-0 cursor-pointer z-10"
                     />
-                    <div className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/50 hidden group-hover:flex items-center justify-center pointer-events-none">
                       <span className="text-white text-[10px] font-bold uppercase">Change</span>
                     </div>
                   </div>
