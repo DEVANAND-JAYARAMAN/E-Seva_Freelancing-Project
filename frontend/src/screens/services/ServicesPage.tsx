@@ -24,6 +24,7 @@ import {
   ServiceSuccessScreen,
 } from "../../components/ServicePaymentScreen";
 import { AddServiceModal } from "./AddServiceModal";
+import { apiUrl } from "../../utils/apiBase";
 
 // Service item interface
 export interface EService {
@@ -1442,7 +1443,7 @@ export function ServicesPage() {
       if (result.isConfirmed) {
         try {
           const response = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/dynamic/${idToDelete}`,
+            apiUrl(`services/dynamic/${idToDelete}`),
             {
               method: "DELETE",
             },
@@ -1458,9 +1459,10 @@ export function ServicesPage() {
               confirmButtonColor: "#005C3A",
             });
           } else {
+            const errBody = await response.text().catch(() => "");
             Swal.fire({
               title: "Failed!",
-              text: "Failed to delete service.",
+              text: errBody || "Failed to delete service.",
               icon: "error",
               confirmButtonColor: "#005C3A",
             });
@@ -1469,7 +1471,7 @@ export function ServicesPage() {
           console.error(e);
           Swal.fire({
             title: "Error!",
-            text: "Error deleting service.",
+            text: "Error deleting service. Check API / CORS connection.",
             icon: "error",
             confirmButtonColor: "#005C3A",
           });
@@ -1486,7 +1488,7 @@ export function ServicesPage() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/dynamic/${editingService.id}`,
+        apiUrl(`services/dynamic/${editingService.id}`),
         {
           method: "PUT",
           headers: {
@@ -1793,7 +1795,7 @@ export function ServicesPage() {
   const fetchDynamicServices = async () => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/dynamic?t=${Date.now()}`
+        `${apiUrl("services/dynamic")}?t=${Date.now()}`
       );
       if (response.ok) {
         const data = await response.json();
@@ -1860,7 +1862,7 @@ export function ServicesPage() {
   const handleAddService = async (newService: EService) => {
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/dynamic`,
+        apiUrl("services/dynamic"),
         {
           method: "POST",
           headers: {
@@ -2090,12 +2092,7 @@ export function ServicesPage() {
           });
         }
 
-        const apiUrl =
-          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(
-            /\/api$/,
-            "",
-          );
-        const res = await fetch(`${apiUrl}/api/services/request`, {
+        const res = await fetch(apiUrl("services/request"), {
           method: "POST",
           body: payload,
         });
@@ -2218,9 +2215,19 @@ export function ServicesPage() {
                   }
                   onToggleRole={(role) => togglePermission(service.id, role)}
                   isAdmin={user?.role === "admin"}
-                  onEditClick={() => {
-                    setEditingService(service);
-                    setEditModalOpen(true);
+                  logoUrl={service.customImage || undefined}
+                  onEditSave={(data) => {
+                    setServicesList((prev) =>
+                      prev.map((s) =>
+                        s.id === service.id
+                          ? {
+                              ...s,
+                              name: data.name,
+                              customImage: data.logoUrl || null,
+                            }
+                          : s,
+                      ),
+                    );
                   }}
                   onDeleteClick={() => handleDeleteService(service.id)}
                 />
@@ -2266,9 +2273,19 @@ export function ServicesPage() {
                   }
                   onToggleRole={(role) => togglePermission(service.id, role)}
                   isAdmin={user?.role === "admin"}
-                  onEditClick={() => {
-                    setEditingService(service);
-                    setEditModalOpen(true);
+                  logoUrl={service.customImage || undefined}
+                  onEditSave={(data) => {
+                    setServicesList((prev) =>
+                      prev.map((s) =>
+                        s.id === service.id
+                          ? {
+                              ...s,
+                              name: data.name,
+                              customImage: data.logoUrl || null,
+                            }
+                          : s,
+                      ),
+                    );
                   }}
                   onDeleteClick={() => handleDeleteService(service.id)}
                 />

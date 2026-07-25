@@ -187,7 +187,14 @@ export function CmHealthCardPage() {
                   icon={renderServiceIcon("w-16 h-16")}
                   onClick={() => setActiveForm("cm-health-card")}
                   isAdmin={isAdmin}
-                  onEditClick={() => handleEditCard(service.id, service.name)}
+                  logoUrl={service.logoUrl}
+                  onEditSave={(data) =>
+                    setServicesList((prev) =>
+                      prev.map((s) =>
+                        s.id === service.id ? { ...s, ...data } : s,
+                      ),
+                    )
+                  }
                   onDeleteClick={() => handleDeleteCard(service.id)}
                 />
               ))}

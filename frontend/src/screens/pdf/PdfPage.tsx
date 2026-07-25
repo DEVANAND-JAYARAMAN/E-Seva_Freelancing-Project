@@ -15,14 +15,16 @@ import {
   Pencil,
   Upload,
   Trash,
+  ImagePlus,
 } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
 import { InputField, SubmitButton } from "../services/form/FormFields";
 import { validateField, PATTERNS } from "../services/form/validators";
 import { ServiceNavigation } from "../../components/ServiceNavigation/ServiceNavigation";
 import { useAuth } from "../../store/context/AuthContext";
-import { useFormEdit, FormEditScope } from "../../store/context/FormEditContext";
+import { useFormEdit } from "../../store/context/FormEditContext";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
+import { openServiceCardEditor } from "../../utils/serviceCardEditor";
 
 // Interface for PDF services definition
 interface PdfService {
@@ -90,10 +92,8 @@ const pdfServicesList: PdfService[] = [
 
 export function PdfPage() {
   const { user } = useAuth();
+  const { overrides } = useFormEdit();
   const isAdmin = user?.role === "admin";
-  const [activeForm, setActiveForm] = useState<string | null>(null);
-  
-  const { overrides } = useFormEdit(activeForm || undefined);
 
   const [servicesList, setServicesList] =
     useState<PdfService[]>(pdfServicesList);
@@ -171,6 +171,7 @@ export function PdfPage() {
   };
 
   // Tab/Screen navigation states
+  const [activeForm, setActiveForm] = useState<string | null>(null);
   const [activeListView, setActiveListView] = useState<string | null>(null); // To view the list for a specific service
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -763,15 +764,56 @@ export function PdfPage() {
                   {isAdmin && (
                     <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
                       <button
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
-                          setEditingService(service);
-                          setEditModalOpen(true);
+                          const next = await openServiceCardEditor({
+                            name: service.name,
+                            logoUrl: service.customImage || undefined,
+                          });
+                          if (next) {
+                            const updated = servicesList.map((s) =>
+                              s.id === service.id
+                                ? {
+                                    ...s,
+                                    name: next.name,
+                                    customImage: next.logoUrl || null,
+                                  }
+                                : s,
+                            );
+                            setServicesList(updated);
+                            saveServicesToDb(updated);
+                          }
                         }}
                         className="p-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-black dark:border-slate-400 text-slate-400 hover:text-[#005c3a] dark:hover:text-emerald-400 transition-all active:scale-[0.95]"
-                        title="Edit card details"
+                        title="Rename / change logo"
                       >
                         <Pencil size={11} />
+                      </button>
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          const next = await openServiceCardEditor({
+                            name: service.name,
+                            logoUrl: service.customImage || undefined,
+                          });
+                          if (next) {
+                            const updated = servicesList.map((s) =>
+                              s.id === service.id
+                                ? {
+                                    ...s,
+                                    name: next.name,
+                                    customImage: next.logoUrl || null,
+                                  }
+                                : s,
+                            );
+                            setServicesList(updated);
+                            saveServicesToDb(updated);
+                          }
+                        }}
+                        className="p-1.5 rounded-xl bg-sky-50 dark:bg-sky-950/30 hover:bg-sky-100 border border-sky-200 text-sky-500 transition-all active:scale-[0.95]"
+                        title="Change logo"
+                      >
+                        <ImagePlus size={11} />
                       </button>
                       <button
                         onClick={(e) => {
@@ -861,11 +903,10 @@ export function PdfPage() {
                   </div>
                 </div>
               ) : (
-                <FormEditScope formId={activeServiceObj.id}>
-                  <form
-                    onSubmit={(e) => handleFormSubmit(e, activeServiceObj)}
-                    className="space-y-8 w-full"
-                  >
+                <form
+                  onSubmit={(e) => handleFormSubmit(e, activeServiceObj)}
+                  className="space-y-8 w-full"
+                >
                   {/* Form Header */}
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between border-b border-slate-100 dark:border-slate-900/50 pb-4 gap-2">
                     <div>
@@ -1076,26 +1117,29 @@ export function PdfPage() {
                           </div>
                         </>
                       )}
-                      
-                      {/* Dynamically Added Fields from FormEditContext */}
-                      {overrides?.addedFields?.map((field) => (
-                        <div key={field.name} className="md:col-span-2">
-                          <InputField
-                            name={field.name}
-                            label={field.label}
-                            type={(field.type as any) || "text"}
-                            placeholder={field.placeholder}
-                            value={formData[field.name] || ""}
-                            onChange={(val) =>
-                              handleFieldChange(field.name, val as string)
-                            }
-                            error={errors[field.name]}
-                            disabled={isSubmitting}
-                          />
-                        </div>
-                      ))}
                     </div>
                   </div>
+
+                  {/* Dynamically added admin fields */}
+                  {overrides.addedFields && overrides.addedFields.length > 0 && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+                      {overrides.addedFields.map((field) => (
+                        <InputField
+                          key={field.name}
+                          name={field.name}
+                          label={field.label}
+                          type={(field.type as "text" | "number" | "file") || "text"}
+                          placeholder={field.placeholder}
+                          value={formData[field.name] || ""}
+                          error={errors[field.name]}
+                          disabled={isSubmitting}
+                          onChange={(val) => {
+                            handleFieldChange(field.name, val);
+                          }}
+                        />
+                      ))}
+                    </div>
+                  )}
 
                   {/* Submit buttons */}
                   <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-900/60 mt-8">
@@ -1113,8 +1157,7 @@ export function PdfPage() {
                       disabled={isSubmitting}
                     />
                   </div>
-                  </form>
-                </FormEditScope>
+                </form>
               )}
             </div>
           </div>

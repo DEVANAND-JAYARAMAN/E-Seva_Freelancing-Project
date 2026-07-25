@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useFormEdit } from "../../../store/context/FormEditContext";
 import { CheckCircle2 } from "lucide-react";
-import { InputField, SubmitButton } from "../form/FormFields";
+import { InputField, SubmitButton, EditableFormHeader } from "../form/FormFields";
 import { validateField, PATTERNS } from "../form/validators";
 
 interface UpdateCellNumberWithOtpProps {
@@ -130,19 +130,11 @@ export const UpdateCellNumberWithOtp: React.FC<UpdateCellNumberWithOtpProps> = (
   return (
     <form onSubmit={handleSubmit} className="space-y-8 w-full">
       {/* Form Header matching layout exactly */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between border-b border-slate-100 dark:border-slate-900/50 pb-4 gap-2">
-        <div>
-          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-            Update Cell Number (With One OTP)
-          </h2>
-          <p className="text-xs text-slate-450 dark:text-slate-555 mt-0.5">
-            Link or change your registered mobile number with secure OTP verification
-          </p>
-        </div>
-        <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none">
-          Service Payment : ₹ 0
-        </div>
-      </div>
+      <EditableFormHeader
+        defaultTitle="Update Cell Number (With One OTP)"
+        defaultSubtitle="Link or change your registered mobile number with secure OTP verification"
+        rightContent="Service Payment : ₹ 0"
+      />
 
       {/* Form Fields */}
       <div className="space-y-5">
@@ -249,7 +241,7 @@ export const UpdateCellNumberWithOtp: React.FC<UpdateCellNumberWithOtpProps> = (
             disabled={isSubmitting}
             className="inline-flex items-center justify-center gap-1.5 px-6 py-2.5 rounded-xl bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] dark:hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider shadow-sm active:scale-[0.98] transition-all disabled:opacity-50 select-none"
           >
-            Send OTP
+            Submit
           </button>
         ) : (
           <SubmitButton

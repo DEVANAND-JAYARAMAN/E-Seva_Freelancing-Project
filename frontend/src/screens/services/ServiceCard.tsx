@@ -1,11 +1,16 @@
-import { ReactNode } from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { ReactNode, MouseEvent } from "react";
+import { ImagePlus, Pencil, Trash2 } from "lucide-react";
+import {
+  openServiceCardEditor,
+  type ServiceCardEditData,
+} from "../../utils/serviceCardEditor";
 
 interface ServiceCardProps {
   id: string;
   name: string;
   subName?: string;
   icon: ReactNode;
+  logoUrl?: string;
   onClick: () => void;
   layout?: "vertical" | "horizontal";
   price?: {
@@ -16,25 +21,97 @@ interface ServiceCardProps {
   allowedRoles?: string[];
   onToggleRole?: (role: "retailer" | "distributor") => void;
   isAdmin?: boolean;
+  /** Preferred: rename + logo change */
+  onEditSave?: (data: ServiceCardEditData) => void;
+  /** Legacy rename-only callback (still supported) */
   onEditClick?: () => void;
   onDeleteClick?: () => void;
 }
 
 export function ServiceCard({
-  id,
   name,
   subName,
   icon,
+  logoUrl,
   onClick,
   layout = "vertical",
-  price,
   isManageMode = false,
   allowedRoles = [],
   onToggleRole,
   isAdmin = false,
+  onEditSave,
   onEditClick,
   onDeleteClick,
 }: ServiceCardProps) {
+  const handleEdit = async (e: MouseEvent) => {
+    e.stopPropagation();
+    if (onEditSave) {
+      const next = await openServiceCardEditor({ name, logoUrl });
+      if (next) onEditSave(next);
+      return;
+    }
+    onEditClick?.();
+  };
+
+  const handleLogoOnly = async (e: MouseEvent) => {
+    e.stopPropagation();
+    if (!onEditSave) return;
+    const next = await openServiceCardEditor({ name, logoUrl });
+    if (next) onEditSave(next);
+  };
+
+  const renderIcon = () => {
+    if (logoUrl) {
+      return (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={logoUrl}
+          alt={name}
+          className="h-full w-full object-contain rounded-xl"
+        />
+      );
+    }
+    return icon;
+  };
+
+  const adminActions = isAdmin && (onEditSave || onEditClick || onDeleteClick) && (
+    <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
+      {(onEditSave || onEditClick) && (
+        <button
+          type="button"
+          onClick={handleEdit}
+          className="p-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-150 dark:border-slate-800 text-slate-400 hover:text-[#005c3a] dark:hover:text-emerald-400 transition-all active:scale-[0.95]"
+          title="Rename / change logo"
+        >
+          <Pencil size={11} />
+        </button>
+      )}
+      {onEditSave && (
+        <button
+          type="button"
+          onClick={handleLogoOnly}
+          className="p-1.5 rounded-xl bg-sky-50 dark:bg-sky-950/30 hover:bg-sky-100 dark:hover:bg-sky-900/40 border border-sky-100 dark:border-sky-900/40 text-sky-500 hover:text-sky-700 transition-all active:scale-[0.95]"
+          title="Change logo"
+        >
+          <ImagePlus size={11} />
+        </button>
+      )}
+      {onDeleteClick && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDeleteClick();
+          }}
+          className="p-1.5 rounded-xl bg-red-50/50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-900/40 border border-red-100/50 dark:border-red-900/30 text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-all active:scale-[0.95]"
+          title="Delete service"
+        >
+          <Trash2 size={11} />
+        </button>
+      )}
+    </div>
+  );
+
   if (layout === "horizontal") {
     return (
       <article
@@ -45,36 +122,11 @@ export function ServiceCard({
             : "hover:shadow-md cursor-pointer group hover:border-l-[#005c3a] dark:hover:border-l-emerald-400 hover:translate-y-[-2px]"
         }`}
       >
-        {isAdmin && (
-          <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onEditClick?.();
-              }}
-              className="p-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-150 dark:border-slate-800 text-slate-400 hover:text-[#005c3a] dark:hover:text-emerald-400 transition-all active:scale-[0.95]"
-              title="Edit card details"
-            >
-              <Pencil size={11} />
-            </button>
-            {onDeleteClick && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDeleteClick();
-                }}
-                className="p-1.5 rounded-xl bg-red-50/50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-900/40 border border-red-100/50 dark:border-red-900/30 text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-all active:scale-[0.95]"
-                title="Delete service"
-              >
-                <Trash2 size={11} />
-              </button>
-            )}
-          </div>
-        )}
+        {adminActions}
 
         <div className="flex flex-col items-center gap-2.5 shrink-0">
-          <div className="transition-transform duration-300 flex items-center justify-center group-hover:scale-105">
-            {icon}
+          <div className="h-16 w-16 transition-transform duration-300 flex items-center justify-center group-hover:scale-105">
+            {renderIcon()}
           </div>
           {isManageMode && (
             <div
@@ -102,7 +154,7 @@ export function ServiceCard({
             </div>
           )}
         </div>
-        <div className="space-y-1">
+        <div className="space-y-1 min-w-0">
           <h4
             className={`font-extrabold transition-colors text-sm uppercase tracking-wide ${
               isManageMode
@@ -133,35 +185,10 @@ export function ServiceCard({
     >
       <div className="absolute inset-0 bg-gradient-to-b from-slate-50/10 to-transparent dark:from-slate-900/5 dark:to-transparent pointer-events-none" />
 
-      {isAdmin && (
-        <div className="absolute top-3 right-3 flex items-center gap-1.5 z-10">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onEditClick?.();
-            }}
-            className="p-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-150 dark:border-slate-800 text-slate-400 hover:text-[#005c3a] dark:hover:text-emerald-400 transition-all active:scale-[0.95]"
-            title="Edit card details"
-          >
-            <Pencil size={11} />
-          </button>
-          {onDeleteClick && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onDeleteClick();
-              }}
-              className="p-1.5 rounded-xl bg-red-50/50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-900/40 border border-red-100/50 dark:border-red-900/30 text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-all active:scale-[0.95]"
-              title="Delete service"
-            >
-              <Trash2 size={11} />
-            </button>
-          )}
-        </div>
-      )}
+      {adminActions}
 
       <div className="h-20 w-20 flex items-center justify-center transition-transform duration-300 group-hover:scale-110">
-        {icon}
+        {renderIcon()}
       </div>
 
       <div className="space-y-1.5">

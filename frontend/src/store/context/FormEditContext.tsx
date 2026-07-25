@@ -1,6 +1,13 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+} from "react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "./AuthContext";
 
@@ -20,32 +27,115 @@ export interface FormOverrides {
   deletedFields: string[];
   fieldOverrides: Record<string, FieldOverride>;
   addedFields?: AddedField[];
+  title?: string;
+  subtitle?: string;
 }
 
-interface FormEditContextState {
-  isEditMode: boolean;
-  setIsEditMode: (mode: boolean) => void;
-  isAdmin: boolean;
-  allOverrides: Record<string, FormOverrides>;
-  saveOverrides: (updated: Record<string, FormOverrides>) => void;
-  defaultFormId: string;
-}
-
-export interface FormEditContextType {
+interface FormEditContextType {
   isEditMode: boolean;
   setIsEditMode: (mode: boolean) => void;
   isAdmin: boolean;
   overrides: FormOverrides;
+  formScope: string | null;
+  setFormScope: (scope: string | null) => void;
   deleteField: (fieldName: string) => void;
   restoreField: (fieldName: string) => void;
   editField: (fieldName: string, label: string, placeholder: string) => void;
+  editFormHeader: (title: string, subtitle: string) => Promise<boolean>;
   resetFormConfig: () => void;
   addField: (label: string, placeholder: string, type: string) => void;
 }
 
-const FormEditContext = createContext<FormEditContextState | undefined>(
+const FormEditContext = createContext<FormEditContextType | undefined>(
   undefined,
 );
+
+const EMPTY_OVERRIDES: FormOverrides = {
+  deletedFields: [],
+  fieldOverrides: {},
+  addedFields: [],
+};
+
+const LOCAL_STORAGE_KEY = "eseva_form_overrides_v1";
+
+function normalizePath(path: string): string {
+  if (!path || path === "/") return "/";
+  return path.replace(/\/+$/, "") || "/";
+}
+
+function normalizeOverridesMap(
+  data: Record<string, FormOverrides> | null | undefined,
+): Record<string, FormOverrides> {
+  const out: Record<string, FormOverrides> = {};
+  if (!data || typeof data !== "object") return out;
+
+  for (const [rawKey, value] of Object.entries(data)) {
+    if (!value || typeof value !== "object") continue;
+    const parts = rawKey.split("::");
+    const path = normalizePath(parts[0] || "/");
+    const key = parts.length > 1 ? `${path}::${parts.slice(1).join("::")}` : path;
+
+    const existing = out[key];
+    if (!existing) {
+      out[key] = {
+        deletedFields: value.deletedFields || [],
+        fieldOverrides: value.fieldOverrides || {},
+        addedFields: value.addedFields || [],
+        title: value.title,
+        subtitle: value.subtitle,
+      };
+      continue;
+    }
+
+    out[key] = {
+      deletedFields: Array.from(
+        new Set([
+          ...(existing.deletedFields || []),
+          ...(value.deletedFields || []),
+        ]),
+      ),
+      fieldOverrides: {
+        ...(existing.fieldOverrides || {}),
+        ...(value.fieldOverrides || {}),
+      },
+      addedFields: [
+        ...(existing.addedFields || []),
+        ...(value.addedFields || []),
+      ],
+      title: value.title ?? existing.title,
+      subtitle: value.subtitle ?? existing.subtitle,
+    };
+  }
+  return out;
+}
+
+function getApiBase(): string {
+  return `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(
+    /\/api$/,
+    "",
+  );
+}
+
+function readLocalOverrides(): Record<string, FormOverrides> {
+  if (typeof window === "undefined") return {};
+  try {
+    const raw = window.localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (!raw) return {};
+    return normalizeOverridesMap(JSON.parse(raw));
+  } catch {
+    return {};
+  }
+}
+
+function writeLocalOverrides(data: Record<string, FormOverrides>): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(data));
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export const FormEditProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -53,17 +143,20 @@ export const FormEditProvider: React.FC<{ children: React.ReactNode }> = ({
   const { user } = useAuth();
   const pathname = usePathname();
   const [isEditMode, setIsEditMode] = useState(false);
+  const [formScope, setFormScope] = useState<string | null>(null);
   const [allOverrides, setAllOverrides] = useState<
     Record<string, FormOverrides>
   >({});
   const [prevPath, setPrevPath] = useState(pathname);
 
+  const allOverridesRef = useRef(allOverrides);
+  allOverridesRef.current = allOverrides;
+
   const isAdmin = user?.role === "admin";
 
-  // Use pathname as the unique identifier for the current form/page
-  const defaultFormId = pathname || "default";
+  const baseFormId = normalizePath(pathname || "default");
+  const formId = formScope ? `${baseFormId}::${formScope}` : baseFormId;
 
-  // Turn off edit mode and show SweetAlert on route navigation
   useEffect(() => {
     if (pathname !== prevPath) {
       if (isEditMode) {
@@ -81,17 +174,24 @@ export const FormEditProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [pathname, prevPath, isEditMode]);
 
-  // Load overrides from backend on mount
   useEffect(() => {
     let isMounted = true;
     const fetchOverrides = async () => {
+      const local = readLocalOverrides();
+      if (isMounted && Object.keys(local).length > 0) {
+        setAllOverrides((prev) => ({ ...local, ...prev }));
+      }
+
       try {
-        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
-        const res = await fetch(`${apiUrl}/api/settings/form_overrides`);
+        const res = await fetch(`${getApiBase()}/api/settings/form_overrides`);
         if (res.ok) {
           const data = await res.json();
-          if (data && Object.keys(data).length > 0 && isMounted) {
-            setAllOverrides(data);
+          const remote = normalizeOverridesMap(data);
+          if (isMounted) {
+            // Local edits win over remote (so refresh keeps rename on localhost)
+            const merged = { ...remote, ...readLocalOverrides() };
+            setAllOverrides(merged);
+            allOverridesRef.current = merged;
           }
         }
       } catch (e) {
@@ -99,27 +199,164 @@ export const FormEditProvider: React.FC<{ children: React.ReactNode }> = ({
       }
     };
     fetchOverrides();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  // Save overrides helper
-  const saveOverrides = async (updated: Record<string, FormOverrides>) => {
-    setAllOverrides(updated);
-    try {
-      const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
-      await fetch(`${apiUrl}/api/settings/form_overrides`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updated),
+  const persistOverrides = useCallback(
+    async (updated: Record<string, FormOverrides>) => {
+      let remote: Record<string, FormOverrides> = {};
+      try {
+        const getRes = await fetch(
+          `${getApiBase()}/api/settings/form_overrides`,
+        );
+        if (getRes.ok) {
+          remote = normalizeOverridesMap(await getRes.json());
+        }
+      } catch {
+        // ignore — fall back to local merge
+      }
+
+      const merged = normalizeOverridesMap({
+        ...remote,
+        ...allOverridesRef.current,
+        ...updated,
       });
-    } catch (e) {
-      console.error("Failed to save form overrides to backend:", e);
+
+      setAllOverrides(merged);
+      allOverridesRef.current = merged;
+
+      const localOk = writeLocalOverrides(merged);
+
+      let apiOk = false;
+      try {
+        const res = await fetch(`${getApiBase()}/api/settings/form_overrides`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(merged),
+        });
+        apiOk = res.ok;
+        if (!res.ok) {
+          console.error(
+            "Form overrides API save failed:",
+            res.status,
+            await res.text().catch(() => ""),
+          );
+        }
+      } catch (e) {
+        console.error("Failed to save form overrides to backend:", e);
+      }
+
+      // Success if API saved OR localStorage saved (localhost CORS workaround)
+      if (apiOk || localOk) return true;
+      return false;
+    },
+    [],
+  );
+
+  const getFormConfig = useCallback((id: string): FormOverrides => {
+    const map = allOverridesRef.current;
+    const scoped = map[id];
+    if (scoped) return { ...EMPTY_OVERRIDES, ...scoped };
+
+    if (id.includes("::")) {
+      const base = id.split("::")[0];
+      if (map[base]) return { ...EMPTY_OVERRIDES, ...map[base] };
     }
+    return { ...EMPTY_OVERRIDES };
+  }, []);
+
+  const currentOverrides: FormOverrides = allOverrides[formId]
+    ? { ...EMPTY_OVERRIDES, ...allOverrides[formId] }
+    : formScope && allOverrides[baseFormId]
+      ? { ...EMPTY_OVERRIDES, ...allOverrides[baseFormId] }
+      : { ...EMPTY_OVERRIDES };
+
+  const deleteField = (fieldName: string) => {
+    const formConfig = { ...getFormConfig(formId) };
+    if (fieldName.startsWith("custom_")) {
+      formConfig.addedFields = (formConfig.addedFields || []).filter(
+        (f) => f.name !== fieldName,
+      );
+    } else if (!formConfig.deletedFields.includes(fieldName)) {
+      formConfig.deletedFields = [...formConfig.deletedFields, fieldName];
+    }
+    void persistOverrides({
+      ...allOverridesRef.current,
+      [formId]: formConfig,
+    });
   };
 
-  // Automatically turn off edit mode if user changes or log out
+  const restoreField = (fieldName: string) => {
+    const formConfig = { ...getFormConfig(formId) };
+    formConfig.deletedFields = formConfig.deletedFields.filter(
+      (name) => name !== fieldName,
+    );
+    void persistOverrides({
+      ...allOverridesRef.current,
+      [formId]: formConfig,
+    });
+  };
+
+  const editField = (fieldName: string, label: string, placeholder: string) => {
+    const formConfig = { ...getFormConfig(formId) };
+    if (fieldName.startsWith("custom_")) {
+      formConfig.addedFields = (formConfig.addedFields || []).map((f) =>
+        f.name === fieldName ? { ...f, label, placeholder } : f,
+      );
+    } else {
+      formConfig.fieldOverrides = {
+        ...formConfig.fieldOverrides,
+        [fieldName]: { label, placeholder },
+      };
+    }
+    void persistOverrides({
+      ...allOverridesRef.current,
+      [formId]: formConfig,
+    });
+  };
+
+  const addField = (label: string, placeholder: string, type: string) => {
+    const formConfig = { ...getFormConfig(formId) };
+    const name = `custom_${type}_${Date.now()}`;
+    formConfig.addedFields = [
+      ...(formConfig.addedFields || []),
+      { name, label, placeholder, type },
+    ];
+    void persistOverrides({
+      ...allOverridesRef.current,
+      [formId]: formConfig,
+    });
+  };
+
+  const editFormHeader = async (title: string, subtitle: string) => {
+    const formConfig = { ...getFormConfig(formId) };
+    formConfig.title = title;
+    formConfig.subtitle = subtitle;
+    const ok = await persistOverrides({
+      ...allOverridesRef.current,
+      [formId]: formConfig,
+    });
+    if (!ok) {
+      import("sweetalert2").then((Swal) => {
+        Swal.default.fire({
+          title: "Save failed",
+          text: "Could not save rename. Please try again.",
+          icon: "error",
+          confirmButtonColor: "#005c3a",
+        });
+      });
+    }
+    return ok;
+  };
+
+  const resetFormConfig = () => {
+    const updated = { ...allOverridesRef.current };
+    delete updated[formId];
+    void persistOverrides(updated);
+  };
+
   useEffect(() => {
     if (!isAdmin) {
       setIsEditMode(false);
@@ -132,9 +369,15 @@ export const FormEditProvider: React.FC<{ children: React.ReactNode }> = ({
         isEditMode,
         setIsEditMode,
         isAdmin,
-        allOverrides,
-        saveOverrides,
-        defaultFormId,
+        overrides: currentOverrides,
+        formScope,
+        setFormScope,
+        deleteField,
+        restoreField,
+        editField,
+        editFormHeader,
+        resetFormConfig,
+        addField,
       }}
     >
       {children}
@@ -142,136 +385,10 @@ export const FormEditProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
-export const FormEditScope: React.FC<{
-  formId: string;
-  children: React.ReactNode;
-}> = ({ formId, children }) => {
-  const context = useContext(FormEditContext);
-  if (!context) {
-    return <>{children}</>;
-  }
-  return (
-    <FormEditContext.Provider value={{ ...context, defaultFormId: formId }}>
-      {children}
-    </FormEditContext.Provider>
-  );
-};
-
-export const useFormEdit = (
-  customFormId?: string | null,
-): FormEditContextType => {
+export const useFormEdit = () => {
   const context = useContext(FormEditContext);
   if (!context) {
     throw new Error("useFormEdit must be used within a FormEditProvider");
   }
-
-  const {
-    allOverrides,
-    saveOverrides,
-    defaultFormId,
-    isEditMode,
-    setIsEditMode,
-    isAdmin,
-  } = context;
-
-  const formId = customFormId || defaultFormId;
-
-  // Get current form overrides or fallback to empty structure
-  const currentOverrides: FormOverrides = allOverrides[formId] || {
-    deletedFields: [],
-    fieldOverrides: {},
-    addedFields: [],
-  };
-
-  const deleteField = (fieldName: string) => {
-    const formConfig = { ...currentOverrides };
-    if (fieldName.startsWith("custom_")) {
-      if (formConfig.addedFields) {
-        formConfig.addedFields = formConfig.addedFields.filter(
-          (f) => f.name !== fieldName,
-        );
-        saveOverrides({
-          ...allOverrides,
-          [formId]: formConfig,
-        });
-      }
-    } else {
-      if (!formConfig.deletedFields.includes(fieldName)) {
-        formConfig.deletedFields = [...formConfig.deletedFields, fieldName];
-        saveOverrides({
-          ...allOverrides,
-          [formId]: formConfig,
-        });
-      }
-    }
-  };
-
-  const restoreField = (fieldName: string) => {
-    const formConfig = { ...currentOverrides };
-    formConfig.deletedFields = formConfig.deletedFields.filter(
-      (name) => name !== fieldName,
-    );
-    saveOverrides({
-      ...allOverrides,
-      [formId]: formConfig,
-    });
-  };
-
-  const editField = (fieldName: string, label: string, placeholder: string) => {
-    const formConfig = { ...currentOverrides };
-    if (fieldName.startsWith("custom_")) {
-      if (formConfig.addedFields) {
-        formConfig.addedFields = formConfig.addedFields.map((f) =>
-          f.name === fieldName ? { ...f, label, placeholder } : f,
-        );
-        saveOverrides({
-          ...allOverrides,
-          [formId]: formConfig,
-        });
-      }
-    } else {
-      formConfig.fieldOverrides = {
-        ...formConfig.fieldOverrides,
-        [fieldName]: { label, placeholder },
-      };
-      saveOverrides({
-        ...allOverrides,
-        [formId]: formConfig,
-      });
-    }
-  };
-
-  const addField = (label: string, placeholder: string, type: string) => {
-    const formConfig = { ...currentOverrides };
-    if (!formConfig.addedFields) {
-      formConfig.addedFields = [];
-    }
-    const name = `custom_${type}_${Date.now()}`;
-    formConfig.addedFields = [
-      ...formConfig.addedFields,
-      { name, label, placeholder, type },
-    ];
-    saveOverrides({
-      ...allOverrides,
-      [formId]: formConfig,
-    });
-  };
-
-  const resetFormConfig = () => {
-    const updated = { ...allOverrides };
-    delete updated[formId];
-    saveOverrides(updated);
-  };
-
-  return {
-    isEditMode,
-    setIsEditMode,
-    isAdmin,
-    overrides: currentOverrides,
-    deleteField,
-    restoreField,
-    editField,
-    resetFormConfig,
-    addField,
-  };
+  return context;
 };

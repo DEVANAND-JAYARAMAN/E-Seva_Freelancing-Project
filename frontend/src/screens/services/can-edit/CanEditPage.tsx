@@ -3,17 +3,38 @@
 import { ServiceNavigation } from "../../../components/ServiceNavigation/ServiceNavigation";
 import { useState } from "react";
 import { useCategoryServices } from "../../../hooks/useCategoryServices";
-import { CheckCircle2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { CanEditForms } from "./CanEditForms";
 import { ServiceCard } from "../ServiceCard";
+import { GenericServiceForm } from "../form/GenericServiceForm";
 import { useAuth } from "../../../store/context/AuthContext";
 import Swal from "sweetalert2";
 
 interface CanEditService {
   id: string;
   name: string;
+  logoUrl?: string;
 }
+
+const KNOWN_CAN_EDIT_IDS = new Set([
+  "new-can-reg",
+  "name-correction",
+  "dob-correction",
+  "mobile-number",
+  "can-delete",
+  "certificate-find",
+  "legal-heir-cert-no",
+  "find-can-number",
+  "name-cell-number",
+  "name-dob",
+  "cell-number-dob",
+  "name-cell-number-dob",
+  "saved-app-removed",
+  "return-app-removed",
+  "father-name-correction",
+  "address-correction",
+]);
 
 export function CanEditPage() {
   const { user } = useAuth();
@@ -43,28 +64,42 @@ export function CanEditPage() {
   ]
   );
 
+  const handleAddService = () => {
+    Swal.fire({
+      title: "Add Service",
+      input: "text",
+      inputPlaceholder: "Enter service name",
+      showCancelButton: true,
+      confirmButtonColor: "#005C3A",
+      confirmButtonText: "Add",
+      inputValidator: (value) => {
+        if (!value?.trim()) return "Service name is required";
+        return null;
+      },
+    }).then((result) => {
+      if (result.isConfirmed && result.value?.trim()) {
+        const name = result.value.trim();
+        const id = `custom-${name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "")}-${Date.now().toString().slice(-5)}`;
+
+        setCanEditServicesList((prev) => [...prev, { id, name }]);
+        Swal.fire({
+          title: "Service Added",
+          text: `"${name}" has been added.`,
+          icon: "success",
+          confirmButtonColor: "#005C3A",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      }
+    });
+  };
+
   const handleCardClick = (service: CanEditService) => {
     setActiveForm(service.id);
     setActiveFormName(service.name);
-  };
-
-  const handleEditCard = (id: string, currentName: string) => {
-    Swal.fire({
-      title: "Rename Service",
-      input: "text",
-      inputValue: currentName,
-      showCancelButton: true,
-      confirmButtonColor: "#005C3A",
-      confirmButtonText: "Save",
-    }).then((result) => {
-      if (result.isConfirmed && result.value?.trim()) {
-        setCanEditServicesList((prev) =>
-          prev.map((s) =>
-            s.id === id ? { ...s, name: result.value.trim() } : s,
-          ),
-        );
-      }
-    });
   };
 
   const handleDeleteCard = (id: string) => {
@@ -79,6 +114,10 @@ export function CanEditPage() {
     }).then((result) => {
       if (result.isConfirmed) {
         setCanEditServicesList((prev) => prev.filter((s) => s.id !== id));
+        if (activeForm === id) {
+          setActiveForm(null);
+          setActiveFormName("");
+        }
         Swal.fire({
           title: "Deleted!",
           icon: "success",
@@ -527,23 +566,43 @@ export function CanEditPage() {
   return (
     <AppShell activePage="Our Service">
       <section className="flex flex-col gap-6 w-full pb-8">
-        {/* Navigation Breadcrumb Bar */}
         <ServiceNavigation
           pageName="CAN EDIT"
           activeForm={activeForm}
           setActiveForm={setActiveForm}
           activeFormLabel={activeFormName}
-        />
+        >
+          {isAdmin && !activeForm && (
+            <button
+              type="button"
+              onClick={handleAddService}
+              className="inline-flex items-center justify-center gap-1 h-7 px-2.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider border border-transparent bg-[#005c3a] hover:bg-[#004d30] text-white"
+            >
+              <Plus size={12} />
+              <span>Add Service</span>
+            </button>
+          )}
+        </ServiceNavigation>
 
-        {/* CONDITIONALLY RENDER CARDS DIRECTORY OR THE DETAILED DYNAMIC INLINE FORM */}
         {!activeForm ? (
-          /* APPLY SERVICE SECTION WITH CARDS */
           <div className="space-y-4">
-            <div className="flex items-center gap-2 border-b border-slate-50 dark:border-slate-900/40 pb-3">
-              <span className="flex h-2 w-2 rounded-full bg-[#005c3a] animate-pulse" />
-              <h3 className="text-sm font-bold text-slate-400 dark:text-slate-555 uppercase tracking-widest">
-                Apply Service
-              </h3>
+            <div className="flex items-center justify-between gap-3 border-b border-slate-50 dark:border-slate-900/40 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="flex h-2 w-2 rounded-full bg-[#005c3a] animate-pulse" />
+                <h3 className="text-sm font-bold text-slate-400 dark:text-slate-555 uppercase tracking-widest">
+                  Apply Service
+                </h3>
+              </div>
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={handleAddService}
+                  className="inline-flex items-center justify-center gap-1 h-7 px-2.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider border border-transparent bg-[#005c3a] hover:bg-[#004d30] text-white"
+                >
+                  <Plus size={12} />
+                  <span>Add Service</span>
+                </button>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
@@ -555,21 +614,37 @@ export function CanEditPage() {
                   icon={renderServiceIcon(service.id, "w-16 h-16")}
                   onClick={() => handleCardClick(service)}
                   isAdmin={isAdmin}
-                  onEditClick={() => handleEditCard(service.id, service.name)}
+                  logoUrl={service.logoUrl}
+                  onEditSave={(data) => {
+                    setCanEditServicesList((prev) =>
+                      prev.map((s) =>
+                        s.id === service.id ? { ...s, ...data } : s,
+                      ),
+                    );
+                    if (activeForm === service.id) {
+                      setActiveFormName(data.name);
+                    }
+                  }}
                   onDeleteClick={() => handleDeleteCard(service.id)}
                 />
               ))}
             </div>
           </div>
         ) : (
-          /* ELEGANT & PROFESSIONAL ENTERPRISE DESIGN FOR INLINE FORM */
           <div className="w-full">
             <div className="w-full bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 md:p-8 shadow-sm flex flex-col gap-6 relative overflow-hidden animate-in fade-in duration-200">
-              <CanEditForms
-                serviceId={activeForm}
-                serviceName={activeFormName}
-                onCancel={() => setActiveForm(null)}
-              />
+              {activeForm && KNOWN_CAN_EDIT_IDS.has(activeForm) ? (
+                <CanEditForms
+                  serviceId={activeForm}
+                  serviceName={activeFormName}
+                  onCancel={() => setActiveForm(null)}
+                />
+              ) : (
+                <GenericServiceForm
+                  title={activeFormName || "New Service"}
+                  onCancel={() => setActiveForm(null)}
+                />
+              )}
             </div>
           </div>
         )}

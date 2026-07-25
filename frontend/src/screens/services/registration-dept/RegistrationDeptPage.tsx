@@ -3,16 +3,18 @@
 import { ServiceNavigation } from "../../../components/ServiceNavigation/ServiceNavigation";
 import { useState } from "react";
 import { useCategoryServices } from "../../../hooks/useCategoryServices";
-import { CheckCircle2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { DocumentCopy } from "./DocumentCopy";
 import { ServiceCard } from "../ServiceCard";
+import { GenericServiceForm } from "../form/GenericServiceForm";
 import { useAuth } from "../../../store/context/AuthContext";
 import Swal from "sweetalert2";
 
 interface RegistrationService {
   id: string;
   name: string;
+  logoUrl?: string;
 }
 
 export function RegistrationDeptPage() {
@@ -27,30 +29,42 @@ export function RegistrationDeptPage() {
     [{ id: "document-copy", name: "பத்திர நகல்" }]
   );
 
-  const handleCardClick = (service: RegistrationService) => {
-    setSubmissionSuccess(false);
-    if (service.id === "document-copy") {
-      setActiveForm("document-copy");
-    }
-  };
-
-  const handleEditCard = (id: string, currentName: string) => {
+  const handleAddService = () => {
     Swal.fire({
-      title: "Rename Service",
+      title: "Add Service",
       input: "text",
-      inputValue: currentName,
+      inputPlaceholder: "Enter service name",
       showCancelButton: true,
       confirmButtonColor: "#005C3A",
-      confirmButtonText: "Save",
+      confirmButtonText: "Add",
+      inputValidator: (value) => {
+        if (!value?.trim()) return "Service name is required";
+        return null;
+      },
     }).then((result) => {
       if (result.isConfirmed && result.value?.trim()) {
-        setRegistrationServicesList((prev) =>
-          prev.map((s) =>
-            s.id === id ? { ...s, name: result.value.trim() } : s,
-          ),
-        );
+        const name = result.value.trim();
+        const id = `custom-${name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "")}-${Date.now().toString().slice(-5)}`;
+
+        setRegistrationServicesList((prev) => [...prev, { id, name }]);
+        Swal.fire({
+          title: "Service Added",
+          text: `"${name}" has been added.`,
+          icon: "success",
+          confirmButtonColor: "#005C3A",
+          timer: 1500,
+          showConfirmButton: false,
+        });
       }
     });
+  };
+
+  const handleCardClick = (service: RegistrationService) => {
+    setSubmissionSuccess(false);
+    setActiveForm(service.id);
   };
 
   const handleDeleteCard = (id: string) => {
@@ -65,6 +79,7 @@ export function RegistrationDeptPage() {
     }).then((result) => {
       if (result.isConfirmed) {
         setRegistrationServicesList((prev) => prev.filter((s) => s.id !== id));
+        if (activeForm === id) setActiveForm(null);
         Swal.fire({
           title: "Deleted!",
           icon: "success",
@@ -262,31 +277,66 @@ export function RegistrationDeptPage() {
     }
   };
 
+  const activeService = registrationServicesList.find((s) => s.id === activeForm);
+
   const getBreadcrumbLabel = () => {
     if (activeForm === "document-copy") return "பத்திர நகல்";
-    return "";
+    return activeService?.name || "";
+  };
+
+  const renderActiveForm = () => {
+    if (!activeForm) return null;
+    const onCancel = () => setActiveForm(null);
+    if (activeForm === "document-copy")
+      return <DocumentCopy onCancel={onCancel} />;
+    return (
+      <GenericServiceForm
+        title={activeService?.name || "New Service"}
+        onCancel={onCancel}
+      />
+    );
   };
 
   return (
     <AppShell activePage="Our Service">
       <section className="flex flex-col gap-6 w-full pb-8">
-        {/* Navigation Breadcrumb Bar */}
         <ServiceNavigation
           pageName="Registration Dept"
           activeForm={activeForm}
           setActiveForm={setActiveForm}
-          activeFormLabel={activeForm ? "Registration Dept" : undefined}
-        />
+          activeFormLabel={activeForm ? getBreadcrumbLabel() : undefined}
+        >
+          {isAdmin && !activeForm && (
+            <button
+              type="button"
+              onClick={handleAddService}
+              className="inline-flex items-center justify-center gap-1 h-7 px-2.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider border border-transparent bg-[#005c3a] hover:bg-[#004d30] text-white"
+            >
+              <Plus size={12} />
+              <span>Add Service</span>
+            </button>
+          )}
+        </ServiceNavigation>
 
-        {/* CONDITIONALLY RENDER CARDS DIRECTORY OR THE DETAILED DYNAMIC INLINE FORM */}
         {!activeForm ? (
-          /* APPLY SERVICE SECTION WITH CARDS */
           <div className="space-y-4">
-            <div className="flex items-center gap-2 border-b border-slate-50 dark:border-slate-900/40 pb-3">
-              <span className="flex h-2 w-2 rounded-full bg-[#005c3a] animate-pulse" />
-              <h3 className="text-sm font-bold text-slate-400 dark:text-slate-555 uppercase tracking-widest">
-                Apply Service
-              </h3>
+            <div className="flex items-center justify-between gap-3 border-b border-slate-50 dark:border-slate-900/40 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="flex h-2 w-2 rounded-full bg-[#005c3a] animate-pulse" />
+                <h3 className="text-sm font-bold text-slate-400 dark:text-slate-555 uppercase tracking-widest">
+                  Apply Service
+                </h3>
+              </div>
+              {isAdmin && (
+                <button
+                  type="button"
+                  onClick={handleAddService}
+                  className="inline-flex items-center justify-center gap-1 h-7 px-2.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider border border-transparent bg-[#005c3a] hover:bg-[#004d30] text-white"
+                >
+                  <Plus size={12} />
+                  <span>Add Service</span>
+                </button>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -298,19 +348,23 @@ export function RegistrationDeptPage() {
                   icon={renderServiceIcon(service.id, "w-16 h-16")}
                   onClick={() => handleCardClick(service)}
                   isAdmin={isAdmin}
-                  onEditClick={() => handleEditCard(service.id, service.name)}
+                  logoUrl={service.logoUrl}
+                  onEditSave={(data) =>
+                    setRegistrationServicesList((prev) =>
+                      prev.map((s) =>
+                        s.id === service.id ? { ...s, ...data } : s,
+                      ),
+                    )
+                  }
                   onDeleteClick={() => handleDeleteCard(service.id)}
                 />
               ))}
             </div>
           </div>
         ) : (
-          /* ELEGANT & PROFESSIONAL ENTERPRISE DESIGN FOR INLINE FORM */
           <div className="w-full">
             <div className="w-full bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 md:p-8 shadow-sm flex flex-col gap-6 relative overflow-hidden animate-in fade-in duration-200">
-              {activeForm === "document-copy" && (
-                <DocumentCopy onCancel={() => setActiveForm(null)} />
-              )}
+              {renderActiveForm()}
             </div>
           </div>
         )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useCategoryServices } from "../../../hooks/useCategoryServices";
 import { useRouter } from "next/navigation";
 import {
@@ -13,7 +13,6 @@ import {
   CheckCircle2,
   Pencil,
   Trash2,
-  CreditCard,
 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { PATHS } from "../../../routes/paths";
@@ -23,8 +22,9 @@ import {
   ServiceSuccessScreen,
 } from "../../../components/ServicePaymentScreen";
 import { useAuth } from "../../../store/context/AuthContext";
+import { useFormEdit } from "../../../store/context/FormEditContext";
 import Swal from "sweetalert2";
-import { DynamicForm } from "../form/DynamicForm";
+import { SoftwareKeyForm } from "./SoftwareKeyForm";
 
 interface SoftwareCardItem {
   id: string;
@@ -37,6 +37,7 @@ interface SoftwareCardItem {
 export function SoftwareKeysPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { setFormScope } = useFormEdit();
   const isAdmin = user?.role === "admin";
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSoftware, setSelectedSoftware] =
@@ -48,6 +49,12 @@ export function SoftwareKeysPage() {
   >("form");
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Scope form-field edits per software key (so Add Field is per service)
+  useEffect(() => {
+    setFormScope(activeForm);
+    return () => setFormScope(null);
+  }, [activeForm, setFormScope]);
   const [editingService, setEditingService] = useState<SoftwareCardItem | "new" | null>(null);
   const [editingServiceForm, setEditingServiceForm] = useState({ name: "", price: "", iconBase64: "" });
 
@@ -1154,33 +1161,10 @@ export function SoftwareKeysPage() {
     };
 
     return (
-      <DynamicForm
-        formId={selectedSoftware.id}
-        schema={{
-          id: selectedSoftware.id,
-          title: selectedSoftware.name,
-          subtitle: `Register ${selectedSoftware.name} software key.`,
-          sections: [
-            {
-              title: "Details",
-              fields: [
-                {
-                  name: "mobileNumber",
-                  label: "Mobile Number",
-                  type: "phone",
-                  validation: { required: true },
-                },
-                {
-                  name: "deviceName",
-                  label: "Device Name",
-                  type: "text",
-                  placeholder: "e.g., Desktop-PC",
-                  validation: { required: true },
-                }
-              ]
-            }
-          ]
-        }}
+      <SoftwareKeyForm
+        title={selectedSoftware.name}
+        description={Register  software key.}
+        price={selectedSoftware.price}
         onSubmit={props.onSubmit}
         onCancel={props.onCancel}
       />
@@ -1243,13 +1227,14 @@ export function SoftwareKeysPage() {
 
             {isAdmin && !activeForm && (
               <button
+                type="button"
                 onClick={() => {
                   setEditingService("new");
                   setEditingServiceForm({ name: "", price: "", iconBase64: "" });
                 }}
-                className="flex items-center gap-1.5 h-9 px-4 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 text-[#005c3a] dark:text-emerald-400 font-bold text-xs hover:bg-[#005c3a] hover:text-white dark:hover:bg-emerald-500 transition-colors"
+                className="inline-flex items-center justify-center gap-1 h-7 px-2.5 rounded-lg text-[10px] font-extrabold uppercase tracking-wider border border-transparent bg-[#005c3a] hover:bg-[#004d30] text-white whitespace-nowrap"
               >
-                <Plus size={13} />
+                <Plus size={12} />
                 <span>Add Service</span>
               </button>
             )}
@@ -1559,7 +1544,7 @@ export function SoftwareKeysPage() {
                 </div>
                 <div className="space-y-1.5">
                   <label className="block text-xs font-bold text-slate-500 uppercase">
-                    Price (₹)
+                    Price (â‚¹)
                   </label>
                   <input
                     type="number"

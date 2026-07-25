@@ -31,7 +31,14 @@ func main() {
 
 	// CORS configuration
 	config := cors.DefaultConfig()
-	config.AllowAllOrigins = true
+	config.AllowOrigins = []string{
+		"https://thuruvancommunications.com",
+		"https://www.thuruvancommunications.com",
+		"http://localhost:3000",
+		"http://127.0.0.1:3000",
+		"http://localhost:3001",
+		"http://127.0.0.1:3001",
+	}
 	config.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"}
 	config.AllowHeaders = []string{"Origin", "Content-Type", "Accept", "Authorization"}
 	r.Use(cors.New(config))

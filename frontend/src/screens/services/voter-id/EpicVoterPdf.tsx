@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useFormEdit } from "../../../store/context/FormEditContext";
 import { CheckCircle2 } from "lucide-react";
-import { InputField, SubmitButton } from "../form/FormFields";
+import { InputField, SubmitButton, EditableFormHeader } from "../form/FormFields";
 import { validateField } from "../form/validators";
 
 interface EpicVoterPdfProps {
@@ -88,19 +88,11 @@ export const EpicVoterPdf: React.FC<EpicVoterPdfProps> = ({ onCancel }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-8 w-full">
       {/* Form Header matching layout exactly */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between border-b border-slate-100 dark:border-slate-900/50 pb-4 gap-2">
-        <div>
-          <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
-            Epic Voter PDF (Without OTP)
-          </h2>
-          <p className="text-xs text-slate-450 dark:text-slate-555 mt-0.5">
-            Download your official Voter card PDF instantly using EPIC number
-          </p>
-        </div>
-        <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none">
-          Service Payment : ₹ 0
-        </div>
-      </div>
+      <EditableFormHeader
+        defaultTitle="Epic Voter PDF (Without OTP)"
+        defaultSubtitle="Download your official Voter card PDF instantly using EPIC number"
+        rightContent="Service Payment : ₹ 0"
+      />
 
       {/* Form Fields */}
       <div className="space-y-5">
