@@ -1,17 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Store } from "lucide-react";
+import { Plus } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
-import { useLocalStorage } from "../../hooks/useLocalStorage";
 import { RetailerStats } from "./RetailerStats";
 import { RetailerTable } from "./RetailerTable";
 import { RetailerForm } from "./RetailerForm";
 import type { Retailer } from "./types";
 import { apiUrl } from "../../utils/apiBase";
-
-// Premium Initial Seed Mockup Data
-const initialRetailersList: Retailer[] = [];
 
 export function RetailersPage() {
   const [retailers, setRetailers] = useState<Retailer[]>([]);
@@ -20,12 +16,9 @@ export function RetailersPage() {
     null,
   );
 
-  // Fetch real data from backend
   const fetchRetailers = async () => {
     try {
-      const res = await fetch(
-        `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/retailers`,
-      );
+      const res = await fetch(apiUrl("retailers"));
       if (res.ok) {
         const data = await res.json();
         const mapped = (data || []).map((user: any) => ({
@@ -33,7 +26,7 @@ export function RetailersPage() {
           name: user.FullName || user.name || "Unknown",
           email: user.Email || user.email,
           phone: user.Mobile || user.mobile,
-          city: "Tamil Nadu", // Default
+          city: "Tamil Nadu",
           balance: user.WalletBalance || user.walletBalance || 0,
           status: user.Status || user.status || "Active",
           createdDate: (user.CreatedAt || user.createdAt || "").split("T")[0],
@@ -50,17 +43,10 @@ export function RetailersPage() {
     fetchRetailers();
   }, []);
 
-  // Add / Edit submission handler (Backend save implemented for Add)
   const handleFormSubmit = async (
     data: Omit<Retailer, "id" | "createdDate"> & { id?: string },
   ) => {
-    const apiUrl =
-      `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(
-        /\/api$/,
-        "",
-      );
     if (data.id) {
-      // Edit mode (API Call)
       try {
         const payload = {
           fullName: data.name,
@@ -70,7 +56,7 @@ export function RetailersPage() {
           rawPassword: data.rawPassword,
           role: "retailer",
         };
-        const res = await fetch(`${apiUrl}/api/users/${data.id}`, {
+        const res = await fetch(apiUrl(`users/${data.id}`), {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -91,7 +77,6 @@ export function RetailersPage() {
         alert("Failed to connect to backend");
       }
     } else {
-      // Add mode (API Call)
       try {
         const payload = {
           fullName: data.name,
@@ -100,7 +85,7 @@ export function RetailersPage() {
           role: "retailer",
           password: (data as any).rawPassword,
         };
-        const res = await fetch(`${apiUrl}/api/auth/signup`, {
+        const res = await fetch(apiUrl("auth/signup"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -110,7 +95,7 @@ export function RetailersPage() {
           const result = await res.json();
           const newRetailer: Retailer = {
             ...data,
-            id: result.userId || `ret-${Date.now()}`,
+            id: result.userId || result.UserId || `ret-${Date.now()}`,
             createdDate: new Date().toISOString().split("T")[0],
           };
           setRetailers((prev) => [newRetailer, ...prev]);
@@ -126,20 +111,14 @@ export function RetailersPage() {
     }
   };
 
-  // Toggle status quick-action handler
   const handleToggleStatus = async (id: string) => {
     const retailer = retailers.find((r) => r.id === id);
     if (!retailer) return;
 
     const newStatus = retailer.status === "Active" ? "Suspended" : "Active";
-    const apiUrl =
-      `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(
-        /\/api$/,
-        "",
-      );
 
     try {
-      const res = await fetch(`${apiUrl}/api/users/${id}`, {
+      const res = await fetch(apiUrl(`users/${id}`), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus, role: "retailer" }),
@@ -160,15 +139,9 @@ export function RetailersPage() {
     }
   };
 
-  // Add money to wallet handler
   const handleAddMoney = async (userId: string, amount: number) => {
-    const apiUrl =
-      `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(
-        /\/api$/,
-        "",
-      );
     try {
-      const res = await fetch(`${apiUrl}/api/admin/wallet/credit`, {
+      const res = await fetch(apiUrl("admin/wallet/credit"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, amount }),
@@ -208,13 +181,11 @@ export function RetailersPage() {
     }
   };
 
-  // Trigger form for Edit
   const handleEditClick = (retailer: Retailer) => {
     setSelectedRetailer(retailer);
     setIsFormOpen(true);
   };
 
-  // Trigger form for Add
   const handleAddClick = () => {
     setSelectedRetailer(null);
     setIsFormOpen(true);
@@ -223,7 +194,6 @@ export function RetailersPage() {
   return (
     <AppShell activePage="Retailers">
       <section className="flex flex-col gap-8 w-full">
-        {/* Header Block */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-50 dark:border-slate-900/30 pb-6">
           <button
             onClick={handleAddClick}
@@ -234,10 +204,8 @@ export function RetailersPage() {
           </button>
         </div>
 
-        {/* Stats Grid */}
         <RetailerStats retailers={retailers} />
 
-        {/* List Table */}
         <RetailerTable
           retailers={retailers}
           onEdit={handleEditClick}
@@ -246,7 +214,6 @@ export function RetailersPage() {
           onDelete={handleDelete}
         />
 
-        {/* Add/Edit Form Modal */}
         <RetailerForm
           isOpen={isFormOpen}
           onClose={() => setIsFormOpen(false)}

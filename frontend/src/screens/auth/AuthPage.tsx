@@ -15,6 +15,7 @@ import { InputField, SubmitButton } from "../services/form/FormFields";
 import { validateField, PATTERNS } from "../services/form/validators";
 import { useAuth } from "../../store/context/AuthContext";
 import { tempLogins } from "../../config/tempLogins";
+import { apiUrl } from "../../utils/apiBase";
 
 type AuthMode = "login" | "register" | "forgot";
 
@@ -187,8 +188,7 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
           setIsSubmitting(false);
         });
       } else if (mode === "register") {
-        const apiUrl = `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api`;
-        const res = await fetch(`${apiUrl}/auth/signup`, {
+        const res = await fetch(apiUrl("auth/signup"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -196,7 +196,7 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
             password: formData.password,
             fullName: formData.fullName || "User",
             mobile: formData.mobile || "0000000000",
-            role: formData.role || "retailer"
+            role: formData.role || "retailer",
           }),
         });
         

@@ -9,15 +9,29 @@ import React, {
   useCallback,
   type ReactNode,
 } from "react";
+import { apiUrl } from "../../utils/apiBase";
+
+export type UserRole = "admin" | "retailer" | "distributor" | "customer";
 
 export type User = {
   id: string;
   name: string;
   email: string;
-  role: "admin" | "retailer" | "distributor" | "customer";
+  role: UserRole;
   walletBalance: number;
   phone?: string;
 };
+
+/** Normalize API / storage roles. Unknown → retailer (never admin). */
+export function normalizeRole(role: unknown): UserRole {
+  const r = String(role ?? "")
+    .toLowerCase()
+    .trim();
+  if (r === "admin" || r === "retailer" || r === "distributor" || r === "customer") {
+    return r;
+  }
+  return "retailer";
+}
 
 type AuthContextType = {
   user: User | null;
@@ -26,7 +40,7 @@ type AuthContextType = {
   login: (
     email: string,
     token: string,
-    role?: "admin" | "retailer" | "distributor" | "customer",
+    role?: UserRole,
     name?: string,
   ) => Promise<void>;
   logout: () => void;
@@ -36,19 +50,42 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function parseStoredUser(raw: string): User | null {
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+    return {
+      id: String(parsed.id || ""),
+      name: String(parsed.name || ""),
+      email: String(parsed.email || ""),
+      role: normalizeRole(parsed.role),
+      walletBalance: Number(parsed.walletBalance || 0),
+      phone: parsed.phone ? String(parsed.phone) : undefined,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate initial check of local auth state on mount
     const checkAuth = async () => {
       try {
         const storedToken = localStorage.getItem("token");
         const storedUser = localStorage.getItem("user");
 
         if (storedToken && storedUser) {
-          setUser(JSON.parse(storedUser));
+          const parsed = parseStoredUser(storedUser);
+          if (parsed) {
+            localStorage.setItem("user", JSON.stringify(parsed));
+            setUser(parsed);
+          } else {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+          }
         }
       } catch (error) {
         console.error("Failed to restore auth session:", error);
@@ -64,18 +101,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (
       email: string,
       token: string,
-      role?: "admin" | "retailer" | "distributor" | "customer",
+      role?: UserRole,
       name?: string,
     ) => {
       setIsLoading(true);
-      
+
       try {
         if (token === "mock_token") {
           const realUser: User = {
             id: `local-mock-${Date.now()}`,
             name: name || "Local User",
             email: email,
-            role: role || "retailer",
+            role: normalizeRole(role || "retailer"),
             walletBalance: 0,
           };
           localStorage.setItem("token", "mock_local_token_123");
@@ -84,8 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        const apiUrl = `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api`;
-        const res = await fetch(`${apiUrl}/auth/login`, {
+        const res = await fetch(apiUrl("auth/login"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -96,12 +132,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (!res.ok) {
           let errorMsg = "Login failed";
           if (res.status === 502 || res.status === 504 || res.status === 503) {
-            errorMsg = "Server is currently offline. Please navigate to /admin to start the server.";
+            errorMsg =
+              "Server is currently offline. Start the local backend (port 8080) or ask admin to start the server.";
           } else {
             try {
               const errorData = await res.json();
               errorMsg = errorData.error || errorMsg;
-            } catch (e) {
+            } catch {
               errorMsg = `Server error: ${res.status} ${res.statusText}`;
             }
           }
@@ -109,12 +146,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         const data = await res.json();
-
         const realUser: User = {
           id: data.user.id,
           name: data.user.fullName,
           email: data.user.email,
-          role: data.role,
+          role: normalizeRole(data.role),
           walletBalance: data.user.walletBalance || 0,
         };
 
@@ -152,12 +188,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user?.email) return;
     if (user.role === "admin") return;
     try {
-      const apiUrl = `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api`;
-      const endpoint = user.role === "retailer" ? "/retailers" : "/distributors";
-      const res = await fetch(`${apiUrl}${endpoint}`);
+      const endpoint =
+        user.role === "retailer" ? "retailers" : "distributors";
+      const res = await fetch(apiUrl(endpoint));
       if (res.ok) {
         const data = await res.json();
-        const me = (data || []).find((u: any) => u.email === user.email || u.Email === user.email);
+        const me = (data || []).find(
+          (u: any) => u.email === user.email || u.Email === user.email,
+        );
         if (me) {
           const balance = me.walletBalance || me.WalletBalance || 0;
           updateWallet(balance);

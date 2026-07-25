@@ -1,17 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Building2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
-import { useLocalStorage } from "../../hooks/useLocalStorage";
 import { DistributorStats } from "./DistributorStats";
 import { DistributorTable } from "./DistributorTable";
 import { DistributorForm } from "./DistributorForm";
 import type { Distributor } from "./types";
 import { apiUrl } from "../../utils/apiBase";
-
-// Premium Initial Seed Mockup Data for Distributors
-const initialDistributorsList: Distributor[] = [];
 
 export function DistributorsPage() {
   const [distributors, setDistributors] = useState<Distributor[]>([]);
@@ -19,12 +15,9 @@ export function DistributorsPage() {
   const [selectedDistributor, setSelectedDistributor] =
     useState<Distributor | null>(null);
 
-  // Fetch real data from backend
   const fetchDistributors = async () => {
     try {
-      const res = await fetch(
-        `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/distributors`,
-      );
+      const res = await fetch(apiUrl("distributors"));
       if (res.ok) {
         const data = await res.json();
         const mapped = (data || []).map((user: any) => ({
@@ -32,7 +25,7 @@ export function DistributorsPage() {
           name: user.FullName || user.name || "Unknown",
           email: user.Email || user.email,
           phone: user.Mobile || user.mobile,
-          city: "Tamil Nadu", // Default
+          city: "Tamil Nadu",
           balance: user.WalletBalance || user.walletBalance || 0,
           status: user.Status || user.status || "Active",
           createdDate: (user.CreatedAt || user.createdAt || "").split("T")[0],
@@ -49,17 +42,10 @@ export function DistributorsPage() {
     fetchDistributors();
   }, []);
 
-  // Add / Edit submission handler (Backend save implemented for Add)
   const handleFormSubmit = async (
     data: Omit<Distributor, "id" | "createdDate"> & { id?: string },
   ) => {
-    const apiUrl =
-      `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(
-        /\/api$/,
-        "",
-      );
     if (data.id) {
-      // Edit mode (API Call)
       try {
         const payload = {
           fullName: data.name,
@@ -69,7 +55,7 @@ export function DistributorsPage() {
           rawPassword: data.rawPassword,
           role: "distributor",
         };
-        const res = await fetch(`${apiUrl}/api/users/${data.id}`, {
+        const res = await fetch(apiUrl(`users/${data.id}`), {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -90,7 +76,6 @@ export function DistributorsPage() {
         alert("Failed to connect to backend");
       }
     } else {
-      // Add mode (API Call)
       try {
         const payload = {
           fullName: data.name,
@@ -99,7 +84,7 @@ export function DistributorsPage() {
           role: "distributor",
           password: (data as any).rawPassword,
         };
-        const res = await fetch(`${apiUrl}/api/auth/signup`, {
+        const res = await fetch(apiUrl("auth/signup"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -109,7 +94,7 @@ export function DistributorsPage() {
           const result = await res.json();
           const newDistributor: Distributor = {
             ...data,
-            id: result.userId || `dist-${Date.now()}`,
+            id: result.userId || result.UserId || `dist-${Date.now()}`,
             createdDate: new Date().toISOString().split("T")[0],
           };
           setDistributors((prev) => [newDistributor, ...prev]);
@@ -125,20 +110,14 @@ export function DistributorsPage() {
     }
   };
 
-  // Toggle status quick-action handler
   const handleToggleStatus = async (id: string) => {
     const distributor = distributors.find((d) => d.id === id);
     if (!distributor) return;
 
     const newStatus = distributor.status === "Active" ? "Suspended" : "Active";
-    const apiUrl =
-      `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(
-        /\/api$/,
-        "",
-      );
 
     try {
-      const res = await fetch(`${apiUrl}/api/users/${id}`, {
+      const res = await fetch(apiUrl(`users/${id}`), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus, role: "distributor" }),
@@ -159,15 +138,9 @@ export function DistributorsPage() {
     }
   };
 
-  // Add money to wallet handler
   const handleAddMoney = async (userId: string, amount: number) => {
-    const apiUrl =
-      `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(
-        /\/api$/,
-        "",
-      );
     try {
-      const res = await fetch(`${apiUrl}/api/admin/wallet/credit`, {
+      const res = await fetch(apiUrl("admin/wallet/credit"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, amount }),
@@ -207,13 +180,11 @@ export function DistributorsPage() {
     }
   };
 
-  // Trigger form for Edit
   const handleEditClick = (distributor: Distributor) => {
     setSelectedDistributor(distributor);
     setIsFormOpen(true);
   };
 
-  // Trigger form for Add
   const handleAddClick = () => {
     setSelectedDistributor(null);
     setIsFormOpen(true);
@@ -222,7 +193,6 @@ export function DistributorsPage() {
   return (
     <AppShell activePage="Distributors">
       <section className="flex flex-col gap-8 w-full">
-        {/* Header Block */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-50 dark:border-slate-900/30 pb-6">
           <button
             onClick={handleAddClick}
@@ -233,10 +203,8 @@ export function DistributorsPage() {
           </button>
         </div>
 
-        {/* Stats Grid */}
         <DistributorStats distributors={distributors} />
 
-        {/* List Table */}
         <DistributorTable
           distributors={distributors}
           onEdit={handleEditClick}
@@ -245,7 +213,6 @@ export function DistributorsPage() {
           onDelete={handleDelete}
         />
 
-        {/* Add/Edit Form Modal */}
         <DistributorForm
           isOpen={isFormOpen}
           onClose={() => setIsFormOpen(false)}

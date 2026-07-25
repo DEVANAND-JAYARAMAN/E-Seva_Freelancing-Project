@@ -3,7 +3,6 @@
 import { X, Leaf, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { navItems } from "../config/data";
-import { usePathname } from "next/navigation";
 import { useAuth } from "../store/context/AuthContext";
 
 type SidebarProps = {
@@ -36,17 +35,11 @@ const NAV_GROUPS: { title: string; labels: string[] }[] = [
 ];
 
 export function Sidebar({ activePage, isOpen, onClose }: SidebarProps) {
-  const pathname = usePathname();
   const { user } = useAuth();
 
-  const isRetailerOrDistributor =
-    user?.role !== "admin" &&
-    (pathname.includes("dashboard2") ||
-      pathname.includes("dashboard3") ||
-      pathname.includes("retailer") ||
-      pathname.includes("distributor") ||
-      user?.role === "retailer" ||
-      user?.role === "distributor");
+  // Only exact admin role gets full console. Everyone else gets partner menu.
+  const isAdmin = user?.role === "admin";
+  const isRetailerOrDistributor = !isAdmin;
 
   const allowedLabels = [
     "Dashboard",
@@ -54,25 +47,25 @@ export function Sidebar({ activePage, isOpen, onClose }: SidebarProps) {
     "Our Service",
     "Wallet",
   ];
-  const displayItems = isRetailerOrDistributor
-    ? navItems.filter((item) => allowedLabels.includes(item.label))
-    : navItems;
+  const displayItems = isAdmin
+    ? navItems
+    : navItems.filter((item) => allowedLabels.includes(item.label));
 
   const displayByLabel = new Map(
     displayItems.map((item) => [item.label, item]),
   );
 
-  const groups = isRetailerOrDistributor
-    ? [
+  const groups = isAdmin
+    ? NAV_GROUPS.map((group) => ({
+        ...group,
+        labels: group.labels.filter((label) => displayByLabel.has(label)),
+      })).filter((group) => group.labels.length > 0)
+    : [
         {
           title: "Menu",
           labels: allowedLabels.filter((label) => displayByLabel.has(label)),
         },
-      ]
-    : NAV_GROUPS.map((group) => ({
-        ...group,
-        labels: group.labels.filter((label) => displayByLabel.has(label)),
-      })).filter((group) => group.labels.length > 0);
+      ];
 
   const roleLabel =
     user?.role === "admin"

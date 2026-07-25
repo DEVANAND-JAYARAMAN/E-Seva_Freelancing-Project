@@ -2,7 +2,8 @@
  * API root including `/api` (or local `/backend-api` proxy).
  * No trailing slash on the base itself.
  *
- * Localhost uses Next.js rewrite → production API (avoids CORS).
+ * Localhost uses Next.js rewrite → local backend by default (see next.config.mjs).
+ * Production builds use NEXT_PUBLIC_API_URL from .env.production.
  */
 export function getApiBaseUrl(): string {
   if (typeof window !== "undefined") {
@@ -12,7 +13,7 @@ export function getApiBaseUrl(): string {
     }
   }
 
-  const raw = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(
+  const raw = `${process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8080"}`.replace(
     /\/+$/,
     "",
   );

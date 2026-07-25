@@ -19,15 +19,22 @@ export function DashboardPage({
 
   useEffect(() => {
     if (role === "admin") {
-      fetch(`${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/admin/dashboard`)
-        .then(res => res.json())
-        .then(data => setStats(data))
-        .catch(err => console.error("Failed to load dashboard stats", err));
+      fetch(
+        `${(process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8080").replace(/(?:\/api|\/)+$/, "")}/api/admin/dashboard`,
+      )
+        .then((res) => res.json())
+        .then((data) => setStats(data))
+        .catch((err) => console.error("Failed to load dashboard stats", err));
     }
   }, [role]);
 
-  if (role === "retailer" || role === "distributor") {
-    return <DashboardPage2 forceRole={role} />;
+  // Fail closed: only admin sees admin dashboard
+  if (role !== "admin") {
+    return (
+      <DashboardPage2
+        forceRole={role === "distributor" ? "distributor" : "retailer"}
+      />
+    );
   }
 
   return (
