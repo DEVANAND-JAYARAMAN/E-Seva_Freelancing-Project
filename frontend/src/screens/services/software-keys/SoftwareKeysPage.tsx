@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   Pencil,
   Trash2,
+  CreditCard,
 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { PATHS } from "../../../routes/paths";
@@ -23,19 +24,7 @@ import {
 } from "../../../components/ServicePaymentScreen";
 import { useAuth } from "../../../store/context/AuthContext";
 import Swal from "sweetalert2";
-import { TnHealthCardForm } from "./TnHealthCardForm";
-import { LongAadhaarForm } from "./LongAadhaarForm";
-import { TnpdsSmartCardForm } from "./TnpdsSmartCardForm";
-import { PanManualMakerForm } from "./PanManualMakerForm";
-import { EshramIdForm } from "./EshramIdForm";
-import { EpicVoterIdForm } from "./EpicVoterIdForm";
-import { PahalAadhaarPdfForm } from "./PahalAadhaarPdfForm";
-import { PassportSizePhotoForm } from "./PassportSizePhotoForm";
-import { RcPvcForm } from "./RcPvcForm";
-import { DlPvcForm } from "./DlPvcForm";
-import { TamilAstrologyForm } from "./TamilAstrologyForm";
-import { FishermanCardForm } from "./FishermanCardForm";
-import { InstantPanCardForm } from "./InstantPanCardForm";
+import { DynamicForm } from "../form/DynamicForm";
 
 interface SoftwareCardItem {
   id: string;
@@ -58,6 +47,8 @@ export function SoftwareKeysPage() {
   >("form");
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newService, setNewService] = useState({ name: "", price: "" });
 
   const [softwareList, setSoftwareList] = useCategoryServices<SoftwareCardItem>(
     "software-keys",
@@ -188,6 +179,35 @@ export function SoftwareKeysPage() {
           showConfirmButton: false,
         });
       }
+    });
+  };
+
+  const handleAddService = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newService.name.trim() || !newService.price.trim()) return;
+
+    const newId = newService.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+
+    const newServiceObj: SoftwareCardItem = {
+      id: newId || `service-${Date.now()}`,
+      name: newService.name.trim(),
+      price: parseFloat(newService.price),
+      iconBg: "bg-emerald-50 dark:bg-emerald-950/20", // Default bg
+    };
+
+    setSoftwareList((prev) => [...prev, newServiceObj]);
+    setIsAddModalOpen(false);
+    setNewService({ name: "", price: "" });
+    Swal.fire({
+      title: "Success",
+      text: "Service added successfully!",
+      icon: "success",
+      confirmButtonColor: "#005C3A",
+      timer: 1500,
+      showConfirmButton: false,
     });
   };
 
@@ -1095,36 +1115,43 @@ export function SoftwareKeysPage() {
       onCancel: () => setActiveForm(null),
     };
 
-    switch (activeForm) {
-      case "tn-health-qr":
-        return <TnHealthCardForm {...props} />;
-      case "long-aadhaar":
-        return <LongAadhaarForm {...props} />;
-      case "tnpds-smart-pvc":
-        return <TnpdsSmartCardForm {...props} />;
-      case "pan-nsdl-uti-manual":
-        return <PanManualMakerForm {...props} />;
-      case "eshram-id":
-        return <EshramIdForm {...props} />;
-      case "epic-voter-id":
-        return <EpicVoterIdForm {...props} />;
-      case "pahal-aadhaar-pdf":
-        return <PahalAadhaarPdfForm {...props} />;
-      case "passport-photo":
-        return <PassportSizePhotoForm {...props} />;
-      case "rc-pvc":
-        return <RcPvcForm {...props} />;
-      case "dl-pvc":
-        return <DlPvcForm {...props} />;
-      case "tamil-astrology":
-        return <TamilAstrologyForm {...props} />;
-      case "fisherman-card":
-        return <FishermanCardForm {...props} />;
-      case "instant-pan":
-        return <InstantPanCardForm {...props} />;
-      default:
-        return null;
-    }
+    return (
+      <DynamicForm
+        formId={selectedSoftware.id}
+        schema={{
+          title: selectedSoftware.name,
+          subtitle: `Register ${selectedSoftware.name} software key.`,
+          paymentLabel: (
+            <div className="flex items-center gap-1.5">
+              <CreditCard size={13} className="text-[#005c3a] dark:text-emerald-400" />
+              <span>Service Charge : ₹ {selectedSoftware.price.toFixed(2)}</span>
+            </div>
+          ),
+          sections: [
+            {
+              title: "Details",
+              fields: [
+                {
+                  name: "mobileNumber",
+                  label: "Mobile Number",
+                  type: "phone",
+                  required: true,
+                },
+                {
+                  name: "deviceName",
+                  label: "Device Name",
+                  type: "text",
+                  placeholder: "e.g., Desktop-PC",
+                  required: true,
+                }
+              ]
+            }
+          ]
+        }}
+        onSubmit={props.onSubmit}
+        onCancel={props.onCancel}
+      />
+    );
   };
 
   return (
@@ -1180,6 +1207,17 @@ export function SoftwareKeysPage() {
                 />
               </div>
             )}
+
+            {isAdmin && !activeForm && (
+              <button
+                onClick={() => setIsAddModalOpen(true)}
+                className="flex items-center justify-center gap-1.5 h-9 px-4 rounded-xl bg-[#005c3a] hover:bg-[#004a2e] text-white text-xs font-bold transition-colors shrink-0"
+              >
+                <Plus size={13} />
+                <span>Add Service</span>
+              </button>
+            )}
+            
             <button
               onClick={() => {
                 if (activeForm) {
@@ -1417,6 +1455,77 @@ export function SoftwareKeysPage() {
                   </form>
                 </>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* ADD SERVICE MODAL (Admin Only) */}
+        {isAddModalOpen && isAdmin && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div
+              className="absolute inset-0 bg-slate-950/30 backdrop-blur-sm"
+              onClick={() => setIsAddModalOpen(false)}
+            />
+            <div className="relative w-full max-w-sm bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl shadow-xl p-6 flex flex-col gap-5 z-10">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-4">
+                <h3 className="font-extrabold text-slate-900 dark:text-white uppercase tracking-wider text-sm">
+                  Add New Service
+                </h3>
+                <button
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="p-1 rounded-md text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  <Plus size={16} className="rotate-45" />
+                </button>
+              </div>
+
+              <form onSubmit={handleAddService} className="flex flex-col gap-4">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-500 uppercase">
+                    Service Name
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newService.name}
+                    onChange={(e) =>
+                      setNewService((p) => ({ ...p, name: e.target.value }))
+                    }
+                    className="w-full px-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/50 text-sm focus:outline-none focus:border-[#005c3a]"
+                    placeholder="e.g. MS Office Key"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-500 uppercase">
+                    Price (₹)
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    value={newService.price}
+                    onChange={(e) =>
+                      setNewService((p) => ({ ...p, price: e.target.value }))
+                    }
+                    className="w-full px-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900/50 text-sm focus:outline-none focus:border-[#005c3a]"
+                    placeholder="e.g. 199"
+                  />
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddModalOpen(false)}
+                    className="flex-1 px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-500 font-bold text-xs uppercase"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 px-4 py-2 rounded-xl bg-[#005c3a] text-white font-bold text-xs uppercase"
+                  >
+                    Add Service
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
