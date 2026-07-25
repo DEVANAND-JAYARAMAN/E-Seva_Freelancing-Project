@@ -21,12 +21,12 @@ export function DistributorsPage() {
       if (res.ok) {
         const data = await res.json();
         const mapped = (data || []).map((user: any) => ({
-          id: user.UserId || user.userId,
+          id: user.userId || user.UserId || "",
           name: user.FullName || user.name || "Unknown",
           email: user.Email || user.email,
           phone: user.Mobile || user.mobile,
           city: "Tamil Nadu",
-          balance: user.WalletBalance || user.walletBalance || 0,
+          balance: Number(user.walletBalance ?? user.WalletBalance ?? 0),
           status: user.Status || user.status || "Active",
           createdDate: (user.CreatedAt || user.createdAt || "").split("T")[0],
           rawPassword: user.RawPassword || user.rawPassword || "N/A",
@@ -146,13 +146,18 @@ export function DistributorsPage() {
         body: JSON.stringify({ userId, amount }),
       });
       if (res.ok) {
-        setDistributors((prev) =>
-          prev.map((item) =>
-            item.id === userId
-              ? { ...item, balance: Number(item.balance || 0) + amount }
-              : item,
-          ),
-        );
+        const data = await res.json().catch(() => ({}));
+        const newBal =
+          data.walletBalance != null ? Number(data.walletBalance) : null;
+        if (newBal != null && !Number.isNaN(newBal)) {
+          setDistributors((prev) =>
+            prev.map((item) =>
+              item.id === userId ? { ...item, balance: newBal } : item,
+            ),
+          );
+        } else {
+          await fetchDistributors();
+        }
         return true;
       }
       return false;

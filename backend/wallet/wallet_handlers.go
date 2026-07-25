@@ -257,8 +257,8 @@ func AdminCreditWallet(c *gin.Context) {
 	ownerPK := "WALLET#" + req.UserId
 	walletSK := "TYPE#Main"
 
-	// Credit the wallet balance directly
-	_, err := db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+	// Credit the wallet balance (source of truth) and return new balance
+	walletOut, err := db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
 		TableName: aws.String("Wallets"),
 		Key: map[string]types.AttributeValue{
 			"PK": &types.AttributeValueMemberS{Value: ownerPK},
@@ -269,6 +269,7 @@ func AdminCreditWallet(c *gin.Context) {
 			":amt": &types.AttributeValueMemberN{Value: strconv.FormatFloat(req.Amount, 'f', 2, 64)},
 			":ts":  &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
 		},
+		ReturnValues: types.ReturnValueAllNew,
 	})
 	if err != nil {
 		log.Printf("Failed to credit wallet for admin credit %s: %v", req.UserId, err)
@@ -276,20 +277,27 @@ func AdminCreditWallet(c *gin.Context) {
 		return
 	}
 
-	// Credit Users.walletBalance
-	_, _ = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+	newBalance := 0.0
+	if balAttr, ok := walletOut.Attributes["balance"].(*types.AttributeValueMemberN); ok {
+		newBalance, _ = strconv.ParseFloat(balAttr.Value, 64)
+	}
+
+	// Mirror absolute wallet balance onto Users so admin list stays in sync
+	_, userErr := db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
 		TableName: aws.String("Users"),
 		Key: map[string]types.AttributeValue{
 			"PK": &types.AttributeValueMemberS{Value: "USER#" + req.UserId},
 			"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
 		},
-		UpdateExpression: aws.String("SET walletBalance = if_not_exists(walletBalance, :zero) + :amt, updatedAt = :ts"),
+		UpdateExpression: aws.String("SET walletBalance = :bal, updatedAt = :ts"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":amt":  &types.AttributeValueMemberN{Value: strconv.FormatFloat(req.Amount, 'f', 2, 64)},
-			":zero": &types.AttributeValueMemberN{Value: "0"},
-			":ts":   &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
+			":bal": &types.AttributeValueMemberN{Value: strconv.FormatFloat(newBalance, 'f', 2, 64)},
+			":ts":  &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
 		},
 	})
+	if userErr != nil {
+		log.Printf("Failed to sync Users.walletBalance for %s: %v", req.UserId, userErr)
+	}
 
 	// Write transaction record
 	txId := "TX#" + now.Format("20060102150405") + "#ADMIN"
@@ -337,7 +345,8 @@ func AdminCreditWallet(c *gin.Context) {
 	})
 
 	c.JSON(http.StatusOK, gin.H{
-		"message": "Recharge successful",
-		"amount":  req.Amount,
+		"message":       "Recharge successful",
+		"amount":        req.Amount,
+		"walletBalance": newBalance,
 	})
 }

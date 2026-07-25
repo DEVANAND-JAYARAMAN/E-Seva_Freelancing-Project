@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -292,16 +293,33 @@ func Login(c *gin.Context) {
 		redirectUrl = "/distributor-dashboard"
 	}
 
+	// Prefer spendable Wallets.balance over Users.walletBalance
+	walletBalance := user.WalletBalance
+	walletOut, wErr := db.DynamoClient.GetItem(context.TODO(), &dynamodb.GetItemInput{
+		TableName: aws.String("Wallets"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: "WALLET#" + user.UserId},
+			"SK": &types.AttributeValueMemberS{Value: "TYPE#Main"},
+		},
+	})
+	if wErr == nil && walletOut.Item != nil {
+		if balAttr, ok := walletOut.Item["balance"].(*types.AttributeValueMemberN); ok {
+			if bal, err := strconv.ParseFloat(balAttr.Value, 64); err == nil {
+				walletBalance = bal
+			}
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"message":     "Login successful",
 		"token":       token,
 		"role":        user.Role,
 		"redirectUrl": redirectUrl,
 		"user": gin.H{
-			"id":       user.UserId,
-			"fullName": user.FullName,
+			"id":            user.UserId,
+			"fullName":      user.FullName,
 			"email":         user.Email,
-			"walletBalance": user.WalletBalance,
+			"walletBalance": walletBalance,
 		},
 	})
 }
@@ -331,6 +349,7 @@ func GetRetailers(c *gin.Context) {
 		return
 	}
 
+	hydrateWalletBalances(users)
 	c.JSON(http.StatusOK, users)
 }
 
@@ -359,5 +378,63 @@ func GetDistributors(c *gin.Context) {
 		return
 	}
 
+	hydrateWalletBalances(users)
 	c.JSON(http.StatusOK, users)
+}
+
+// hydrateWalletBalances overwrites Users.walletBalance with Wallets.balance (spendable truth).
+func hydrateWalletBalances(users []models.User) {
+	if len(users) == 0 {
+		return
+	}
+
+	keys := make([]map[string]types.AttributeValue, 0, len(users))
+	idByPK := make(map[string]int, len(users))
+	for i, u := range users {
+		id := u.UserId
+		if id == "" {
+			id = strings.TrimPrefix(u.PK, "USER#")
+		}
+		if id == "" {
+			continue
+		}
+		pk := "WALLET#" + id
+		keys = append(keys, map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: pk},
+			"SK": &types.AttributeValueMemberS{Value: "TYPE#Main"},
+		})
+		idByPK[pk] = i
+	}
+
+	for start := 0; start < len(keys); start += 100 {
+		end := start + 100
+		if end > len(keys) {
+			end = len(keys)
+		}
+		batch := keys[start:end]
+		out, err := db.DynamoClient.BatchGetItem(context.TODO(), &dynamodb.BatchGetItemInput{
+			RequestItems: map[string]types.KeysAndAttributes{
+				"Wallets": {Keys: batch},
+			},
+		})
+		if err != nil {
+			log.Printf("hydrateWalletBalances BatchGet failed: %v", err)
+			return
+		}
+		for _, item := range out.Responses["Wallets"] {
+			pkAttr, ok := item["PK"].(*types.AttributeValueMemberS)
+			if !ok {
+				continue
+			}
+			idx, ok := idByPK[pkAttr.Value]
+			if !ok {
+				continue
+			}
+			if balAttr, ok := item["balance"].(*types.AttributeValueMemberN); ok {
+				if bal, err := strconv.ParseFloat(balAttr.Value, 64); err == nil {
+					users[idx].WalletBalance = bal
+				}
+			}
+		}
+	}
 }
