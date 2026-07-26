@@ -21,7 +21,7 @@ type RetailerTableProps = {
   retailers: Retailer[];
   onEdit: (retailer: Retailer) => void;
   onToggleStatus: (id: string) => void;
-  onAddMoney: (id: string, amount: number) => Promise<boolean>;
+  onAddMoney: (id: string, amount: number) => Promise<true | string | boolean>;
   onDelete: (id: string) => Promise<boolean> | void;
 };
 
@@ -285,9 +285,13 @@ export function RetailerTable({
                                 Swal.showValidationMessage('Please enter a valid amount');
                                 return false;
                               }
-                              const success = await onAddMoney(retailer.id, Number(amount));
-                              if (!success) {
-                                Swal.showValidationMessage('Failed to add money. Please try again.');
+                              const result = await onAddMoney(retailer.id, Number(amount));
+                              if (result !== true) {
+                                Swal.showValidationMessage(
+                                  typeof result === "string"
+                                    ? result
+                                    : "Failed to add money. Please try again.",
+                                );
                                 return false;
                               }
                               return amount;

@@ -138,15 +138,18 @@ export function DistributorsPage() {
     }
   };
 
-  const handleAddMoney = async (userId: string, amount: number) => {
+  const handleAddMoney = async (
+    userId: string,
+    amount: number,
+  ): Promise<true | string> => {
     try {
       const res = await fetch(apiUrl("admin/wallet/credit"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, amount }),
       });
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
-        const data = await res.json().catch(() => ({}));
         const newBal =
           data.walletBalance != null ? Number(data.walletBalance) : null;
         if (newBal != null && !Number.isNaN(newBal)) {
@@ -160,10 +163,14 @@ export function DistributorsPage() {
         }
         return true;
       }
-      return false;
+      return (
+        data.message ||
+        data.error ||
+        "Failed to add money. Check admin wallet balance."
+      );
     } catch (err) {
       console.error("Failed to add money", err);
-      return false;
+      return "Network error — could not reach server";
     }
   };
 

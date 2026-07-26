@@ -275,17 +275,19 @@ func AdminCreditWallet(c *gin.Context) {
 	ownerPK := "WALLET#" + req.UserId
 	walletSK := "TYPE#Main"
 
-	// Credit the partner wallet
+	// Credit the partner wallet (create row if missing)
 	_, err := db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
 		TableName: aws.String("Wallets"),
 		Key: map[string]types.AttributeValue{
 			"PK": &types.AttributeValueMemberS{Value: ownerPK},
 			"SK": &types.AttributeValueMemberS{Value: walletSK},
 		},
-		UpdateExpression: aws.String("ADD balance :amt, totalCredits :amt SET updatedAt = :ts"),
+		UpdateExpression: aws.String("SET balance = if_not_exists(balance, :zero) + :amt, totalCredits = if_not_exists(totalCredits, :zero) + :amt, updatedAt = :ts, userId = if_not_exists(userId, :uid)"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":amt": &types.AttributeValueMemberN{Value: strconv.FormatFloat(req.Amount, 'f', 2, 64)},
-			":ts":  &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
+			":amt":  &types.AttributeValueMemberN{Value: strconv.FormatFloat(req.Amount, 'f', 2, 64)},
+			":zero": &types.AttributeValueMemberN{Value: "0"},
+			":ts":   &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
+			":uid":  &types.AttributeValueMemberS{Value: req.UserId},
 		},
 	})
 	if err != nil {
@@ -358,7 +360,26 @@ func AdminCreditWallet(c *gin.Context) {
 		"message":            "Recharge successful",
 		"amount":             req.Amount,
 		"adminWalletBalance": admin.GetAdminWalletBalance(),
+		"walletBalance":      partnerBalanceAfterCredit(req.UserId),
 	})
+}
+
+func partnerBalanceAfterCredit(userId string) float64 {
+	out, err := db.DynamoClient.GetItem(context.TODO(), &dynamodb.GetItemInput{
+		TableName: aws.String("Wallets"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: "WALLET#" + userId},
+			"SK": &types.AttributeValueMemberS{Value: "TYPE#Main"},
+		},
+	})
+	if err != nil || out.Item == nil {
+		return 0
+	}
+	if v, ok := out.Item["balance"].(*types.AttributeValueMemberN); ok {
+		f, _ := strconv.ParseFloat(v.Value, 64)
+		return f
+	}
+	return 0
 }
 
 // ResetWallet POST /api/wallet/reset?userId=...
