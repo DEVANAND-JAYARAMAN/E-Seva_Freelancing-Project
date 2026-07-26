@@ -3,7 +3,7 @@ import { X, Upload } from "lucide-react";
 import Swal from "sweetalert2";
 import type { StatusTicket, TicketStatus } from "./types";
 import { useAuth } from "../store/context/AuthContext";
-import { getApiBaseUrl, authFetch } from "../utils/apiBase";
+import { getApiBaseUrl, authFetch, apiUrl } from "../utils/apiBase";
 
 type StatusDetailModalProps = {
   isOpen: boolean;
@@ -17,6 +17,11 @@ type StatusDetailModalProps = {
     ackText?: string,
   ) => void | Promise<boolean | void>;
   isEditMode: boolean;
+  onResubmit?: (
+    id: string,
+    formData: Record<string, string>,
+    documents: string[],
+  ) => Promise<boolean | void>;
 };
 
 const FIELD_LABELS: Record<string, string> = {
@@ -158,6 +163,7 @@ export function StatusDetailModal({
   ticket,
   onUpdateStatus,
   isEditMode,
+  onResubmit,
 }: StatusDetailModalProps) {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
@@ -171,7 +177,15 @@ export function StatusDetailModal({
   const [ackText, setAckText] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [editForm, setEditForm] = useState<Record<string, string>>({});
+  const [pendingFiles, setPendingFiles] = useState<Record<string, File>>({});
+  const [resubmitting, setResubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const canReapply =
+    !isAdmin &&
+    (user?.role === "retailer" || user?.role === "distributor") &&
+    ticket?.status === "Resubmit";
 
   useEffect(() => {
     if (ticket) {
@@ -188,9 +202,26 @@ export function StatusDetailModal({
     }
   }, [ticket, isOpen]);
 
+  useEffect(() => {
+    if (
+      ticket &&
+      isOpen &&
+      !isAdmin &&
+      (user?.role === "retailer" || user?.role === "distributor") &&
+      ticket.status === "Resubmit"
+    ) {
+      setEditForm({ ...(ticket.formData || {}) });
+      setPendingFiles({});
+      setResubmitting(false);
+    }
+  }, [ticket, isOpen, isAdmin, user?.role]);
+
   if (!isOpen || !ticket) return null;
 
-  const formData = ticket.formData || {};
+  const formData =
+    canReapply && Object.keys(editForm).length > 0
+      ? editForm
+      : ticket.formData || {};
   const documents = ticket.documents || [];
 
   const textEntries = Object.entries(formData).filter(
@@ -218,6 +249,85 @@ export function StatusDetailModal({
   const showAckSelect =
     selectedStatus === "Process" || selectedStatus === "Approved";
   const showApplicationNo = selectedStatus === "Process" && ackType === "text";
+
+  const handleReapply = async () => {
+    if (!canReapply || !onResubmit || resubmitting) return;
+
+    setResubmitting(true);
+    try {
+      const updatedForm: Record<string, string> = { ...editForm };
+      const uploadErrors: string[] = [];
+
+      for (const [key, file] of Object.entries(pendingFiles)) {
+        try {
+          const uploadBody = new FormData();
+          uploadBody.append("file", file);
+          const upRes = await authFetch(apiUrl("uploads"), {
+            method: "POST",
+            body: uploadBody,
+          });
+          const upData = await upRes.json().catch(() => ({}));
+          if (!upRes.ok || !upData.path) {
+            uploadErrors.push(file.name);
+            continue;
+          }
+          const path = String(upData.path);
+          let mapped = false;
+          for (const [k, val] of Object.entries(updatedForm)) {
+            if (val === file.name) {
+              updatedForm[k] = path;
+              mapped = true;
+            }
+          }
+          if (!mapped) {
+            updatedForm[key] = path;
+          }
+        } catch {
+          uploadErrors.push(file.name);
+        }
+      }
+
+      if (uploadErrors.length > 0) {
+        await Swal.fire({
+          icon: "error",
+          title: "Upload failed",
+          text: `Could not upload: ${uploadErrors.join(", ")}. Check internet and try again.`,
+        });
+        return;
+      }
+
+      const docs: string[] = [];
+      const seen = new Set<string>();
+      const addDoc = (p: string) => {
+        const t = (p || "").trim();
+        if (!t || seen.has(t) || !t.startsWith("/uploads/")) return;
+        seen.add(t);
+        docs.push(t);
+      };
+      for (const v of Object.values(updatedForm)) {
+        addDoc(v);
+      }
+      for (const doc of documents) {
+        const referenced = Object.values(updatedForm).some((v) => {
+          if (!v) return false;
+          return (
+            v === doc ||
+            doc.endsWith(`/${v}`) ||
+            getFileName(doc) === getFileName(v) ||
+            getFileName(doc) === v
+          );
+        });
+        if (referenced) addDoc(doc);
+      }
+
+      const ok = await onResubmit(ticket.id, updatedForm, docs);
+      if (ok !== false) {
+        onClose();
+      }
+    } finally {
+      setResubmitting(false);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!canEdit || saving) return;
@@ -408,6 +518,15 @@ export function StatusDetailModal({
                 {ticket.serviceName}
               </h2>
 
+              {canReapply &&
+                ticket.remarks &&
+                ticket.remarks !== "No remarks." && (
+                  <div className="mb-5 rounded-md border border-purple-200 bg-purple-50 px-4 py-3 text-sm text-purple-900">
+                    <span className="font-semibold">Admin asked to resubmit:</span>{" "}
+                    {ticket.remarks}
+                  </div>
+                )}
+
               {/* Form fields 2-col */}
               {textEntries.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
@@ -418,17 +537,43 @@ export function StatusDetailModal({
                       </label>
                       {isTextareaKey(key) ? (
                         <textarea
-                          readOnly
+                          readOnly={!canReapply}
                           rows={3}
                           value={value || ""}
-                          className="w-full rounded-md border border-slate-300 bg-[#e9ecef] px-3 py-2 text-sm text-slate-800 resize-y cursor-default focus:outline-none"
+                          onChange={
+                            canReapply
+                              ? (e) =>
+                                  setEditForm((prev) => ({
+                                    ...prev,
+                                    [key]: e.target.value,
+                                  }))
+                              : undefined
+                          }
+                          className={`w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-800 resize-y focus:outline-none ${
+                            canReapply
+                              ? "bg-white focus:ring-2 focus:ring-sky-400"
+                              : "bg-[#e9ecef] cursor-default"
+                          }`}
                         />
                       ) : (
                         <input
                           type="text"
-                          readOnly
+                          readOnly={!canReapply}
                           value={value || ""}
-                          className="w-full rounded-md border border-slate-300 bg-[#e9ecef] px-3 py-2 text-sm text-slate-800 cursor-default focus:outline-none"
+                          onChange={
+                            canReapply
+                              ? (e) =>
+                                  setEditForm((prev) => ({
+                                    ...prev,
+                                    [key]: e.target.value,
+                                  }))
+                              : undefined
+                          }
+                          className={`w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:outline-none ${
+                            canReapply
+                              ? "bg-white focus:ring-2 focus:ring-sky-400"
+                              : "bg-[#e9ecef] cursor-default"
+                          }`}
                         />
                       )}
                     </div>
@@ -445,18 +590,22 @@ export function StatusDetailModal({
                   {fileEntries.map(([key, value], idx) => {
                     const orderKeys = ["photo", "signature", "aadhaarcard"];
                     const orderIdx = orderKeys.indexOf(key.toLowerCase());
+                    const viewSource = canReapply
+                      ? ticket.formData?.[key] || ""
+                      : value || "";
                     const url = resolveDocUrl(
-                      value || "",
+                      viewSource,
                       documents,
                       orderIdx >= 0 ? orderIdx : idx,
                     );
                     const label = formatLabel(key);
+                    const pendingName = pendingFiles[key]?.name;
                     return (
                       <div key={key} className="flex flex-col gap-1">
                         <label className="text-xs font-semibold text-[#7a1f1f]">
                           {label}
                         </label>
-                        <div>
+                        <div className="flex flex-wrap items-center gap-2">
                           <button
                             type="button"
                             onClick={() => openDoc(url, label)}
@@ -464,7 +613,34 @@ export function StatusDetailModal({
                           >
                             View
                           </button>
+                          {canReapply && (
+                            <label className="inline-flex items-center justify-center px-4 py-1.5 rounded bg-[#1e88e5] hover:bg-[#1565c0] text-white text-sm font-semibold cursor-pointer">
+                              Replace
+                              <input
+                                type="file"
+                                className="hidden"
+                                accept="image/*,.pdf,.doc,.docx"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  setPendingFiles((prev) => ({
+                                    ...prev,
+                                    [key]: file,
+                                  }));
+                                  setEditForm((prev) => ({
+                                    ...prev,
+                                    [key]: file.name,
+                                  }));
+                                }}
+                              />
+                            </label>
+                          )}
                         </div>
+                        {canReapply && pendingName && (
+                          <p className="text-[11px] text-slate-500 truncate">
+                            New file: {pendingName}
+                          </p>
+                        )}
                       </div>
                     );
                   })}
@@ -500,8 +676,22 @@ export function StatusDetailModal({
                 </div>
               )}
 
+              {canReapply && (
+                <div className="flex justify-center mt-6">
+                  <button
+                    type="button"
+                    disabled={resubmitting || !onResubmit}
+                    onClick={handleReapply}
+                    className="min-w-[140px] px-8 py-2.5 rounded-md bg-[#1e88e5] hover:bg-[#1565c0] disabled:opacity-60 text-white text-sm font-bold shadow-sm"
+                  >
+                    {resubmitting ? "Reapplying..." : "Reapply"}
+                  </button>
+                </div>
+              )}
+
               {/* Existing acknowledgement (view) */}
               {!canEdit &&
+                !canReapply &&
                 ((ticket.ackFiles && ticket.ackFiles.length > 0) ||
                   ticket.ackText) && (
                   <div className="mt-5 pt-4 border-t border-slate-200 space-y-2">
@@ -678,6 +868,7 @@ export function StatusDetailModal({
 
               {/* View-only remarks */}
               {!canEdit &&
+                !canReapply &&
                 ticket.remarks &&
                 ticket.remarks !== "No remarks." && (
                   <div className="mt-5 pt-4 border-t border-slate-200">

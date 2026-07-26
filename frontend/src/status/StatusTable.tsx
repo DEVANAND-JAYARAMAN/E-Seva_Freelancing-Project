@@ -181,10 +181,22 @@ export function StatusTable({
                       type="button"
                       onClick={() => onSelectTicket(ticket, isAdmin)}
                       className="inline-flex h-8 items-center justify-center gap-1.5 px-3 rounded-lg border border-slate-200/60 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-[#005c3a] dark:text-emerald-400 transition-colors text-[10px] font-extrabold uppercase tracking-wider"
-                      title={isAdmin ? "View & update status" : "View details"}
+                      title={
+                        isAdmin
+                          ? "View & update status"
+                          : ticket.status === "Resubmit"
+                            ? "Reapply with corrections"
+                            : "View details"
+                      }
                     >
                       <Eye size={13} />
-                      <span>{isAdmin ? "Open" : "View"}</span>
+                      <span>
+                        {isAdmin
+                          ? "Open"
+                          : ticket.status === "Resubmit"
+                            ? "Reapply"
+                            : "View"}
+                      </span>
                     </button>
                   </td>
                 </tr>

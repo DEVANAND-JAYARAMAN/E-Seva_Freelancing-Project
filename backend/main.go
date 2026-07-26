@@ -127,6 +127,8 @@ func main() {
 				serviceGroup.POST("/request/", service.CreateServiceRequest)
 				serviceGroup.POST("/:id/status", auth.RequireAdmin(), service.UpdateServiceRequestStatus)
 				serviceGroup.POST("/:id/status/", auth.RequireAdmin(), service.UpdateServiceRequestStatus)
+				serviceGroup.POST("/:id/resubmit", service.ResubmitServiceRequest)
+				serviceGroup.POST("/:id/resubmit/", service.ResubmitServiceRequest)
 				serviceGroup.GET("/requests", service.GetServiceRequests)
 				serviceGroup.POST("/dynamic", auth.RequireAdmin(), service.CreateDynamicService)
 				serviceGroup.GET("/dynamic", service.GetDynamicServices)

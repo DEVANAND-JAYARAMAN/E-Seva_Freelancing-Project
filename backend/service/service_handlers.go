@@ -427,6 +427,155 @@ func CreateServiceRequest(c *gin.Context) {
 	})
 }
 
+type ResubmitServiceReq struct {
+	FormData  map[string]string `json:"formData"`
+	Documents []string          `json:"documents"`
+}
+
+// ResubmitServiceRequest lets a retailer/distributor correct a Resubmit application
+// and move it back to Pending (no extra wallet debit).
+func ResubmitServiceRequest(c *gin.Context) {
+	appId := strings.TrimSpace(c.Param("id"))
+	appId = strings.TrimSuffix(appId, "/")
+	if appId == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Application id required"})
+		return
+	}
+
+	userId := auth.UserID(c)
+	if userId == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization required"})
+		return
+	}
+
+	var req ResubmitServiceReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid body: " + err.Error()})
+		return
+	}
+	if req.FormData == nil {
+		req.FormData = map[string]string{}
+	}
+
+	out, err := db.DynamoClient.GetItem(context.TODO(), &dynamodb.GetItemInput{
+		TableName: aws.String("ServiceApplications"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
+			"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+		},
+	})
+	if err != nil || out.Item == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Service request not found"})
+		return
+	}
+
+	var app models.ServiceApplication
+	_ = attributevalue.UnmarshalMap(out.Item, &app)
+
+	if app.Status != "Resubmit" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Only Resubmit requests can be reapplied"})
+		return
+	}
+	if !auth.IsAdmin(c) && strings.TrimSpace(app.RetailerId) != userId {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Not allowed to resubmit this request"})
+		return
+	}
+
+	docs := req.Documents
+	if docs == nil {
+		docs = []string{}
+	}
+	seen := map[string]bool{}
+	var mergedDocs []string
+	add := func(p string) {
+		p = strings.TrimSpace(p)
+		if p == "" || seen[p] {
+			return
+		}
+		seen[p] = true
+		mergedDocs = append(mergedDocs, p)
+	}
+	for _, p := range docs {
+		add(p)
+	}
+	for _, v := range req.FormData {
+		if strings.HasPrefix(v, "/uploads/") {
+			add(v)
+		}
+	}
+
+	now := time.Now().UTC().Format(time.RFC3339)
+	formAV, err := attributevalue.Marshal(req.FormData)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid formData"})
+		return
+	}
+	docsAV, err := attributevalue.Marshal(mergedDocs)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid documents"})
+		return
+	}
+
+	prevRemarks := strings.TrimSpace(app.AdminRemarks)
+	newRemarks := prevRemarks
+	if prevRemarks != "" && !strings.Contains(strings.ToLower(prevRemarks), "resubmitted by partner") {
+		newRemarks = prevRemarks + " | Resubmitted by partner"
+	} else if prevRemarks == "" {
+		newRemarks = "Resubmitted by partner"
+	}
+
+	_, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+		TableName: aws.String("ServiceApplications"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
+			"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+		},
+		UpdateExpression:    aws.String("SET #s = :pending, formData = :fd, documents = :docs, lastUpdated = :ts, adminRemarks = :remarks"),
+		ConditionExpression: aws.String("#s = :resubmit"),
+		ExpressionAttributeNames: map[string]string{
+			"#s": "status",
+		},
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":pending":  &types.AttributeValueMemberS{Value: "Pending"},
+			":resubmit": &types.AttributeValueMemberS{Value: "Resubmit"},
+			":fd":       formAV,
+			":docs":     docsAV,
+			":ts":       &types.AttributeValueMemberS{Value: now},
+			":remarks":  &types.AttributeValueMemberS{Value: newRemarks},
+		},
+	})
+	if err != nil {
+		log.Printf("ResubmitServiceRequest failed for %s: %v", appId, err)
+		c.JSON(http.StatusConflict, gin.H{"error": "Could not resubmit — status may have changed"})
+		return
+	}
+
+	notifId := generateId("NOTIF")
+	notif := models.Notification{
+		PK:        "USER#ADMIN",
+		SK:        "NOTIF#" + now + "#" + notifId,
+		Id:        notifId,
+		UserId:    "ADMIN",
+		Title:     "Application Resubmitted",
+		Message:   fmt.Sprintf("%s resubmitted %s (%s)", app.RetailerName, app.ServiceName, appId),
+		Type:      "info",
+		IsRead:    false,
+		CreatedAt: now,
+		Link:      "/status",
+	}
+	notifItem, _ := attributevalue.MarshalMap(notif)
+	_, _ = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+		TableName: aws.String("Notifications"),
+		Item:      notifItem,
+	})
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Application resubmitted successfully",
+		"id":      appId,
+		"status":  "Pending",
+	})
+}
+
 func UpdateServiceRequestStatus(c *gin.Context) {
 	appId := strings.TrimSpace(c.Param("id"))
 	appId = strings.TrimSuffix(appId, "/")

@@ -259,6 +259,48 @@ export function StatusPage() {
     }
   };
 
+  const handleResubmit = async (
+    id: string,
+    formData: Record<string, string>,
+    documents: string[],
+  ): Promise<boolean> => {
+    try {
+      const res = await authFetch(apiUrl(`services/${id}/resubmit`), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ formData, documents }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        await Swal.fire({
+          icon: "error",
+          title: "Resubmit failed",
+          text: data.error || data.message || "Could not resubmit application",
+        });
+        return false;
+      }
+
+      await fetchTickets();
+      setIsDetailOpen(false);
+      await Swal.fire({
+        icon: "success",
+        title: "Resubmitted",
+        text: data.message || "Application resubmitted successfully",
+        timer: 1400,
+        showConfirmButton: false,
+      });
+      return true;
+    } catch (e) {
+      console.error(e);
+      await Swal.fire({
+        icon: "error",
+        title: "Network error",
+        text: "Could not reach server to resubmit",
+      });
+      return false;
+    }
+  };
+
   const handleSelectTicket = (ticket: StatusTicket, editMode = false) => {
     setSelectedTicket(ticket);
     setIsModalEditMode(editMode);
@@ -289,6 +331,7 @@ export function StatusPage() {
           ticket={selectedTicket}
           onUpdateStatus={handleUpdateStatus}
           isEditMode={isModalEditMode}
+          onResubmit={handleResubmit}
         />
       </section>
     </AppShell>
