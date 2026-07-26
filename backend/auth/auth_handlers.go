@@ -27,8 +27,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// In production, load this from .env
-var jwtSecret = []byte("your-super-secret-jwt-key-change-this-in-production")
+// JWT signing uses jwtSecretBytes() from middleware.go (JWT_SECRET env or legacy default).
 
 type SignupRequest struct {
 	FullName string `json:"fullName" binding:"required"`
@@ -134,7 +133,7 @@ func generateToken(userId string, role string) (string, error) {
 		"role":   role,
 		"exp":    time.Now().Add(time.Hour * 24).Unix(),
 	})
-	return token.SignedString(jwtSecret)
+	return token.SignedString(jwtSecretBytes())
 }
 
 func GetUserByEmail(email string) (*models.User, error) {

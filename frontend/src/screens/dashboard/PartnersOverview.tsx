@@ -13,7 +13,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
-import { apiUrl } from "../../utils/apiBase";
+import { apiUrl, authFetch } from "../../utils/apiBase";
 import { formatTxnDateTime } from "../../utils/formatters";
 
 type PartnerService = {
@@ -127,7 +127,7 @@ export function PartnersPage() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    fetch(apiUrl("admin/partners-overview"), { cache: "no-store" })
+    authFetch(apiUrl("admin/partners-overview"), { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
         if (cancelled) return;

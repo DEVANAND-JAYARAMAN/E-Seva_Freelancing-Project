@@ -10,6 +10,7 @@ import React, {
 } from "react";
 import { usePathname } from "next/navigation";
 import { useAuth } from "./AuthContext";
+import { authFetch } from "../../utils/apiBase";
 
 export interface FieldOverride {
   label?: string;
@@ -183,7 +184,7 @@ export const FormEditProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       try {
-        const res = await fetch(`${getApiBase()}/api/settings/form_overrides`);
+        const res = await authFetch(`${getApiBase()}/api/settings/form_overrides`);
         if (res.ok) {
           const data = await res.json();
           const remote = normalizeOverridesMap(data);
@@ -208,7 +209,7 @@ export const FormEditProvider: React.FC<{ children: React.ReactNode }> = ({
     async (updated: Record<string, FormOverrides>) => {
       let remote: Record<string, FormOverrides> = {};
       try {
-        const getRes = await fetch(
+        const getRes = await authFetch(
           `${getApiBase()}/api/settings/form_overrides`,
         );
         if (getRes.ok) {
@@ -231,7 +232,7 @@ export const FormEditProvider: React.FC<{ children: React.ReactNode }> = ({
 
       let apiOk = false;
       try {
-        const res = await fetch(`${getApiBase()}/api/settings/form_overrides`, {
+        const res = await authFetch(`${getApiBase()}/api/settings/form_overrides`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(merged),

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { FileText, User, Wallet } from "lucide-react";
 import { useAuth } from "../../store/context/AuthContext";
 import { formatTxnDateTime } from "../../utils/formatters";
+import { authFetch } from "../../utils/apiBase";
 
 export function ServiceQueue({ since }: { since?: string }) {
   const { user } = useAuth();
@@ -15,7 +16,7 @@ export function ServiceQueue({ since }: { since?: string }) {
       url += `?userId=${user.id}`;
     }
 
-    fetch(url, { cache: "no-store" })
+    authFetch(url, { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
         const dataArray = Array.isArray(data) ? data : [];

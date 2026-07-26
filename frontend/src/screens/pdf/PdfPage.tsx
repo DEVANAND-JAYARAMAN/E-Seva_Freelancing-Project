@@ -25,6 +25,7 @@ import { useAuth } from "../../store/context/AuthContext";
 import { useFormEdit } from "../../store/context/FormEditContext";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
 import { openServiceCardEditor } from "../../utils/serviceCardEditor";
+import { authFetch } from "../../utils/apiBase";
 
 // Interface for PDF services definition
 interface PdfService {
@@ -107,7 +108,7 @@ export function PdfPage() {
     const fetchServices = async () => {
       try {
         const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
-        const response = await fetch(`${apiUrl}/api/services/pdf-pricing?t=${Date.now()}`);
+        const response = await authFetch(`${apiUrl}/api/services/pdf-pricing?t=${Date.now()}`);
         if (response.ok) {
           const data = await response.json();
           if (data && Array.isArray(data) && data.length > 0) {
@@ -124,7 +125,7 @@ export function PdfPage() {
   const saveServicesToDb = async (updatedList: PdfService[]) => {
     try {
         const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
-        await fetch(`${apiUrl}/api/services/pdf-pricing`, {
+        await authFetch(`${apiUrl}/api/services/pdf-pricing`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(updatedList)
@@ -649,7 +650,7 @@ export function PdfPage() {
             /\/api$/,
             "",
           );
-        const res = await fetch(`${apiUrl}/api/services/request`, {
+        const res = await authFetch(`${apiUrl}/api/services/request`, {
           method: "POST",
           body: payload,
         });

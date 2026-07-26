@@ -62,102 +62,107 @@ func main() {
 			authGroup.POST("/login", auth.Login)
 		}
 
-		api.GET("/retailers", auth.GetRetailers)
-		api.GET("/distributors", auth.GetDistributors)
-		api.PUT("/users/:id", auth.UpdateUser)
-		api.PUT("/users/:id/", auth.UpdateUser)
-		api.DELETE("/users/:id", auth.DeleteUser)
-		api.DELETE("/users/:id/", auth.DeleteUser)
-
-		crmGroup := api.Group("/crm")
+		// Public payment callbacks (idempotent credit inside ProcessMugavaiPayment)
+		api.POST("/wallet/payment/callback", wallet.HandlePaymentCallback)
+		v1Public := api.Group("/v1/wallet")
 		{
-			crmGroup.POST("/customers", crm.CreateCustomer)
-			crmGroup.GET("/customers", crm.GetCustomers)
+			v1Public.POST("/recharge/webhook", service.RechargeWebhook)
+			v1Public.Any("/recharge/return", service.RechargeReturn)
 		}
 
-		billingGroup := api.Group("/billing")
+		// Authenticated routes
+		secured := api.Group("/")
+		secured.Use(auth.RequireAuth())
 		{
-			billingGroup.POST("/invoices", billing.CreateInvoice)
-			billingGroup.GET("/invoices", billing.GetInvoices)
-		}
+			secured.GET("/retailers", auth.RequireAdmin(), auth.GetRetailers)
+			secured.GET("/distributors", auth.RequireAdmin(), auth.GetDistributors)
+			secured.PUT("/users/:id", auth.RequireAdmin(), auth.UpdateUser)
+			secured.PUT("/users/:id/", auth.RequireAdmin(), auth.UpdateUser)
+			secured.DELETE("/users/:id", auth.RequireAdmin(), auth.DeleteUser)
+			secured.DELETE("/users/:id/", auth.RequireAdmin(), auth.DeleteUser)
 
-		// Notifications
-		api.POST("/notifications", notification.CreateNotification)
-		api.GET("/notifications", notification.GetNotifications)
-		api.DELETE("/notifications/all", notification.ClearAllNotifications)
-		api.PATCH("/notifications/read-all", notification.MarkAllAsRead)
-		api.PATCH("/notifications/:id/read", notification.MarkAsRead)
-		api.DELETE("/notifications/:id", notification.DeleteNotification)
-
-		// Global Alerts & Service Messages
-		api.GET("/alerts", notification.GetGlobalAlerts)
-		api.POST("/alerts", notification.CreateGlobalAlert)
-		api.PUT("/alerts/:id", notification.ToggleGlobalAlert)
-		api.DELETE("/alerts/:id", notification.DeleteGlobalAlert)
-
-		api.GET("/service-messages/:serviceId", notification.GetServiceMessages)
-		api.POST("/service-messages", notification.CreateServiceMessage)
-		api.PUT("/service-messages/:id", notification.ToggleServiceMessage)
-		api.DELETE("/service-messages/:id", notification.DeleteServiceMessage)
-
-		settingsGroup := api.Group("/settings")
-		{
-			settingsGroup.GET("/:key", service.GetSetting)
-			settingsGroup.PUT("/:key", service.UpdateSetting)
-		}
-
-		api.POST("/uploads", service.UploadFile)
-		api.POST("/uploads/", service.UploadFile)
-
-		serviceGroup := api.Group("/services")
-		{
-			serviceGroup.POST("/request", service.CreateServiceRequest)
-			serviceGroup.POST("/request/", service.CreateServiceRequest)
-			serviceGroup.POST("/:id/status", service.UpdateServiceRequestStatus)
-			serviceGroup.POST("/:id/status/", service.UpdateServiceRequestStatus)
-			serviceGroup.GET("/requests", service.GetServiceRequests)
-			serviceGroup.POST("/dynamic", service.CreateDynamicService)
-			serviceGroup.GET("/dynamic", service.GetDynamicServices)
-			serviceGroup.PUT("/dynamic/:id", service.UpdateDynamicService)
-			serviceGroup.PUT("/dynamic/:id/cost", service.UpdateOfficialCost)
-			serviceGroup.DELETE("/dynamic/:id", service.DeleteDynamicService)
-			serviceGroup.GET("/pricing", service.GetPricingConfig)
-			serviceGroup.PUT("/pricing", service.UpdatePricingConfig)
-			serviceGroup.GET("/pdf-pricing", service.GetPdfPricingConfig)
-			serviceGroup.PUT("/pdf-pricing", service.UpdatePdfPricingConfig)
-		}
-
-		walletGroup := api.Group("/wallet")
-		{
-			walletGroup.GET("/transactions", service.GetWalletTransactions)
-			walletGroup.GET("/balance", wallet.GetWalletBalance)
-			walletGroup.POST("/reset", wallet.ResetWallet)
-			walletGroup.POST("/recharge/gateway", wallet.InitiateGatewayRecharge)
-			walletGroup.POST("/recharge/manual", wallet.ManualRecharge)
-			walletGroup.POST("/payment/callback", wallet.HandlePaymentCallback)
-			walletGroup.GET("/recharge/status/:order_id", wallet.CheckGatewayRechargeStatus)
-		}
-
-		adminGroup := api.Group("/admin")
-		{
-			adminGroup.GET("/dashboard", admin.GetDashboardStats)
-			adminGroup.POST("/dashboard/reset", admin.ResetDashboardCounts)
-			adminGroup.POST("/dashboard/reset/", admin.ResetDashboardCounts)
-			adminGroup.GET("/partners-overview", admin.GetPartnersOverview)
-			adminGroup.GET("/wallet/transactions", admin.GetAdminWalletTransactions)
-			adminGroup.GET("/daily-payments", admin.GetDailyPayments)
-			adminGroup.POST("/wallet/add-money", admin.AdminAddMoneyHandler)
-			adminGroup.POST("/wallet/credit", wallet.AdminCreditWallet)
-		}
-
-		v1Group := api.Group("/v1")
-		{
-			walletV1 := v1Group.Group("/wallet")
+			crmGroup := secured.Group("/crm")
 			{
-				walletV1.POST("/recharge/gateway", service.RechargeGateway)
-				walletV1.POST("/recharge/webhook", service.RechargeWebhook)
-				walletV1.Any("/recharge/return", service.RechargeReturn)
+				crmGroup.POST("/customers", crm.CreateCustomer)
+				crmGroup.GET("/customers", crm.GetCustomers)
 			}
+
+			billingGroup := secured.Group("/billing")
+			{
+				billingGroup.POST("/invoices", billing.CreateInvoice)
+				billingGroup.GET("/invoices", billing.GetInvoices)
+			}
+
+			// Notifications
+			secured.POST("/notifications", notification.CreateNotification)
+			secured.GET("/notifications", notification.GetNotifications)
+			secured.DELETE("/notifications/all", notification.ClearAllNotifications)
+			secured.PATCH("/notifications/read-all", notification.MarkAllAsRead)
+			secured.PATCH("/notifications/:id/read", notification.MarkAsRead)
+			secured.DELETE("/notifications/:id", notification.DeleteNotification)
+
+			// Global Alerts & Service Messages
+			secured.GET("/alerts", notification.GetGlobalAlerts)
+			secured.POST("/alerts", auth.RequireAdmin(), notification.CreateGlobalAlert)
+			secured.PUT("/alerts/:id", auth.RequireAdmin(), notification.ToggleGlobalAlert)
+			secured.DELETE("/alerts/:id", auth.RequireAdmin(), notification.DeleteGlobalAlert)
+
+			secured.GET("/service-messages/:serviceId", notification.GetServiceMessages)
+			secured.POST("/service-messages", auth.RequireAdmin(), notification.CreateServiceMessage)
+			secured.PUT("/service-messages/:id", auth.RequireAdmin(), notification.ToggleServiceMessage)
+			secured.DELETE("/service-messages/:id", auth.RequireAdmin(), notification.DeleteServiceMessage)
+
+			settingsGroup := secured.Group("/settings")
+			{
+				settingsGroup.GET("/:key", service.GetSetting)
+				settingsGroup.PUT("/:key", auth.RequireAdmin(), service.UpdateSetting)
+			}
+
+			secured.POST("/uploads", service.UploadFile)
+			secured.POST("/uploads/", service.UploadFile)
+
+			serviceGroup := secured.Group("/services")
+			{
+				serviceGroup.POST("/request", service.CreateServiceRequest)
+				serviceGroup.POST("/request/", service.CreateServiceRequest)
+				serviceGroup.POST("/:id/status", auth.RequireAdmin(), service.UpdateServiceRequestStatus)
+				serviceGroup.POST("/:id/status/", auth.RequireAdmin(), service.UpdateServiceRequestStatus)
+				serviceGroup.GET("/requests", service.GetServiceRequests)
+				serviceGroup.POST("/dynamic", auth.RequireAdmin(), service.CreateDynamicService)
+				serviceGroup.GET("/dynamic", service.GetDynamicServices)
+				serviceGroup.PUT("/dynamic/:id", auth.RequireAdmin(), service.UpdateDynamicService)
+				serviceGroup.PUT("/dynamic/:id/cost", auth.RequireAdmin(), service.UpdateOfficialCost)
+				serviceGroup.DELETE("/dynamic/:id", auth.RequireAdmin(), service.DeleteDynamicService)
+				serviceGroup.GET("/pricing", service.GetPricingConfig)
+				serviceGroup.PUT("/pricing", auth.RequireAdmin(), service.UpdatePricingConfig)
+				serviceGroup.GET("/pdf-pricing", service.GetPdfPricingConfig)
+				serviceGroup.PUT("/pdf-pricing", auth.RequireAdmin(), service.UpdatePdfPricingConfig)
+			}
+
+			walletGroup := secured.Group("/wallet")
+			{
+				walletGroup.GET("/transactions", service.GetWalletTransactions)
+				walletGroup.GET("/balance", wallet.GetWalletBalance)
+				walletGroup.POST("/reset", auth.RequireAdmin(), wallet.ResetWallet)
+				walletGroup.POST("/recharge/gateway", wallet.InitiateGatewayRecharge)
+				walletGroup.POST("/recharge/manual", auth.RequireAdmin(), wallet.ManualRecharge)
+				walletGroup.GET("/recharge/status/:order_id", wallet.CheckGatewayRechargeStatus)
+			}
+
+			adminGroup := secured.Group("/admin")
+			adminGroup.Use(auth.RequireAdmin())
+			{
+				adminGroup.GET("/dashboard", admin.GetDashboardStats)
+				adminGroup.POST("/dashboard/reset", admin.ResetDashboardCounts)
+				adminGroup.POST("/dashboard/reset/", admin.ResetDashboardCounts)
+				adminGroup.GET("/partners-overview", admin.GetPartnersOverview)
+				adminGroup.GET("/wallet/transactions", admin.GetAdminWalletTransactions)
+				adminGroup.GET("/daily-payments", admin.GetDailyPayments)
+				adminGroup.POST("/wallet/add-money", admin.AdminAddMoneyHandler)
+				adminGroup.POST("/wallet/credit", wallet.AdminCreditWallet)
+			}
+
+			secured.POST("/v1/wallet/recharge/gateway", service.RechargeGateway)
 		}
 	}
 

@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { AppShell } from "../layouts/AppShell";
 import { useAuth } from "../store/context/AuthContext";
-import { apiUrl } from "../utils/apiBase";
+import { apiUrl, authFetch } from "../utils/apiBase";
 import { formatTxnDateTime } from "../utils/formatters";
 import Swal from "sweetalert2";
 
@@ -46,7 +46,7 @@ export function AdminWalletPage() {
   const loadLedger = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(apiUrl("admin/wallet/transactions"), {
+      const res = await authFetch(apiUrl("admin/wallet/transactions"), {
         cache: "no-store",
       });
       if (!res.ok) return;
@@ -132,7 +132,7 @@ export function AdminWalletPage() {
     }
     setSaving(true);
     try {
-      const res = await fetch(apiUrl("admin/wallet/add-money"), {
+      const res = await authFetch(apiUrl("admin/wallet/add-money"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ amount: amt }),

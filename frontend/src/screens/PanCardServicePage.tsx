@@ -7,6 +7,7 @@ import { InputField, SubmitButton, SelectField } from "./services/form/FormField
 import { useAuth } from "../store/context/AuthContext";
 import { useFormEdit } from "../store/context/FormEditContext";
 import { useRouter } from "next/navigation";
+import { authFetch } from "../utils/apiBase";
 
 export function PanCardServicePage() {
   const { user } = useAuth();
@@ -75,7 +76,7 @@ export function PanCardServicePage() {
       });
 
       const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
-      const res = await fetch(`${apiUrl}/api/services/request`, {
+      const res = await authFetch(`${apiUrl}/api/services/request`, {
         method: "POST",
         body: payload,
       });

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { AppShell } from "../layouts/AppShell";
 import { CheckCircle2, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { authFetch } from "../utils/apiBase";
 
 interface ServicePriceRow {
   slNo: number;
@@ -125,7 +126,7 @@ export function PdfServicePage() {
   useEffect(() => {
     const fetchPrices = async () => {
       try {
-        const response = await fetch(
+        const response = await authFetch(
           `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/pdf-pricing`,
         );
         if (response.ok) {
@@ -194,7 +195,7 @@ export function PdfServicePage() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch(
+      const response = await authFetch(
         `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/pdf-pricing`,
         {
           method: "PUT",

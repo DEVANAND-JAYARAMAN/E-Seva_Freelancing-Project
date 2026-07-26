@@ -9,7 +9,7 @@ import {
   ServiceSuccessScreen,
 } from "../../../components/ServicePaymentScreen";
 import { ServiceMessageManager } from "../../../components/ServiceMessageManager";
-import { apiUrl } from "../../../utils/apiBase";
+import { apiUrl, authFetch } from "../../../utils/apiBase";
 import { EService } from "../ServicesPage";
 
 export function DynamicServicePage({ serviceId }: { serviceId: string }) {
@@ -27,7 +27,7 @@ export function DynamicServicePage({ serviceId }: { serviceId: string }) {
   useEffect(() => {
     const fetchService = async () => {
       try {
-        const response = await fetch(apiUrl("services/dynamic"));
+        const response = await authFetch(apiUrl("services/dynamic"));
         if (response.ok) {
           const data = await response.json();
           const found = data.find((d: any) => d.id === serviceId);

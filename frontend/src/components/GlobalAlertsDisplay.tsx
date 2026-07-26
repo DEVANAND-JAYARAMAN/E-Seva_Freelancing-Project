@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { X, AlertCircle } from "lucide-react";
 import { useAuth } from "../store/context/AuthContext";
+import { authFetch } from "../utils/apiBase";
 
 interface GlobalAlert {
   id: string;
@@ -17,7 +18,7 @@ export const GlobalAlertsDisplay = () => {
     const fetchAlerts = async () => {
       try {
         const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
-        const res = await fetch(`${apiUrl}/api/alerts`);
+        const res = await authFetch(`${apiUrl}/api/alerts`);
         if (res.ok) {
           const data = await res.json();
           const activeAlerts = data.filter((a: any) => a.status === "Active");

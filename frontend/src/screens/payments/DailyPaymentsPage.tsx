@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Search, CheckCircle2, IndianRupee, CalendarDays } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
-import { apiUrl } from "../../utils/apiBase";
+import { apiUrl, authFetch } from "../../utils/apiBase";
 
 type DayRow = {
   date: string;
@@ -31,7 +31,7 @@ export function DailyPaymentsPage() {
     (async () => {
       setLoading(true);
       try {
-        const res = await fetch(apiUrl("admin/daily-payments"));
+        const res = await authFetch(apiUrl("admin/daily-payments"));
         if (res.ok) {
           const json = await res.json();
           if (!cancelled) setData(json);

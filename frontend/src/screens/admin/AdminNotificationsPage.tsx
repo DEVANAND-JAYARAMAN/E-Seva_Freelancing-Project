@@ -5,6 +5,7 @@ import { AppShell } from "../../layouts/AppShell";
 import { Plus, Trash2, CheckCircle2, AlertCircle } from "lucide-react";
 import Swal from "sweetalert2";
 import { formatTxnDateTime } from "../../utils/formatters";
+import { authFetch } from "../../utils/apiBase";
 
 interface GlobalAlert {
   id: string;
@@ -21,7 +22,7 @@ export function AdminNotificationsPage() {
   const fetchAlerts = async () => {
     try {
       const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
-      const res = await fetch(`${apiUrl}/api/alerts`);
+      const res = await authFetch(`${apiUrl}/api/alerts`);
       if (res.ok) {
         const data = await res.json();
         // sort by newest
@@ -66,7 +67,7 @@ export function AdminNotificationsPage() {
       const initialStatus = activeCount < 2 ? "Active" : "Inactive";
       
       const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
-      const res = await fetch(`${apiUrl}/api/alerts`, {
+      const res = await authFetch(`${apiUrl}/api/alerts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: newMessage.trim(), status: initialStatus })
@@ -101,7 +102,7 @@ export function AdminNotificationsPage() {
 
     try {
       const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
-      await fetch(`${apiUrl}/api/alerts/${alert.id}`, {
+      await authFetch(`${apiUrl}/api/alerts/${alert.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus })
@@ -126,7 +127,7 @@ export function AdminNotificationsPage() {
     if (confirm.isConfirmed) {
       try {
         const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
-        await fetch(`${apiUrl}/api/alerts/${id}`, { method: "DELETE" });
+        await authFetch(`${apiUrl}/api/alerts/${id}`, { method: "DELETE" });
         fetchAlerts();
       } catch (e) {}
     }

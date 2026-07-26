@@ -19,7 +19,7 @@ import {
 import { AppShell } from "../layouts/AppShell";
 import { useAuth } from "../store/context/AuthContext";
 import { type WalletTransaction, type PaymentRequest } from "../config/data";
-import { apiUrl } from "../utils/apiBase";
+import { apiUrl, authFetch } from "../utils/apiBase";
 import { formatTxnDateTime, nowTxnDateTime } from "../utils/formatters";
 
 function mapTx(raw: any): WalletTransaction {
@@ -62,7 +62,7 @@ export function WalletPage() {
           user?.role === "admin"
             ? apiUrl("admin/wallet/transactions")
             : `${apiUrl("wallet/transactions")}?userId=${encodeURIComponent(user?.id || "")}`;
-        const res = await fetch(endpoint, {
+        const res = await authFetch(endpoint, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
@@ -192,7 +192,7 @@ export function WalletPage() {
           /(?:\/api|\/)+$/,
           "",
         );
-        const res = await fetch(`${baseUrl}/api/v1/wallet/recharge/gateway`, {
+        const res = await authFetch(`${baseUrl}/api/v1/wallet/recharge/gateway`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -242,7 +242,7 @@ export function WalletPage() {
 
               // Poll backend for final status
               try {
-                const statusRes = await fetch(
+                const statusRes = await authFetch(
                   `${baseUrl}/api/wallet/recharge/status/${data.data.order_id}`,
                   {
                     headers: {
@@ -354,7 +354,7 @@ export function WalletPage() {
         /(?:\/api|\/)+$/,
         "",
       );
-      const res = await fetch(`${baseUrl}/api/wallet/recharge/manual`, {
+      const res = await authFetch(`${baseUrl}/api/wallet/recharge/manual`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -461,7 +461,7 @@ export function WalletPage() {
       return;
     }
     try {
-      const res = await fetch(
+      const res = await authFetch(
         `${apiUrl("wallet/reset")}?userId=${encodeURIComponent(userId)}`,
         {
           method: "POST",

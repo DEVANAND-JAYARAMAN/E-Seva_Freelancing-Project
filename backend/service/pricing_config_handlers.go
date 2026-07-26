@@ -209,31 +209,6 @@ func ResolveServiceChargeFromPricing(userId, categoryId, serviceId, serviceName 
 				}
 			}
 		}
-		for _, row := range list {
-			name, _ := row["name"].(string)
-			nn := norm(name)
-			if sname != "" && (strings.Contains(nn, sname) || strings.Contains(sname, nn)) {
-				p := pickPrice(row)
-				if p > 0 {
-					return p, true
-				}
-			}
-		}
-		if len(list) > 0 {
-			for _, row := range list {
-				id, _ := row["id"].(string)
-				if strings.HasSuffix(strings.ToLower(id), "main") {
-					p := pickPrice(row)
-					if p > 0 {
-						return p, true
-					}
-				}
-			}
-			p := pickPrice(list[0])
-			if p > 0 {
-				return p, true
-			}
-		}
 		return 0, false
 	}
 
@@ -243,6 +218,7 @@ func ResolveServiceChargeFromPricing(userId, categoryId, serviceId, serviceName 
 				return p, true
 			}
 		}
+		return 0, false
 	}
 	for _, v := range matrix {
 		if list := asRows(v); len(list) > 0 {

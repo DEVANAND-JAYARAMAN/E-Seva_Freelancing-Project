@@ -3,7 +3,9 @@ package wallet
 import (
 	"context"
 	"net/http"
+	"strings"
 
+	"eservice-backend/auth"
 	"eservice-backend/db"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -13,32 +15,39 @@ import (
 )
 
 func CheckGatewayRechargeStatus(c *gin.Context) {
-	orderID := c.Param("order_id")
+	orderID := strings.TrimSpace(c.Param("order_id"))
 	if orderID == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Order ID is required"})
 		return
 	}
 
-	out, err := db.DynamoClient.Scan(context.TODO(), &dynamodb.ScanInput{
-		TableName:        aws.String("WalletTransactions"),
-		FilterExpression: aws.String("id = :oid"),
-		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":oid": &types.AttributeValueMemberS{Value: orderID},
+	out, err := db.DynamoClient.GetItem(context.TODO(), &dynamodb.GetItemInput{
+		TableName: aws.String("WalletTransactions"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: "ORDER#" + orderID},
+			"SK": &types.AttributeValueMemberS{Value: "META"},
 		},
 	})
-
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to check status"})
 		return
 	}
+	if out.Item == nil {
+		c.JSON(http.StatusOK, gin.H{"status": "Pending"})
+		return
+	}
 
-	if len(out.Items) > 0 {
-		statusAttr := out.Items[0]["status"]
-		if s, ok := statusAttr.(*types.AttributeValueMemberS); ok {
-			c.JSON(http.StatusOK, gin.H{"status": s.Value})
+	// Only the order owner (or admin) may poll
+	if uid, ok := out.Item["userId"].(*types.AttributeValueMemberS); ok {
+		if !auth.IsAdmin(c) && uid.Value != auth.UserID(c) {
+			c.JSON(http.StatusForbidden, gin.H{"message": "Not allowed"})
 			return
 		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{"status": "Pending"})
+	status := "Pending"
+	if s, ok := out.Item["status"].(*types.AttributeValueMemberS); ok && s.Value != "" {
+		status = s.Value
+	}
+	c.JSON(http.StatusOK, gin.H{"status": status})
 }

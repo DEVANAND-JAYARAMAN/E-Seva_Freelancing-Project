@@ -33,3 +33,27 @@ export function apiUrl(path: string): string {
   }
   return url;
 }
+
+/** Authorization headers from the logged-in session token. */
+export function authHeaders(extra?: HeadersInit): Headers {
+  const headers = new Headers(extra || {});
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("token");
+    if (token && !headers.has("Authorization")) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
+  }
+  return headers;
+}
+
+/**
+ * fetch() wrapper that always attaches Bearer token when present.
+ * Use for all authenticated API calls.
+ */
+export function authFetch(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+): Promise<Response> {
+  const headers = authHeaders(init?.headers);
+  return fetch(input, { ...init, headers });
+}

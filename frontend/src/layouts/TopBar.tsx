@@ -16,6 +16,7 @@ import { useTheme } from "../store/context/ThemeProvider";
 import { useAuth } from "../store/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { formatTxnDateTime } from "../utils/formatters";
+import { authFetch } from "../utils/apiBase";
 
 type Notification = {
   id: string;
@@ -61,12 +62,12 @@ export function TopBar({ onMenuClick, activePage }: TopBarProps) {
       const targetUserId = user.role === "admin" ? "ADMIN" : user.id;
       let res;
       try {
-        res = await fetch(
+        res = await authFetch(
           `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/notifications?userId=${targetUserId}`,
         );
       } catch (e) {
         // Fallback for trailing slash redirect CORS issue
-        res = await fetch(
+        res = await authFetch(
           `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/notifications/?userId=${targetUserId}`,
         );
       }
@@ -95,7 +96,7 @@ export function TopBar({ onMenuClick, activePage }: TopBarProps) {
   const markAsRead = async (id: string, createdAt: string) => {
     if (!user) return;
     try {
-      await fetch(
+      await authFetch(
         `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/notifications/${id}/read?userId=${user.id}&createdAt=${createdAt}`,
         {
           method: "PATCH",
@@ -110,7 +111,7 @@ export function TopBar({ onMenuClick, activePage }: TopBarProps) {
   const clearNotification = async (id: string, createdAt: string) => {
     if (!user) return;
     try {
-      await fetch(
+      await authFetch(
         `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/notifications/${id}?userId=${user.role === "admin" ? "ADMIN" : user.id}&createdAt=${createdAt}`,
         { method: "DELETE" },
       );
@@ -206,7 +207,7 @@ export function TopBar({ onMenuClick, activePage }: TopBarProps) {
                 if (user) {
                   const targetUserId =
                     user.role === "admin" ? "ADMIN" : user.id;
-                  fetch(
+                  authFetch(
                     `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/notifications/read-all?userId=${targetUserId}`,
                     { method: "PATCH" },
                   ).catch(console.error);
@@ -240,7 +241,7 @@ export function TopBar({ onMenuClick, activePage }: TopBarProps) {
                       onClick={async () => {
                         if (!user) return;
                         try {
-                          await fetch(
+                          await authFetch(
                             `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/notifications/all?userId=${user.role === "admin" ? "ADMIN" : user.id}`,
                             { method: "DELETE" },
                           );

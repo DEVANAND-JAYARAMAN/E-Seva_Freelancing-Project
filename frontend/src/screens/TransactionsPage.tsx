@@ -6,6 +6,7 @@ import { History, Search, ArrowLeft, Activity, Download } from "lucide-react";
 import { AppShell } from "../layouts/AppShell";
 import { useAuth } from "../store/context/AuthContext";
 import { formatTxnDateTime } from "../utils/formatters";
+import { authFetch } from "../utils/apiBase";
 
 interface WalletTransaction {
   id: string;
@@ -47,7 +48,7 @@ export function TransactionsPage() {
           /(?:\/api|\/)+$/,
           "",
         );
-        const res = await fetch(
+        const res = await authFetch(
           `${baseUrl}/api/wallet/transactions?userId=${targetUserId}`,
           {
             headers: {

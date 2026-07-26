@@ -10,7 +10,7 @@ import React, {
   useRef,
   type ReactNode,
 } from "react";
-import { apiUrl } from "../../utils/apiBase";
+import { apiUrl, authFetch } from "../../utils/apiBase";
 
 export type UserRole = "admin" | "retailer" | "distributor" | "customer";
 
@@ -195,7 +195,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!current?.id && !current?.email) return;
     try {
       if (current.role === "admin") {
-        const res = await fetch(apiUrl("admin/dashboard"));
+        const res = await authFetch(apiUrl("admin/dashboard"));
         if (res.ok) {
           const data = await res.json();
           if (typeof data?.adminWalletBalance === "number") {
@@ -207,7 +207,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       // Prefer live wallet balance by userId (admin top-ups update this)
       if (current.id) {
-        const balRes = await fetch(
+        const balRes = await authFetch(
           `${apiUrl("wallet/balance")}?userId=${encodeURIComponent(current.id)}`,
           { cache: "no-store" },
         );
@@ -222,7 +222,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const endpoint =
         current.role === "retailer" ? "retailers" : "distributors";
-      const res = await fetch(apiUrl(endpoint), { cache: "no-store" });
+      const res = await authFetch(apiUrl(endpoint), { cache: "no-store" });
       if (res.ok) {
         const data = await res.json();
         const me = (data || []).find(

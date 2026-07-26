@@ -7,7 +7,7 @@ import { DistributorStats } from "./DistributorStats";
 import { DistributorTable } from "./DistributorTable";
 import { DistributorForm } from "./DistributorForm";
 import type { Distributor } from "./types";
-import { apiUrl } from "../../utils/apiBase";
+import { apiUrl, authFetch } from "../../utils/apiBase";
 
 export function DistributorsPage() {
   const [distributors, setDistributors] = useState<Distributor[]>([]);
@@ -17,7 +17,7 @@ export function DistributorsPage() {
 
   const fetchDistributors = async () => {
     try {
-      const res = await fetch(apiUrl("distributors"));
+      const res = await authFetch(apiUrl("distributors"));
       if (res.ok) {
         const data = await res.json();
         const mapped = (data || []).map((user: any) => ({
@@ -55,7 +55,7 @@ export function DistributorsPage() {
           rawPassword: data.rawPassword,
           role: "distributor",
         };
-        const res = await fetch(apiUrl(`users/${data.id}`), {
+        const res = await authFetch(apiUrl(`users/${data.id}`), {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -84,7 +84,7 @@ export function DistributorsPage() {
           role: "distributor",
           password: (data as any).rawPassword,
         };
-        const res = await fetch(apiUrl("auth/signup"), {
+        const res = await authFetch(apiUrl("auth/signup"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -117,7 +117,7 @@ export function DistributorsPage() {
     const newStatus = distributor.status === "Active" ? "Suspended" : "Active";
 
     try {
-      const res = await fetch(apiUrl(`users/${id}`), {
+      const res = await authFetch(apiUrl(`users/${id}`), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus, role: "distributor" }),
@@ -143,7 +143,7 @@ export function DistributorsPage() {
     amount: number,
   ): Promise<true | string> => {
     try {
-      const res = await fetch(apiUrl("admin/wallet/credit"), {
+      const res = await authFetch(apiUrl("admin/wallet/credit"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, amount }),
@@ -176,7 +176,7 @@ export function DistributorsPage() {
 
   const handleDelete = async (id: string) => {
     try {
-      const res = await fetch(`${apiUrl(`users/${id}`)}?role=distributor`, {
+      const res = await authFetch(`${apiUrl(`users/${id}`)}?role=distributor`, {
         method: "DELETE",
       });
       if (res.ok) {

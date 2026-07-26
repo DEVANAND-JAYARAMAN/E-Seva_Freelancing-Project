@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { AppShell } from "../../layouts/AppShell";
 import { useAuth } from "../../store/context/AuthContext";
+import { authFetch } from "../../utils/apiBase";
 import {
   LineChart,
   Line,
@@ -73,7 +74,7 @@ export function BillingPage() {
   const fetchData = async () => {
     try {
       // Fetch Dynamic Services for Config Table First
-      const resDyn = await fetch(`${baseUrl}/api/services/dynamic`);
+      const resDyn = await authFetch(`${baseUrl}/api/services/dynamic`);
       let dynServices: any[] = [];
       if (resDyn.ok) {
         dynServices = await resDyn.json();
@@ -90,7 +91,7 @@ export function BillingPage() {
       if (user?.role && user.role !== "admin") {
         reqUrl += `?userId=${user.id}`;
       }
-      const resReq = await fetch(reqUrl);
+      const resReq = await authFetch(reqUrl);
       let rawRequests: any[] = [];
       if (resReq.ok) {
         rawRequests = await resReq.json() || [];
@@ -199,7 +200,7 @@ export function BillingPage() {
   const handleSaveOfficialCost = async (id: string, name: string) => {
     try {
       const val = parseFloat(editingCosts[id] || "0");
-      const res = await fetch(`${baseUrl}/api/services/dynamic/${id}/cost`, {
+      const res = await authFetch(`${baseUrl}/api/services/dynamic/${id}/cost`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, officialCost: val }),

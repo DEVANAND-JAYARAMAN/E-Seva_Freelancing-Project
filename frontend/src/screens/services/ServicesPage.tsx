@@ -24,7 +24,7 @@ import {
   ServiceSuccessScreen,
 } from "../../components/ServicePaymentScreen";
 import { AddServiceModal } from "./AddServiceModal";
-import { apiUrl } from "../../utils/apiBase";
+import { apiUrl, authFetch } from "../../utils/apiBase";
 import { useServicePricing } from "../../hooks/useServicePricing";
 import { categoryCardPrices } from "../../utils/servicePricing";
 
@@ -1446,7 +1446,7 @@ export function ServicesPage() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const response = await fetch(
+          const response = await authFetch(
             apiUrl(`services/dynamic/${idToDelete}`),
             {
               method: "DELETE",
@@ -1491,7 +1491,7 @@ export function ServicesPage() {
     if (!editingService) return;
 
     try {
-      const response = await fetch(
+      const response = await authFetch(
         apiUrl(`services/dynamic/${editingService.id}`),
         {
           method: "PUT",
@@ -1818,7 +1818,7 @@ export function ServicesPage() {
 
   const fetchDynamicServices = async () => {
     try {
-      const response = await fetch(
+      const response = await authFetch(
         `${apiUrl("services/dynamic")}?t=${Date.now()}`
       );
       if (response.ok) {
@@ -1885,7 +1885,7 @@ export function ServicesPage() {
 
   const handleAddService = async (newService: EService) => {
     try {
-      const response = await fetch(
+      const response = await authFetch(
         apiUrl("services/dynamic"),
         {
           method: "POST",

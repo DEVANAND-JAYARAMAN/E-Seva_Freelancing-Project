@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Wallet, CheckCircle2, AlertCircle } from "lucide-react";
 import { useAuth } from "../store/context/AuthContext";
 import Link from "next/link";
-import { apiUrl } from "../utils/apiBase";
+import { apiUrl, authFetch } from "../utils/apiBase";
 import {
   fetchPricingMatrix,
   resolveServiceCharge,
@@ -95,7 +95,7 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
           try {
             const uploadBody = new FormData();
             uploadBody.append("file", file);
-            const upRes = await fetch(apiUrl("uploads"), {
+            const upRes = await authFetch(apiUrl("uploads"), {
               method: "POST",
               body: uploadBody,
             });
@@ -160,7 +160,7 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
         documents: documentPaths,
       };
 
-      const res = await fetch(apiUrl("services/request"), {
+      const res = await authFetch(apiUrl("services/request"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

@@ -16,7 +16,7 @@ import {
 import { AppShell } from "../layouts/AppShell";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { useAuth } from "../store/context/AuthContext";
-import { apiUrl } from "../utils/apiBase";
+import { apiUrl, authFetch } from "../utils/apiBase";
 
 // Catalog item representing main services in grid
 export interface ServiceCatalogItem {
@@ -1852,7 +1852,7 @@ export function PaymentsPage() {
   // Load config from backend
 
   useEffect(() => {
-    fetch(apiUrl("services/pricing"))
+    authFetch(apiUrl("services/pricing"))
       .then((res) => res.json())
       .then((data) => {
         if (data && Object.keys(data).length > 0) {
@@ -1984,7 +1984,7 @@ export function PaymentsPage() {
     setPricingConfig(updatedConfig);
 
     // Save to backend
-    fetch(
+    authFetch(
       `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/pricing`,
       {
         method: "PUT",

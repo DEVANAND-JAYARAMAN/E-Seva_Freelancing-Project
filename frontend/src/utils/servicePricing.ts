@@ -1,4 +1,4 @@
-import { apiUrl } from "./apiBase";
+import { apiUrl, authFetch } from "./apiBase";
 
 export type PricingRole = "admin" | "retailer" | "distributor" | "customer";
 
@@ -153,7 +153,7 @@ export async function fetchPricingMatrix(force = false): Promise<PricingMatrix> 
   inflight = (async () => {
     const local = readLocalMatrix();
     try {
-      const res = await fetch(apiUrl("services/pricing"), { cache: "no-store" });
+      const res = await authFetch(apiUrl("services/pricing"), { cache: "no-store" });
       if (res.ok) {
         const data = await res.json();
         if (data && typeof data === "object" && Object.keys(data).length > 0) {

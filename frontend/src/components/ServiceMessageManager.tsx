@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Pencil, Trash2, Plus, X, Check, Save } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { useAuth } from '../store/context/AuthContext';
+import { authFetch } from '../utils/apiBase';
 
 interface ServiceMessage {
   id: string;
@@ -21,7 +22,7 @@ export const ServiceMessageManager = ({ serviceId, serviceName }: { serviceId: s
   const fetchMessages = async () => {
     try {
       const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
-      const res = await fetch(`${apiUrl}/api/service-messages/${serviceId}`);
+      const res = await authFetch(`${apiUrl}/api/service-messages/${serviceId}`);
       if (res.ok) {
         const data = await res.json();
         setMessages(data);
@@ -60,7 +61,7 @@ export const ServiceMessageManager = ({ serviceId, serviceName }: { serviceId: s
     setIsLoading(true);
     try {
       const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
-      const res = await fetch(`${apiUrl}/api/service-messages`, {
+      const res = await authFetch(`${apiUrl}/api/service-messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ serviceId, message: newMessage.trim(), status: "Inactive" })
@@ -82,7 +83,7 @@ export const ServiceMessageManager = ({ serviceId, serviceName }: { serviceId: s
       for (const msg of messages) {
         if (msg.id !== id && msg.status === "Active") {
           const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
-          await fetch(`${apiUrl}/api/service-messages/${msg.id}`, {
+          await authFetch(`${apiUrl}/api/service-messages/${msg.id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ status: "Inactive" })
@@ -93,7 +94,7 @@ export const ServiceMessageManager = ({ serviceId, serviceName }: { serviceId: s
 
     try {
       const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
-      await fetch(`${apiUrl}/api/service-messages/${id}`, {
+      await authFetch(`${apiUrl}/api/service-messages/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus })
@@ -106,7 +107,7 @@ export const ServiceMessageManager = ({ serviceId, serviceName }: { serviceId: s
     if(!confirm("Are you sure?")) return;
     try {
       const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
-      await fetch(`${apiUrl}/api/service-messages/${id}`, { method: "DELETE" });
+      await authFetch(`${apiUrl}/api/service-messages/${id}`, { method: "DELETE" });
       fetchMessages();
     } catch(e) {}
   };

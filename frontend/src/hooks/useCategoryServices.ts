@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, SetStateAction, Dispatch } from "react";
+import { authFetch } from "../utils/apiBase";
 
 export interface CategoryService {
   id: string;
@@ -54,7 +55,7 @@ export function useCategoryServices<T extends CategoryService>(
       }
 
       try {
-        const res = await fetch(
+        const res = await authFetch(
           `${getApiBase()}/api/settings/category_${categoryId}`,
         );
         if (res.ok) {
@@ -97,7 +98,7 @@ export function useCategoryServices<T extends CategoryService>(
 
           const saveToBackend = async () => {
             try {
-              await fetch(
+              await authFetch(
                 `${getApiBase()}/api/settings/category_${categoryId}`,
                 {
                   method: "PUT",

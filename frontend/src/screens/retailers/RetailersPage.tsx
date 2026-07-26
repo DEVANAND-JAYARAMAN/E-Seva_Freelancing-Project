@@ -7,7 +7,7 @@ import { RetailerStats } from "./RetailerStats";
 import { RetailerTable } from "./RetailerTable";
 import { RetailerForm } from "./RetailerForm";
 import type { Retailer } from "./types";
-import { apiUrl } from "../../utils/apiBase";
+import { apiUrl, authFetch } from "../../utils/apiBase";
 
 export function RetailersPage() {
   const [retailers, setRetailers] = useState<Retailer[]>([]);
@@ -18,7 +18,7 @@ export function RetailersPage() {
 
   const fetchRetailers = async () => {
     try {
-      const res = await fetch(apiUrl("retailers"));
+      const res = await authFetch(apiUrl("retailers"));
       if (res.ok) {
         const data = await res.json();
         const mapped = (data || []).map((user: any) => ({
@@ -56,7 +56,7 @@ export function RetailersPage() {
           rawPassword: data.rawPassword,
           role: "retailer",
         };
-        const res = await fetch(apiUrl(`users/${data.id}`), {
+        const res = await authFetch(apiUrl(`users/${data.id}`), {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -85,7 +85,7 @@ export function RetailersPage() {
           role: "retailer",
           password: (data as any).rawPassword,
         };
-        const res = await fetch(apiUrl("auth/signup"), {
+        const res = await authFetch(apiUrl("auth/signup"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
@@ -118,7 +118,7 @@ export function RetailersPage() {
     const newStatus = retailer.status === "Active" ? "Suspended" : "Active";
 
     try {
-      const res = await fetch(apiUrl(`users/${id}`), {
+      const res = await authFetch(apiUrl(`users/${id}`), {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus, role: "retailer" }),
@@ -144,7 +144,7 @@ export function RetailersPage() {
     amount: number,
   ): Promise<true | string> => {
     try {
-      const res = await fetch(apiUrl("admin/wallet/credit"), {
+      const res = await authFetch(apiUrl("admin/wallet/credit"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, amount }),
@@ -177,7 +177,7 @@ export function RetailersPage() {
 
   const handleDelete = async (id: string) => {
     try {
-      const res = await fetch(`${apiUrl(`users/${id}`)}?role=retailer`, {
+      const res = await authFetch(`${apiUrl(`users/${id}`)}?role=retailer`, {
         method: "DELETE",
       });
       if (res.ok) {

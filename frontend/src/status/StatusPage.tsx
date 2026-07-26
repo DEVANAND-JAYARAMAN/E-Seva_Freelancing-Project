@@ -16,7 +16,7 @@ import { useEffect } from "react";
 import { StatusDetailModal } from "./StatusDetailModal";
 import type { StatusTicket, TicketStatus } from "./types";
 import { useAuth } from "../store/context/AuthContext";
-import { apiUrl } from "../utils/apiBase";
+import { apiUrl, authFetch } from "../utils/apiBase";
 
 // Seed data with precisely the 5 statuses requested by the user
 const seedTickets: StatusTicket[] = [
@@ -102,7 +102,7 @@ export function StatusPage() {
           (url.includes("?") ? "&" : "?") +
           `userId=${encodeURIComponent(user.id)}`;
       }
-      const res = await fetch(url, { cache: "no-store" });
+      const res = await authFetch(url, { cache: "no-store" });
       if (res.ok) {
         const data = await res.json();
         const sortedData = (data || []).sort(
@@ -199,7 +199,7 @@ export function StatusPage() {
         formData.append("ackText", ackText);
       }
 
-      const res = await fetch(apiUrl(`services/${id}/status`), {
+      const res = await authFetch(apiUrl(`services/${id}/status`), {
         method: "POST",
         body: formData,
       });

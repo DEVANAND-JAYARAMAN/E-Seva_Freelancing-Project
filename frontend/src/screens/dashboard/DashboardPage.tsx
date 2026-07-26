@@ -10,7 +10,7 @@ import { StatsGrid } from "./StatsGrid";
 import { WalletSummary } from "./WalletSummary";
 import { useAuth } from "../../store/context/AuthContext";
 import { DashboardPage2 } from "./DashboardPage2";
-import { apiUrl } from "../../utils/apiBase";
+import { apiUrl, authFetch } from "../../utils/apiBase";
 
 export function DashboardPage({
   forceRole,
@@ -23,7 +23,7 @@ export function DashboardPage({
   const [resetting, setResetting] = useState(false);
 
   const loadStats = useCallback(() => {
-    fetch(apiUrl("admin/dashboard"), { cache: "no-store" })
+    authFetch(apiUrl("admin/dashboard"), { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
         setStats(data);
@@ -54,7 +54,7 @@ export function DashboardPage({
 
     setResetting(true);
     try {
-      const res = await fetch(apiUrl("admin/dashboard/reset"), {
+      const res = await authFetch(apiUrl("admin/dashboard/reset"), {
         method: "POST",
       });
       const data = await res.json().catch(() => ({}));

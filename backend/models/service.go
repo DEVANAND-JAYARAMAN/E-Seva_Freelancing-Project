@@ -21,6 +21,7 @@ type ServiceApplication struct {
 	AckText          string            `dynamodbav:"ackText" json:"ackText"`
 	CreatedDate      string            `dynamodbav:"createdDate" json:"createdDate"`
 	LastUpdated      string            `dynamodbav:"lastUpdated" json:"lastUpdated"`
+	RefundedAt       string            `dynamodbav:"refundedAt" json:"refundedAt,omitempty"`
 }
 
 type Wallet struct {

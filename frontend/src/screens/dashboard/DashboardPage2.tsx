@@ -18,6 +18,7 @@ import {
   Store,
 } from "lucide-react";
 import { formatTxnDateTime } from "../../utils/formatters";
+import { authFetch } from "../../utils/apiBase";
 
 export function DashboardPage2({
   forceRole,
@@ -49,7 +50,7 @@ export function DashboardPage2({
         /(?:\/api|\/)+$/,
         "",
       );
-      const res = await fetch(`${baseUrl}/api/wallet/recharge/manual`, {
+      const res = await authFetch(`${baseUrl}/api/wallet/recharge/manual`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -95,7 +96,7 @@ export function DashboardPage2({
   useEffect(() => {
     // Fetch live requests specific to user
     const userFilter = user?.id ? `?userId=${user.id}` : "";
-    fetch(
+    authFetch(
       `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/requests${userFilter}`,
     )
       .then((res) => res.json())

@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"eservice-backend/admin"
+	"eservice-backend/auth"
 	"eservice-backend/db"
 	"eservice-backend/models"
 	"eservice-backend/timeutil"
@@ -26,7 +27,7 @@ import (
 )
 
 type CreateServiceReq struct {
-	RetailerId        string   `form:"retailerId" json:"retailerId" binding:"required"`
+	RetailerId        string   `form:"retailerId" json:"retailerId"`
 	RetailerName      string   `form:"retailerName" json:"retailerName"`
 	RetailerMobile    string   `form:"retailerMobile" json:"retailerMobile"`
 	ServiceId         string   `form:"serviceId" json:"serviceId" binding:"required"`
@@ -133,6 +134,16 @@ func CreateServiceRequest(c *gin.Context) {
 		return
 	}
 
+	// Bind identity from JWT — never trust client retailerId for non-admins
+	authUser := auth.UserID(c)
+	if authUser == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization required"})
+		return
+	}
+	if !auth.IsAdmin(c) || strings.TrimSpace(req.RetailerId) == "" {
+		req.RetailerId = authUser
+	}
+
 	// Prefer Service Payment matrix price (by role) over client-submitted cost when found
 	if resolved, ok := ResolveServiceChargeFromPricing(req.RetailerId, req.PricingCategoryId, req.ServiceId, req.ServiceName); ok && resolved > 0 {
 		req.Cost = resolved
@@ -162,10 +173,34 @@ func CreateServiceRequest(c *gin.Context) {
 		var wallet models.Wallet
 		attributevalue.UnmarshalMap(out.Item, &wallet)
 		balance = wallet.Balance
-	} else {
-		// Just for testing/mocking we could allow it, but let's strictly require a wallet
-		// Create a wallet on the fly if not exists with 0 balance
-		balance = 0
+	}
+	// Sync from Users.walletBalance when Wallets row missing/zero so debit matches UI
+	if balance <= 0 {
+		uOut, uErr := db.DynamoClient.GetItem(context.TODO(), &dynamodb.GetItemInput{
+			TableName: aws.String("Users"),
+			Key: map[string]types.AttributeValue{
+				"PK": &types.AttributeValueMemberS{Value: "USER#" + req.RetailerId},
+				"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+			},
+		})
+		if uErr == nil && uOut.Item != nil {
+			if v, ok := uOut.Item["walletBalance"].(*types.AttributeValueMemberN); ok {
+				if parsed, perr := strconv.ParseFloat(v.Value, 64); perr == nil && parsed > 0 {
+					balance = parsed
+					nowSync := time.Now().UTC().Format(time.RFC3339)
+					_, _ = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+						TableName: aws.String("Wallets"),
+						Item: map[string]types.AttributeValue{
+							"PK":        &types.AttributeValueMemberS{Value: walletPK},
+							"SK":        &types.AttributeValueMemberS{Value: "TYPE#Main"},
+							"userId":    &types.AttributeValueMemberS{Value: req.RetailerId},
+							"balance":   &types.AttributeValueMemberN{Value: fmt.Sprintf("%.2f", balance)},
+							"updatedAt": &types.AttributeValueMemberS{Value: nowSync},
+						},
+					})
+				}
+			}
+		}
 	}
 
 	if balance < req.Cost {
@@ -333,7 +368,7 @@ func CreateServiceRequest(c *gin.Context) {
 						"SK": &types.AttributeValueMemberS{Value: "TYPE#Main"},
 					},
 					UpdateExpression:    aws.String("SET balance = if_not_exists(balance, :zero) - :cost, updatedAt = :ts"),
-					ConditionExpression: aws.String("attribute_not_exists(balance) OR balance >= :cost"),
+					ConditionExpression: aws.String("attribute_exists(balance) AND balance >= :cost"),
 					ExpressionAttributeValues: map[string]types.AttributeValue{
 						":cost": &types.AttributeValueMemberN{Value: fmt.Sprintf("%f", req.Cost)},
 						":zero": &types.AttributeValueMemberN{Value: "0"},
@@ -547,58 +582,76 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 		}
 	} else if status == "Rejected" && app.Status != "Rejected" {
 		walletPK := "WALLET#" + app.RetailerId
-		txId := generateId("TX")
-		refundTx := models.WalletTransaction{
-			PK:          walletPK,
-			SK:          "TX#" + now + "#" + txId,
-			Id:          txId,
-			WalletType:  "Main",
-			Amount:      app.Cost,
-			Type:        "Credit",
-			Status:      "Success",
-			Reference:   app.ServiceId + "-REFUND",
-			CreatedAt:   now,
-			Date:        timeutil.FormatRFC3339AsIST(now),
-			Description: "Service refund",
-		}
-		refundTxItem, _ := attributevalue.MarshalMap(refundTx)
-
 		costStr := fmt.Sprintf("%.2f", app.Cost)
-		if _, err = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
-			TableName: aws.String("WalletTransactions"),
-			Item:      refundTxItem,
-		}); err != nil {
-			log.Printf("Reject refund tx failed for %s: %v", appId, err)
-		}
-		if _, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
-			TableName: aws.String("Wallets"),
+
+		// Claim refund once — prevents double credit on Rejected→Pending→Rejected
+		_, claimErr := db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+			TableName: aws.String("ServiceApplications"),
 			Key: map[string]types.AttributeValue{
-				"PK": &types.AttributeValueMemberS{Value: walletPK},
-				"SK": &types.AttributeValueMemberS{Value: "TYPE#Main"},
-			},
-			UpdateExpression: aws.String("SET balance = if_not_exists(balance, :zero) + :cost, updatedAt = :ts"),
-			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":cost": &types.AttributeValueMemberN{Value: costStr},
-				":zero": &types.AttributeValueMemberN{Value: "0"},
-				":ts":   &types.AttributeValueMemberS{Value: now},
-			},
-		}); err != nil {
-			log.Printf("Reject wallet credit failed for %s: %v", appId, err)
-		}
-		if _, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
-			TableName: aws.String("Users"),
-			Key: map[string]types.AttributeValue{
-				"PK": &types.AttributeValueMemberS{Value: "USER#" + app.RetailerId},
+				"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
 				"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
 			},
-			UpdateExpression: aws.String("SET walletBalance = if_not_exists(walletBalance, :zero) + :cost, updatedAt = :ts"),
+			UpdateExpression:    aws.String("SET refundedAt = :ts"),
+			ConditionExpression: aws.String("attribute_not_exists(refundedAt)"),
 			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":cost": &types.AttributeValueMemberN{Value: costStr},
-				":zero": &types.AttributeValueMemberN{Value: "0"},
-				":ts":   &types.AttributeValueMemberS{Value: now},
+				":ts": &types.AttributeValueMemberS{Value: now},
 			},
-		}); err != nil {
-			log.Printf("Reject user wallet credit failed for %s: %v", appId, err)
+		})
+		if claimErr != nil {
+			log.Printf("Reject refund already claimed for %s: %v", appId, claimErr)
+		} else if app.Cost > 0 {
+			txId := generateId("TX")
+			refundTx := models.WalletTransaction{
+				PK:          walletPK,
+				SK:          "TX#" + now + "#" + txId,
+				Id:          txId,
+				WalletType:  "Main",
+				Amount:      app.Cost,
+				Type:        "Credit",
+				Status:      "Success",
+				Reference:   appId + "-REFUND",
+				CreatedAt:   now,
+				Date:        timeutil.FormatRFC3339AsIST(now),
+				Description: "Service refund",
+			}
+			refundTxItem, _ := attributevalue.MarshalMap(refundTx)
+
+			if _, err = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+				TableName: aws.String("WalletTransactions"),
+				Item:      refundTxItem,
+			}); err != nil {
+				log.Printf("Reject refund tx failed for %s: %v", appId, err)
+			}
+			if _, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+				TableName: aws.String("Wallets"),
+				Key: map[string]types.AttributeValue{
+					"PK": &types.AttributeValueMemberS{Value: walletPK},
+					"SK": &types.AttributeValueMemberS{Value: "TYPE#Main"},
+				},
+				UpdateExpression: aws.String("SET balance = if_not_exists(balance, :zero) + :cost, updatedAt = :ts"),
+				ExpressionAttributeValues: map[string]types.AttributeValue{
+					":cost": &types.AttributeValueMemberN{Value: costStr},
+					":zero": &types.AttributeValueMemberN{Value: "0"},
+					":ts":   &types.AttributeValueMemberS{Value: now},
+				},
+			}); err != nil {
+				log.Printf("Reject wallet credit failed for %s: %v", appId, err)
+			}
+			if _, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+				TableName: aws.String("Users"),
+				Key: map[string]types.AttributeValue{
+					"PK": &types.AttributeValueMemberS{Value: "USER#" + app.RetailerId},
+					"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+				},
+				UpdateExpression: aws.String("SET walletBalance = if_not_exists(walletBalance, :zero) + :cost, updatedAt = :ts"),
+				ExpressionAttributeValues: map[string]types.AttributeValue{
+					":cost": &types.AttributeValueMemberN{Value: costStr},
+					":zero": &types.AttributeValueMemberN{Value: "0"},
+					":ts":   &types.AttributeValueMemberS{Value: now},
+				},
+			}); err != nil {
+				log.Printf("Reject user wallet credit failed for %s: %v", appId, err)
+			}
 		}
 	}
 
@@ -737,6 +790,11 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 
 func GetServiceRequests(c *gin.Context) {
 	userId := c.Query("userId")
+	if !auth.IsAdmin(c) {
+		userId = auth.UserID(c)
+	} else if userId == "" {
+		// admin with no filter → all
+	}
 
 	out, err := db.DynamoClient.Scan(context.TODO(), &dynamodb.ScanInput{
 		TableName: aws.String("ServiceApplications"),
@@ -819,6 +877,9 @@ func GetServiceRequests(c *gin.Context) {
 
 func GetWalletTransactions(c *gin.Context) {
 	userId := c.Query("userId")
+	if !auth.IsAdmin(c) || userId == "" {
+		userId = auth.UserID(c)
+	}
 	if userId == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "userId is required"})
 		return
@@ -953,27 +1014,53 @@ func RechargeGateway(c *gin.Context) {
 		return
 	}
 
-	// Store orderId → userId mapping in DynamoDB so webhook can credit the right wallet
-	if req.UserID != "" {
+	// Store order mapping under the gateway order id (webhook uses this id)
+	authUser := auth.UserID(c)
+	if authUser == "" {
+		authUser = req.UserID
+	}
+	gatewayOrderID := strings.TrimSpace(mugavaiRes.Data.OrderID)
+	if gatewayOrderID == "" {
+		gatewayOrderID = orderId
+	}
+	if authUser != "" {
 		now := time.Now().UTC().Format(time.RFC3339)
+		metaItem := map[string]types.AttributeValue{
+			"PK":        &types.AttributeValueMemberS{Value: "ORDER#" + gatewayOrderID},
+			"SK":        &types.AttributeValueMemberS{Value: "META"},
+			"userId":    &types.AttributeValueMemberS{Value: authUser},
+			"amount":    &types.AttributeValueMemberN{Value: fmt.Sprintf("%.2f", req.Amount)},
+			"status":    &types.AttributeValueMemberS{Value: "Pending"},
+			"createdAt": &types.AttributeValueMemberS{Value: now},
+			"localOrderId": &types.AttributeValueMemberS{Value: orderId},
+		}
 		_, _ = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
 			TableName: aws.String("WalletTransactions"),
-			Item: map[string]types.AttributeValue{
+			Item:      metaItem,
+		})
+		// Also map local order id if gateway returned a different one
+		if gatewayOrderID != orderId {
+			alias := map[string]types.AttributeValue{
 				"PK":        &types.AttributeValueMemberS{Value: "ORDER#" + orderId},
 				"SK":        &types.AttributeValueMemberS{Value: "META"},
-				"userId":    &types.AttributeValueMemberS{Value: req.UserID},
+				"userId":    &types.AttributeValueMemberS{Value: authUser},
 				"amount":    &types.AttributeValueMemberN{Value: fmt.Sprintf("%.2f", req.Amount)},
 				"status":    &types.AttributeValueMemberS{Value: "Pending"},
 				"createdAt": &types.AttributeValueMemberS{Value: now},
-			},
-		})
+				"aliasOf":   &types.AttributeValueMemberS{Value: gatewayOrderID},
+			}
+			_, _ = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+				TableName: aws.String("WalletTransactions"),
+				Item:      alias,
+			})
+		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Payment gateway initialized successfully",
 		"data": map[string]interface{}{
 			"payment_url": mugavaiRes.Data.PaymentURL,
-			"order_id":    mugavaiRes.Data.OrderID,
+			"order_id":    gatewayOrderID,
 		},
 	})
 }
@@ -1014,16 +1101,12 @@ func ProcessMugavaiPayment(c *gin.Context) (bool, string) {
 	actualOrderID := getParam("order_id", "client_txn_id", "txn_id")
 	actualUTR := getParam("utr", "upi_txn_id", "bank_txn_id", "transaction_id")
 	status := getParam("status")
-	amountStr := getParam("amount")
 
 	if actualOrderID == "" {
 		return false, "missing order_id"
 	}
 
-	var parsedAmount float64
-	fmt.Sscanf(amountStr, "%f", &parsedAmount)
-
-	log.Printf("[Payment Processing] Order=%s Status=%s Amount=%.2f UTR=%s", actualOrderID, status, parsedAmount, actualUTR)
+	log.Printf("[Payment Processing] Order=%s Status=%s UTR=%s", actualOrderID, status, actualUTR)
 
 	if status != "SUCCESS" && status != "success" && status != "COMPLETED" && status != "Completed" {
 		return false, "not a success status"
@@ -1041,7 +1124,7 @@ func ProcessMugavaiPayment(c *gin.Context) (bool, string) {
 		return false, "order_not_found"
 	}
 
-	// Idempotency check: Don't process if already processed!
+	// Idempotency: already Success
 	if s, ok := meta.Item["status"].(*types.AttributeValueMemberS); ok {
 		if s.Value == "Success" || s.Value == "SUCCESS" {
 			log.Printf("[Payment Processing] Order %s already processed", actualOrderID)
@@ -1055,22 +1138,41 @@ func ProcessMugavaiPayment(c *gin.Context) (bool, string) {
 	}
 	userId := userIdAttr.Value
 
+	// Credit ONLY the amount stored at order creation (ignore gateway callback amount)
+	creditAmount := 0.0
+	if amtAttr, ok := meta.Item["amount"].(*types.AttributeValueMemberN); ok {
+		fmt.Sscanf(amtAttr.Value, "%f", &creditAmount)
+	}
+	if creditAmount <= 0 {
+		return false, "invalid_order_amount"
+	}
+	amountStr := fmt.Sprintf("%.2f", creditAmount)
 	now := time.Now().UTC()
-	amountStr = fmt.Sprintf("%.2f", parsedAmount)
 
-	// Update META status to Success to prevent duplicate processing
-	_, _ = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+	// Atomic claim: only one callback may flip Pending → Success
+	_, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
 		TableName: aws.String("WalletTransactions"),
 		Key: map[string]types.AttributeValue{
 			"PK": &types.AttributeValueMemberS{Value: "ORDER#" + actualOrderID},
 			"SK": &types.AttributeValueMemberS{Value: "META"},
 		},
-		UpdateExpression: aws.String("SET #s = :status"),
-		ExpressionAttributeNames: map[string]string{"#s": "status"},
+		UpdateExpression:    aws.String("SET #s = :success, utr = :utr, processedAt = :ts"),
+		ConditionExpression: aws.String("attribute_not_exists(#s) OR #s = :pending OR #s = :Pending"),
+		ExpressionAttributeNames: map[string]string{
+			"#s": "status",
+		},
 		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":status": &types.AttributeValueMemberS{Value: "Success"},
+			":success": &types.AttributeValueMemberS{Value: "Success"},
+			":pending": &types.AttributeValueMemberS{Value: "Pending"},
+			":Pending": &types.AttributeValueMemberS{Value: "Pending"},
+			":utr":     &types.AttributeValueMemberS{Value: actualUTR},
+			":ts":      &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
 		},
 	})
+	if err != nil {
+		log.Printf("[Payment Processing] Idempotent claim failed for %s: %v", actualOrderID, err)
+		return true, "already processed"
+	}
 
 	// Credit Wallets table
 	_, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
@@ -1079,18 +1181,34 @@ func ProcessMugavaiPayment(c *gin.Context) (bool, string) {
 			"PK": &types.AttributeValueMemberS{Value: "WALLET#" + userId},
 			"SK": &types.AttributeValueMemberS{Value: "TYPE#Main"},
 		},
-		UpdateExpression: aws.String("ADD balance :amt SET updatedAt = :ts"),
+		UpdateExpression: aws.String("ADD balance :amt SET updatedAt = :ts, userId = if_not_exists(userId, :uid)"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
 			":amt": &types.AttributeValueMemberN{Value: amountStr},
 			":ts":  &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
+			":uid": &types.AttributeValueMemberS{Value: userId},
 		},
 	})
 	if err != nil {
 		log.Printf("[Payment Processing] Failed to credit Wallets for user %s: %v", userId, err)
+		// Roll META back so a later retry can recover
+		_, _ = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+			TableName: aws.String("WalletTransactions"),
+			Key: map[string]types.AttributeValue{
+				"PK": &types.AttributeValueMemberS{Value: "ORDER#" + actualOrderID},
+				"SK": &types.AttributeValueMemberS{Value: "META"},
+			},
+			UpdateExpression: aws.String("SET #s = :pending"),
+			ExpressionAttributeNames: map[string]string{
+				"#s": "status",
+			},
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":pending": &types.AttributeValueMemberS{Value: "Pending"},
+			},
+		})
 		return false, "wallet credit failed"
 	}
 
-	// Credit Users.walletBalance
+	// Credit Users.walletBalance (keep in sync with Wallets)
 	_, _ = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
 		TableName: aws.String("Users"),
 		Key: map[string]types.AttributeValue{
@@ -1124,11 +1242,10 @@ func ProcessMugavaiPayment(c *gin.Context) (bool, string) {
 		},
 	})
 
-	log.Printf("[Payment Processing] Successfully credited ₹%.2f to user %s", parsedAmount, userId)
+	log.Printf("[Payment Processing] Successfully credited ₹%.2f to user %s", creditAmount, userId)
 
-	// Mirror partner UPI recharge into admin Main Wallet
 	admin.CreditAdminFromPartnerRecharge(
-		parsedAmount,
+		creditAmount,
 		userId,
 		actualUTR,
 		fmt.Sprintf("Partner gateway recharge (UTR: %s) from %s", actualUTR, userId),
@@ -1141,7 +1258,7 @@ func ProcessMugavaiPayment(c *gin.Context) (bool, string) {
 		Id:        notifId,
 		UserId:    "ADMIN",
 		Title:     "Wallet Recharged",
-		Message:   fmt.Sprintf("User %s recharged wallet with %.2f (UTR: %s) — credited to admin wallet", userId, parsedAmount, actualUTR),
+		Message:   fmt.Sprintf("User %s recharged wallet with %.2f (UTR: %s) — credited to admin wallet", userId, creditAmount, actualUTR),
 		Type:      "success",
 		IsRead:    false,
 		CreatedAt: now.Format(time.RFC3339),

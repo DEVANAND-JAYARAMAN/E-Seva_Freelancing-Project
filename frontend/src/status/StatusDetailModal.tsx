@@ -3,7 +3,7 @@ import { X, Upload } from "lucide-react";
 import Swal from "sweetalert2";
 import type { StatusTicket, TicketStatus } from "./types";
 import { useAuth } from "../store/context/AuthContext";
-import { getApiBaseUrl } from "../utils/apiBase";
+import { getApiBaseUrl, authFetch } from "../utils/apiBase";
 
 type StatusDetailModalProps = {
   isOpen: boolean;
@@ -286,7 +286,7 @@ export function StatusDetailModal({
     }
     // Prefer preview modal; also verify the file is reachable
     try {
-      const head = await fetch(url, { method: "GET", cache: "no-store" });
+      const head = await authFetch(url, { method: "GET", cache: "no-store" });
       if (!head.ok) {
         await Swal.fire({
           icon: "error",
