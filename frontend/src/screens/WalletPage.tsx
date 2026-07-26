@@ -83,9 +83,9 @@ export function WalletPage() {
 
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState("");
-  const [typeFilter, setTypeFilter] = useState<"all" | "credit" | "debit">(
-    "all",
-  );
+  const [typeFilter, setTypeFilter] = useState<
+    "all" | "credit" | "debit" | "refund"
+  >("all");
 
   // Modal Form State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -128,6 +128,16 @@ export function WalletPage() {
 
   // Handle transaction search and filters
   const filteredTransactions = useMemo(() => {
+    const isRefund = (t: WalletTransaction) => {
+      const ref = (t.reference || "").toLowerCase();
+      const desc = (t.description || "").toLowerCase();
+      return (
+        ref.includes("refund") ||
+        desc.includes("refund") ||
+        ref.endsWith("-refund")
+      );
+    };
+
     return transactions.filter((t) => {
       const matchesSearch =
         (t.description || "")
@@ -141,7 +151,9 @@ export function WalletPage() {
       const matchesType =
         typeFilter === "all"
           ? true
-          : (t.type || "").toLowerCase() === typeFilter.toLowerCase();
+          : typeFilter === "refund"
+            ? isRefund(t)
+            : (t.type || "").toLowerCase() === typeFilter.toLowerCase();
       const matchesWallet = t.walletType === "Main";
 
       return matchesSearch && matchesType && matchesWallet;
@@ -617,7 +629,7 @@ export function WalletPage() {
                 />
                 <input
                   type="text"
-                  placeholder="Search ref, desc..."
+                  placeholder="Search refund, ref, desc..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-9 pr-4 py-2 border border-slate-200 dark:border-slate-800 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 text-xs text-slate-700 dark:text-slate-350 focus:bg-slate-50 dark:focus:bg-slate-950 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/50 outline-none transition-all"
@@ -656,6 +668,16 @@ export function WalletPage() {
                 >
                   Debits
                 </button>
+                <button
+                  onClick={() => setTypeFilter("refund")}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-extrabold transition-all ${
+                    typeFilter === "refund"
+                      ? "bg-slate-50 dark:bg-[#0f1524] text-amber-600 dark:text-amber-400 shadow-sm"
+                      : "text-slate-400 dark:text-slate-500 hover:text-slate-750 dark:hover:text-slate-300"
+                  }`}
+                >
+                  Refunds
+                </button>
               </div>
 
               {/* Export button */}
@@ -683,6 +705,9 @@ export function WalletPage() {
                 {filteredTransactions.length > 0 ? (
                   filteredTransactions.map((tx) => {
                     const isCredit = tx.type === "credit";
+                    const isRefund =
+                      (tx.reference || "").toLowerCase().includes("refund") ||
+                      (tx.description || "").toLowerCase().includes("refund");
 
                     return (
                       <tr
@@ -707,7 +732,14 @@ export function WalletPage() {
                           </span>
                         </td>
                         <td className="py-4 px-5 font-semibold">
-                          {tx.description}
+                          <div className="flex flex-col gap-1">
+                            {isRefund ? (
+                              <span className="inline-flex w-fit items-center px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wide bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300">
+                                Refund
+                              </span>
+                            ) : null}
+                            <span>{tx.description}</span>
+                          </div>
                         </td>
                         <td
                           className={`py-4 px-5 text-right font-extrabold text-sm ${

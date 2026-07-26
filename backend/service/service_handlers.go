@@ -849,7 +849,7 @@ func processRejectRefund(appId string, app *models.ServiceApplication, now strin
 		Reference:   appId + "-REFUND",
 		CreatedAt:   now,
 		Date:        timeutil.FormatRFC3339AsIST(now),
-		Description: fmt.Sprintf("Refund for rejected %s", app.ServiceName),
+		Description: fmt.Sprintf("REFUND — Rejected: %s", app.ServiceName),
 	}
 	refundTxItem, _ := attributevalue.MarshalMap(refundTx)
 	if _, err := db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
