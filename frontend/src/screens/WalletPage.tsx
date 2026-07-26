@@ -57,7 +57,9 @@ export function WalletPage() {
     const paymentReturn =
       params.get("payment") === "return" ||
       hash === "payment-return" ||
-      hash.startsWith("payment-return");
+      hash.startsWith("payment-return") ||
+      !!params.get("order_id") ||
+      !!params.get("status");
     const openAdd = params.get("add") === "1";
 
     if (paymentReturn) {
@@ -65,17 +67,61 @@ export function WalletPage() {
         /(?:\/api|\/)+$/,
         "",
       );
-      let orderId = "";
+      let orderId =
+        params.get("order_id") ||
+        params.get("client_txn_id") ||
+        params.get("txn_id") ||
+        "";
       try {
-        orderId = sessionStorage.getItem("wallet_recharge_order") || "";
+        if (!orderId) {
+          orderId = sessionStorage.getItem("wallet_recharge_order") || "";
+        }
+      } catch {
+        /* ignore */
+      }
+      const statusParam = params.get("status") || "";
+      const utrParam =
+        params.get("utr") ||
+        params.get("upi_txn_id") ||
+        params.get("bank_txn_id") ||
+        "";
+      let storedAmount = 0;
+      try {
+        storedAmount = Number(
+          sessionStorage.getItem("wallet_recharge_amount") || "0",
+        );
       } catch {
         /* ignore */
       }
 
       const verify = async () => {
-        void refreshProfile();
+        setIsModalOpen(true);
+        setGatewayProcessing(true);
+        setFormError("");
+
+        // Confirm credit from site (no api.* browser visit)
         if (orderId) {
-          for (let i = 0; i < 15; i++) {
+          try {
+            await authFetch(`${baseUrl}/api/wallet/recharge/confirm`, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+              body: JSON.stringify({
+                order_id: orderId,
+                status: statusParam || "SUCCESS",
+                utr: utrParam,
+              }),
+            });
+          } catch {
+            /* webhook may still complete */
+          }
+        }
+
+        let finalStatus = "Pending";
+        if (orderId) {
+          for (let i = 0; i < 20; i++) {
             try {
               const statusRes = await authFetch(
                 `${baseUrl}/api/wallet/recharge/status/${orderId}`,
@@ -86,16 +132,12 @@ export function WalletPage() {
                 },
               );
               const statusData = await statusRes.json().catch(() => ({}));
-              const st = String(statusData.status || "");
+              finalStatus = String(statusData.status || "Pending");
               if (
-                st === "Success" ||
-                st === "SUCCESS" ||
-                st === "success"
+                finalStatus === "Success" ||
+                finalStatus === "SUCCESS" ||
+                finalStatus === "success"
               ) {
-                setFormSuccess(true);
-                setIsModalOpen(true);
-                setFormError("");
-                void refreshProfile();
                 break;
               }
             } catch {
@@ -103,15 +145,44 @@ export function WalletPage() {
             }
             await new Promise((r) => setTimeout(r, 2000));
           }
-        } else {
-          setFormSuccess(true);
-          setIsModalOpen(true);
         }
+
+        setGatewayProcessing(false);
+        void refreshProfile();
+
+        if (
+          finalStatus === "Success" ||
+          finalStatus === "SUCCESS" ||
+          finalStatus === "success"
+        ) {
+          if (storedAmount > 0) {
+            setAmount(String(storedAmount));
+          }
+          setFormSuccess(true);
+          setFormError("");
+          try {
+            sessionStorage.removeItem("wallet_recharge_order");
+            sessionStorage.removeItem("wallet_recharge_amount");
+          } catch {
+            /* ignore */
+          }
+        } else {
+          setFormError(
+            "Payment is still confirming. If money was deducted, wait 1–2 minutes and refresh Wallet.",
+          );
+        }
+
         const clean = window.location.pathname;
         window.history.replaceState({}, "", clean);
         setTimeout(() => {
           setFormSuccess(false);
-          setIsModalOpen(false);
+          if (
+            finalStatus === "Success" ||
+            finalStatus === "SUCCESS" ||
+            finalStatus === "success"
+          ) {
+            setIsModalOpen(false);
+          }
         }, 2800);
       };
       void verify();
@@ -299,8 +370,9 @@ export function WalletPage() {
             amount: amtNum,
             customer_mobile: mobileNumber,
             customer_email: user?.email || "user@thuruvan.com",
-            // API return credits wallet, then 302 → site /wallets/#payment-return
-            redirect_url: baseUrl + "/api/v1/wallet/recharge/return",
+            // Never send browsers to api.* (Edge HTTP 403). Site return only.
+            redirect_url:
+              window.location.origin + "/wallets/#payment-return",
             user_id: user?.id || "",
           }),
         });
@@ -317,112 +389,9 @@ export function WalletPage() {
             /* ignore */
           }
 
-          const width = 600;
-          const height = 700;
-          const left = window.screenX + (window.outerWidth - width) / 2;
-          const top = window.screenY + (window.outerHeight - height) / 2;
-          const popup = window.open(
-            data.data.payment_url,
-            "Payment Gateway",
-            `width=${width},height=${height},left=${left},top=${top}`,
-          );
-
-          const pollOrderStatus = async (): Promise<string> => {
-            const statusRes = await authFetch(
-              `${baseUrl}/api/wallet/recharge/status/${orderId}`,
-              {
-                headers: {
-                  Authorization: `Bearer ${localStorage.getItem("token")}`,
-                },
-              },
-            );
-            const statusData = await statusRes.json().catch(() => ({}));
-            return String(statusData.status || "Pending");
-          };
-
-          const finishWithStatus = async (status: string) => {
-            setGatewayProcessing(false);
-            if (
-              status === "Success" ||
-              status === "SUCCESS" ||
-              status === "success"
-            ) {
-              handleGatewaySuccess(orderId);
-              return;
-            }
-            if (status === "Pending") {
-              setFormError(
-                "Payment is still confirming. If money was deducted, wait 1–2 minutes and refresh Wallet — it will credit automatically.",
-              );
-              void refreshProfile();
-              return;
-            }
-            handleGatewayFailed(orderId, status);
-            setFormError(
-              `Payment failed or canceled (Status: ${status})`,
-            );
-          };
-
-          const pollTimer = setInterval(async () => {
-            try {
-              if (
-                popup &&
-                !popup.closed &&
-                popup.location.href.includes(window.location.origin)
-              ) {
-                popup.close();
-              }
-            } catch {
-              // Ignore cross-origin error while on gateway domain
-            }
-
-            // Keep polling while popup open — credit may arrive via webhook
-            try {
-              const live = await pollOrderStatus();
-              if (
-                live === "Success" ||
-                live === "SUCCESS" ||
-                live === "success"
-              ) {
-                clearInterval(pollTimer);
-                try {
-                  popup?.close();
-                } catch {
-                  /* ignore */
-                }
-                await finishWithStatus(live);
-                return;
-              }
-            } catch {
-              /* keep waiting */
-            }
-
-            if (!popup || popup.closed) {
-              clearInterval(pollTimer);
-              setGatewayProcessing(true);
-
-              // Retry status for up to ~40s (webhook / return can lag)
-              let finalStatus = "Pending";
-              for (let i = 0; i < 20; i++) {
-                try {
-                  finalStatus = await pollOrderStatus();
-                  if (
-                    finalStatus === "Success" ||
-                    finalStatus === "SUCCESS" ||
-                    finalStatus === "success" ||
-                    (finalStatus !== "Pending" &&
-                      finalStatus.toLowerCase() !== "pending")
-                  ) {
-                    break;
-                  }
-                } catch {
-                  /* retry */
-                }
-                await new Promise((r) => setTimeout(r, 2000));
-              }
-              await finishWithStatus(finalStatus);
-            }
-          }, 1500);
+          // Same-tab checkout avoids popup + api.* 403 return window
+          window.location.assign(data.data.payment_url);
+          return;
         } else {
           setGatewayProcessing(false);
           setFormError(

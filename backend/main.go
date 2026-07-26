@@ -152,6 +152,7 @@ func main() {
 				walletGroup.POST("/recharge/gateway", wallet.InitiateGatewayRecharge)
 				walletGroup.POST("/recharge/manual", auth.RequireAdmin(), wallet.ManualRecharge)
 				walletGroup.GET("/recharge/status/:order_id", wallet.CheckGatewayRechargeStatus)
+				walletGroup.POST("/recharge/confirm", service.ConfirmGatewayRecharge)
 			}
 
 			adminGroup := secured.Group("/admin")

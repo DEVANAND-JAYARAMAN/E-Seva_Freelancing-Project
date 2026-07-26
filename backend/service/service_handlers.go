@@ -1266,6 +1266,10 @@ type MugavaiCreateOrderReq struct {
 	CustomerEmail  string  `json:"customer_email"`
 	OrderID        string  `json:"order_id"`
 	RedirectURL    string  `json:"redirect_url"`
+	// Optional notify fields (gateways vary on naming)
+	CallbackURL string `json:"callback_url,omitempty"`
+	WebhookURL  string `json:"webhook_url,omitempty"`
+	NotifyURL   string `json:"notify_url,omitempty"`
 }
 
 type MugavaiCreateOrderRes struct {
@@ -1292,13 +1296,27 @@ func RechargeGateway(c *gin.Context) {
 	// Generate an order ID
 	orderId := generateId("ORD")
 
+	webhookURL := "https://api.thuruvancommunications.com/api/v1/wallet/recharge/webhook"
+	// Browser must NEVER land on api.* (Edge returns HTTP 403 for some users).
+	// Always send humans back to the site; credit via webhook + /confirm.
+	siteReturn := "https://thuruvancommunications.com/wallets/#payment-return"
+	if req.RedirectURL != "" {
+		low := strings.ToLower(req.RedirectURL)
+		if strings.Contains(low, "thuruvancommunications.com") && !strings.Contains(low, "api.thuruvan") {
+			siteReturn = req.RedirectURL
+		}
+	}
+
 	// Prepare request body for Mugavai API
 	mugavaiReqBody := MugavaiCreateOrderReq{
 		Amount:         req.Amount,
 		CustomerMobile: req.CustomerMobile,
 		CustomerEmail:  req.CustomerEmail,
 		OrderID:        orderId,
-		RedirectURL:    req.RedirectURL,
+		RedirectURL:    siteReturn,
+		CallbackURL:    webhookURL,
+		WebhookURL:     webhookURL,
+		NotifyURL:      webhookURL,
 	}
 
 	jsonValue, err := json.Marshal(mugavaiReqBody)
@@ -1724,10 +1742,81 @@ func DeleteDynamicService(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Service deleted successfully"})
 }
 
-// RechargeReturn handles the redirect from Mugavai payment gateway.
-// Credit wallet from gateway query params, then always bounce to the site wallets page.
+// RechargeReturn is kept for older gateway configs that still point here.
+// Always bounce to the site — do not keep the browser on api.* (Edge 403).
 func RechargeReturn(c *gin.Context) {
 	ProcessMugavaiPayment(c)
-	// Hardcoded site return — do not nest redirect_url (gateways mangle ?query).
-	c.Redirect(http.StatusFound, "https://thuruvancommunications.com/wallets/#payment-return")
+	c.Header("Content-Type", "text/html; charset=utf-8")
+	// Use meta-refresh + JS so even if 302 is blocked, the page still leaves api.*
+	c.String(http.StatusOK, `<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="refresh" content="0;url=https://thuruvancommunications.com/wallets/#payment-return">
+<title>Redirecting…</title></head>
+<body style="font-family:system-ui;text-align:center;padding:3rem;background:#f0fdfa;color:#064e3b">
+<p>Payment received. Returning to wallet…</p>
+<p><a href="https://thuruvancommunications.com/wallets/#payment-return">Continue to Wallet</a></p>
+<script>location.replace("https://thuruvancommunications.com/wallets/#payment-return");</script>
+</body></html>`)
+}
+
+// ConfirmGatewayRecharge lets the logged-in retailer confirm a gateway redirect
+// that landed on the site with order_id/status/utr query params (no api.* visit).
+func ConfirmGatewayRecharge(c *gin.Context) {
+	var body struct {
+		OrderID string `json:"order_id"`
+		Status  string `json:"status"`
+		UTR     string `json:"utr"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	orderID := strings.TrimSpace(body.OrderID)
+	if orderID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "order_id required"})
+		return
+	}
+
+	meta, err := db.DynamoClient.GetItem(context.TODO(), &dynamodb.GetItemInput{
+		TableName: aws.String("WalletTransactions"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: "ORDER#" + orderID},
+			"SK": &types.AttributeValueMemberS{Value: "META"},
+		},
+	})
+	if err != nil || meta.Item == nil {
+		// try as local alias
+		c.JSON(http.StatusNotFound, gin.H{"error": "order not found"})
+		return
+	}
+	uidAttr, _ := meta.Item["userId"].(*types.AttributeValueMemberS)
+	if uidAttr == nil || (!auth.IsAdmin(c) && uidAttr.Value != auth.UserID(c)) {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Not allowed"})
+		return
+	}
+
+	// Inject params into context-compatible processing via query override trick:
+	// clone request URL with params then call shared processor helper.
+	status := strings.TrimSpace(body.Status)
+	utr := strings.TrimSpace(body.UTR)
+	if status == "" && utr != "" {
+		status = "SUCCESS"
+	}
+	if status == "" {
+		status = "SUCCESS" // user returned from gateway after paying; webhook may lag
+	}
+
+	q := c.Request.URL.Query()
+	q.Set("order_id", orderID)
+	q.Set("status", status)
+	if utr != "" {
+		q.Set("utr", utr)
+	}
+	c.Request.URL.RawQuery = q.Encode()
+
+	ok, msg := ProcessMugavaiPayment(c)
+	if ok {
+		c.JSON(http.StatusOK, gin.H{"status": "Success", "message": msg})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": "Pending", "message": msg})
 }
