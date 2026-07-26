@@ -66,9 +66,13 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
     };
   }, [pricingCategoryId, serviceId, serviceName, role, retailerCharge]);
 
+  const insufficient = walletBalance < resolvedCharge;
+
   const handlePaymentSubmit = async () => {
-    if (walletBalance < resolvedCharge) {
-      setError(`Insufficient wallet balance (₹${walletBalance.toFixed(2)}). Please add funds to your wallet to proceed.`);
+    if (insufficient) {
+      setError(
+        `Insufficient wallet balance (₹${walletBalance.toFixed(2)}). Need ₹${resolvedCharge.toFixed(2)} — please add funds.`,
+      );
       return;
     }
 
@@ -146,6 +150,39 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
           </span>
         </div>
 
+        <div className="flex items-center justify-between px-1">
+          <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
+            Wallet Balance
+          </span>
+          <span
+            className={`text-sm font-black ${
+              insufficient
+                ? "text-rose-600 dark:text-rose-400"
+                : "text-emerald-700 dark:text-emerald-400"
+            }`}
+          >
+            ₹{walletBalance.toFixed(2)}
+          </span>
+        </div>
+
+        {insufficient ? (
+          <div className="flex items-start gap-2 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 text-rose-700 dark:text-rose-300 text-xs font-semibold">
+            <AlertCircle size={16} className="shrink-0 mt-0.5" />
+            <span>
+              Wallet-ல போதுமான balance இல்லை. Need ₹
+              {resolvedCharge.toFixed(2)}, available ₹
+              {walletBalance.toFixed(2)}. Add funds then try again.
+            </span>
+          </div>
+        ) : null}
+
+        {error ? (
+          <div className="flex items-start gap-2 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 text-rose-700 dark:text-rose-300 text-xs font-semibold">
+            <AlertCircle size={16} className="shrink-0 mt-0.5" />
+            <span>{error}</span>
+          </div>
+        ) : null}
+
         <div className="flex flex-col gap-2 mt-2">
           <label className="block text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider pl-2">
             Select Payment Option
@@ -182,8 +219,8 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
             </p>
           </div>
 
-          {walletBalance < resolvedCharge && (
-            <Link href="/wallets" className="text-[10px] font-extrabold uppercase tracking-wider underline underline-offset-2 hover:text-rose-700 dark:hover:text-rose-300 w-fit">
+          {insufficient && (
+            <Link href="/wallet" className="text-[10px] font-extrabold uppercase tracking-wider text-rose-600 underline underline-offset-2 hover:text-rose-700 dark:hover:text-rose-300 w-fit">
               Go to Wallet to Add Funds
             </Link>
           )}
@@ -201,14 +238,16 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
         <button
           type="button"
           onClick={handlePaymentSubmit}
-          disabled={isSubmitting}
-          className="flex-1 flex justify-center items-center gap-2 px-4 py-3 rounded-xl bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] dark:hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider shadow-sm transition-all active:scale-[0.98] disabled:opacity-70"
+          disabled={isSubmitting || insufficient}
+          className="flex-1 flex justify-center items-center gap-2 px-4 py-3 rounded-xl bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] dark:hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider shadow-sm transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting ? (
             <>
               <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               Processing...
             </>
+          ) : insufficient ? (
+            "Add Funds First"
           ) : (
             "Pay & Submit"
           )}
