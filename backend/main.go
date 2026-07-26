@@ -139,6 +139,8 @@ func main() {
 				serviceGroup.PUT("/pricing", auth.RequireAdmin(), service.UpdatePricingConfig)
 				serviceGroup.GET("/pdf-pricing", service.GetPdfPricingConfig)
 				serviceGroup.PUT("/pdf-pricing", auth.RequireAdmin(), service.UpdatePdfPricingConfig)
+				serviceGroup.GET("/pdf-catalog", service.GetPdfServicesCatalog)
+				serviceGroup.PUT("/pdf-catalog", auth.RequireAdmin(), service.UpdatePdfServicesCatalog)
 			}
 
 			walletGroup := secured.Group("/wallet")

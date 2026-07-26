@@ -230,33 +230,117 @@ func ResolveServiceChargeFromPricing(userId, categoryId, serviceId, serviceName 
 	return 0, false
 }
 
-func GetPdfPricingConfig(c *gin.Context) {
+// isPdfCommissionPricingRow detects admin commission-matrix rows
+// (PdfServicePage) vs retailer catalog cards (PdfPage: id/name/amount).
+func isPdfCommissionPricingRow(m map[string]interface{}) bool {
+	if _, ok := m["serviceName"]; ok {
+		return true
+	}
+	if _, ok := m["admin"]; ok {
+		return true
+	}
+	if _, ok := m["retailer"]; ok {
+		return true
+	}
+	return false
+}
+
+func isPdfCatalogRow(m map[string]interface{}) bool {
+	if isPdfCommissionPricingRow(m) {
+		return false
+	}
+	_, hasName := m["name"]
+	_, hasAmount := m["amount"]
+	_, hasID := m["id"]
+	return hasName || hasAmount || hasID
+}
+
+func asConfigMaps(cfg interface{}) []map[string]interface{} {
+	arr, ok := cfg.([]interface{})
+	if !ok {
+		raw, err := json.Marshal(cfg)
+		if err != nil {
+			return nil
+		}
+		var decoded []interface{}
+		if json.Unmarshal(raw, &decoded) != nil {
+			return nil
+		}
+		arr = decoded
+	}
+	out := make([]map[string]interface{}, 0, len(arr))
+	for _, item := range arr {
+		if m, ok := item.(map[string]interface{}); ok {
+			out = append(out, m)
+		}
+	}
+	return out
+}
+
+func loadSettingsConfig(pk string) (interface{}, error) {
 	out, err := db.DynamoClient.GetItem(context.TODO(), &dynamodb.GetItemInput{
 		TableName: aws.String("Settings"),
 		Key: map[string]types.AttributeValue{
-			"PK": &types.AttributeValueMemberS{Value: "SETTING#pdfPricingConfig"},
+			"PK": &types.AttributeValueMemberS{Value: pk},
 			"SK": &types.AttributeValueMemberS{Value: "META"},
 		},
 	})
+	if err != nil {
+		return nil, err
+	}
+	if out.Item == nil {
+		return nil, nil
+	}
+	var data PricingConfigStore
+	if err := attributevalue.UnmarshalMap(out.Item, &data); err != nil {
+		return nil, err
+	}
+	return data.Config, nil
+}
 
+func saveSettingsConfig(pk string, cfg interface{}) error {
+	store := PricingConfigStore{
+		PK:     pk,
+		SK:     "META",
+		Config: cfg,
+	}
+	av, err := attributevalue.MarshalMap(store)
+	if err != nil {
+		return err
+	}
+	_, err = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+		TableName: aws.String("Settings"),
+		Item:      av,
+	})
+	return err
+}
+
+func GetPdfPricingConfig(c *gin.Context) {
+	cfg, err := loadSettingsConfig("SETTING#pdfPricingConfig")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch pdf pricing config", "details": err.Error()})
 		return
 	}
-
-	if out.Item == nil {
-		c.JSON(http.StatusOK, gin.H{}) // Empty object if not found
+	if cfg == nil {
+		c.JSON(http.StatusOK, []interface{}{})
 		return
 	}
 
-	var data PricingConfigStore
-	err = attributevalue.UnmarshalMap(out.Item, &data)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode config"})
+	rows := asConfigMaps(cfg)
+	if len(rows) == 0 {
+		c.JSON(http.StatusOK, []interface{}{})
 		return
 	}
 
-	c.JSON(http.StatusOK, data.Config)
+	// Legacy: PdfPage catalog was saved into the same key — do not return it
+	// as commission pricing (blank serviceName/admin columns on /pdf-service).
+	if isPdfCatalogRow(rows[0]) && !isPdfCommissionPricingRow(rows[0]) {
+		_ = saveSettingsConfig("SETTING#pdfServicesCatalog", cfg)
+		c.JSON(http.StatusOK, []interface{}{})
+		return
+	}
+
+	c.JSON(http.StatusOK, cfg)
 }
 
 func UpdatePdfPricingConfig(c *gin.Context) {
@@ -266,27 +350,51 @@ func UpdatePdfPricingConfig(c *gin.Context) {
 		return
 	}
 
-	store := PricingConfigStore{
-		PK:     "SETTING#pdfPricingConfig",
-		SK:     "META",
-		Config: req,
-	}
-
-	av, err := attributevalue.MarshalMap(store)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to marshal config data"})
-		return
-	}
-
-	_, err = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
-		TableName: aws.String("Settings"),
-		Item:      av,
-	})
-
-	if err != nil {
+	if err := saveSettingsConfig("SETTING#pdfPricingConfig", req); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save config", "details": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "PDF Pricing configuration saved successfully"})
+}
+
+// GetPdfServicesCatalog returns retailer PDF service cards (id/name/amount).
+func GetPdfServicesCatalog(c *gin.Context) {
+	cfg, err := loadSettingsConfig("SETTING#pdfServicesCatalog")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch pdf services catalog", "details": err.Error()})
+		return
+	}
+	if cfg != nil {
+		c.JSON(http.StatusOK, cfg)
+		return
+	}
+
+	// Migrate catalog data that was previously stored under pdfPricingConfig.
+	legacy, lerr := loadSettingsConfig("SETTING#pdfPricingConfig")
+	if lerr == nil && legacy != nil {
+		rows := asConfigMaps(legacy)
+		if len(rows) > 0 && isPdfCatalogRow(rows[0]) && !isPdfCommissionPricingRow(rows[0]) {
+			_ = saveSettingsConfig("SETTING#pdfServicesCatalog", legacy)
+			c.JSON(http.StatusOK, legacy)
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, []interface{}{})
+}
+
+func UpdatePdfServicesCatalog(c *gin.Context) {
+	var req interface{}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := saveSettingsConfig("SETTING#pdfServicesCatalog", req); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save catalog", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "PDF services catalog saved successfully"})
 }

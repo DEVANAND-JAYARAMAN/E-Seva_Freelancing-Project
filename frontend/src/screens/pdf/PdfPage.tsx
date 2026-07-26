@@ -25,7 +25,7 @@ import { useAuth } from "../../store/context/AuthContext";
 import { useFormEdit } from "../../store/context/FormEditContext";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
 import { openServiceCardEditor } from "../../utils/serviceCardEditor";
-import { authFetch } from "../../utils/apiBase";
+import { apiUrl, authFetch } from "../../utils/apiBase";
 
 // Interface for PDF services definition
 interface PdfService {
@@ -107,11 +107,19 @@ export function PdfPage() {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
-        const response = await authFetch(`${apiUrl}/api/services/pdf-pricing?t=${Date.now()}`);
+        const response = await authFetch(
+          `${apiUrl("services/pdf-catalog")}?t=${Date.now()}`,
+        );
         if (response.ok) {
           const data = await response.json();
-          if (data && Array.isArray(data) && data.length > 0) {
+          if (
+            Array.isArray(data) &&
+            data.length > 0 &&
+            data.every(
+              (row: { name?: string; amount?: number }) =>
+                typeof row?.name === "string" && row.name.trim() !== "",
+            )
+          ) {
             setServicesList(data);
           }
         }
@@ -124,14 +132,13 @@ export function PdfPage() {
 
   const saveServicesToDb = async (updatedList: PdfService[]) => {
     try {
-        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
-        await authFetch(`${apiUrl}/api/services/pdf-pricing`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updatedList)
-        });
-    } catch(err) {
-       console.error("Error saving services", err);
+      await authFetch(apiUrl("services/pdf-catalog"), {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedList),
+      });
+    } catch (err) {
+      console.error("Error saving services", err);
     }
   };
 

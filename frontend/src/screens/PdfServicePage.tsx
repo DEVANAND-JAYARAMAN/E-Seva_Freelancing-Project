@@ -3,8 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { AppShell } from "../layouts/AppShell";
 import { CheckCircle2, Plus, Trash2 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { authFetch } from "../utils/apiBase";
+import { apiUrl, authFetch } from "../utils/apiBase";
 
 interface ServicePriceRow {
   slNo: number;
@@ -16,109 +15,116 @@ interface ServicePriceRow {
   customer: string;
 }
 
+const DEFAULT_PDF_PRICES: ServicePriceRow[] = [
+  {
+    slNo: 1,
+    serviceName: "Adhaar to Pan Number",
+    admin: "12.00",
+    othersiteAdmin: "0.00",
+    distributor: "30.00",
+    retailer: "30.00",
+    customer: "25.00",
+  },
+  {
+    slNo: 2,
+    serviceName: "Pan To Pan Details",
+    admin: "10.00",
+    othersiteAdmin: "0.00",
+    distributor: "30.00",
+    retailer: "30.00",
+    customer: "25.00",
+  },
+  {
+    slNo: 3,
+    serviceName: "Driving License PDF",
+    admin: "10.00",
+    othersiteAdmin: "",
+    distributor: "30.00",
+    retailer: "30.00",
+    customer: "25.00",
+  },
+  {
+    slNo: 4,
+    serviceName: "RC Pdf",
+    admin: "12.00",
+    othersiteAdmin: "",
+    distributor: "30.00",
+    retailer: "30.00",
+    customer: "25.00",
+  },
+  {
+    slNo: 5,
+    serviceName: "Adhaar to Smart card Number FIND",
+    admin: "12.00",
+    othersiteAdmin: "",
+    distributor: "20.00",
+    retailer: "20.00",
+    customer: "25.00",
+  },
+  {
+    slNo: 6,
+    serviceName: "Cell Number Link In Voter ID",
+    admin: "20.00",
+    othersiteAdmin: "",
+    distributor: "60.00",
+    retailer: "60.00",
+    customer: "60.00",
+  },
+  {
+    slNo: 7,
+    serviceName: "EPIC INSTANT PDF",
+    admin: "10.00",
+    othersiteAdmin: "",
+    distributor: "40.00",
+    retailer: "40.00",
+    customer: "40.00",
+  },
+  {
+    slNo: 8,
+    serviceName: "Adhaar verification",
+    admin: "10.00",
+    othersiteAdmin: "",
+    distributor: "20.00",
+    retailer: "20.00",
+    customer: "20.00",
+  },
+  {
+    slNo: 9,
+    serviceName: "PAN TO GST Number Find",
+    admin: "15.00",
+    othersiteAdmin: "",
+    distributor: "70.00",
+    retailer: "70.00",
+    customer: "70.00",
+  },
+  {
+    slNo: 10,
+    serviceName: "E-Shram PDF",
+    admin: "30.00",
+    othersiteAdmin: "",
+    distributor: "130.00",
+    retailer: "130.00",
+    customer: "130.00",
+  },
+  {
+    slNo: 11,
+    serviceName: "Rc To Mobile Number Find",
+    admin: "11.00",
+    othersiteAdmin: "",
+    distributor: "",
+    retailer: "",
+    customer: "",
+  },
+];
+
+function isCommissionPricingRow(row: unknown): row is ServicePriceRow {
+  if (!row || typeof row !== "object") return false;
+  const r = row as Record<string, unknown>;
+  return typeof r.serviceName === "string" && r.serviceName.trim() !== "";
+}
+
 export function PdfServicePage() {
-  const router = useRouter();
-  const [prices, setPrices] = useState<ServicePriceRow[]>([
-    {
-      slNo: 1,
-      serviceName: "Adhaar to Pan Number",
-      admin: "12.00",
-      othersiteAdmin: "0.00",
-      distributor: "30.00",
-      retailer: "30.00",
-      customer: "25.00",
-    },
-    {
-      slNo: 2,
-      serviceName: "Pan To Pan Details",
-      admin: "10.00",
-      othersiteAdmin: "0.00",
-      distributor: "30.00",
-      retailer: "30.00",
-      customer: "25.00",
-    },
-    {
-      slNo: 3,
-      serviceName: "Driving License PDF",
-      admin: "10.00",
-      othersiteAdmin: "",
-      distributor: "30.00",
-      retailer: "30.00",
-      customer: "25.00",
-    },
-    {
-      slNo: 4,
-      serviceName: "RC Pdf",
-      admin: "12.00",
-      othersiteAdmin: "",
-      distributor: "30.00",
-      retailer: "30.00",
-      customer: "25.00",
-    },
-    {
-      slNo: 5,
-      serviceName: "Adhaar to Smart card Number FIND",
-      admin: "12.00",
-      othersiteAdmin: "",
-      distributor: "20.00",
-      retailer: "20.00",
-      customer: "25.00",
-    },
-    {
-      slNo: 6,
-      serviceName: "Cell Number Link In Voter ID",
-      admin: "20.00",
-      othersiteAdmin: "",
-      distributor: "60.00",
-      retailer: "60.00",
-      customer: "60.00",
-    },
-    {
-      slNo: 7,
-      serviceName: "EPIC INSTANT PDF",
-      admin: "10.00",
-      othersiteAdmin: "",
-      distributor: "40.00",
-      retailer: "40.00",
-      customer: "40.00",
-    },
-    {
-      slNo: 8,
-      serviceName: "Adhaar verification",
-      admin: "10.00",
-      othersiteAdmin: "",
-      distributor: "20.00",
-      retailer: "20.00",
-      customer: "20.00",
-    },
-    {
-      slNo: 9,
-      serviceName: "PAN TO GST Number Find",
-      admin: "15.00",
-      othersiteAdmin: "",
-      distributor: "70.00",
-      retailer: "70.00",
-      customer: "70.00",
-    },
-    {
-      slNo: 10,
-      serviceName: "E-Shram PDF",
-      admin: "30.00",
-      othersiteAdmin: "",
-      distributor: "130.00",
-      retailer: "130.00",
-      customer: "130.00",
-    },
-    {
-      slNo: 11,
-      serviceName: "Rc To Mobile Number Find",
-      admin: "11.00",
-      othersiteAdmin: "",
-      distributor: "",
-      retailer: "",
-      customer: "",
-    },
-  ]);
+  const [prices, setPrices] = useState<ServicePriceRow[]>(DEFAULT_PDF_PRICES);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -126,13 +132,21 @@ export function PdfServicePage() {
   useEffect(() => {
     const fetchPrices = async () => {
       try {
-        const response = await authFetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/pdf-pricing`,
-        );
+        const response = await authFetch(apiUrl("services/pdf-pricing"));
         if (response.ok) {
           const data = await response.json();
-          if (data && Array.isArray(data) && data.length > 0) {
-            setPrices(data);
+          if (Array.isArray(data) && data.length > 0 && data.every(isCommissionPricingRow)) {
+            setPrices(
+              data.map((row: ServicePriceRow, i: number) => ({
+                slNo: Number(row.slNo) || i + 1,
+                serviceName: String(row.serviceName || ""),
+                admin: String(row.admin ?? ""),
+                othersiteAdmin: String(row.othersiteAdmin ?? ""),
+                distributor: String(row.distributor ?? ""),
+                retailer: String(row.retailer ?? ""),
+                customer: String(row.customer ?? ""),
+              })),
+            );
           }
         }
       } catch (error) {
@@ -195,16 +209,13 @@ export function PdfServicePage() {
     setIsSubmitting(true);
 
     try {
-      const response = await authFetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/pdf-pricing`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(prices),
+      const response = await authFetch(apiUrl("services/pdf-pricing"), {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify(prices),
+      });
 
       if (response.ok) {
         setSuccess(true);
