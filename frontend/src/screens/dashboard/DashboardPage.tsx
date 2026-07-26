@@ -64,9 +64,9 @@ export function DashboardPage({
     const confirm = await Swal.fire({
       icon: "warning",
       title: "Start New?",
-      html: "Dashboard counts start from <b>now</b> (old files stay in Services Status). Admin + partner <b>Main Wallets → ₹0</b>. Logins stay.",
+      html: "This will <b>delete all Services Status files</b> (Pending / Approved / Rejected). Dashboard counts start fresh. <b>Wallets stay</b>. Logins stay.",
       showCancelButton: true,
-      confirmButtonText: "Yes, Start New",
+      confirmButtonText: "Yes, Clear Status",
       cancelButtonText: "Cancel",
       confirmButtonColor: "#0f766e",
     });
@@ -82,16 +82,16 @@ export function DashboardPage({
         await Swal.fire({
           icon: "error",
           title: "Reset failed",
-          text: data.error || "Could not clear dashboard counts",
+          text: data.error || "Could not clear Services Status",
         });
         return;
       }
       loadStats();
       await Swal.fire({
         icon: "success",
-        title: "Started new",
-        text: "Counts from now. Wallets ₹0. Applications kept.",
-        timer: 1600,
+        title: "Services Status cleared",
+        text: `Deleted ${data.appsDeleted ?? 0} files. Wallets unchanged.`,
+        timer: 2000,
         showConfirmButton: false,
       });
     } catch (e) {

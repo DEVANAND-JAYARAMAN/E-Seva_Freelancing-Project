@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"eservice-backend/auth"
 	"eservice-backend/db"
 	"eservice-backend/timeutil"
 
@@ -84,10 +83,51 @@ func afterReset(raw string, resetAt time.Time) bool {
 	return !t.Before(resetAt)
 }
 
+// clearAllServiceApplications deletes every row in ServiceApplications.
+func clearAllServiceApplications() int {
+	deleted := 0
+	var startKey map[string]types.AttributeValue
+	for {
+		out, err := db.DynamoClient.Scan(context.TODO(), &dynamodb.ScanInput{
+			TableName:         aws.String("ServiceApplications"),
+			ExclusiveStartKey: startKey,
+		})
+		if err != nil {
+			log.Printf("Start New: ServiceApplications scan failed: %v", err)
+			return deleted
+		}
+		for _, item := range out.Items {
+			pk, okPK := item["PK"].(*types.AttributeValueMemberS)
+			sk, okSK := item["SK"].(*types.AttributeValueMemberS)
+			if !okPK || !okSK {
+				continue
+			}
+			_, delErr := db.DynamoClient.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
+				TableName: aws.String("ServiceApplications"),
+				Key: map[string]types.AttributeValue{
+					"PK": pk,
+					"SK": sk,
+				},
+			})
+			if delErr == nil {
+				deleted++
+			}
+		}
+		if out.LastEvaluatedKey == nil {
+			break
+		}
+		startKey = out.LastEvaluatedKey
+	}
+	return deleted
+}
+
 // ResetDashboardCounts POST /api/admin/dashboard/reset
-// Start New: checkpoint status counts from now, zero admin + partner Main Wallets.
-// Does NOT delete service applications (logins and files stay).
+// Start New: delete all Services Status applications, checkpoint dashboard from now.
+// Logins and wallet balances stay unchanged.
 func ResetDashboardCounts(c *gin.Context) {
+	appsDeleted := clearAllServiceApplications()
+	log.Printf("Start New: deleted %d ServiceApplications", appsDeleted)
+
 	now := time.Now().UTC().Format(time.RFC3339)
 	item := map[string]types.AttributeValue{
 		"PK": &types.AttributeValueMemberS{Value: "SETTING#dashboardReset"},
@@ -105,52 +145,10 @@ func ResetDashboardCounts(c *gin.Context) {
 		return
 	}
 
-	adminId := ResolveAdminUserId()
-	if adminId != "" {
-		auth.ZeroUserWallet(adminId)
-		log.Printf("Start New: zeroed admin wallet %s", adminId)
-	}
-
-	walletsZeroed := 0
-	usersOut, scanErr := db.DynamoClient.Scan(context.TODO(), &dynamodb.ScanInput{
-		TableName: aws.String("Users"),
-	})
-	if scanErr != nil {
-		log.Printf("Start New: users scan failed: %v", scanErr)
-	} else {
-		for _, u := range usersOut.Items {
-			roleVal, _ := u["role"].(*types.AttributeValueMemberS)
-			idVal, okID := u["userId"].(*types.AttributeValueMemberS)
-			if !okID {
-				if pk, okPK := u["PK"].(*types.AttributeValueMemberS); okPK {
-					idVal = &types.AttributeValueMemberS{Value: strings.TrimPrefix(pk.Value, "USER#")}
-					okID = true
-				}
-			}
-			if !okID || idVal == nil || idVal.Value == "" {
-				continue
-			}
-			role := ""
-			if roleVal != nil {
-				role = strings.ToLower(roleVal.Value)
-			}
-			if role != "retailer" && role != "distributor" {
-				continue
-			}
-			if adminId != "" && idVal.Value == adminId {
-				continue
-			}
-			// Keep login + applications; only zero Main Wallet
-			auth.ZeroUserWallet(idVal.Value)
-			walletsZeroed++
-		}
-	}
-
 	c.JSON(http.StatusOK, gin.H{
-		"message":          "Started new — dashboard counts from now, wallets zeroed (applications kept)",
+		"message":          "Started new — Services Status cleared, dashboard counts from now (wallets unchanged)",
 		"dashboardResetAt": now,
-		"adminWallet":      0,
-		"walletsZeroed":    walletsZeroed,
+		"appsDeleted":      appsDeleted,
 	})
 }
 
