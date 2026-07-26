@@ -126,6 +126,7 @@ func main() {
 		walletGroup := api.Group("/wallet")
 		{
 			walletGroup.GET("/transactions", service.GetWalletTransactions)
+			walletGroup.POST("/reset", wallet.ResetWallet)
 			walletGroup.POST("/recharge/gateway", wallet.InitiateGatewayRecharge)
 			walletGroup.POST("/recharge/manual", wallet.ManualRecharge)
 			walletGroup.POST("/payment/callback", wallet.HandlePaymentCallback)

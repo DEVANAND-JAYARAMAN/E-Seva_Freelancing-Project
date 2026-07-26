@@ -10,9 +10,11 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"eservice-backend/admin"
+	"eservice-backend/auth"
 	"eservice-backend/db"
 	"eservice-backend/service"
 	"eservice-backend/timeutil"
@@ -356,5 +358,29 @@ func AdminCreditWallet(c *gin.Context) {
 		"message":            "Recharge successful",
 		"amount":             req.Amount,
 		"adminWalletBalance": admin.GetAdminWalletBalance(),
+	})
+}
+
+// ResetWallet POST /api/wallet/reset?userId=...
+// Zeros Main Wallet balance and clears that user's wallet ledger.
+func ResetWallet(c *gin.Context) {
+	userId := strings.TrimSpace(c.Query("userId"))
+	if userId == "" {
+		var body struct {
+			UserId string `json:"userId"`
+		}
+		_ = c.ShouldBindJSON(&body)
+		userId = strings.TrimSpace(body.UserId)
+	}
+	if userId == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "userId is required"})
+		return
+	}
+
+	auth.ZeroUserWallet(userId)
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Wallet reset to ₹0",
+		"userId":  userId,
+		"balance": 0,
 	})
 }

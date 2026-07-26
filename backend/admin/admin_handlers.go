@@ -2,11 +2,13 @@ package admin
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
+	"eservice-backend/auth"
 	"eservice-backend/db"
 	"eservice-backend/timeutil"
 
@@ -83,8 +85,7 @@ func afterReset(raw string, resetAt time.Time) bool {
 }
 
 // ResetDashboardCounts POST /api/admin/dashboard/reset
-// Clears dashboard status/payment counts by setting a "start new" checkpoint.
-// Does not delete partners, wallets, or historical rows — only hides them from dashboard counts.
+// Start New: checkpoint status counts, zero admin Main Wallet, wipe retailers/distributors.
 func ResetDashboardCounts(c *gin.Context) {
 	now := time.Now().UTC().Format(time.RFC3339)
 	item := map[string]types.AttributeValue{
@@ -102,9 +103,57 @@ func ResetDashboardCounts(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to reset dashboard counts"})
 		return
 	}
+
+	adminId := ResolveAdminUserId()
+	if adminId != "" {
+		auth.ZeroUserWallet(adminId)
+		log.Printf("Start New: zeroed admin wallet %s", adminId)
+	}
+
+	partnersWiped := 0
+	walletsZeroed := 0
+	usersOut, scanErr := db.DynamoClient.Scan(context.TODO(), &dynamodb.ScanInput{
+		TableName: aws.String("Users"),
+	})
+	if scanErr != nil {
+		log.Printf("Start New: users scan failed: %v", scanErr)
+	} else {
+		for _, u := range usersOut.Items {
+			roleVal, _ := u["role"].(*types.AttributeValueMemberS)
+			idVal, okID := u["userId"].(*types.AttributeValueMemberS)
+			if !okID {
+				if pk, okPK := u["PK"].(*types.AttributeValueMemberS); okPK {
+					idVal = &types.AttributeValueMemberS{Value: strings.TrimPrefix(pk.Value, "USER#")}
+					okID = true
+				}
+			}
+			if !okID || idVal == nil || idVal.Value == "" {
+				continue
+			}
+			role := ""
+			if roleVal != nil {
+				role = strings.ToLower(roleVal.Value)
+			}
+			if role != "retailer" && role != "distributor" {
+				continue
+			}
+			if adminId != "" && idVal.Value == adminId {
+				continue
+			}
+			// Keep login; clear apps + set Main Wallet ₹0
+			auth.WipePartnerRelatedData(idVal.Value)
+			auth.ZeroUserWallet(idVal.Value)
+			partnersWiped++
+			walletsZeroed++
+		}
+	}
+
 	c.JSON(http.StatusOK, gin.H{
-		"message":          "Dashboard counts cleared — start new from now",
+		"message":          "Started new — counts cleared, admin + partner wallets zeroed",
 		"dashboardResetAt": now,
+		"adminWallet":      0,
+		"partnersWiped":    partnersWiped,
+		"walletsZeroed":    walletsZeroed,
 	})
 }
 

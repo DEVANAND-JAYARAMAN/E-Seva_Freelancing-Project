@@ -446,16 +446,44 @@ export function WalletPage() {
     }
   };
 
-  // Reset to default seeds
-  const handleResetData = () => {
+  // Reset Main Wallet balance + ledger via API
+  const handleResetData = async () => {
     if (
-      window.confirm(
-        "Are you sure you want to reset all wallet transaction history and requests to defaults?",
+      !window.confirm(
+        "Reset Main Wallet to ₹0 and clear all wallet transaction history?",
       )
     ) {
+      return;
+    }
+    const userId = user?.id;
+    if (!userId) {
+      window.alert("User not loaded — login again and retry.");
+      return;
+    }
+    try {
+      const res = await fetch(
+        `${apiUrl("wallet/reset")}?userId=${encodeURIComponent(userId)}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ userId }),
+        },
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        window.alert(data.error || "Wallet reset failed");
+        return;
+      }
       setTransactions([]);
       setPaymentRequests([]);
-      updateWallet(2895.0);
+      updateWallet(0);
+      await refreshProfile();
+    } catch (e) {
+      console.error(e);
+      window.alert("Could not reach server to reset wallet");
     }
   };
 

@@ -44,7 +44,7 @@ export function DashboardPage({
     const confirm = await Swal.fire({
       icon: "warning",
       title: "Start New?",
-      html: "Dashboard card counts (Pending, Approved, Rejected, Today Payment, Recent Updates) will clear to <b>0</b> and start fresh from now.<br/><br/>Wallet balance and partners list will stay.",
+      html: "This will clear dashboard counts to <b>0</b>, set admin <b>Main Wallet to ₹0</b>, and reset all <b>Retailer / Distributor</b> Main Wallets to ₹0 (login stays). Status cards start fresh from now.",
       showCancelButton: true,
       confirmButtonText: "Yes, Start New",
       cancelButtonText: "Cancel",
@@ -70,7 +70,7 @@ export function DashboardPage({
       await Swal.fire({
         icon: "success",
         title: "Started new",
-        text: "Counts cleared. New activity will show from now.",
+        text: "Wallet ₹0, partners cleared, counts start fresh.",
         timer: 1600,
         showConfirmButton: false,
       });
