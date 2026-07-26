@@ -8,7 +8,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -1446,7 +1445,12 @@ func ProcessMugavaiPayment(c *gin.Context) (bool, string) {
 
 	log.Printf("[Payment Processing] Order=%s Status=%s UTR=%s", actualOrderID, status, actualUTR)
 
-	if status != "SUCCESS" && status != "success" && status != "COMPLETED" && status != "Completed" {
+	// Some gateways omit status on redirect but include UTR when paid
+	if status == "" && actualUTR != "" {
+		status = "SUCCESS"
+	}
+
+	if status != "SUCCESS" && status != "success" && status != "COMPLETED" && status != "Completed" && status != "Success" {
 		return false, "not a success status"
 	}
 
@@ -1721,64 +1725,9 @@ func DeleteDynamicService(c *gin.Context) {
 }
 
 // RechargeReturn handles the redirect from Mugavai payment gateway.
-// Prefer sending the browser back to the site (not the API host).
+// Credit wallet from gateway query params, then always bounce to the site wallets page.
 func RechargeReturn(c *gin.Context) {
 	ProcessMugavaiPayment(c)
-
-	const fallbackFrontend = "https://thuruvancommunications.com/wallets/#payment-return"
-
-	redirectURL := strings.TrimSpace(c.Query("redirect_url"))
-	if redirectURL == "" {
-		redirectURL = strings.TrimSpace(c.PostForm("redirect_url"))
-	}
-
-	target := fallbackFrontend
-	if redirectURL != "" && isSafeFrontendRedirect(redirectURL) {
-		u, err := url.Parse(redirectURL)
-		if err == nil {
-			// Normalize to wallets + hash (avoid broken /wallets/payment=return paths)
-			if strings.HasPrefix(u.Path, "/wallets") {
-				u.Path = "/wallets/"
-				u.RawQuery = ""
-				u.Fragment = "payment-return"
-			} else if u.Fragment == "" {
-				q := u.Query()
-				if q.Get("payment") == "" {
-					q.Set("payment", "return")
-				}
-				u.RawQuery = q.Encode()
-			}
-			target = u.String()
-		} else {
-			target = redirectURL
-		}
-	}
-
-	c.Redirect(http.StatusFound, target)
-}
-
-func isSafeFrontendRedirect(raw string) bool {
-	u, err := url.Parse(raw)
-	if err != nil {
-		return false
-	}
-	if u.Scheme != "https" && u.Scheme != "http" {
-		return false
-	}
-	host := strings.ToLower(u.Hostname())
-	allowed := map[string]bool{
-		"thuruvancommunications.com":     true,
-		"www.thuruvancommunications.com": true,
-		"localhost":                      true,
-		"127.0.0.1":                      true,
-	}
-	if !allowed[host] {
-		return false
-	}
-	// Reject broken mangled paths like /wallets/payment=return (missing ?)
-	path := strings.ToLower(u.EscapedPath())
-	if strings.Contains(path, "payment=") {
-		return false
-	}
-	return true
+	// Hardcoded site return — do not nest redirect_url (gateways mangle ?query).
+	c.Redirect(http.StatusFound, "https://thuruvancommunications.com/wallets/#payment-return")
 }
