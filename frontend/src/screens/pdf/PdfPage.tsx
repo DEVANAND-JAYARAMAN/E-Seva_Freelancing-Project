@@ -249,7 +249,7 @@ export function PdfPage() {
     switch (id) {
       case "adhaar-to-pan":
         return (
-          <div className="relative w-full h-36 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center overflow-hidden">
+          <div className="relative w-full h-24 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center overflow-hidden">
             {/* Aadhaar representation */}
             <div className="absolute left-6 w-24 h-16 rounded-md bg-amber-50 dark:bg-amber-950/20 border border-amber-200/50 dark:border-amber-900/30 rotate-[-6deg] shadow-md flex flex-col p-1.5 justify-between">
               <div className="h-1 w-full bg-gradient-to-r from-orange-400 via-white to-green-500 rounded-sm" />
@@ -285,7 +285,7 @@ export function PdfPage() {
 
       case "pan-to-details":
         return (
-          <div className="relative w-full h-36 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center overflow-hidden">
+          <div className="relative w-full h-24 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center overflow-hidden">
             <div className="w-36 h-22 rounded-lg bg-gradient-to-br from-amber-500 to-amber-600 border border-amber-650 shadow-lg flex flex-col p-2 justify-between">
               <div className="flex items-center justify-between border-b border-amber-400/30 pb-1">
                 <span className="text-[6px] font-black text-white uppercase tracking-wider">
@@ -313,7 +313,7 @@ export function PdfPage() {
 
       case "dl-pdf":
         return (
-          <div className="relative w-full h-36 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center overflow-hidden">
+          <div className="relative w-full h-24 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center overflow-hidden">
             <div className="w-36 h-22 rounded-lg bg-sky-50 dark:bg-sky-950/20 border border-sky-200/50 dark:border-sky-900/30 shadow-lg flex flex-col p-2 justify-between">
               <div className="flex items-center justify-between border-b border-sky-200 dark:border-sky-900/40 pb-1">
                 <div className="flex items-center gap-1">
@@ -342,7 +342,7 @@ export function PdfPage() {
 
       case "rc-pdf":
         return (
-          <div className="relative w-full h-36 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center overflow-hidden">
+          <div className="relative w-full h-24 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center overflow-hidden">
             <div className="w-36 h-22 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-250 dark:border-emerald-900/30 shadow-lg flex flex-col p-2 justify-between">
               <div className="flex items-center justify-between border-b border-emerald-200 dark:border-emerald-900/40 pb-1">
                 <span className="text-[5px] font-bold text-slate-600 dark:text-emerald-400 uppercase">
@@ -369,7 +369,7 @@ export function PdfPage() {
 
       case "adhaar-to-smartcard":
         return (
-          <div className="relative w-full h-36 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center overflow-hidden">
+          <div className="relative w-full h-24 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center overflow-hidden">
             <div className="absolute left-6 w-24 h-16 rounded-md bg-amber-50 dark:bg-amber-950/20 border border-amber-250 rotate-[-8deg] shadow-md flex flex-col p-1.5 justify-between">
               <div className="h-1 w-full bg-orange-400 rounded-xs" />
               <div className="h-1.5 w-3/4 bg-slate-300 dark:bg-slate-700 rounded-xs" />
@@ -396,7 +396,7 @@ export function PdfPage() {
 
       case "adhaar-verification":
         return (
-          <div className="relative w-full h-36 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center overflow-hidden">
+          <div className="relative w-full h-24 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center overflow-hidden">
             <div className="relative w-36 h-22 rounded-lg bg-slate-50 dark:bg-[#0a0f18]/30 border border-slate-250 dark:border-slate-800 shadow-lg flex flex-col p-2 justify-between">
               <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-900/40 pb-1">
                 <span className="text-[5px] font-black text-slate-500 uppercase tracking-wider">
@@ -419,7 +419,7 @@ export function PdfPage() {
 
       case "pan-to-gst":
         return (
-          <div className="relative w-full h-36 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center overflow-hidden">
+          <div className="relative w-full h-24 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center overflow-hidden">
             <div className="absolute left-6 w-24 h-16 rounded-md bg-amber-600 rotate-[-8deg] shadow-md flex flex-col p-1.5 justify-between">
               <div className="h-1 w-full bg-amber-900/30 rounded-xs" />
               <div className="h-2 w-3 text-white font-extrabold text-[4px]">
@@ -445,7 +445,7 @@ export function PdfPage() {
 
       case "eshram-pdf":
         return (
-          <div className="relative w-full h-36 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center overflow-hidden">
+          <div className="relative w-full h-24 bg-gradient-to-tr from-slate-100 to-slate-200 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center overflow-hidden">
             <div className="w-36 h-22 rounded-lg bg-gradient-to-br from-yellow-50 to-amber-100 dark:from-yellow-950/20 dark:to-amber-900/10 border border-yellow-250/60 shadow-lg flex flex-col p-2 justify-between">
               <div className="flex items-center justify-between border-b border-yellow-200 dark:border-yellow-900/40 pb-1">
                 <div className="flex items-center gap-1">
@@ -784,14 +784,14 @@ export function PdfPage() {
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 max-w-6xl">
               {servicesList.map((service) => (
                 <div
                   key={service.id}
-                  className="bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col group relative"
+                  className="bg-slate-50 dark:bg-[#090d16] border border-black dark:border-white rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col group relative max-w-[220px]"
                 >
                   {isAdmin && (
-                    <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
+                    <div className="absolute top-1.5 right-1.5 z-10 flex flex-col gap-1">
                       <button
                         onClick={async (e) => {
                           e.stopPropagation();
@@ -813,10 +813,10 @@ export function PdfPage() {
                             saveServicesToDb(updated);
                           }
                         }}
-                        className="p-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-black dark:border-slate-400 text-slate-400 hover:text-[#005c3a] dark:hover:text-emerald-400 transition-all active:scale-[0.95]"
+                        className="p-1 rounded-lg bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-black dark:border-slate-400 text-slate-400 hover:text-[#005c3a] dark:hover:text-emerald-400 transition-all active:scale-[0.95]"
                         title="Rename / change logo"
                       >
-                        <Pencil size={11} />
+                        <Pencil size={10} />
                       </button>
                       <button
                         onClick={async (e) => {
@@ -839,27 +839,27 @@ export function PdfPage() {
                             saveServicesToDb(updated);
                           }
                         }}
-                        className="p-1.5 rounded-xl bg-sky-50 dark:bg-sky-950/30 hover:bg-sky-100 border border-sky-200 text-sky-500 transition-all active:scale-[0.95]"
+                        className="p-1 rounded-lg bg-sky-50 dark:bg-sky-950/30 hover:bg-sky-100 border border-sky-200 text-sky-500 transition-all active:scale-[0.95]"
                         title="Change logo"
                       >
-                        <ImagePlus size={11} />
+                        <ImagePlus size={10} />
                       </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDeleteService(service.id);
                         }}
-                        className="p-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-black dark:border-slate-400 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-all active:scale-[0.95]"
+                        className="p-1 rounded-lg bg-slate-50 dark:bg-slate-900 hover:bg-rose-50 dark:hover:bg-rose-950/30 border border-black dark:border-slate-400 text-slate-400 hover:text-rose-500 dark:hover:text-rose-400 transition-all active:scale-[0.95]"
                         title="Delete card"
                       >
-                        <Trash size={11} />
+                        <Trash size={10} />
                       </button>
                     </div>
                   )}
 
                   {/* Card realistic image preview */}
                   {service.customImage ? (
-                    <div className="relative w-full h-36 bg-slate-50 dark:bg-slate-900 flex items-center justify-center overflow-hidden">
+                    <div className="relative w-full h-24 bg-slate-50 dark:bg-slate-900 flex items-center justify-center overflow-hidden">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={service.customImage}
@@ -872,19 +872,19 @@ export function PdfPage() {
                   )}
 
                   {/* Card Title & Content */}
-                  <div className="p-5 flex-1 flex flex-col gap-4">
-                    <div className="space-y-1">
-                      <h4 className="text-sm font-black text-emerald-555 group-hover:text-emerald-650 transition-colors capitalize line-clamp-1 leading-snug">
+                  <div className="p-3 flex-1 flex flex-col gap-2">
+                    <div className="space-y-0.5">
+                      <h4 className="text-xs font-black text-emerald-555 group-hover:text-emerald-650 transition-colors capitalize line-clamp-2 leading-snug">
                         {service.name}
                       </h4>
-                      <div className="flex items-center gap-1 text-[11px] font-bold text-rose-500">
+                      <div className="flex items-center gap-1 text-[10px] font-bold text-rose-500">
                         <span>Amount:</span>
                         <span>₹ {service.amount.toFixed(2)}</span>
                       </div>
                     </div>
 
                     {/* Bottom interactive buttons matching layout exactly */}
-                    <div className="grid grid-cols-2 gap-2 mt-auto pt-2">
+                    <div className="grid grid-cols-2 gap-1.5 mt-auto pt-1">
                       <button
                         onClick={() => {
                           setFormData({});
@@ -892,13 +892,13 @@ export function PdfPage() {
                           setSubmissionSuccess(false);
                           setActiveForm(service.id);
                         }}
-                        className="flex items-center justify-center h-9 rounded-xl border border-slate-250 dark:border-slate-800 text-xs font-bold text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-900 active:scale-[0.98] transition-all select-none"
+                        className="flex items-center justify-center h-7 rounded-lg border border-slate-250 dark:border-slate-800 text-[10px] font-bold text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-900 active:scale-[0.98] transition-all select-none"
                       >
                         Apply
                       </button>
                       <button
                         onClick={() => setActiveListView(service.id)}
-                        className="flex items-center justify-center h-9 rounded-xl bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] dark:hover:bg-emerald-500 text-white text-xs font-bold shadow-sm active:scale-[0.98] transition-all select-none"
+                        className="flex items-center justify-center h-7 rounded-lg bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] dark:hover:bg-emerald-500 text-white text-[10px] font-bold shadow-sm active:scale-[0.98] transition-all select-none"
                       >
                         List
                       </button>
