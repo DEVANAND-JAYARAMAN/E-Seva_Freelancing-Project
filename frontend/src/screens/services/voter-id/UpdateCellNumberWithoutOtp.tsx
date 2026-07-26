@@ -3,6 +3,7 @@ import { useFormEdit } from "../../../store/context/FormEditContext";
 import { CheckCircle2 } from "lucide-react";
 import { InputField, SubmitButton, EditableFormHeader } from "../form/FormFields";
 import { validateField, PATTERNS } from "../form/validators";
+import { ServicePaymentBadge } from "../../../components/ServicePaymentBadge";
 
 interface UpdateCellNumberWithoutOtpProps {
   onCancel: () => void;
@@ -103,7 +104,14 @@ export const UpdateCellNumberWithoutOtp: React.FC<UpdateCellNumberWithoutOtpProp
       <EditableFormHeader
         defaultTitle="Update Cell Number (Without OTP)"
         defaultSubtitle="Link your mobile number with your EPIC card directly without OTP (background verification)"
-        rightContent="Service Payment : ₹ 0"
+        rightContent={
+          <ServicePaymentBadge
+            pricingCategoryId="voter-id"
+            serviceId="update-cell-no-otp"
+            serviceName="Update Cell Number (Without OTP)"
+            fallback={40}
+          />
+        }
       />
 
       {/* Form Fields */}

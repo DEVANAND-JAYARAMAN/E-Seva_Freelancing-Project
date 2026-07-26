@@ -17,6 +17,11 @@ import {
 import { useAuth } from "../../../store/context/AuthContext";
 import { useFormEdit } from "../../../store/context/FormEditContext";
 import Swal from "sweetalert2";
+import { ServicePaymentBadge } from "../../../components/ServicePaymentBadge";
+import {
+  ServicePaymentScreen,
+  ServiceSuccessScreen,
+} from "../../../components/ServicePaymentScreen";
 
 interface VoterService {
   id: string;
@@ -25,9 +30,11 @@ interface VoterService {
 
 function GenericVoterServiceForm({
   title,
+  serviceId,
   onCancel,
 }: {
   title: string;
+  serviceId: string;
   onCancel: () => void;
 }) {
   const { overrides } = useFormEdit();
@@ -39,6 +46,9 @@ function GenericVoterServiceForm({
   const [customValues, setCustomValues] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentPhase, setPaymentPhase] = useState<
+    "form" | "payment" | "success"
+  >("form");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,27 +63,45 @@ function GenericVoterServiceForm({
       setErrors(newErrors);
       return;
     }
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      Swal.fire({
-        title: "Request Submitted",
-        text: `${title} request registered successfully.`,
-        icon: "success",
-        confirmButtonColor: "#005c3a",
-        timer: 1800,
-        showConfirmButton: false,
-      });
-      onCancel();
-    }, 800);
+    setPaymentPhase("payment");
   };
+
+  if (paymentPhase === "success") {
+    return <ServiceSuccessScreen serviceName={title} />;
+  }
+
+  if (paymentPhase === "payment") {
+    return (
+      <div className="py-6">
+        <ServicePaymentScreen
+          serviceId={serviceId}
+          serviceName={title}
+          retailerCharge={40}
+          pricingCategoryId="voter-id"
+          formData={{ ...formData, ...customValues }}
+          onBack={() => setPaymentPhase("form")}
+          onSuccess={() => {
+            setPaymentPhase("success");
+            setTimeout(() => onCancel(), 2500);
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 w-full">
       <EditableFormHeader
         defaultTitle={title}
         defaultSubtitle={`Submit details to apply for ${title}`}
-        rightContent="Service Payment : ₹ 0"
+        rightContent={
+          <ServicePaymentBadge
+            pricingCategoryId="voter-id"
+            serviceId={serviceId}
+            serviceName={title}
+            fallback={40}
+          />
+        }
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-3">
@@ -354,6 +382,7 @@ export function VoterIdPage() {
     return (
       <GenericVoterServiceForm
         title={activeService?.name || "New Service"}
+        serviceId={activeForm}
         onCancel={onCancel}
       />
     );

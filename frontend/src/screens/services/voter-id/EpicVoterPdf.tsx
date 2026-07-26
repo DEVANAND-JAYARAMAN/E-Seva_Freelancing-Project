@@ -1,12 +1,25 @@
 import React, { useState } from "react";
 import { useFormEdit } from "../../../store/context/FormEditContext";
-import { CheckCircle2 } from "lucide-react";
-import { InputField, SubmitButton, EditableFormHeader } from "../form/FormFields";
+import {
+  InputField,
+  SubmitButton,
+  EditableFormHeader,
+} from "../form/FormFields";
 import { validateField } from "../form/validators";
+import {
+  ServicePaymentScreen,
+  ServiceSuccessScreen,
+} from "../../../components/ServicePaymentScreen";
+import { ServicePaymentBadge } from "../../../components/ServicePaymentBadge";
 
 interface EpicVoterPdfProps {
   onCancel: () => void;
 }
+
+const SERVICE_ID = "epic-voter-pdf";
+const SERVICE_NAME = "Epic Voter PDF (Without OTP)";
+const CATEGORY_ID = "voter-id";
+const FALLBACK_PRICE = 40;
 
 export const EpicVoterPdf: React.FC<EpicVoterPdfProps> = ({ onCancel }) => {
   const { overrides } = useFormEdit();
@@ -16,23 +29,24 @@ export const EpicVoterPdf: React.FC<EpicVoterPdfProps> = ({ onCancel }) => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submissionSuccess, setSubmissionSuccess] = useState(false);
+  const [paymentPhase, setPaymentPhase] = useState<
+    "form" | "payment" | "success"
+  >("form");
 
-  const handleFieldChange = (name: string, value: string, file?: File) => {
+  const handleFieldChange = (name: string, value: string) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
-      
-      // Live validation on edit
+
       if (errors[name]) {
-        let rule = { required: true, requiredMessage: "This field is required" };
+        const rule = {
+          required: true,
+          requiredMessage: "This field is required",
+        };
         const errorMsg = validateField(name, value, rule, updated);
         setErrors((prevErrors) => {
           const next = { ...prevErrors };
-          if (errorMsg) {
-            next[name] = errorMsg;
-          } else {
-            delete next[name];
-          }
+          if (errorMsg) next[name] = errorMsg;
+          else delete next[name];
           return next;
         });
       }
@@ -44,11 +58,20 @@ export const EpicVoterPdf: React.FC<EpicVoterPdfProps> = ({ onCancel }) => {
     e.preventDefault();
 
     const newErrors: Record<string, string> = {};
-    
-    const nameErr = validateField("nameAsPerAadhaar", formData.nameAsPerAadhaar, { required: true, requiredMessage: "Name As Per Aadhaar is required" }, formData);
+    const nameErr = validateField(
+      "nameAsPerAadhaar",
+      formData.nameAsPerAadhaar,
+      { required: true, requiredMessage: "Name As Per Aadhaar is required" },
+      formData,
+    );
     if (nameErr) newErrors.nameAsPerAadhaar = nameErr;
 
-    const epicErr = validateField("epicNo", formData.epicNo, { required: true, requiredMessage: "Voter Id/EPIC Number is required" }, formData);
+    const epicErr = validateField(
+      "epicNo",
+      formData.epicNo,
+      { required: true, requiredMessage: "Voter Id/EPIC Number is required" },
+      formData,
+    );
     if (epicErr) newErrors.epicNo = epicErr;
 
     if (Object.keys(newErrors).length > 0) {
@@ -56,45 +79,51 @@ export const EpicVoterPdf: React.FC<EpicVoterPdfProps> = ({ onCancel }) => {
       return;
     }
 
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSubmissionSuccess(true);
-      setTimeout(() => {
-        setSubmissionSuccess(false);
-        onCancel();
-      }, 2500);
-    }, 1500);
+    setIsSubmitting(false);
+    setPaymentPhase("payment");
   };
 
-  if (submissionSuccess) {
+  if (paymentPhase === "success") {
+    return <ServiceSuccessScreen serviceName={SERVICE_NAME} />;
+  }
+
+  if (paymentPhase === "payment") {
     return (
-      <div className="py-16 flex flex-col items-center justify-center text-center gap-4">
-        <span className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-400 animate-bounce">
-          <CheckCircle2 size={44} className="stroke-[2.5]" />
-        </span>
-        <div>
-          <h5 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-            Request Submitted Successfully!
-          </h5>
-          <p className="text-sm text-slate-400 dark:text-slate-555 mt-2 max-w-md leading-relaxed">
-            Your request for **Epic Voter PDF (Without OTP)** has been successfully processed. The admin will update the status soon.
-          </p>
-        </div>
+      <div className="py-6">
+        <ServicePaymentScreen
+          serviceId={SERVICE_ID}
+          serviceName={SERVICE_NAME}
+          retailerCharge={FALLBACK_PRICE}
+          pricingCategoryId={CATEGORY_ID}
+          formData={formData}
+          onBack={() => setPaymentPhase("form")}
+          onSuccess={() => {
+            setPaymentPhase("success");
+            setTimeout(() => {
+              setPaymentPhase("form");
+              onCancel();
+            }, 2500);
+          }}
+        />
       </div>
     );
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 w-full">
-      {/* Form Header matching layout exactly */}
       <EditableFormHeader
         defaultTitle="Epic Voter PDF (Without OTP)"
         defaultSubtitle="Download your official Voter card PDF instantly using EPIC number"
-        rightContent="Service Payment : ₹ 0"
+        rightContent={
+          <ServicePaymentBadge
+            pricingCategoryId={CATEGORY_ID}
+            serviceId={SERVICE_ID}
+            serviceName={SERVICE_NAME}
+            fallback={FALLBACK_PRICE}
+          />
+        }
       />
 
-      {/* Form Fields */}
       <div className="space-y-5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
@@ -106,7 +135,7 @@ export const EpicVoterPdf: React.FC<EpicVoterPdfProps> = ({ onCancel }) => {
               value={formData.nameAsPerAadhaar}
               error={errors.nameAsPerAadhaar}
               disabled={isSubmitting}
-              onChange={(val, file) => handleFieldChange("nameAsPerAadhaar", val, file)}
+              onChange={(val) => handleFieldChange("nameAsPerAadhaar", val)}
             />
           </div>
 
@@ -125,8 +154,6 @@ export const EpicVoterPdf: React.FC<EpicVoterPdfProps> = ({ onCancel }) => {
         </div>
       </div>
 
-      
-      {/* Added Extra Fields */}
       {overrides.addedFields && overrides.addedFields.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
           {overrides.addedFields.map((field) => (
@@ -134,19 +161,17 @@ export const EpicVoterPdf: React.FC<EpicVoterPdfProps> = ({ onCancel }) => {
               key={field.name}
               name={field.name}
               label={field.label}
-              type={(field.type as any) || "text"}
+              type={(field.type as "text" | "number" | "tel" | "email" | "date" | "file") || "text"}
               placeholder={field.placeholder}
               value={formData[field.name] || ""}
               error={errors && errors[field.name]}
               disabled={isSubmitting}
-              onChange={(val, file) => {
-                handleFieldChange(field.name, val, file);
-              }}
+              onChange={(val) => handleFieldChange(field.name, val)}
             />
           ))}
         </div>
       )}
-{/* Button Footer */}
+
       <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-900/60 mt-8">
         <button
           type="button"

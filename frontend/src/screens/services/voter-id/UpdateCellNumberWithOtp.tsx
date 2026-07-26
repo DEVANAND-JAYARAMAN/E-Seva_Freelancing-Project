@@ -3,6 +3,7 @@ import { useFormEdit } from "../../../store/context/FormEditContext";
 import { CheckCircle2 } from "lucide-react";
 import { InputField, SubmitButton, EditableFormHeader } from "../form/FormFields";
 import { validateField, PATTERNS } from "../form/validators";
+import { ServicePaymentBadge } from "../../../components/ServicePaymentBadge";
 
 interface UpdateCellNumberWithOtpProps {
   onCancel: () => void;
@@ -133,7 +134,14 @@ export const UpdateCellNumberWithOtp: React.FC<UpdateCellNumberWithOtpProps> = (
       <EditableFormHeader
         defaultTitle="Update Cell Number (With One OTP)"
         defaultSubtitle="Link or change your registered mobile number with secure OTP verification"
-        rightContent="Service Payment : ₹ 0"
+        rightContent={
+          <ServicePaymentBadge
+            pricingCategoryId="voter-id"
+            serviceId="update-cell-one-otp"
+            serviceName="Update Cell Number (With One OTP)"
+            fallback={40}
+          />
+        }
       />
 
       {/* Form Fields */}
