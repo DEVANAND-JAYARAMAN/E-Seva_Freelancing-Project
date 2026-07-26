@@ -100,28 +100,37 @@ export function WalletPage() {
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState(false);
 
-  // Compute stats
+  // Compute stats — Total Credits = money added (top-up / admin), not refunds
   const stats = useMemo(() => {
-    const mainCredit = transactions
-      .filter(
-        (t) =>
-          t.walletType === "Main" &&
-          t.type === "credit" &&
-          t.status === "Success",
-      )
+    const isRefundTx = (t: WalletTransaction) => {
+      const ref = (t.reference || "").toLowerCase();
+      const desc = (t.description || "").toLowerCase();
+      return (
+        ref.includes("refund") ||
+        desc.includes("refund") ||
+        ref.endsWith("-refund")
+      );
+    };
+
+    const mainTx = transactions.filter(
+      (t) => t.walletType === "Main" && t.status === "Success",
+    );
+
+    const mainCredit = mainTx
+      .filter((t) => t.type === "credit" && !isRefundTx(t))
       .reduce((sum, t) => sum + t.amount, 0);
 
-    const mainDebit = transactions
-      .filter(
-        (t) =>
-          t.walletType === "Main" &&
-          t.type === "debit" &&
-          t.status === "Success",
-      )
+    const mainRefund = mainTx
+      .filter((t) => t.type === "credit" && isRefundTx(t))
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    const mainDebit = mainTx
+      .filter((t) => t.type === "debit")
       .reduce((sum, t) => sum + t.amount, 0);
 
     return {
       totalCredits: mainCredit,
+      totalRefunds: mainRefund,
       totalDebits: mainDebit,
     };
   }, [transactions]);
@@ -153,7 +162,9 @@ export function WalletPage() {
           ? true
           : typeFilter === "refund"
             ? isRefund(t)
-            : (t.type || "").toLowerCase() === typeFilter.toLowerCase();
+            : typeFilter === "credit"
+              ? (t.type || "").toLowerCase() === "credit" && !isRefund(t)
+              : (t.type || "").toLowerCase() === typeFilter.toLowerCase();
       const matchesWallet = t.walletType === "Main";
 
       return matchesSearch && matchesType && matchesWallet;
@@ -564,7 +575,7 @@ export function WalletPage() {
             </div>
           </article>
 
-          {/* Aggregate Total Credit Card */}
+          {/* Aggregate Total Credit Card — top-ups only (refunds excluded) */}
           <article className="flex items-center gap-3 bg-gradient-to-br from-[#005c3a] to-[#004229] dark:from-[#08291c] dark:to-[#02150e] rounded-2xl px-4 py-3.5 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 min-h-[7.5rem]">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white">
               <ArrowUpRight size={17} className="stroke-[2.5]" />
@@ -579,6 +590,16 @@ export function WalletPage() {
                 </span>
                 {stats.totalCredits.toLocaleString("en-IN")}
               </strong>
+              {stats.totalRefunds > 0 ? (
+                <p className="text-[10px] font-semibold text-emerald-200/90 mt-1">
+                  Refunds separate: ₹
+                  {stats.totalRefunds.toLocaleString("en-IN")}
+                </p>
+              ) : (
+                <p className="text-[10px] font-semibold text-white/50 mt-1">
+                  Top-ups / admin credit only
+                </p>
+              )}
             </div>
           </article>
 
