@@ -21,8 +21,11 @@ type PartnerService = {
   serviceName: string;
   status: string;
   debitAmount: number;
+  creditAmount?: number;
+  availableBalance?: number;
   createdDate: string;
   createdAtIst?: string;
+  dateTime?: string;
 };
 
 type PartnerRow = {
@@ -37,6 +40,7 @@ type PartnerRow = {
   totalDebited: number;
   activeServices: PartnerService[];
   recentServices: PartnerService[];
+  amountDetails?: PartnerService[];
 };
 
 type RoleFilter = "all" | "retailer" | "distributor";
@@ -391,62 +395,103 @@ function PartnerBlock({
       {open && (
         <tr className="bg-slate-50/60 dark:bg-slate-950/50 border-t border-slate-100 dark:border-slate-800">
           <td colSpan={7} className="px-4 py-3">
-            {p.recentServices.length === 0 ? (
-              <p className="text-xs font-semibold text-slate-500 py-2">
-                No service history for this partner.
-              </p>
-            ) : (
-              <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/40 px-3">
-                <table className="w-full text-left text-xs">
-                  <thead>
-                    <tr className="text-[10px] font-black uppercase tracking-wider text-slate-400">
-                      <th className="py-2 pr-3">Service</th>
-                      <th className="py-2 pr-3">Status</th>
-                      <th className="py-2 pr-3 text-right">Wallet Cut</th>
-                      <th className="py-2">Date &amp; Time</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {p.recentServices.map((s) => (
-                      <tr
-                        key={
-                          s.applicationId ||
-                          `${s.serviceName}-${s.createdDate}`
-                        }
-                        className="border-t border-slate-100 dark:border-slate-800/60"
-                      >
-                        <td className="py-2.5 pr-3 font-bold text-slate-800 dark:text-slate-100">
-                          {s.serviceName}
-                        </td>
-                        <td className="py-2.5 pr-3">
-                          <span
-                            className={`inline-flex px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase ${
-                              statusStyle[s.status] ||
-                              "bg-slate-100 text-slate-600"
+            {(() => {
+              const rows =
+                p.amountDetails && p.amountDetails.length > 0
+                  ? p.amountDetails
+                  : p.recentServices;
+              if (rows.length === 0) {
+                return (
+                  <p className="text-xs font-semibold text-slate-500 py-2">
+                    No service amount history for this partner.
+                  </p>
+                );
+              }
+              return (
+                <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/40">
+                  <table className="w-full text-left text-xs border-collapse min-w-[640px]">
+                    <thead>
+                      <tr className="bg-[#1e293b] text-white">
+                        {[
+                          "Sl No",
+                          "Date Time",
+                          "Service",
+                          "Status",
+                          "Debit",
+                          "Credit",
+                          "Available Balance",
+                        ].map((h) => (
+                          <th
+                            key={h}
+                            className={`py-2.5 px-3 text-[10px] font-extrabold uppercase tracking-wider whitespace-nowrap ${
+                              h === "Debit" ||
+                              h === "Credit" ||
+                              h === "Available Balance"
+                                ? "text-right"
+                                : "text-left"
                             }`}
                           >
-                            {s.status}
-                          </span>
-                        </td>
-                        <td className="py-2.5 pr-3 text-right font-extrabold text-rose-600 dark:text-rose-400">
-                          −₹{money(s.debitAmount)}
-                        </td>
-                        <td className="py-2.5 font-semibold text-slate-500">
-                          {s.createdAtIst ||
-                            formatTxnDateTime(s.createdDate)}
-                        </td>
+                            {h}
+                          </th>
+                        ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-                {p.serviceCount > p.recentServices.length && (
-                  <p className="text-[10px] font-semibold text-slate-400 mt-2 mb-2">
-                    Showing latest {p.recentServices.length} of{" "}
-                    {p.serviceCount} services
-                  </p>
-                )}
-              </div>
-            )}
+                    </thead>
+                    <tbody>
+                      {rows.map((s, i) => (
+                        <tr
+                          key={
+                            s.applicationId ||
+                            `${s.serviceName}-${s.createdDate}-${i}`
+                          }
+                          className={
+                            i % 2 === 0
+                              ? "bg-white dark:bg-slate-950/40"
+                              : "bg-slate-50 dark:bg-slate-900/50"
+                          }
+                        >
+                          <td className="py-2.5 px-3 font-semibold text-slate-600">
+                            {i + 1}
+                          </td>
+                          <td className="py-2.5 px-3 font-semibold text-slate-700 dark:text-slate-200 whitespace-nowrap">
+                            {s.dateTime ||
+                              s.createdAtIst ||
+                              formatTxnDateTime(s.createdDate)}
+                          </td>
+                          <td className="py-2.5 px-3 font-bold text-slate-800 dark:text-slate-100">
+                            {s.serviceName}
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <span
+                              className={`inline-flex px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase ${
+                                statusStyle[s.status] ||
+                                "bg-slate-100 text-slate-600"
+                              }`}
+                            >
+                              {s.status}
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-3 text-right font-bold text-rose-600">
+                            {(s.debitAmount || 0) > 0
+                              ? money(s.debitAmount)
+                              : "—"}
+                          </td>
+                          <td className="py-2.5 px-3 text-right font-bold text-emerald-600">
+                            {(s.creditAmount || 0) > 0
+                              ? `+ ${money(s.creditAmount || 0)}`
+                              : "—"}
+                          </td>
+                          <td className="py-2.5 px-3 text-right font-black text-slate-800 dark:text-white">
+                            {typeof s.availableBalance === "number"
+                              ? money(s.availableBalance)
+                              : money(p.walletBalance)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
           </td>
         </tr>
       )}
