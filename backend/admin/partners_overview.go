@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"eservice-backend/auth"
 	"eservice-backend/db"
@@ -94,8 +95,6 @@ func GetPartnersOverview(c *gin.Context) {
 	var apps []models.ServiceApplication
 	_ = attributevalue.UnmarshalListOfMaps(appsOut.Items, &apps)
 
-	// serviceId / appId → name + status (for enriching wallet txs)
-	serviceMeta := map[string]models.ServiceApplication{}
 	appsByPartner := map[string][]models.ServiceApplication{}
 	for _, app := range apps {
 		pid := strings.TrimSpace(app.RetailerId)
@@ -103,12 +102,6 @@ func GetPartnersOverview(c *gin.Context) {
 			continue
 		}
 		appsByPartner[pid] = append(appsByPartner[pid], app)
-		if app.ServiceId != "" {
-			serviceMeta[app.ServiceId] = app
-		}
-		if app.Id != "" {
-			serviceMeta[app.Id] = app
-		}
 	}
 
 	txOut, err := db.DynamoClient.Scan(context.TODO(), &dynamodb.ScanInput{
@@ -186,7 +179,8 @@ func GetPartnersOverview(c *gin.Context) {
 		sort.Slice(allTx, func(i, j int) bool {
 			return allTx[i].createdAt > allTx[j].createdAt
 		})
-		bal := u.WalletBalance
+		// Amount details = THIS partner's service applications (correct status),
+		// with Debit/Credit/Available Balance from their wallet ledger.
 		type balTx struct {
 			rawWalletTx
 			available float64
@@ -194,6 +188,7 @@ func GetPartnersOverview(c *gin.Context) {
 			credit    float64
 		}
 		ledger := make([]balTx, 0, len(allTx))
+		bal := u.WalletBalance
 		for _, t := range allTx {
 			row := balTx{rawWalletTx: t, available: bal}
 			isCredit := strings.EqualFold(t.txType, "credit")
@@ -207,69 +202,57 @@ func GetPartnersOverview(c *gin.Context) {
 			ledger = append(ledger, row)
 		}
 
-		// Per-service amount details: prefer wallet service debits/refunds with balance
-		amountDetails := make([]partnerServiceRow, 0)
+		usedTx := map[string]bool{}
+		matchLedger := func(app models.ServiceApplication, wantDebit bool) (balTx, bool) {
+			bestIdx := -1
+			bestScore := int64(1 << 62)
+			appT := parseFlexibleTime(app.CreatedDate)
+			for i, t := range ledger {
+				key := t.id + "|" + t.createdAt
+				if usedTx[key] {
+					continue
+				}
+				ref := strings.TrimSuffix(t.reference, "-REFUND")
+				exact := ref == app.ServiceId || ref == app.Id
+				if wantDebit {
+					if t.debit <= 0 || !almostEqual(t.debit, app.Cost) {
+						continue
+					}
+					soft := strings.Contains(strings.ToLower(t.description), "service")
+					if !exact && !soft {
+						continue
+					}
+				} else {
+					if t.credit <= 0 || !almostEqual(t.credit, app.Cost) {
+						continue
+					}
+					if !strings.Contains(strings.ToLower(t.reference), "refund") && !exact {
+						continue
+					}
+				}
+				txT := parseFlexibleTime(t.createdAt)
+				diff := absInt64(appT.Unix() - txT.Unix())
+				score := diff
+				if !exact {
+					score += 1_000_000 // prefer exact serviceId match
+				}
+				if bestIdx < 0 || score < bestScore {
+					bestIdx = i
+					bestScore = score
+				}
+			}
+			if bestIdx < 0 {
+				return balTx{}, false
+			}
+			picked := ledger[bestIdx]
+			usedTx[picked.id+"|"+picked.createdAt] = true
+			return picked, true
+		}
+
+		amountDetails := make([]partnerServiceRow, 0, len(partnerApps))
 		totalDebited := 0.0
-		for _, t := range ledger {
-			if !isServiceWalletTx(t.rawWalletTx) {
-				continue
-			}
-			name, status := resolveServiceMeta(t.rawWalletTx, serviceMeta)
-			ist := timeutil.FormatRFC3339AsIST(t.createdAt)
-			row := partnerServiceRow{
-				ApplicationId:    t.id,
-				ServiceName:      name,
-				Status:           status,
-				DebitAmount:      t.debit,
-				CreditAmount:     t.credit,
-				AvailableBalance: t.available,
-				CreatedDate:      t.createdAt,
-				CreatedAtIST:     ist,
-				DateTime:         ist,
-			}
-			if t.status != "" && !strings.EqualFold(t.status, "Success") {
-				row.Status = t.status
-			}
-			if row.Status == "" {
-				row.Status = t.status
-			}
-			amountDetails = append(amountDetails, row)
-			totalDebited += t.debit
-		}
-
-		// Fallback: if no wallet service txs yet, use applications with debit only
-		if len(amountDetails) == 0 && len(partnerApps) > 0 {
-			runBal := u.WalletBalance
-			// Walk newest→oldest: after newest cut, balance ≈ current; then undo cuts going back
-			for _, app := range partnerApps {
-				ist := timeutil.FormatRFC3339AsIST(app.CreatedDate)
-				name := app.ServiceName
-				if name == "" {
-					name = app.ServiceId
-				}
-				if name == "" {
-					name = "Service"
-				}
-				amountDetails = append(amountDetails, partnerServiceRow{
-					ApplicationId:    app.Id,
-					ServiceName:      name,
-					Status:           app.Status,
-					DebitAmount:      app.Cost,
-					CreditAmount:     0,
-					AvailableBalance: runBal,
-					CreatedDate:      app.CreatedDate,
-					CreatedAtIST:     ist,
-					DateTime:         ist,
-				})
-				totalDebited += app.Cost
-				runBal += app.Cost // undo debit when going older
-			}
-		}
-
-		active := make([]partnerServiceRow, 0)
-		recent := make([]partnerServiceRow, 0)
+		runBal := u.WalletBalance
 		for _, app := range partnerApps {
-			ist := timeutil.FormatRFC3339AsIST(app.CreatedDate)
 			name := app.ServiceName
 			if name == "" {
 				name = app.ServiceId
@@ -277,27 +260,42 @@ func GetPartnersOverview(c *gin.Context) {
 			if name == "" {
 				name = "Service"
 			}
-			row := partnerServiceRow{
-				ApplicationId: app.Id,
-				ServiceName:   name,
-				Status:        app.Status,
-				DebitAmount:   app.Cost,
-				CreatedDate:   app.CreatedDate,
-				CreatedAtIST:  ist,
-				DateTime:      ist,
+			ist := timeutil.FormatRFC3339AsIST(app.CreatedDate)
+
+			debitAmt := app.Cost
+			creditAmt := 0.0
+			avail := runBal
+
+			if deb, ok := matchLedger(app, true); ok {
+				debitAmt = deb.debit
+				avail = deb.available
 			}
-			// Attach matching available balance from amountDetails when possible
-			for _, d := range amountDetails {
-				if almostEqual(d.DebitAmount, app.Cost) &&
-					(strings.Contains(strings.ToLower(d.ServiceName), strings.ToLower(name)) ||
-						d.ServiceName == name ||
-						strings.EqualFold(d.ApplicationId, app.Id)) {
-					row.AvailableBalance = d.AvailableBalance
-					row.CreditAmount = d.CreditAmount
-					break
-				}
+			if cred, ok := matchLedger(app, false); ok {
+				creditAmt = cred.credit
 			}
-			st := strings.ToLower(app.Status)
+
+			amountDetails = append(amountDetails, partnerServiceRow{
+				ApplicationId:    app.Id,
+				ServiceName:      name,
+				Status:           app.Status, // always this partner's request status
+				DebitAmount:      debitAmt,
+				CreditAmount:     creditAmt,
+				AvailableBalance: avail,
+				CreatedDate:      app.CreatedDate,
+				CreatedAtIST:     ist,
+				DateTime:         ist,
+			})
+			totalDebited += debitAmt
+			runBal += debitAmt // walking older: undo debit for fallback chain
+			if creditAmt > 0 {
+				runBal -= creditAmt
+			}
+		}
+
+		active := make([]partnerServiceRow, 0)
+		recent := make([]partnerServiceRow, 0)
+		for _, row := range amountDetails {
+			st := strings.ToLower(row.Status)
 			if st == "pending" || st == "process" || st == "inprocess" || st == "resubmit" {
 				active = append(active, row)
 			}
@@ -340,65 +338,27 @@ func GetPartnersOverview(c *gin.Context) {
 	})
 }
 
-func isServiceWalletTx(t rawWalletTx) bool {
-	ref := strings.ToLower(t.reference)
-	desc := strings.ToLower(t.description)
-	title := strings.ToLower(t.title)
-	if strings.Contains(desc, "service") || strings.Contains(title, "service") {
-		return true
+func parseFlexibleTime(s string) time.Time {
+	if s == "" {
+		return time.Time{}
 	}
-	if strings.Contains(ref, "refund") {
-		return true
+	if t, err := time.Parse(time.RFC3339, s); err == nil {
+		return t
 	}
-	// Catalog service ids / app refs (not recharge UTR / ADMIN)
-	if ref == "" || ref == "admin" || ref == "admin_dummy" || ref == "admin_transfer" || ref == "partner_recharge" {
-		return false
+	if t, err := time.Parse(time.RFC3339Nano, s); err == nil {
+		return t
 	}
-	if strings.HasPrefix(strings.ToUpper(t.reference), "SRV") ||
-		strings.Contains(ref, "service") {
-		return true
+	if t, err := time.Parse("2006-01-02 15:04:05", s); err == nil {
+		return t
 	}
-	// Heuristic: debit with non-UTR short/long catalog id used as serviceId
-	if strings.EqualFold(t.txType, "debit") && !looksLikeUtr(t.reference) {
-		return true
-	}
-	return false
+	return time.Time{}
 }
 
-func looksLikeUtr(s string) bool {
-	if len(s) == 12 {
-		for _, c := range s {
-			if c < '0' || c > '9' {
-				return false
-			}
-		}
-		return true
+func absInt64(n int64) int64 {
+	if n < 0 {
+		return -n
 	}
-	return false
-}
-
-func resolveServiceMeta(t rawWalletTx, meta map[string]models.ServiceApplication) (name, status string) {
-	ref := strings.TrimSuffix(t.reference, "-REFUND")
-	if app, ok := meta[ref]; ok {
-		name = app.ServiceName
-		if name == "" {
-			name = app.ServiceId
-		}
-		status = app.Status
-	}
-	if name == "" {
-		name = t.title
-	}
-	if name == "" {
-		name = t.description
-	}
-	if name == "" {
-		name = "Service"
-	}
-	if status == "" {
-		status = t.status
-	}
-	return name, status
+	return n
 }
 
 func almostEqual(a, b float64) bool {
