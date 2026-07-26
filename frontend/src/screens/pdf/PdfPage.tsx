@@ -1142,18 +1142,14 @@ export function PdfPage() {
                           </div>
                         </>
                       )}
-                    </div>
-                  </div>
-
-                  {/* Dynamically added admin fields */}
-                  {overrides.addedFields && overrides.addedFields.length > 0 && (
-                    <div data-form-fields-grid className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
-                      {overrides.addedFields.map((field) => (
+                      {overrides.addedFields?.map((field) => (
                         <InputField
                           key={field.name}
                           name={field.name}
                           label={field.label}
-                          type={(field.type as "text" | "number" | "file") || "text"}
+                          type={
+                            (field.type as "text" | "number" | "file") || "text"
+                          }
                           placeholder={field.placeholder}
                           value={formData[field.name] || ""}
                           error={errors[field.name]}
@@ -1164,7 +1160,7 @@ export function PdfPage() {
                         />
                       ))}
                     </div>
-                  )}
+                  </div>
 
                   {/* Submit buttons */}
                   <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-900/60 mt-8">

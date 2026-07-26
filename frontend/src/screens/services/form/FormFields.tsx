@@ -98,16 +98,19 @@ export const FieldWrapper: React.FC<FieldWrapperProps> = ({
     const target = findSortableGridItem(root);
     orderTargetRef.current = target;
     target.dataset.fieldName = name;
-    target.style.order = String(orderIndex);
+    target.style.setProperty("order", String(orderIndex));
+    if (target !== root) {
+      root.style.setProperty("order", String(orderIndex));
+    }
 
     return () => {
       if (orderTargetRef.current === target) {
-        // Keep last order if remounting; clear only if still ours
         if (target.dataset.fieldName === name) {
           delete target.dataset.fieldName;
           target.style.removeProperty("order");
         }
       }
+      root.style.removeProperty("order");
     };
   }, [name, orderIndex, disableEdit, isDeleted, isEditMode]);
 
@@ -118,6 +121,7 @@ export const FieldWrapper: React.FC<FieldWrapperProps> = ({
   return (
     <div
       ref={rootRef}
+      style={{ order: orderIndex }}
       onDragOver={(e) => {
         if (!canReorder) return;
         e.preventDefault();
@@ -127,7 +131,9 @@ export const FieldWrapper: React.FC<FieldWrapperProps> = ({
         if (!canReorder) return;
         e.preventDefault();
         e.stopPropagation();
-        const from = e.dataTransfer.getData("text/field-name");
+        const from =
+          e.dataTransfer.getData("text/field-name") ||
+          e.dataTransfer.getData("text/plain");
         if (from) reorderField(from, name);
       }}
       className={`flex flex-col gap-1.5 w-full transition-all ${
@@ -142,12 +148,14 @@ export const FieldWrapper: React.FC<FieldWrapperProps> = ({
             <span
               draggable
               onDragStart={(e) => {
+                e.stopPropagation();
                 setDragging(true);
                 e.dataTransfer.setData("text/field-name", name);
+                e.dataTransfer.setData("text/plain", name);
                 e.dataTransfer.effectAllowed = "move";
               }}
               onDragEnd={() => setDragging(false)}
-              className="inline-flex text-amber-500/80 cursor-grab active:cursor-grabbing shrink-0"
+              className="inline-flex text-amber-500/80 cursor-grab active:cursor-grabbing shrink-0 p-0.5"
               title="Drag to reorder"
             >
               <GripVertical size={14} />
@@ -159,7 +167,11 @@ export const FieldWrapper: React.FC<FieldWrapperProps> = ({
           <div className="flex gap-1 shrink-0">
             <button
               type="button"
-              onClick={() => moveField(name, "up")}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                moveField(name, "up");
+              }}
               className="p-1 text-slate-500 hover:text-[#005c3a] hover:bg-emerald-50 dark:hover:bg-emerald-950/20 rounded-md transition-colors"
               title="Move up"
             >
@@ -167,7 +179,11 @@ export const FieldWrapper: React.FC<FieldWrapperProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => moveField(name, "down")}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                moveField(name, "down");
+              }}
               className="p-1 text-slate-500 hover:text-[#005c3a] hover:bg-emerald-50 dark:hover:bg-emerald-950/20 rounded-md transition-colors"
               title="Move down"
             >

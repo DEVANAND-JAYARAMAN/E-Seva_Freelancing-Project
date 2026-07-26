@@ -376,13 +376,16 @@ export const FormEditProvider: React.FC<{ children: React.ReactNode }> = ({
     bumpRegistry((n) => n + 1);
   }, []);
 
+  const fieldOrderKey = (currentOverrides.fieldOrder || []).join("\0");
+
   const getFieldOrderIndex = useCallback(
     (fieldName: string) => {
       const order = buildOrderList(formId);
       const idx = order.indexOf(fieldName);
-      return idx >= 0 ? idx : order.length;
+      return idx >= 0 ? idx : 999;
     },
-    [buildOrderList, formId],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [buildOrderList, formId, fieldOrderKey],
   );
 
   const persistFieldOrder = (id: string, nextOrder: string[]) => {
