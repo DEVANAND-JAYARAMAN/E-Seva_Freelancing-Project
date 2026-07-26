@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { ServicePaymentBadge } from "../../../components/ServicePaymentBadge";
 import { useFormEdit } from "../../../store/context/FormEditContext";
 import { CheckCircle2 } from "lucide-react";
 import { InputField, SubmitButton } from "../form/FormFields";
@@ -111,9 +112,12 @@ export const RationToAdhaar: React.FC<RationToAdhaarProps> = ({ onCancel }) => {
             Locate your Adhaar details by verifying Ration Card Number
           </p>
         </div>
-        <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none">
-          Service Payment : ₹ 0
-        </div>
+        <ServicePaymentBadge
+          pricingCategoryId="ration-card"
+          serviceId="ration-to-adhaar"
+          serviceName="Ration Number To Adhaar Number Find"
+          fallback={40}
+        />
       </div>
 
       {/* Form Sections */}

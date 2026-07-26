@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { ServicePaymentBadge } from "../../../components/ServicePaymentBadge";
 import { useFormEdit } from "../../../store/context/FormEditContext";
 import { CheckCircle2 } from "lucide-react";
 import { InputField, SubmitButton } from "../form/FormFields";
@@ -111,9 +112,12 @@ export const PanToAdhaarNumberFind: React.FC<PanToAdhaarNumberFindProps> = ({
             Locate your Aadhaar details by verifying your PAN Number
           </p>
         </div>
-        <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none">
-          Service Payment : ₹ 0
-        </div>
+        <ServicePaymentBadge
+          pricingCategoryId="utisl-pan"
+          serviceId="pan-to-adhaar"
+          serviceName="Pan To Adhaar Number Find"
+          fallback={99}
+        />
       </div>
 
       {/* Form Sections */}

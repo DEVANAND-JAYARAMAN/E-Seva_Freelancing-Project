@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { ServicePaymentBadge } from "../../../components/ServicePaymentBadge";
 import { useFormEdit } from "../../../store/context/FormEditContext";
 import { CheckCircle2 } from "lucide-react";
 import { InputField, SubmitButton } from "../form/FormFields";
@@ -117,9 +118,12 @@ export const EidToAadhaarPdf: React.FC<EidToAadhaarPdfProps> = ({
             ID (EID)
           </p>
         </div>
-        <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none">
-          Service Payment : ₹ 1600.00
-        </div>
+        <ServicePaymentBadge
+          pricingCategoryId="aadhaar-card-address"
+          serviceId="eid-to-aadhaar-pdf"
+          serviceName="EID to Adhaar PDF Apply"
+          fallback={1600}
+        />
       </div>
 
       <div className="space-y-5">

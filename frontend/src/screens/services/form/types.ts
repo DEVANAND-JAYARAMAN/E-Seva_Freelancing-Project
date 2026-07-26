@@ -41,6 +41,7 @@ export interface FormSchema {
   /** Service Payment catalog category id — live role price */
   pricingCategoryId?: string;
   pricingServiceId?: string;
+  pricingFallback?: number;
   sections: FormSection[];
   submitButtonText?: string;
 }

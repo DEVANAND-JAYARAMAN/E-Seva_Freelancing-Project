@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { ServicePaymentBadge } from "../../../components/ServicePaymentBadge";
 import { useFormEdit } from "../../../store/context/FormEditContext";
 import { CheckCircle2 } from "lucide-react";
 import { InputField, SubmitButton } from "../form/FormFields";
@@ -115,9 +116,12 @@ export const PanToMsmeUdhayamFind: React.FC<PanToMsmeUdhayamFindProps> = ({
             Locate your Udyam Registration records by verifying PAN
           </p>
         </div>
-        <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none">
-          Service Payment : ₹ 0
-        </div>
+        <ServicePaymentBadge
+          pricingCategoryId="msme"
+          serviceId="msme-pan"
+          serviceName="Pan To Msme Udhayam Find"
+          fallback={200}
+        />
       </div>
 
       {/* Form Sections */}

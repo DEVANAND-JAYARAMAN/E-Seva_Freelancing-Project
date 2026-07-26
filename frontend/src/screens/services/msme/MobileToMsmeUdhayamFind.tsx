@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { ServicePaymentBadge } from "../../../components/ServicePaymentBadge";
 import { useFormEdit } from "../../../store/context/FormEditContext";
 import { CheckCircle2 } from "lucide-react";
 import { PhoneField, SubmitButton, InputField } from "../form/FormFields";
@@ -115,9 +116,12 @@ export const MobileToMsmeUdhayamFind: React.FC<
             Locate your Udyam Registration records by verifying Mobile Number
           </p>
         </div>
-        <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none">
-          Service Payment : ₹ 0
-        </div>
+        <ServicePaymentBadge
+          pricingCategoryId="msme"
+          serviceId="msme-mobile"
+          serviceName="Mobile To Msme Udhayam Find"
+          fallback={200}
+        />
       </div>
 
       {/* Form Sections */}

@@ -15,6 +15,7 @@ import {
 import { useAuth } from "../../../store/context/AuthContext";
 import { useFormEdit } from "../../../store/context/FormEditContext";
 import Swal from "sweetalert2";
+import { ServicePaymentBadge } from "../../../components/ServicePaymentBadge";
 
 interface FssaiService {
   id: string;
@@ -24,9 +25,11 @@ interface FssaiService {
 
 function GenericFssaiServiceForm({
   title,
+  serviceId,
   onCancel,
 }: {
   title: string;
+  serviceId: string;
   onCancel: () => void;
 }) {
   const { overrides } = useFormEdit();
@@ -72,7 +75,14 @@ function GenericFssaiServiceForm({
       <EditableFormHeader
         defaultTitle={title}
         defaultSubtitle={`Submit details to apply for ${title}`}
-        rightContent="Service Payment : ₹ 0"
+        rightContent={
+          <ServicePaymentBadge
+            pricingCategoryId="fssai"
+            serviceId={serviceId}
+            serviceName={title}
+            fallback={150}
+          />
+        }
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-3">
@@ -316,6 +326,7 @@ export function FssaiPage() {
     return (
       <GenericFssaiServiceForm
         title={activeService?.name || "New Service"}
+        serviceId={activeForm}
         onCancel={onCancel}
       />
     );

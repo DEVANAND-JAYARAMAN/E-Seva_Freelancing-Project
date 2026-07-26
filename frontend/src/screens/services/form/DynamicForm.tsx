@@ -150,6 +150,7 @@ const DynamicFormInner: React.FC<DynamicFormProps> = ({
             pricingCategoryId={schema.pricingCategoryId}
             serviceId={schema.pricingServiceId || schema.id}
             serviceName={schema.title}
+            fallback={schema.pricingFallback ?? 0}
           />
         ) : schema.paymentLabel ? (
           <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none">

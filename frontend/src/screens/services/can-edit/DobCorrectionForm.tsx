@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { ServicePaymentBadge } from "../../../components/ServicePaymentBadge";
 import { useFormEdit } from "../../../store/context/FormEditContext";
 import { CheckCircle2 } from "lucide-react";
 import { InputField, SelectField, SubmitButton } from "../form/FormFields";
@@ -113,9 +114,12 @@ export const DobCorrectionForm: React.FC<DobCorrectionFormProps> = ({
             Submit required details to apply for DOB Correction services
           </p>
         </div>
-        <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none">
-          Service Payment : ₹ 0
-        </div>
+        <ServicePaymentBadge
+          pricingCategoryId="can-edit"
+          serviceId="dob-correction"
+          serviceName="DOB Correction"
+          fallback={50}
+        />
       </div>
 
       <div className="space-y-5">
