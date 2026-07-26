@@ -49,31 +49,42 @@ export function WalletPage() {
     refreshProfile();
   }, [refreshProfile]);
 
-  // After gateway redirect back to /wallets/?paid=1 (hash often stripped by gateways)
+  // After gateway return OR pending stored order — confirm credit into wallet
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     const hash = (window.location.hash || "").replace(/^#/, "");
-    let storedOrder = "";
-    try {
-      storedOrder = sessionStorage.getItem("wallet_recharge_order") || "";
-    } catch {
-      /* ignore */
-    }
+    const readStored = (key: string) => {
+      try {
+        return (
+          sessionStorage.getItem(key) || localStorage.getItem(key) || ""
+        );
+      } catch {
+        return "";
+      }
+    };
+    const clearStored = () => {
+      try {
+        sessionStorage.removeItem("wallet_recharge_order");
+        sessionStorage.removeItem("wallet_recharge_amount");
+        localStorage.removeItem("wallet_recharge_order");
+        localStorage.removeItem("wallet_recharge_amount");
+      } catch {
+        /* ignore */
+      }
+    };
+    const storedOrder = readStored("wallet_recharge_order");
     const paymentReturn =
       params.get("paid") === "1" ||
       params.get("payment") === "return" ||
       hash === "payment-return" ||
       hash.startsWith("payment-return") ||
       !!params.get("order_id") ||
-      !!params.get("status");
+      !!params.get("status") ||
+      !!storedOrder;
     const openAdd = params.get("add") === "1";
 
     if (paymentReturn) {
-      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(
-        /(?:\/api|\/)+$/,
-        "",
-      );
       let orderId =
         params.get("order_id") ||
         params.get("client_txn_id") ||
@@ -86,46 +97,69 @@ export function WalletPage() {
         params.get("upi_txn_id") ||
         params.get("bank_txn_id") ||
         "";
-      let storedAmount = 0;
-      try {
-        storedAmount = Number(
-          sessionStorage.getItem("wallet_recharge_amount") || "0",
-        );
-      } catch {
-        /* ignore */
-      }
+      const storedAmount = Number(readStored("wallet_recharge_amount") || "0");
 
       const verify = async () => {
         setIsModalOpen(true);
         setGatewayProcessing(true);
         setFormError("");
 
-        // Confirm credit from site (no api.* browser visit)
+        let confirmOk = false;
         if (orderId) {
           try {
-            await authFetch(`${baseUrl}/api/wallet/recharge/confirm`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${localStorage.getItem("token")}`,
+            const confirmRes = await authFetch(
+              apiUrl("wallet/recharge/confirm"),
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+                body: JSON.stringify({
+                  order_id: orderId,
+                  status: statusParam || "SUCCESS",
+                  utr: utrParam,
+                }),
               },
-              body: JSON.stringify({
-                order_id: orderId,
-                status: statusParam || "SUCCESS",
-                utr: utrParam,
-              }),
-            });
+            );
+            const confirmData = await confirmRes.json().catch(() => ({}));
+            if (
+              String(confirmData.status || "")
+                .toLowerCase()
+                .includes("success") ||
+              confirmData.message === "already processed" ||
+              confirmData.message === "success"
+            ) {
+              confirmOk = true;
+            }
+            if (typeof confirmData.balance === "number") {
+              updateWallet(Number(confirmData.balance));
+            }
           } catch {
-            /* webhook may still complete */
+            /* retry via status poll */
           }
         }
 
-        let finalStatus = "Pending";
-        if (orderId) {
+        let finalStatus = confirmOk ? "Success" : "Pending";
+        if (orderId && !confirmOk) {
           for (let i = 0; i < 20; i++) {
             try {
+              // Re-confirm each poll — webhook may lag; this credits when Pending
+              await authFetch(apiUrl("wallet/recharge/confirm"), {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${localStorage.getItem("token")}`,
+                },
+                body: JSON.stringify({
+                  order_id: orderId,
+                  status: "SUCCESS",
+                  utr: utrParam,
+                }),
+              }).catch(() => null);
+
               const statusRes = await authFetch(
-                `${baseUrl}/api/wallet/recharge/status/${orderId}`,
+                apiUrl(`wallet/recharge/status/${orderId}`),
                 {
                   headers: {
                     Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -154,22 +188,18 @@ export function WalletPage() {
         if (
           finalStatus === "Success" ||
           finalStatus === "SUCCESS" ||
-          finalStatus === "success"
+          finalStatus === "success" ||
+          confirmOk
         ) {
           if (storedAmount > 0) {
             setAmount(String(storedAmount));
           }
           setFormSuccess(true);
           setFormError("");
-          try {
-            sessionStorage.removeItem("wallet_recharge_order");
-            sessionStorage.removeItem("wallet_recharge_amount");
-          } catch {
-            /* ignore */
-          }
+          clearStored();
         } else {
           setFormError(
-            "Payment is still confirming. If money was deducted, wait 1–2 minutes and refresh Wallet.",
+            "Payment is still confirming. Open Wallet again in 1 minute, or tap Refresh. If still missing, send UTR to admin.",
           );
         }
 
@@ -180,7 +210,8 @@ export function WalletPage() {
           if (
             finalStatus === "Success" ||
             finalStatus === "SUCCESS" ||
-            finalStatus === "success"
+            finalStatus === "success" ||
+            confirmOk
           ) {
             setIsModalOpen(false);
           }
@@ -193,7 +224,7 @@ export function WalletPage() {
     if (openAdd) {
       setIsModalOpen(true);
     }
-  }, [refreshProfile]);
+  }, [refreshProfile, updateWallet]);
 
   // Balances
   const mainBalance = user?.walletBalance || 0;
@@ -357,11 +388,7 @@ export function WalletPage() {
       }
       setGatewayProcessing(true);
       try {
-        const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(
-          /(?:\/api|\/)+$/,
-          "",
-        );
-        const res = await authFetch(`${baseUrl}/api/v1/wallet/recharge/gateway`, {
+        const res = await authFetch(apiUrl("v1/wallet/recharge/gateway"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -382,10 +409,9 @@ export function WalletPage() {
           const orderId = String(data.data.order_id || "");
           try {
             sessionStorage.setItem("wallet_recharge_order", orderId);
-            sessionStorage.setItem(
-              "wallet_recharge_amount",
-              String(amtNum),
-            );
+            sessionStorage.setItem("wallet_recharge_amount", String(amtNum));
+            localStorage.setItem("wallet_recharge_order", orderId);
+            localStorage.setItem("wallet_recharge_amount", String(amtNum));
           } catch {
             /* ignore */
           }

@@ -1462,6 +1462,35 @@ func ProcessMugavaiPayment(c *gin.Context) (bool, string) {
 	return creditGatewayOrder(actualOrderID, status, actualUTR)
 }
 
+func walletLedgerHasOrder(userId, orderID string) bool {
+	out, err := db.DynamoClient.Query(context.TODO(), &dynamodb.QueryInput{
+		TableName:              aws.String("WalletTransactions"),
+		KeyConditionExpression: aws.String("PK = :pk AND begins_with(SK, :sk)"),
+		FilterExpression:       aws.String("id = :oid"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":pk":  &types.AttributeValueMemberS{Value: "WALLET#" + userId},
+			":sk":  &types.AttributeValueMemberS{Value: "TX#"},
+			":oid": &types.AttributeValueMemberS{Value: orderID},
+		},
+		Limit: aws.Int32(200),
+	})
+	if err != nil || out == nil {
+		return false
+	}
+	for _, it := range out.Items {
+		if id, ok := it["id"].(*types.AttributeValueMemberS); ok && id.Value == orderID {
+			return true
+		}
+	}
+	// Also match SK suffix (TX#timestamp#orderId)
+	for _, it := range out.Items {
+		if sk, ok := it["SK"].(*types.AttributeValueMemberS); ok && strings.HasSuffix(sk.Value, "#"+orderID) {
+			return true
+		}
+	}
+	return false
+}
+
 func creditGatewayOrder(actualOrderID, status, actualUTR string) (bool, string) {
 	actualOrderID = strings.TrimSpace(actualOrderID)
 	status = strings.TrimSpace(status)
@@ -1507,13 +1536,6 @@ func creditGatewayOrder(actualOrderID, status, actualUTR string) (bool, string) 
 		}
 	}
 
-	if s, ok := meta.Item["status"].(*types.AttributeValueMemberS); ok {
-		if s.Value == "Success" || s.Value == "SUCCESS" {
-			log.Printf("[Payment Processing] Order %s already processed", canonicalID)
-			return true, "already processed"
-		}
-	}
-
 	userIdAttr, ok := meta.Item["userId"].(*types.AttributeValueMemberS)
 	if !ok || userIdAttr.Value == "" {
 		return false, "user_not_found"
@@ -1521,8 +1543,11 @@ func creditGatewayOrder(actualOrderID, status, actualUTR string) (bool, string) 
 	userId := userIdAttr.Value
 
 	creditAmount := 0.0
-	if amtAttr, ok := meta.Item["amount"].(*types.AttributeValueMemberN); ok {
-		fmt.Sscanf(amtAttr.Value, "%f", &creditAmount)
+	switch amt := meta.Item["amount"].(type) {
+	case *types.AttributeValueMemberN:
+		fmt.Sscanf(amt.Value, "%f", &creditAmount)
+	case *types.AttributeValueMemberS:
+		fmt.Sscanf(amt.Value, "%f", &creditAmount)
 	}
 	if creditAmount <= 0 {
 		return false, "invalid_order_amount"
@@ -1530,31 +1555,54 @@ func creditGatewayOrder(actualOrderID, status, actualUTR string) (bool, string) 
 	amountStr := fmt.Sprintf("%.2f", creditAmount)
 	now := time.Now().UTC()
 	if actualUTR == "" {
-		actualUTR = "GW-" + canonicalID
+		if u, ok := meta.Item["utr"].(*types.AttributeValueMemberS); ok && strings.TrimSpace(u.Value) != "" {
+			actualUTR = strings.TrimSpace(u.Value)
+		} else {
+			actualUTR = "GW-" + canonicalID
+		}
 	}
 
-	_, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
-		TableName: aws.String("WalletTransactions"),
-		Key: map[string]types.AttributeValue{
-			"PK": &types.AttributeValueMemberS{Value: "ORDER#" + canonicalID},
-			"SK": &types.AttributeValueMemberS{Value: "META"},
-		},
-		UpdateExpression:    aws.String("SET #s = :success, utr = :utr, processedAt = :ts"),
-		ConditionExpression: aws.String("attribute_not_exists(#s) OR #s = :pending OR #s = :Pending"),
-		ExpressionAttributeNames: map[string]string{
-			"#s": "status",
-		},
-		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":success": &types.AttributeValueMemberS{Value: "Success"},
-			":pending": &types.AttributeValueMemberS{Value: "Pending"},
-			":Pending": &types.AttributeValueMemberS{Value: "Pending"},
-			":utr":     &types.AttributeValueMemberS{Value: actualUTR},
-			":ts":      &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
-		},
-	})
-	if err != nil {
-		log.Printf("[Payment Processing] Idempotent claim failed for %s: %v", canonicalID, err)
-		return true, "already processed"
+	// If META says Success but ledger row is missing, repair (credit again).
+	orderAlreadySuccess := false
+	if s, ok := meta.Item["status"].(*types.AttributeValueMemberS); ok {
+		sv := strings.TrimSpace(s.Value)
+		orderAlreadySuccess = sv == "Success" || sv == "SUCCESS" || sv == "success"
+	}
+	if orderAlreadySuccess {
+		if walletLedgerHasOrder(userId, canonicalID) {
+			log.Printf("[Payment Processing] Order %s already credited", canonicalID)
+			return true, "already processed"
+		}
+		log.Printf("[Payment Processing] Order %s Success but no ledger — repairing credit", canonicalID)
+	} else {
+		_, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+			TableName: aws.String("WalletTransactions"),
+			Key: map[string]types.AttributeValue{
+				"PK": &types.AttributeValueMemberS{Value: "ORDER#" + canonicalID},
+				"SK": &types.AttributeValueMemberS{Value: "META"},
+			},
+			UpdateExpression:    aws.String("SET #s = :success, utr = :utr, processedAt = :ts"),
+			ConditionExpression: aws.String("attribute_not_exists(#s) OR #s = :pending OR #s = :Pending OR #s = :pendingLower"),
+			ExpressionAttributeNames: map[string]string{
+				"#s": "status",
+			},
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":success":       &types.AttributeValueMemberS{Value: "Success"},
+				":pending":       &types.AttributeValueMemberS{Value: "Pending"},
+				":Pending":       &types.AttributeValueMemberS{Value: "Pending"},
+				":pendingLower":  &types.AttributeValueMemberS{Value: "pending"},
+				":utr":           &types.AttributeValueMemberS{Value: actualUTR},
+				":ts":            &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
+			},
+		})
+		if err != nil {
+			// Race: another worker claimed it — re-check ledger
+			if walletLedgerHasOrder(userId, canonicalID) {
+				return true, "already processed"
+			}
+			log.Printf("[Payment Processing] Idempotent claim failed for %s: %v", canonicalID, err)
+			return false, "claim_failed"
+		}
 	}
 
 	if canonicalID != actualOrderID {
@@ -1840,9 +1888,25 @@ func ConfirmGatewayRecharge(c *gin.Context) {
 	}
 
 	ok, msg := creditGatewayOrder(orderID, status, utr)
+	bal := 0.0
+	if uidAttr != nil {
+		// Live balance after credit attempt
+		wOut, wErr := db.DynamoClient.GetItem(context.TODO(), &dynamodb.GetItemInput{
+			TableName: aws.String("Wallets"),
+			Key: map[string]types.AttributeValue{
+				"PK": &types.AttributeValueMemberS{Value: "WALLET#" + uidAttr.Value},
+				"SK": &types.AttributeValueMemberS{Value: "TYPE#Main"},
+			},
+		})
+		if wErr == nil && wOut.Item != nil {
+			if v, ok := wOut.Item["balance"].(*types.AttributeValueMemberN); ok {
+				fmt.Sscanf(v.Value, "%f", &bal)
+			}
+		}
+	}
 	if ok {
-		c.JSON(http.StatusOK, gin.H{"status": "Success", "message": msg})
+		c.JSON(http.StatusOK, gin.H{"status": "Success", "message": msg, "balance": bal})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"status": "Pending", "message": msg})
+	c.JSON(http.StatusOK, gin.H{"status": "Pending", "message": msg, "balance": bal})
 }
