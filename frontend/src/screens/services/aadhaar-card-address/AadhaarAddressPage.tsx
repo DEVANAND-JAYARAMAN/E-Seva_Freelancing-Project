@@ -24,8 +24,7 @@ export function AadhaarAddressPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
   const [activeForm, setActiveForm] = useState<string | null>(null);
-  const [submissionSuccess, setSubmissionSuccess] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [aadhaarServicesList, setAadhaarServicesList] = useCategoryServices<AadhaarService>(
     "aadhaar-card-address",
@@ -74,7 +73,6 @@ export function AadhaarAddressPage() {
   };
 
   const handleCardClick = (service: AadhaarService) => {
-    setSubmissionSuccess(false);
     setActiveForm(service.id);
   };
 

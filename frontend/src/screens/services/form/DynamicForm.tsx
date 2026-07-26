@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  useFormEdit,
-  FormEditScope,
-} from "../../../store/context/FormEditContext";
+import { useFormEdit } from "../../../store/context/FormEditContext";
 import { FormSchema } from "./types";
 import { validateField } from "./validators";
 import {
@@ -15,6 +12,7 @@ import {
   SubmitButton,
 } from "./FormFields";
 import { ServicePaymentBadge } from "../../../components/ServicePaymentBadge";
+import { usePaidServiceFlow } from "../../../hooks/usePaidServiceFlow";
 
 interface DynamicFormProps {
   formId?: string;
@@ -25,13 +23,6 @@ interface DynamicFormProps {
 }
 
 export const DynamicForm: React.FC<DynamicFormProps> = (props) => {
-  if (props.formId) {
-    return (
-      <FormEditScope formId={props.formId}>
-        <DynamicFormInner {...props} />
-      </FormEditScope>
-    );
-  }
   return <DynamicFormInner {...props} />;
 };
 
@@ -42,9 +33,18 @@ const DynamicFormInner: React.FC<DynamicFormProps> = ({
   onCancel,
   isLoading = false,
 }) => {
-  const { overrides } = useFormEdit(formId);
+  const { overrides } = useFormEdit();
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const { isForm, startPayment, paymentView } = usePaidServiceFlow({
+    serviceId: schema.pricingServiceId || schema.id,
+    serviceName: schema.title,
+    pricingCategoryId: schema.pricingCategoryId || "",
+    retailerCharge: schema.pricingFallback ?? 100,
+    formData,
+    onDone: onCancel,
+  });
 
   // Initialize form state when the schema changes
   useEffect(() => {
@@ -128,8 +128,14 @@ const DynamicFormInner: React.FC<DynamicFormProps> = ({
       return;
     }
 
-    onSubmit(formData);
+    if (schema.pricingCategoryId) {
+      startPayment();
+    } else {
+      onSubmit(formData);
+    }
   };
+
+  if (!isForm) return paymentView;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 w-full">

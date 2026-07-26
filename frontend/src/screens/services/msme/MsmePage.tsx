@@ -24,8 +24,7 @@ export function MsmePage() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
   const [activeForm, setActiveForm] = useState<string | null>(null); // "msme-main" | "msme-pan" | "msme-mobile" | null
-  const [submissionSuccess, setSubmissionSuccess] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [msmeServicesList, setMsmeServicesList] = useCategoryServices<MsmeService>(
     "msme",
@@ -47,8 +46,7 @@ export function MsmePage() {
   );
 
   const handleCardClick = (service: MsmeService) => {
-    setSubmissionSuccess(false);
-    if (service.id === "msme-main") {
+if (service.id === "msme-main") {
       setActiveForm("msme-main");
     } else if (service.id === "msme-pan") {
       setActiveForm("msme-pan");
@@ -105,13 +103,10 @@ export function MsmePage() {
     // Simulate API registration call
     setTimeout(() => {
       setIsSubmitting(false);
-      setSubmissionSuccess(true);
-
-      // Auto close or reset state after submission
+// Auto close or reset state after submission
       setTimeout(() => {
         setActiveForm(null);
-        setSubmissionSuccess(false);
-      }, 2500);
+}, 2500);
     }, 1500);
   };
 
@@ -338,30 +333,12 @@ export function MsmePage() {
           <div className="w-full">
             <div className="w-full bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 md:p-8 shadow-sm flex flex-col gap-6 relative overflow-hidden animate-in fade-in duration-200">
               {activeForm === "msme-main" ? (
-                submissionSuccess ? (
-                  <div className="py-16 flex flex-col items-center justify-center text-center gap-4">
-                    <span className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-400 animate-bounce">
-                      <CheckCircle2 size={44} className="stroke-[2.5]" />
-                    </span>
-                    <div>
-                      <h5 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                        Application Placed Successfully!
-                      </h5>
-                      <p className="text-sm text-slate-400 dark:text-slate-500 mt-2 max-w-md leading-relaxed">
-                        Your full registration for **MSME / Udyam Certificate**
-                        has been registered. You can monitor the progress inside
-                        Service Status tab.
-                      </p>
-                    </div>
-                  </div>
-                ) : (
                   <DynamicForm
                     schema={msmeApplySchema}
                     onSubmit={handleFormSubmit}
                     onCancel={() => setActiveForm(null)}
                     isLoading={isSubmitting}
                   />
-                )
               ) : activeForm === "msme-pan" ? (
                 <PanToMsmeUdhayamFind onCancel={() => setActiveForm(null)} />
               ) : (

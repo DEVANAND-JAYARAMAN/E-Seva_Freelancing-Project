@@ -11,8 +11,7 @@ import { PATHS } from "../../../routes/paths";
 
 export function AgriStackPdfPage() {
   const router = useRouter();
-  const [submissionSuccess, setSubmissionSuccess] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Read pricing from Service Payment API (role-based)
   const { getCharge } = useServicePricing();
@@ -28,10 +27,8 @@ export function AgriStackPdfPage() {
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
-      setSubmissionSuccess(true);
-      setTimeout(() => {
-        setSubmissionSuccess(false);
-        router.push(PATHS.SERVICES);
+setTimeout(() => {
+router.push(PATHS.SERVICES);
       }, 3000);
     }, 1500);
   };
@@ -68,29 +65,14 @@ export function AgriStackPdfPage() {
         {/* FORM SECTION */}
         <div className="w-full">
           <div className="w-full bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 md:p-8 shadow-sm flex flex-col gap-6 relative overflow-hidden animate-in fade-in duration-200">
-            {submissionSuccess ? (
-              <div className="py-16 flex flex-col items-center justify-center text-center gap-4">
-                <span className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-400 animate-bounce">
-                  <CheckCircle2 size={44} className="stroke-[2.5]" />
-                </span>
-                <div>
-                  <h5 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                    Request Submitted Successfully!
-                  </h5>
-                  <p className="text-sm text-slate-450 dark:text-slate-550 mt-2 max-w-md leading-relaxed">
-                    Your request for the **Agri Stack PDF / Farmer ID Card**
-                    has been registered successfully. The admin will update the status soon.
-                  </p>
-                </div>
-              </div>
-            ) : (
+            
               <AgriStackPdfForm
                 price={getServicePrice()}
                 onCancel={() => router.push(PATHS.SERVICES)}
                 onSubmit={handleFormSubmit}
                 isLoading={isSubmitting}
               />
-            )}
+            
           </div>
         </div>
       </section>

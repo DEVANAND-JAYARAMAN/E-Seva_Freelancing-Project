@@ -2,11 +2,13 @@ import React, { useState } from "react";
 import { useFormEdit } from "../../../store/context/FormEditContext";
 import { InputField, TextAreaField, SubmitButton } from "../form/FormFields";
 import { Upload, FileText } from "lucide-react";
+import { ServicePaymentBadge } from "../../../components/ServicePaymentBadge";
+import { usePaidServiceFlow } from "../../../hooks/usePaidServiceFlow";
 
 interface PoliceVerificationFormProps {
   price: number;
   onCancel: () => void;
-  onSubmit: (data: any) => void;
+  onSubmit?: (data: Record<string, string>) => void;
   isLoading?: boolean;
 }
 
@@ -30,6 +32,15 @@ export const PoliceVerificationForm: React.FC<PoliceVerificationFormProps> = ({
     photo: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const { isForm, startPayment, paymentView } = usePaidServiceFlow({
+    serviceId: "police-verification-request",
+    serviceName: "Police Verification Registration",
+    pricingCategoryId: "police-verification",
+    retailerCharge: price || 130,
+    formData,
+    onDone: onCancel,
+  });
 
   const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -83,8 +94,10 @@ export const PoliceVerificationForm: React.FC<PoliceVerificationFormProps> = ({
       return;
     }
 
-    onSubmit(formData);
+    startPayment();
   };
+
+  if (!isForm) return paymentView;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 w-full">
@@ -98,6 +111,13 @@ export const PoliceVerificationForm: React.FC<PoliceVerificationFormProps> = ({
             verification
           </p>
         </div>
+        <ServicePaymentBadge
+          pricingCategoryId="police-verification"
+          serviceId="police-verification-request"
+          serviceName="Police Verification Registration"
+          fallback={price || 130}
+        />
+      </div>
         <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none">
           Service Payment : ₹ {price}
         </div>

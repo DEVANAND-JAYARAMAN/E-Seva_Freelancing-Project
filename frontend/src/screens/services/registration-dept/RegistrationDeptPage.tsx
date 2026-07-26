@@ -21,8 +21,7 @@ export function RegistrationDeptPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
   const [activeForm, setActiveForm] = useState<string | null>(null);
-  const [submissionSuccess, setSubmissionSuccess] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [registrationServicesList, setRegistrationServicesList] = useCategoryServices<RegistrationService>(
     "registration-dept",
@@ -63,7 +62,6 @@ export function RegistrationDeptPage() {
   };
 
   const handleCardClick = (service: RegistrationService) => {
-    setSubmissionSuccess(false);
     setActiveForm(service.id);
   };
 

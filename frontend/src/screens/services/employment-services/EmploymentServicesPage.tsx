@@ -21,8 +21,7 @@ export function EmploymentServicesPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
   const [activeForm, setActiveForm] = useState<string | null>(null);
-  const [submissionSuccess, setSubmissionSuccess] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [employmentServicesList, setEmploymentServicesList] = useCategoryServices<EmploymentService>("employment-services",
     [{ id: "lapsed-renewal", name: "Lapsed Registration Renewal" }]);
@@ -61,7 +60,6 @@ export function EmploymentServicesPage() {
   };
 
   const handleCardClick = (service: EmploymentService) => {
-    setSubmissionSuccess(false);
     setActiveForm(service.id);
   };
 

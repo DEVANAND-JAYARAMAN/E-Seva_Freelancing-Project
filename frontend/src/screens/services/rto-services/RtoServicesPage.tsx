@@ -25,8 +25,7 @@ export function RtoServicesPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
   const [activeForm, setActiveForm] = useState<string | null>(null);
-  const [submissionSuccess, setSubmissionSuccess] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [rtoServicesList, setRtoServicesList] = useCategoryServices<RtoService>("rto-services", [
     { id: "chassis-to-rc", name: "Chassis Number To Rc Find" },
@@ -68,7 +67,6 @@ export function RtoServicesPage() {
   };
 
   const handleCardClick = (service: RtoService) => {
-    setSubmissionSuccess(false);
     setActiveForm(service.id);
   };
 

@@ -1,21 +1,23 @@
 "use client";
 
 import { useState } from "react";
-import Swal from "sweetalert2";
 import { useFormEdit } from "../../../store/context/FormEditContext";
 import { EditableFormHeader, InputField, SubmitButton } from "./FormFields";
 import { ServicePaymentBadge } from "../../../components/ServicePaymentBadge";
+import { usePaidServiceFlow } from "../../../hooks/usePaidServiceFlow";
 
 export function GenericServiceForm({
   title,
   onCancel,
   pricingCategoryId,
   pricingServiceId,
+  retailerCharge = 50,
 }: {
   title: string;
   onCancel: () => void;
   pricingCategoryId?: string;
   pricingServiceId?: string;
+  retailerCharge?: number;
 }) {
   const { overrides } = useFormEdit();
   const [formData, setFormData] = useState<Record<string, string>>({
@@ -25,7 +27,15 @@ export function GenericServiceForm({
   });
   const [customValues, setCustomValues] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { isForm, startPayment, paymentView } = usePaidServiceFlow({
+    serviceId: pricingServiceId || title.toLowerCase().replace(/\s+/g, "-"),
+    serviceName: title,
+    pricingCategoryId: pricingCategoryId || "",
+    retailerCharge,
+    formData: { ...formData, ...customValues },
+    onDone: onCancel,
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,20 +50,10 @@ export function GenericServiceForm({
       setErrors(newErrors);
       return;
     }
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      Swal.fire({
-        title: "Request Submitted",
-        text: `${title} request registered successfully.`,
-        icon: "success",
-        confirmButtonColor: "#005c3a",
-        timer: 1800,
-        showConfirmButton: false,
-      });
-      onCancel();
-    }, 800);
+    startPayment();
   };
+
+  if (!isForm) return paymentView;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 w-full">
@@ -65,6 +65,7 @@ export function GenericServiceForm({
             pricingCategoryId={pricingCategoryId}
             serviceId={pricingServiceId}
             serviceName={title}
+            fallback={retailerCharge}
           />
         }
       />
@@ -77,7 +78,6 @@ export function GenericServiceForm({
           placeholder="Enter full name"
           value={formData.applicantName}
           error={errors.applicantName}
-          disabled={isSubmitting}
           onChange={(val) => {
             setFormData((p) => ({ ...p, applicantName: val }));
             if (errors.applicantName) {
@@ -92,14 +92,13 @@ export function GenericServiceForm({
         <InputField
           name="mobileNo"
           label="Mobile Number"
-          type="text"
-          placeholder="10-digit mobile number"
+            type="text"
+            placeholder="10-digit mobile"
           value={formData.mobileNo}
           error={errors.mobileNo}
-          disabled={isSubmitting}
           onChange={(val) => {
-            const num = val.replace(/\D/g, "").substring(0, 10);
-            setFormData((p) => ({ ...p, mobileNo: num }));
+            const digits = val.replace(/\D/g, "").slice(0, 10);
+            setFormData((p) => ({ ...p, mobileNo: digits }));
             if (errors.mobileNo) {
               setErrors((p) => {
                 const n = { ...p };
@@ -115,7 +114,6 @@ export function GenericServiceForm({
           type="text"
           placeholder="Optional remarks"
           value={formData.remarks}
-          disabled={isSubmitting}
           onChange={(val) => setFormData((p) => ({ ...p, remarks: val }))}
         />
         {overrides.addedFields?.map((field) => (
@@ -123,31 +121,25 @@ export function GenericServiceForm({
             key={field.name}
             name={field.name}
             label={field.label}
-            type={(field.type as "text" | "number" | "file") || "text"}
+            type={(field.type as "text") || "text"}
             placeholder={field.placeholder}
             value={customValues[field.name] || ""}
-            disabled={isSubmitting}
             onChange={(val) =>
-              setCustomValues((prev) => ({ ...prev, [field.name]: val }))
+              setCustomValues((p) => ({ ...p, [field.name]: val }))
             }
           />
         ))}
       </div>
 
-      <div className="flex items-center gap-3 pt-3 border-t border-slate-100 dark:border-slate-900/60 mt-2">
-        <SubmitButton
-          text={isSubmitting ? "Processing..." : "Submit"}
-          loading={isSubmitting}
-          disabled={isSubmitting}
-        />
+      <div className="flex items-center justify-end gap-3 pt-4">
         <button
           type="button"
           onClick={onCancel}
-          disabled={isSubmitting}
-          className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-850 bg-slate-50 dark:bg-transparent text-slate-500 hover:text-slate-800 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
+          className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-500 font-bold text-xs uppercase"
         >
           Cancel
         </button>
+        <SubmitButton text="Submit Request" />
       </div>
     </form>
   );

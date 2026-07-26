@@ -16,6 +16,7 @@ import { useAuth } from "../../../store/context/AuthContext";
 import { useFormEdit } from "../../../store/context/FormEditContext";
 import Swal from "sweetalert2";
 import { ServicePaymentBadge } from "../../../components/ServicePaymentBadge";
+import { usePaidServiceFlow } from "../../../hooks/usePaidServiceFlow";
 
 interface FssaiService {
   id: string;
@@ -40,7 +41,15 @@ function GenericFssaiServiceForm({
   });
   const [customValues, setCustomValues] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { isForm, startPayment, paymentView } = usePaidServiceFlow({
+    serviceId,
+    serviceName: title,
+    pricingCategoryId: "fssai",
+    retailerCharge: 150,
+    formData: { ...formData, ...customValues },
+    onDone: onCancel,
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,20 +64,10 @@ function GenericFssaiServiceForm({
       setErrors(newErrors);
       return;
     }
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      Swal.fire({
-        title: "Request Submitted",
-        text: `${title} request registered successfully.`,
-        icon: "success",
-        confirmButtonColor: "#005c3a",
-        timer: 1800,
-        showConfirmButton: false,
-      });
-      onCancel();
-    }, 800);
+    startPayment();
   };
+
+  if (!isForm) return paymentView;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 w-full">
@@ -93,7 +92,6 @@ function GenericFssaiServiceForm({
           placeholder="Enter full name"
           value={formData.applicantName}
           error={errors.applicantName}
-          disabled={isSubmitting}
           onChange={(val) => {
             setFormData((p) => ({ ...p, applicantName: val }));
             if (errors.applicantName) {
@@ -112,7 +110,7 @@ function GenericFssaiServiceForm({
           placeholder="10-digit mobile number"
           value={formData.mobileNo}
           error={errors.mobileNo}
-          disabled={isSubmitting}
+          disabled={false}
           onChange={(val) => {
             const num = val.replace(/\D/g, "").substring(0, 10);
             setFormData((p) => ({ ...p, mobileNo: num }));
@@ -131,7 +129,6 @@ function GenericFssaiServiceForm({
           type="text"
           placeholder="Enter shop name"
           value={formData.shopName}
-          disabled={isSubmitting}
           onChange={(val) => setFormData((p) => ({ ...p, shopName: val }))}
         />
         {overrides.addedFields?.map((field) => (
@@ -142,7 +139,6 @@ function GenericFssaiServiceForm({
             type={(field.type as "text" | "number" | "file") || "text"}
             placeholder={field.placeholder}
             value={customValues[field.name] || ""}
-            disabled={isSubmitting}
             onChange={(val) =>
               setCustomValues((prev) => ({ ...prev, [field.name]: val }))
             }
@@ -151,16 +147,11 @@ function GenericFssaiServiceForm({
       </div>
 
       <div className="flex items-center gap-3 pt-3 border-t border-slate-100 dark:border-slate-900/60 mt-2">
-        <SubmitButton
-          text={isSubmitting ? "Processing..." : "Submit"}
-          loading={isSubmitting}
-          disabled={isSubmitting}
-        />
+        <SubmitButton text="Submit" />
         <button
           type="button"
           onClick={onCancel}
-          disabled={isSubmitting}
-          className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-850 bg-slate-50 dark:bg-transparent text-slate-500 hover:text-slate-800 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
+          className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-850 bg-slate-50 dark:bg-transparent text-slate-500 hover:text-slate-800 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all select-none"
         >
           Cancel
         </button>

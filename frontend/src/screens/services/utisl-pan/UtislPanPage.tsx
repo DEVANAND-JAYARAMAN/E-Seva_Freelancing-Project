@@ -4,7 +4,6 @@ import { ServiceNavigation } from "../../../components/ServiceNavigation/Service
 import { useState } from "react";
 import { useCategoryServices } from "../../../hooks/useCategoryServices";
 import { CheckCircle2 } from "lucide-react";
-import { FormEditScope } from "../../../store/context/FormEditContext";
 import { AppShell } from "../../../layouts/AppShell";
 import { PanToAdhaarNumberFind } from "./PanToAdhaarNumberFind";
 import { ServiceCard } from "../ServiceCard";
@@ -20,8 +19,7 @@ export function UtislPanPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
   const [activeForm, setActiveForm] = useState<string | null>(null);
-  const [submissionSuccess, setSubmissionSuccess] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [utislPanServicesList, setUtislPanServicesList] = useCategoryServices<UtislPanService>(
     "utisl-pan",
@@ -29,7 +27,6 @@ export function UtislPanPage() {
   );
 
   const handleCardClick = (service: UtislPanService) => {
-    setSubmissionSuccess(false);
     if (service.id === "pan-to-adhaar") {
       setActiveForm("pan-to-adhaar");
     }
@@ -261,11 +258,9 @@ export function UtislPanPage() {
           /* ELEGANT & PROFESSIONAL ENTERPRISE DESIGN FOR INLINE FORM */
           <div className="w-full">
             <div className="w-full bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 md:p-8 shadow-sm flex flex-col gap-6 relative overflow-hidden animate-in fade-in duration-200">
-              <FormEditScope formId={activeForm}>
-                {activeForm === "pan-to-adhaar" && (
+              {activeForm === "pan-to-adhaar" && (
                   <PanToAdhaarNumberFind onCancel={() => setActiveForm(null)} />
                 )}
-              </FormEditScope>
             </div>
           </div>
         )}

@@ -23,8 +23,7 @@ export function GstPage() {
   const [selectedService, setSelectedService] = useState<GstServiceItem | null>(
     null,
   );
-  const [submissionSuccess, setSubmissionSuccess] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [gstServicesList, setGstServicesList] = useCategoryServices<GstServiceItem>(
     "gst",
@@ -35,8 +34,7 @@ export function GstPage() {
 
   const handleCardClick = (service: GstServiceItem) => {
     setSelectedService(service);
-    setSubmissionSuccess(false);
-    if (service.id === "gst-reg") {
+if (service.id === "gst-reg") {
       setActiveForm("gst-reg");
     } else {
       setActiveForm(service.id);
@@ -89,11 +87,9 @@ export function GstPage() {
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
-      setSubmissionSuccess(true);
-      setTimeout(() => {
+setTimeout(() => {
         setActiveForm(null);
-        setSubmissionSuccess(false);
-      }, 2500);
+}, 2500);
     }, 1500);
   };
 
@@ -378,23 +374,7 @@ export function GstPage() {
           /* RENDER THE FORM INLINE */
           <div className="w-full">
             <div className="w-full bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 md:p-8 shadow-sm flex flex-col gap-6 relative overflow-hidden animate-in fade-in duration-200">
-              {submissionSuccess ? (
-                <div className="py-16 flex flex-col items-center justify-center text-center gap-4">
-                  <span className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-400 animate-bounce">
-                    <CheckCircle2 size={44} className="stroke-[2.5]" />
-                  </span>
-                  <div>
-                    <h5 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                      Application Submitted Successfully!
-                    </h5>
-                    <p className="text-sm text-slate-400 dark:text-slate-500 mt-2 max-w-md leading-relaxed">
-                      Your request for **{selectedService?.name}** has been
-                      registered. You can monitor the progress inside Service
-                      Status tab.
-                    </p>
-                  </div>
-                </div>
-              ) : activeForm === "gst-reg" && selectedService ? (
+              {activeForm === "gst-reg" && selectedService ? (
                 <GstRegistrationForm
                   price={selectedService.price}
                   onCancel={() => setActiveForm(null)}

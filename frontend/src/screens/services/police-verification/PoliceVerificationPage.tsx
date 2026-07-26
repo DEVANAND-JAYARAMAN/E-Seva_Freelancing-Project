@@ -22,8 +22,7 @@ export function PoliceVerificationPage() {
   const [activeForm, setActiveForm] = useState<string | null>(null);
   const [selectedService, setSelectedService] =
     useState<PoliceVerificationService | null>(null);
-  const [submissionSuccess, setSubmissionSuccess] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [servicesList, setServicesList] = useCategoryServices<PoliceVerificationService>("police-verification",
     [
@@ -37,8 +36,7 @@ export function PoliceVerificationPage() {
 
   const handleCardClick = (service: PoliceVerificationService) => {
     setSelectedService(service);
-    setSubmissionSuccess(false);
-    if (service.id === "police-verification-request") {
+if (service.id === "police-verification-request") {
       setActiveForm("police-verification-request");
     }
   };
@@ -89,11 +87,9 @@ export function PoliceVerificationPage() {
     setIsSubmitting(true);
     setTimeout(() => {
       setIsSubmitting(false);
-      setSubmissionSuccess(true);
-      setTimeout(() => {
+setTimeout(() => {
         setActiveForm(null);
-        setSubmissionSuccess(false);
-      }, 3000);
+}, 3000);
     }, 1500);
   };
 
@@ -243,23 +239,7 @@ export function PoliceVerificationPage() {
         ) : (
           <div className="w-full">
             <div className="w-full bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 md:p-8 shadow-sm flex flex-col gap-6 relative overflow-hidden animate-in fade-in duration-200">
-              {submissionSuccess ? (
-                <div className="py-16 flex flex-col items-center justify-center text-center gap-4">
-                  <span className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-400 animate-bounce">
-                    <CheckCircle2 size={44} className="stroke-[2.5]" />
-                  </span>
-                  <div>
-                    <h5 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                      Application Submitted Successfully!
-                    </h5>
-                    <p className="text-sm text-slate-400 dark:text-slate-550 mt-2 max-w-md leading-relaxed">
-                      Your request for **{selectedService?.name}** has been
-                      registered. You can monitor the progress inside Service
-                      Status tab.
-                    </p>
-                  </div>
-                </div>
-              ) : activeForm === "police-verification-request" &&
+              {activeForm === "police-verification-request" &&
                 selectedService ? (
                 <PoliceVerificationForm
                   price={selectedService.price}

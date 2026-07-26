@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { ServicePaymentBadge } from "../../../components/ServicePaymentBadge";
+import { usePaidServiceFlow } from "../../../hooks/usePaidServiceFlow";
 import { useFormEdit } from "../../../store/context/FormEditContext";
 import { CheckCircle2 } from "lucide-react";
 import { InputField, SelectField, SubmitButton } from "../form/FormFields";
@@ -20,11 +21,20 @@ export const CellNumberDobForm: React.FC<CellNumberDobFormProps> = ({
     canNumber: "",
     mobileNo: "",
   });
+
+  const { isForm, startPayment, paymentView } = usePaidServiceFlow({
+    serviceId: "cell-number-dob",
+    serviceName: "Cell Number + Date of Birth",
+    pricingCategoryId: "can-edit",
+    retailerCharge: 50,
+    formData,
+    
+    onDone: onCancel,
+  });
+
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submissionSuccess, setSubmissionSuccess] = useState(false);
-
-  const handleFieldChange = (name: string, value: string, file?: File) => {
+const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
       if (errors[name]) {
@@ -104,18 +114,15 @@ export const CellNumberDobForm: React.FC<CellNumberDobFormProps> = ({
       return;
     }
 
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSubmissionSuccess(true);
-      setTimeout(() => {
-        setSubmissionSuccess(false);
-        onCancel();
-      }, 2500);
-    }, 1500);
+    startPayment();
   };
 
+  if (!isForm) return paymentView;
+
+
   return (
+
+
     <form onSubmit={handleSubmit} className="space-y-8 w-full">
       <div className="flex flex-col sm:flex-row sm:items-start justify-between border-b border-slate-100 dark:border-slate-900/50 pb-4 gap-2">
         <div>
@@ -135,22 +142,7 @@ export const CellNumberDobForm: React.FC<CellNumberDobFormProps> = ({
         />
       </div>
 
-      {submissionSuccess ? (
-        <div className="py-16 flex flex-col items-center justify-center text-center gap-4">
-          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-400 animate-bounce">
-            <CheckCircle2 size={44} className="stroke-[2.5]" />
-          </span>
-          <div>
-            <h5 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-              Request Placed Successfully!
-            </h5>
-            <p className="text-sm text-slate-400 dark:text-slate-555 mt-2 max-w-md leading-relaxed">
-              Your request for **Cell Number + Date of Birth** has been
-              registered. The updates will be processed shortly.
-            </p>
-          </div>
-        </div>
-      ) : (
+      
         <>
           <div className="space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -300,7 +292,7 @@ export const CellNumberDobForm: React.FC<CellNumberDobFormProps> = ({
             />
           </div>
         </>
-      )}
+      
     </form>
   );
 };

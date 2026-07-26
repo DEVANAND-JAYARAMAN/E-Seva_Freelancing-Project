@@ -6,11 +6,13 @@ import {
   TextAreaField,
   SubmitButton,
 } from "../form/FormFields";
+import { ServicePaymentBadge } from "../../../components/ServicePaymentBadge";
+import { usePaidServiceFlow } from "../../../hooks/usePaidServiceFlow";
 
 interface GstRegistrationFormProps {
   price: number;
   onCancel: () => void;
-  onSubmit: (data: any) => void;
+  onSubmit?: (data: Record<string, string>) => void;
   isLoading?: boolean;
 }
 
@@ -34,6 +36,15 @@ export const GstRegistrationForm: React.FC<GstRegistrationFormProps> = ({
     businessAddress: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const { isForm, startPayment, paymentView } = usePaidServiceFlow({
+    serviceId: "gst-reg",
+    serviceName: "GST Registration",
+    pricingCategoryId: "gst",
+    retailerCharge: price || 400,
+    formData,
+    onDone: onCancel,
+  });
 
   const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -83,8 +94,10 @@ export const GstRegistrationForm: React.FC<GstRegistrationFormProps> = ({
       return;
     }
 
-    onSubmit(formData);
+    startPayment();
   };
+
+  if (!isForm) return paymentView;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 w-full">
@@ -98,9 +111,12 @@ export const GstRegistrationForm: React.FC<GstRegistrationFormProps> = ({
             Register your GST profile with business and identity details
           </p>
         </div>
-        <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none">
-          Service Payment : ₹ {price}
-        </div>
+        <ServicePaymentBadge
+          pricingCategoryId="gst"
+          serviceId="gst-reg"
+          serviceName="GST Registration"
+          fallback={price || 400}
+        />
       </div>
 
       {/* 2-Column responsive form body */}
