@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { X, Upload, ArrowLeft } from "lucide-react";
+import { X, Upload, ArrowLeft, User, Phone, IndianRupee, CalendarDays, BadgeCheck, Briefcase } from "lucide-react";
 import Swal from "sweetalert2";
 import type { StatusTicket, TicketStatus } from "./types";
 import { useAuth } from "../store/context/AuthContext";
@@ -468,129 +468,188 @@ export function StatusDetailModal({
     setPreviewUrl(url);
   };
 
-  const statusColor =
+  const statusLabel =
+    ticket.status === "Process" ? "PROCESSING" : ticket.status.toUpperCase();
+
+  const statusPill =
     ticket.status === "Approved"
-      ? "text-emerald-600"
+      ? "bg-emerald-500 text-white shadow-emerald-200"
       : ticket.status === "Process"
-        ? "text-blue-600"
+        ? "bg-sky-500 text-white shadow-sky-200"
         : ticket.status === "Pending"
-          ? "text-amber-600"
+          ? "bg-amber-500 text-white shadow-amber-200"
           : ticket.status === "Resubmit"
-            ? "text-purple-600"
+            ? "bg-violet-500 text-white shadow-violet-200"
             : ticket.status === "Rejected"
-              ? "text-rose-600"
-              : "text-slate-600";
+              ? "bg-rose-500 text-white shadow-rose-200"
+              : "bg-slate-500 text-white";
+
+  const headerWash =
+    ticket.status === "Approved"
+      ? "from-emerald-700 via-teal-700 to-cyan-800"
+      : ticket.status === "Process"
+        ? "from-sky-700 via-blue-700 to-indigo-800"
+        : ticket.status === "Pending"
+          ? "from-amber-600 via-orange-600 to-rose-600"
+          : ticket.status === "Resubmit"
+            ? "from-violet-700 via-fuchsia-700 to-pink-800"
+            : ticket.status === "Rejected"
+              ? "from-rose-700 via-red-700 to-orange-800"
+              : "from-slate-700 via-slate-800 to-slate-900";
 
   const page = (
-    <div className="fixed inset-0 z-[200] flex flex-col bg-slate-50 dark:bg-[#030712]">
+    <div className="fixed inset-0 z-[200] flex flex-col bg-gradient-to-br from-teal-50 via-sky-50 to-amber-50 dark:from-[#030712] dark:via-[#071018] dark:to-[#0a1220]">
       {/* Page header - full cover, not a floating modal */}
-      <header className="shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#090d16]">
-        <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3.5">
+      <header className={`shrink-0 bg-gradient-to-r ${headerWash} text-white shadow-lg`}>
+        <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-4">
           <div className="flex items-center gap-3 min-w-0">
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-9 items-center justify-center gap-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold uppercase tracking-wider transition-colors"
+              className="inline-flex h-9 items-center justify-center gap-1.5 px-3 rounded-lg border border-white/30 bg-white/15 hover:bg-white/25 text-white text-xs font-bold uppercase tracking-wider transition-colors backdrop-blur-sm"
             >
               <ArrowLeft size={14} />
               <span>Back</span>
             </button>
             <div className="min-w-0">
-              <h1 className="text-base sm:text-lg font-black text-slate-900 dark:text-white truncate">
+              <h1 className="text-base sm:text-lg font-black text-white truncate drop-shadow-sm">
                 File Details
               </h1>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 truncate">
-                {ticket.serviceName} · {ticket.status}
+              <p className="text-[10px] font-bold uppercase tracking-widest text-white/80 truncate">
+                {ticket.serviceName}
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 transition-colors shrink-0"
-            type="button"
-            aria-label="Close"
-          >
-            <X size={16} />
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <span
+              className={`hidden sm:inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-md ${statusPill}`}
+            >
+              {statusLabel}
+            </span>
+            <button
+              onClick={onClose}
+              className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/15 hover:bg-white/25 text-white transition-colors"
+              type="button"
+              aria-label="Close"
+            >
+              <X size={16} />
+            </button>
+          </div>
         </div>
       </header>
 
       <div className="flex-1 overflow-y-auto">
         <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-5 sm:py-8 space-y-5">
-            {/* Summary card — reference model */}
-            <div className="bg-white dark:bg-[#090d16] rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-              <div className="grid grid-cols-1 sm:grid-cols-2">
-                <div className="col-span-1 sm:col-span-2 p-4 border-b border-slate-100 dark:border-slate-800">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
-                    Requested Service
+            {/* Colorful summary tiles */}
+            <div className="rounded-2xl border border-teal-200/80 dark:border-teal-900/50 bg-white/80 dark:bg-[#090d16]/90 backdrop-blur-sm shadow-md overflow-hidden">
+              <div className="px-4 sm:px-5 py-4 bg-gradient-to-r from-teal-600 to-cyan-600 text-white">
+                <div className="flex items-start gap-3">
+                  <span className="mt-0.5 flex h-10 w-10 items-center justify-center rounded-xl bg-white/20">
+                    <Briefcase size={18} />
                   </span>
-                  <span className="text-base font-bold text-slate-900 dark:text-white mt-0.5 block">
-                    {ticket.serviceName}
-                  </span>
+                  <div className="min-w-0">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-teal-100 block">
+                      Requested Service
+                    </span>
+                    <span className="text-base sm:text-lg font-black text-white mt-0.5 block truncate">
+                      {ticket.serviceName}
+                    </span>
+                  </div>
                 </div>
-                <div className="p-4 border-b border-r border-slate-100 dark:border-slate-800">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
-                    Retailer / Distributor
-                  </span>
-                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5 block">
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-4 sm:p-5">
+                <div className="rounded-xl border border-sky-200 dark:border-sky-900/50 bg-gradient-to-br from-sky-50 to-cyan-50 dark:from-sky-950/40 dark:to-cyan-950/30 p-3.5">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <User size={14} className="text-sky-600 dark:text-sky-400" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-sky-700/80 dark:text-sky-300/80">
+                      Retailer / Distributor
+                    </span>
+                  </div>
+                  <span className="text-sm font-extrabold text-slate-900 dark:text-white block">
                     {ticket.retailerName}
                   </span>
-                  <span className="text-xs text-slate-500 block">
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold text-sky-700 dark:text-sky-300 mt-1">
+                    <Phone size={11} />
                     {ticket.retailerMobile || "—"}
                   </span>
                 </div>
-                <div className="p-4 border-b border-slate-100 dark:border-slate-800">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
-                    User Role
-                  </span>
-                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5 block">
+
+                <div className="rounded-xl border border-indigo-200 dark:border-indigo-900/50 bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-950/40 dark:to-blue-950/30 p-3.5">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <BadgeCheck size={14} className="text-indigo-600 dark:text-indigo-400" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-700/80 dark:text-indigo-300/80">
+                      User Role
+                    </span>
+                  </div>
+                  <span className="text-sm font-extrabold text-slate-900 dark:text-white block">
                     {ticket.userRole || "Retailer"}
                   </span>
                 </div>
-                <div className="p-4 border-b border-r border-slate-100 dark:border-slate-800">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
-                    Processing Charge
-                  </span>
-                  <span className="text-sm font-bold text-emerald-600 mt-0.5 block">
+
+                <div className="rounded-xl border border-emerald-200 dark:border-emerald-900/50 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30 p-3.5">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <IndianRupee size={14} className="text-emerald-600 dark:text-emerald-400" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700/80 dark:text-emerald-300/80">
+                      Processing Charge
+                    </span>
+                  </div>
+                  <span className="text-lg font-black text-emerald-700 dark:text-emerald-400 block">
                     ₹{ticket.amount.toFixed(2)}
                   </span>
                 </div>
-                <div className="p-4 border-b border-slate-100 dark:border-slate-800">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
-                    Current Status
-                  </span>
+
+                <div className="rounded-xl border border-amber-200 dark:border-amber-900/50 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/30 p-3.5">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800/80 dark:text-amber-300/80">
+                      Current Status
+                    </span>
+                  </div>
                   <span
-                    className={`text-sm font-bold uppercase tracking-wide mt-0.5 block ${statusColor}`}
+                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-black uppercase tracking-wide shadow-sm ${statusPill}`}
                   >
-                    {ticket.status === "Process"
-                      ? "PROCESSING"
-                      : ticket.status.toUpperCase()}
+                    {statusLabel}
                   </span>
                 </div>
-                <div className="p-4 border-r border-slate-100 dark:border-slate-800">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
-                    Submission Date
-                  </span>
-                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 mt-0.5 block">
+
+                <div className="rounded-xl border border-cyan-200 dark:border-cyan-900/50 bg-gradient-to-br from-cyan-50 to-teal-50 dark:from-cyan-950/40 dark:to-teal-950/30 p-3.5">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <CalendarDays size={14} className="text-cyan-600 dark:text-cyan-400" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-700/80 dark:text-cyan-300/80">
+                      Submission Date
+                    </span>
+                  </div>
+                  <span className="text-sm font-extrabold text-slate-900 dark:text-white block">
                     {ticket.createdDate}
                   </span>
                 </div>
-                <div className="p-4">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
-                    Last Status Update
-                  </span>
-                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 mt-0.5 block">
+
+                <div className="rounded-xl border border-rose-200 dark:border-rose-900/50 bg-gradient-to-br from-rose-50 to-orange-50 dark:from-rose-950/40 dark:to-orange-950/30 p-3.5">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <CalendarDays size={14} className="text-rose-600 dark:text-rose-400" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-rose-700/80 dark:text-rose-300/80">
+                      Last Status Update
+                    </span>
+                  </div>
+                  <span className="text-sm font-extrabold text-slate-900 dark:text-white block">
                     {ticket.lastUpdated}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Main form — thuruvancommunication.in model */}
-            <div className="bg-white dark:bg-[#090d16] rounded-xl border-2 border-sky-300 dark:border-sky-800 p-5 sm:p-6 shadow-sm">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-5">
-                {ticket.serviceName}
-              </h2>
+            {/* Main form — same fields, colorful frame */}
+            <div className="bg-white dark:bg-[#090d16] rounded-2xl border-2 border-teal-300 dark:border-teal-800 p-5 sm:p-6 shadow-md overflow-hidden">
+              <div className="flex items-center justify-between gap-3 mb-5 pb-4 border-b border-teal-100 dark:border-teal-900/40">
+                <h2 className="text-lg font-black text-slate-900 dark:text-white">
+                  {ticket.serviceName}
+                </h2>
+                <span
+                  className={`sm:hidden inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${statusPill}`}
+                >
+                  {statusLabel}
+                </span>
+              </div>
 
               {canReapply &&
                 ticket.remarks &&
@@ -756,7 +815,7 @@ export function StatusDetailModal({
                     type="button"
                     disabled={resubmitting || !onResubmit}
                     onClick={handleReapply}
-                    className="min-w-[140px] px-8 py-2.5 rounded-md bg-[#1e88e5] hover:bg-[#1565c0] disabled:opacity-60 text-white text-sm font-bold shadow-sm"
+                    className="min-w-[140px] px-8 py-2.5 rounded-xl bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 disabled:opacity-60 text-white text-sm font-black shadow-md shadow-teal-200/50"
                   >
                     {resubmitting ? "Reapplying..." : "Reapply"}
                   </button>
@@ -797,7 +856,8 @@ export function StatusDetailModal({
 
               {/* Admin workflow controls */}
               {canEdit && (
-                <div className="mt-6 pt-4 border-t border-slate-200">
+                <div className="mt-6 pt-5 border-t-2 border-teal-100 dark:border-teal-900/50 rounded-xl bg-gradient-to-br from-teal-50/80 to-sky-50/80 dark:from-teal-950/20 dark:to-sky-950/20 px-4 py-4 -mx-1">
+                  <p className="text-[11px] font-black uppercase tracking-wider text-teal-700 dark:text-teal-300 mb-3">Admin actions</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
                     {/* Service Status */}
                     <div className="flex flex-col gap-1">
@@ -932,7 +992,7 @@ export function StatusDetailModal({
                       type="button"
                       disabled={saving}
                       onClick={handleSubmit}
-                      className="min-w-[140px] px-8 py-2.5 rounded-md bg-[#1e88e5] hover:bg-[#1565c0] disabled:opacity-60 text-white text-sm font-bold shadow-sm"
+                      className="min-w-[140px] px-8 py-2.5 rounded-xl bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-500 hover:to-cyan-500 disabled:opacity-60 text-white text-sm font-black shadow-md shadow-teal-200/50"
                     >
                       {saving ? "Saving..." : "Submit"}
                     </button>
