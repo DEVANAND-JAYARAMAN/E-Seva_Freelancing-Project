@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   RefreshCw,
   Loader,
@@ -12,7 +12,6 @@ import Swal from "sweetalert2";
 import { AppShell } from "../layouts/AppShell";
 import { StatusTable } from "./StatusTable";
 import { StatusStats } from "./StatusStats";
-import { useEffect } from "react";
 import { StatusDetailModal } from "./StatusDetailModal";
 import type { StatusTicket, TicketStatus } from "./types";
 import { useAuth } from "../store/context/AuthContext";
@@ -92,6 +91,13 @@ export function StatusPage() {
   );
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isModalEditMode, setIsModalEditMode] = useState(false);
+
+  // Keep open File Details in sync when the tickets list refreshes
+  useEffect(() => {
+    if (!selectedTicket?.id) return;
+    const fresh = tickets.find((t) => t.id === selectedTicket.id);
+    if (fresh) setSelectedTicket(fresh);
+  }, [tickets, selectedTicket?.id]);
 
   // Fetch real data from backend
   const fetchTickets = async () => {
