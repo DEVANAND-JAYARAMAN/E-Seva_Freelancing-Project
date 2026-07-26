@@ -471,6 +471,23 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 	var app models.ServiceApplication
 	attributevalue.UnmarshalMap(out.Item, &app)
 
+	// Harden cost / retailerId from raw attributes if unmarshal missed them
+	if app.Cost <= 0 {
+		if n, ok := out.Item["cost"].(*types.AttributeValueMemberN); ok {
+			fmt.Sscanf(n.Value, "%f", &app.Cost)
+		}
+	}
+	if strings.TrimSpace(app.RetailerId) == "" {
+		if s, ok := out.Item["retailerId"].(*types.AttributeValueMemberS); ok {
+			app.RetailerId = s.Value
+		}
+	}
+	if strings.TrimSpace(app.RefundedAt) == "" {
+		if s, ok := out.Item["refundedAt"].(*types.AttributeValueMemberS); ok {
+			app.RefundedAt = s.Value
+		}
+	}
+
 	var isAlreadyApproved bool
 	if app.Status == "Approved" || app.Status == "Completed" {
 		if status == "Approved" || status == "Completed" {
@@ -479,8 +496,8 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Request is already in a final state"})
 			return
 		}
-	} else if app.Status == "Rejected" && status != "Pending" {
-		// Allow reopen to Pending if admin needs to fix; block other changes
+	} else if app.Status == "Rejected" && status != "Pending" && status != "Rejected" {
+		// Allow reopen to Pending; allow re-post Rejected only for missing-refund repair below
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Request is already in a final state"})
 		return
 	}
@@ -580,78 +597,16 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 		}); err != nil {
 			log.Printf("Approved invoice put failed for %s: %v", appId, err)
 		}
-	} else if status == "Rejected" && app.Status != "Rejected" {
-		walletPK := "WALLET#" + app.RetailerId
-		costStr := fmt.Sprintf("%.2f", app.Cost)
+	}
 
-		// Claim refund once — prevents double credit on Rejected→Pending→Rejected
-		_, claimErr := db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
-			TableName: aws.String("ServiceApplications"),
-			Key: map[string]types.AttributeValue{
-				"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
-				"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
-			},
-			UpdateExpression:    aws.String("SET refundedAt = :ts"),
-			ConditionExpression: aws.String("attribute_not_exists(refundedAt)"),
-			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":ts": &types.AttributeValueMemberS{Value: now},
-			},
-		})
-		if claimErr != nil {
-			log.Printf("Reject refund already claimed for %s: %v", appId, claimErr)
-		} else if app.Cost > 0 {
-			txId := generateId("TX")
-			refundTx := models.WalletTransaction{
-				PK:          walletPK,
-				SK:          "TX#" + now + "#" + txId,
-				Id:          txId,
-				WalletType:  "Main",
-				Amount:      app.Cost,
-				Type:        "Credit",
-				Status:      "Success",
-				Reference:   appId + "-REFUND",
-				CreatedAt:   now,
-				Date:        timeutil.FormatRFC3339AsIST(now),
-				Description: "Service refund",
-			}
-			refundTxItem, _ := attributevalue.MarshalMap(refundTx)
-
-			if _, err = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
-				TableName: aws.String("WalletTransactions"),
-				Item:      refundTxItem,
-			}); err != nil {
-				log.Printf("Reject refund tx failed for %s: %v", appId, err)
-			}
-			if _, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
-				TableName: aws.String("Wallets"),
-				Key: map[string]types.AttributeValue{
-					"PK": &types.AttributeValueMemberS{Value: walletPK},
-					"SK": &types.AttributeValueMemberS{Value: "TYPE#Main"},
-				},
-				UpdateExpression: aws.String("SET balance = if_not_exists(balance, :zero) + :cost, updatedAt = :ts"),
-				ExpressionAttributeValues: map[string]types.AttributeValue{
-					":cost": &types.AttributeValueMemberN{Value: costStr},
-					":zero": &types.AttributeValueMemberN{Value: "0"},
-					":ts":   &types.AttributeValueMemberS{Value: now},
-				},
-			}); err != nil {
-				log.Printf("Reject wallet credit failed for %s: %v", appId, err)
-			}
-			if _, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
-				TableName: aws.String("Users"),
-				Key: map[string]types.AttributeValue{
-					"PK": &types.AttributeValueMemberS{Value: "USER#" + app.RetailerId},
-					"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
-				},
-				UpdateExpression: aws.String("SET walletBalance = if_not_exists(walletBalance, :zero) + :cost, updatedAt = :ts"),
-				ExpressionAttributeValues: map[string]types.AttributeValue{
-					":cost": &types.AttributeValueMemberN{Value: costStr},
-					":zero": &types.AttributeValueMemberN{Value: "0"},
-					":ts":   &types.AttributeValueMemberS{Value: now},
-				},
-			}); err != nil {
-				log.Printf("Reject user wallet credit failed for %s: %v", appId, err)
-			}
+	refundedAmount := 0.0
+	refundMsg := ""
+	if status == "Rejected" {
+		refundedAmount, refundMsg = processRejectRefund(appId, &app, now)
+		if refundedAmount > 0 {
+			log.Printf("Reject refund OK for %s: ₹%.2f → %s (%s)", appId, refundedAmount, app.RetailerId, refundMsg)
+		} else if refundMsg != "" {
+			log.Printf("Reject refund skipped for %s: %s", appId, refundMsg)
 		}
 	}
 
@@ -785,7 +740,193 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Request " + status + " successfully"})
+	c.JSON(http.StatusOK, gin.H{
+		"message":       "Request " + status + " successfully",
+		"refundAmount":  refundedAmount,
+		"refundMessage": refundMsg,
+	})
+}
+
+// processRejectRefund credits the retailer wallet once per application.
+// Safe to call again: refundedAt claim prevents double credit.
+func processRejectRefund(appId string, app *models.ServiceApplication, now string) (float64, string) {
+	retailerId := strings.TrimSpace(app.RetailerId)
+	if retailerId == "" {
+		return 0, "missing retailerId"
+	}
+	amount := app.Cost
+	if amount <= 0 {
+		return 0, "cost is zero — nothing to refund"
+	}
+	if strings.TrimSpace(app.RefundedAt) != "" {
+		return 0, "already refunded at " + app.RefundedAt
+	}
+
+	costStr := fmt.Sprintf("%.2f", amount)
+	walletPK := "WALLET#" + retailerId
+
+	// Claim once
+	_, claimErr := db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+		TableName: aws.String("ServiceApplications"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
+			"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+		},
+		UpdateExpression:    aws.String("SET refundedAt = :ts"),
+		ConditionExpression: aws.String("attribute_not_exists(refundedAt)"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":ts": &types.AttributeValueMemberS{Value: now},
+		},
+	})
+	if claimErr != nil {
+		// Recover stuck claims: refundedAt set but no refund ledger row
+		qOut, qErr := db.DynamoClient.Query(context.TODO(), &dynamodb.QueryInput{
+			TableName:              aws.String("WalletTransactions"),
+			KeyConditionExpression: aws.String("PK = :pk AND begins_with(SK, :sk)"),
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":pk": &types.AttributeValueMemberS{Value: walletPK},
+				":sk": &types.AttributeValueMemberS{Value: "TX#"},
+			},
+		})
+		hasRefundTx := false
+		if qErr == nil {
+			refWanted := appId + "-REFUND"
+			for _, item := range qOut.Items {
+				if r, ok := item["reference"].(*types.AttributeValueMemberS); ok && r.Value == refWanted {
+					hasRefundTx = true
+					break
+				}
+			}
+		}
+		if hasRefundTx {
+			return 0, "already refunded"
+		}
+		_, _ = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+			TableName: aws.String("ServiceApplications"),
+			Key: map[string]types.AttributeValue{
+				"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
+				"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+			},
+			UpdateExpression: aws.String("REMOVE refundedAt"),
+		})
+		_, claimErr = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+			TableName: aws.String("ServiceApplications"),
+			Key: map[string]types.AttributeValue{
+				"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
+				"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+			},
+			UpdateExpression:    aws.String("SET refundedAt = :ts"),
+			ConditionExpression: aws.String("attribute_not_exists(refundedAt)"),
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":ts": &types.AttributeValueMemberS{Value: now},
+			},
+		})
+		if claimErr != nil {
+			return 0, "refund already claimed"
+		}
+	}
+
+	clearClaim := func() {
+		_, _ = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+			TableName: aws.String("ServiceApplications"),
+			Key: map[string]types.AttributeValue{
+				"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
+				"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+			},
+			UpdateExpression: aws.String("REMOVE refundedAt"),
+		})
+	}
+
+	txId := generateId("TX")
+	refundTx := models.WalletTransaction{
+		PK:          walletPK,
+		SK:          "TX#" + now + "#" + txId,
+		Id:          txId,
+		WalletType:  "Main",
+		Amount:      amount,
+		Type:        "Credit",
+		Status:      "Success",
+		Reference:   appId + "-REFUND",
+		CreatedAt:   now,
+		Date:        timeutil.FormatRFC3339AsIST(now),
+		Description: fmt.Sprintf("Refund for rejected %s", app.ServiceName),
+	}
+	refundTxItem, _ := attributevalue.MarshalMap(refundTx)
+	if _, err := db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+		TableName: aws.String("WalletTransactions"),
+		Item:      refundTxItem,
+	}); err != nil {
+		log.Printf("Reject refund tx failed for %s: %v", appId, err)
+		clearClaim()
+		return 0, "failed to write refund transaction"
+	}
+
+	// Credit Wallets (create row if missing)
+	_, wErr := db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+		TableName: aws.String("Wallets"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: walletPK},
+			"SK": &types.AttributeValueMemberS{Value: "TYPE#Main"},
+		},
+		UpdateExpression: aws.String("SET balance = if_not_exists(balance, :zero) + :cost, updatedAt = :ts, userId = if_not_exists(userId, :uid)"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":cost": &types.AttributeValueMemberN{Value: costStr},
+			":zero": &types.AttributeValueMemberN{Value: "0"},
+			":ts":   &types.AttributeValueMemberS{Value: now},
+			":uid":  &types.AttributeValueMemberS{Value: retailerId},
+		},
+	})
+	if wErr != nil {
+		// Wallet row may not exist — PutItem with starting balance
+		_, putErr := db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+			TableName: aws.String("Wallets"),
+			Item: map[string]types.AttributeValue{
+				"PK":        &types.AttributeValueMemberS{Value: walletPK},
+				"SK":        &types.AttributeValueMemberS{Value: "TYPE#Main"},
+				"userId":    &types.AttributeValueMemberS{Value: retailerId},
+				"balance":   &types.AttributeValueMemberN{Value: costStr},
+				"updatedAt": &types.AttributeValueMemberS{Value: now},
+			},
+			ConditionExpression: aws.String("attribute_not_exists(PK)"),
+		})
+		if putErr != nil {
+			// Race: row appeared — retry ADD
+			_, retryErr := db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+				TableName: aws.String("Wallets"),
+				Key: map[string]types.AttributeValue{
+					"PK": &types.AttributeValueMemberS{Value: walletPK},
+					"SK": &types.AttributeValueMemberS{Value: "TYPE#Main"},
+				},
+				UpdateExpression: aws.String("ADD balance :cost SET updatedAt = :ts"),
+				ExpressionAttributeValues: map[string]types.AttributeValue{
+					":cost": &types.AttributeValueMemberN{Value: costStr},
+					":ts":   &types.AttributeValueMemberS{Value: now},
+				},
+			})
+			if retryErr != nil {
+				log.Printf("Reject wallet credit failed for %s: update=%v put=%v retry=%v", appId, wErr, putErr, retryErr)
+				clearClaim()
+				return 0, "failed to credit wallet"
+			}
+		}
+	}
+
+	_, _ = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+		TableName: aws.String("Users"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: "USER#" + retailerId},
+			"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+		},
+		UpdateExpression: aws.String("SET walletBalance = if_not_exists(walletBalance, :zero) + :cost, updatedAt = :ts"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":cost": &types.AttributeValueMemberN{Value: costStr},
+			":zero": &types.AttributeValueMemberN{Value: "0"},
+			":ts":   &types.AttributeValueMemberS{Value: now},
+		},
+	})
+
+	app.RefundedAt = now
+	return amount, "refunded"
 }
 
 func GetServiceRequests(c *gin.Context) {

@@ -215,11 +215,17 @@ export function StatusPage() {
 
       await fetchTickets();
       setIsDetailOpen(false);
+      const refundAmt = Number(data.refundAmount || 0);
       await Swal.fire({
         icon: "success",
         title: "Updated",
-        text: `Status changed to ${newStatus}`,
-        timer: 1400,
+        text:
+          newStatus === "Rejected" && refundAmt > 0
+            ? `Rejected — ₹${refundAmt.toFixed(2)} refunded to retailer wallet`
+            : newStatus === "Rejected" && data.refundMessage
+              ? `Rejected — ${data.refundMessage}`
+              : `Status changed to ${newStatus}`,
+        timer: refundAmt > 0 ? 2200 : 1400,
         showConfirmButton: false,
       });
       return true;
