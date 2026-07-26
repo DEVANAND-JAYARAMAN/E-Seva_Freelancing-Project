@@ -49,6 +49,32 @@ export function WalletPage() {
     refreshProfile();
   }, [refreshProfile]);
 
+  // After gateway redirect back to /wallets/?payment=return (or ?add=1)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const paymentReturn = params.get("payment") === "return";
+    const openAdd = params.get("add") === "1";
+
+    if (paymentReturn) {
+      void refreshProfile();
+      setFormSuccess(true);
+      setIsModalOpen(true);
+      // Clean query so refresh doesn't re-trigger
+      const clean = window.location.pathname;
+      window.history.replaceState({}, "", clean);
+      setTimeout(() => {
+        setFormSuccess(false);
+        setIsModalOpen(false);
+      }, 2500);
+      return;
+    }
+
+    if (openAdd) {
+      setIsModalOpen(true);
+    }
+  }, [refreshProfile]);
+
   // Balances
   const mainBalance = user?.walletBalance || 0;
 
@@ -229,7 +255,8 @@ export function WalletPage() {
               baseUrl +
               "/api/v1/wallet/recharge/return?redirect_url=" +
               encodeURIComponent(
-                window.location.origin + window.location.pathname,
+                window.location.origin +
+                  "/wallets/?payment=return",
               ),
             user_id: user?.id || "",
           }),

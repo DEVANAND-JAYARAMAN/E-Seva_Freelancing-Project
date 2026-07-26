@@ -68,6 +68,7 @@ func main() {
 		{
 			v1Public.POST("/recharge/webhook", service.RechargeWebhook)
 			v1Public.Any("/recharge/return", service.RechargeReturn)
+			v1Public.Any("/recharge/return/", service.RechargeReturn)
 		}
 
 		// Authenticated routes
