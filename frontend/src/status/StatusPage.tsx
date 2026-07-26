@@ -17,6 +17,50 @@ import type { StatusTicket, TicketStatus } from "./types";
 import { useAuth } from "../store/context/AuthContext";
 import { apiUrl, authFetch } from "../utils/apiBase";
 
+/** Pull person name from any service formData (keys differ per form). */
+function extractApplicantName(form: Record<string, any>): string {
+  const preferredKeys = [
+    "applicantName",
+    "applicant_name",
+    "ApplicantName",
+    "applicantNameEnglish",
+    "nameAsPerAadhaar",
+    "nameAsPerReg",
+    "nameEnglish",
+    "newNameEnglish",
+    "fullName",
+    "FullName",
+    "name",
+    "Name",
+    "customerName",
+    "devoteeName",
+    "ownerName",
+    "tradeName",
+    "familyRelationName",
+    "tamilName",
+    "applicantNameTamil",
+    "newNameTamil",
+  ];
+
+  for (const key of preferredKeys) {
+    const val = form?.[key];
+    if (val == null) continue;
+    const s = String(val).trim();
+    if (s) return s;
+  }
+
+  // Fallback: any non-file field whose key looks like a person name
+  const skip = /(file|photo|sign|document|upload|card|proof|path|url|image)/i;
+  for (const [key, val] of Object.entries(form || {})) {
+    if (!/name/i.test(key)) continue;
+    if (skip.test(key)) continue;
+    const s = String(val ?? "").trim();
+    if (s && s.length >= 2 && !s.startsWith("/uploads/")) return s;
+  }
+
+  return "";
+}
+
 // Seed data with precisely the 5 statuses requested by the user
 const seedTickets: StatusTicket[] = [
   {
@@ -135,15 +179,7 @@ export function StatusPage() {
             form.cellNo ||
             form.whatsapp ||
             "";
-          const applicantName = String(
-            form.applicantName ||
-              form.applicant_name ||
-              form.ApplicantName ||
-              form.name ||
-              form.fullName ||
-              form.customerName ||
-              "",
-          ).trim();
+          const applicantName = extractApplicantName(form);
           const mobile =
             app.retailerMobile ||
             app.RetailerMobile ||
