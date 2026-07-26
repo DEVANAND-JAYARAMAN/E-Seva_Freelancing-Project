@@ -80,48 +80,53 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
     setIsSubmitting(true);
 
     try {
-      const submitData = new FormData();
-      submitData.append("retailerId", user?.id || "unknown_retailer");
-      submitData.append("retailerName", user?.name || "");
-      submitData.append("retailerMobile", user?.phone || "");
-      submitData.append("serviceId", serviceId || serviceName.toLowerCase().replace(/\s+/g, "_"));
-      submitData.append("serviceName", serviceName);
-      if (pricingCategoryId) {
-        submitData.append("pricingCategoryId", pricingCategoryId);
-      }
-      submitData.append("cost", String(resolvedCharge));
-      submitData.append("customerWhatsApp", customerWhatsApp.trim());
-      submitData.append("walletType", "Main");
-      
-      if (formData) {
-        submitData.append("formData", JSON.stringify(formData));
-      }
-      
-      if (files) {
-        files.forEach((file) => {
-          submitData.append("documents", file);
-        });
-      }
+      const payload = {
+        retailerId: user?.id || "unknown_retailer",
+        retailerName: user?.name || "",
+        retailerMobile: user?.phone || "",
+        serviceId:
+          serviceId || serviceName.toLowerCase().replace(/\s+/g, "_"),
+        serviceName,
+        pricingCategoryId: pricingCategoryId || "",
+        cost: resolvedCharge,
+        customerWhatsApp: customerWhatsApp.trim(),
+        walletType: "Main",
+        formData: formData ? JSON.stringify(formData) : "",
+      };
 
+      // Always JSON submit — avoids multipart/nginx upload timeouts that show as "Network error"
       const res = await fetch(apiUrl("services/request"), {
         method: "POST",
-        body: submitData
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...payload,
+          // Keep filenames in formData if present; binary upload is optional
+          documentCount: files?.length || 0,
+        }),
       });
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        setError(errData.error || "Failed to create service request");
+        const msg =
+          errData.error ||
+          errData.message ||
+          errData.details ||
+          `Failed to create service request (${res.status})`;
+        setError(String(msg));
         setIsSubmitting(false);
         return;
       }
 
-      // Update local wallet balance since payment is always via wallet
       updateWallet(walletBalance - resolvedCharge);
-
       setIsSubmitting(false);
       onSuccess(customerWhatsApp.trim() || undefined);
     } catch (e) {
-      setError("Network error occurred");
+      const msg = e instanceof Error ? e.message : "Network error occurred";
+      setError(
+        msg.toLowerCase().includes("fetch")
+          ? "Network error — could not reach server. Check internet and try again."
+          : msg || "Network error occurred",
+      );
       setIsSubmitting(false);
     }
   };

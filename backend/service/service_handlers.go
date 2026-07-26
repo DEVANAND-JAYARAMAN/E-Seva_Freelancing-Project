@@ -26,16 +26,16 @@ import (
 )
 
 type CreateServiceReq struct {
-	RetailerId         string  `form:"retailerId" binding:"required"`
-	RetailerName       string  `form:"retailerName"`
-	RetailerMobile     string  `form:"retailerMobile"`
-	ServiceId          string  `form:"serviceId" binding:"required"`
-	ServiceName        string  `form:"serviceName" binding:"required"`
-	PricingCategoryId  string  `form:"pricingCategoryId"`
-	Cost               float64 `form:"cost"`
-	CustomerWhatsApp   string  `form:"customerWhatsApp"`
-	WalletType         string  `form:"walletType"` // "Retailer" or "Distributor" (needed for history)
-	FormData           string  `form:"formData"`
+	RetailerId        string  `form:"retailerId" json:"retailerId" binding:"required"`
+	RetailerName      string  `form:"retailerName" json:"retailerName"`
+	RetailerMobile    string  `form:"retailerMobile" json:"retailerMobile"`
+	ServiceId         string  `form:"serviceId" json:"serviceId" binding:"required"`
+	ServiceName       string  `form:"serviceName" json:"serviceName" binding:"required"`
+	PricingCategoryId string  `form:"pricingCategoryId" json:"pricingCategoryId"`
+	Cost              float64 `form:"cost" json:"cost"`
+	CustomerWhatsApp  string  `form:"customerWhatsApp" json:"customerWhatsApp"`
+	WalletType        string  `form:"walletType" json:"walletType"`
+	FormData          string  `form:"formData" json:"formData"`
 }
 
 type UpdateServiceStatusReq struct {
@@ -90,8 +90,15 @@ func generateId(prefix string) string {
 
 func CreateServiceRequest(c *gin.Context) {
 	var req CreateServiceReq
-	if err := c.ShouldBind(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	ct := c.ContentType()
+	var bindErr error
+	if strings.Contains(ct, "application/json") {
+		bindErr = c.ShouldBindJSON(&req)
+	} else {
+		bindErr = c.ShouldBind(&req)
+	}
+	if bindErr != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": bindErr.Error()})
 		return
 	}
 
@@ -265,9 +272,12 @@ func CreateServiceRequest(c *gin.Context) {
 						"PK": &types.AttributeValueMemberS{Value: walletPK},
 						"SK": &types.AttributeValueMemberS{Value: "TYPE#Main"},
 					},
-					UpdateExpression: aws.String("SET balance = balance - :cost"),
+					UpdateExpression:    aws.String("SET balance = if_not_exists(balance, :zero) - :cost, updatedAt = :ts"),
+					ConditionExpression: aws.String("attribute_not_exists(balance) OR balance >= :cost"),
 					ExpressionAttributeValues: map[string]types.AttributeValue{
 						":cost": &types.AttributeValueMemberN{Value: fmt.Sprintf("%f", req.Cost)},
+						":zero": &types.AttributeValueMemberN{Value: "0"},
+						":ts":   &types.AttributeValueMemberS{Value: now},
 					},
 				},
 			},
@@ -278,9 +288,11 @@ func CreateServiceRequest(c *gin.Context) {
 						"PK": &types.AttributeValueMemberS{Value: "USER#" + req.RetailerId},
 						"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
 					},
-					UpdateExpression: aws.String("SET walletBalance = walletBalance - :cost"),
+					UpdateExpression: aws.String("SET walletBalance = if_not_exists(walletBalance, :zero) - :cost, updatedAt = :ts"),
 					ExpressionAttributeValues: map[string]types.AttributeValue{
 						":cost": &types.AttributeValueMemberN{Value: fmt.Sprintf("%f", req.Cost)},
+						":zero": &types.AttributeValueMemberN{Value: "0"},
+						":ts":   &types.AttributeValueMemberS{Value: now},
 					},
 				},
 			},
@@ -288,7 +300,8 @@ func CreateServiceRequest(c *gin.Context) {
 	})
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save request"})
+		log.Printf("CreateServiceRequest transact failed for %s: %v", req.RetailerId, err)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save request", "details": err.Error()})
 		return
 	}
 

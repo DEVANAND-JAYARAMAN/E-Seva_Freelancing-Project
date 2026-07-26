@@ -109,6 +109,7 @@ func main() {
 		serviceGroup := api.Group("/services")
 		{
 			serviceGroup.POST("/request", service.CreateServiceRequest)
+			serviceGroup.POST("/request/", service.CreateServiceRequest)
 			serviceGroup.POST("/:id/status", service.UpdateServiceRequestStatus)
 			serviceGroup.POST("/:id/status/", service.UpdateServiceRequestStatus)
 			serviceGroup.GET("/requests", service.GetServiceRequests)
