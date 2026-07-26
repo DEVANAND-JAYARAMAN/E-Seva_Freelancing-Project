@@ -1,9 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { AppShell } from "../../layouts/AppShell";
 import { ServiceQueue } from "./ServiceQueue";
-import { PartnersOverview } from "./PartnersOverview";
+import {
+  PartnersOverview,
+  PartnersMetricCard,
+} from "./PartnersOverview";
 import { StatsGrid } from "./StatsGrid";
 import { WalletSummary } from "./WalletSummary";
 import { useAuth } from "../../store/context/AuthContext";
@@ -17,6 +20,17 @@ export function DashboardPage({
   const { user, updateWallet } = useAuth();
   const role = forceRole || user?.role;
   const [stats, setStats] = useState<any>(null);
+  const [partnerCounts, setPartnerCounts] = useState({
+    retailers: 0,
+    distributors: 0,
+  });
+
+  const handlePartnerCounts = useCallback(
+    (c: { retailers: number; distributors: number }) => {
+      setPartnerCounts(c);
+    },
+    [],
+  );
 
   useEffect(() => {
     if (role === "admin") {
@@ -29,10 +43,21 @@ export function DashboardPage({
           if (typeof data?.adminWalletBalance === "number") {
             updateWallet(Number(data.adminWalletBalance));
           }
+          // Prefer dashboard counts until partners overview loads
+          setPartnerCounts((prev) => ({
+            retailers: Number(data?.retailers ?? prev.retailers ?? 0),
+            distributors: Number(data?.distributors ?? prev.distributors ?? 0),
+          }));
         })
         .catch((err) => console.error("Failed to load dashboard stats", err));
     }
   }, [role, updateWallet]);
+
+  const scrollToPartners = () => {
+    document
+      .getElementById("partners-services-card")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   // Fail closed: only admin sees admin dashboard
   if (role !== "admin") {
@@ -46,13 +71,23 @@ export function DashboardPage({
   return (
     <AppShell activePage="Dashboard">
       <section className="flex flex-col gap-6 w-full">
-        {/* Combined Stats & Wallets Grid (3 rows, 4 columns on large screens) */}
+        {/* First-image style metric cards grid */}
         <section
           className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
           aria-label="Wallet and metrics summary"
         >
           <WalletSummary stats={stats} />
           <StatsGrid stats={stats} />
+          <PartnersMetricCard
+            retailers={partnerCounts.retailers}
+            distributors={partnerCounts.distributors}
+            onClick={scrollToPartners}
+          />
+        </section>
+
+        {/* Colored Partners card — second-image details inside */}
+        <section className="w-full" aria-label="Partners and services overview">
+          <PartnersOverview onCounts={handlePartnerCounts} />
         </section>
 
         {/* Live Queues */}
@@ -60,11 +95,6 @@ export function DashboardPage({
           <div className="lg:col-span-3">
             <ServiceQueue />
           </div>
-        </section>
-
-        {/* Partners: retailers + distributors with services & wallet cuts */}
-        <section className="w-full" aria-label="Partners and services overview">
-          <PartnersOverview />
         </section>
       </section>
     </AppShell>
