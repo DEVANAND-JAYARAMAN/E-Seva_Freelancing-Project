@@ -220,7 +220,7 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
           </div>
 
           {insufficient && (
-            <Link href="/wallet" className="text-[10px] font-extrabold uppercase tracking-wider text-rose-600 underline underline-offset-2 hover:text-rose-700 dark:hover:text-rose-300 w-fit">
+            <Link href="/wallets" className="text-[10px] font-extrabold uppercase tracking-wider text-rose-600 underline underline-offset-2 hover:text-rose-700 dark:hover:text-rose-300 w-fit">
               Go to Wallet to Add Funds
             </Link>
           )}
