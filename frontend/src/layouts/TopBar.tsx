@@ -8,8 +8,6 @@ import {
   Settings,
   User,
   LogOut,
-  Check,
-  X,
   Wallet,
 } from "lucide-react";
 import { useTheme } from "../store/context/ThemeProvider";
@@ -122,6 +120,10 @@ export function TopBar({ onMenuClick, activePage }: TopBarProps) {
   };
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const displayName =
+    user?.name?.trim() ||
+    (user?.role === "admin" ? "Admin" : "Partner");
+  const initial = (displayName.charAt(0) || "T").toUpperCase();
 
   const handleLogout = () => {
     logout();
@@ -129,20 +131,21 @@ export function TopBar({ onMenuClick, activePage }: TopBarProps) {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-200/60 dark:border-slate-800/40 bg-white/80 dark:bg-[#060913]/80 pl-4 pr-2 sm:pl-6 sm:pr-3 lg:pl-8 lg:pr-4 backdrop-blur-xl transition-all duration-300">
-      {/* Mobile Menu Open Trigger & Brand Signpost */}
-      <div className="flex items-center gap-4">
+    <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-teal-200/50 dark:border-teal-900/40 bg-white/85 dark:bg-[#060913]/85 pl-4 pr-2 sm:pl-6 sm:pr-3 lg:pl-8 lg:pr-4 backdrop-blur-xl transition-all duration-300 shadow-sm shadow-teal-900/5">
+      {/* Teal accent line */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px] bg-gradient-to-r from-emerald-500 via-teal-400 to-amber-400 opacity-80" />
+
+      <div className="flex items-center gap-4 relative">
         <button
           onClick={onMenuClick}
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200/80 dark:border-slate-800/60 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/60 lg:hidden transition-colors"
+          className="flex h-10 w-10 items-center justify-center rounded-xl border border-teal-200/80 dark:border-teal-800/60 bg-teal-50/80 dark:bg-teal-950/30 text-teal-800 dark:text-teal-200 hover:bg-teal-100 dark:hover:bg-teal-900/50 lg:hidden transition-colors"
           aria-label="Open sidebar"
         >
           <Menu size={18} />
         </button>
 
-        {/* Small Brand Logo shown only on mobile */}
         <div className="flex items-center gap-2 lg:hidden">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#005c3a] dark:bg-emerald-600 text-white shadow-md">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-teal-700 text-white shadow-md">
             <Leaf size={14} fill="white" />
           </span>
           <span className="font-extrabold text-slate-800 dark:text-white text-base">
@@ -150,47 +153,53 @@ export function TopBar({ onMenuClick, activePage }: TopBarProps) {
           </span>
         </div>
 
-        {/* Desktop Greeting Info */}
         <div className="hidden lg:block">
-          <h1 className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+          <h1 className="text-xs font-bold text-teal-700/70 dark:text-teal-300/70 uppercase tracking-wider">
             Welcome back,{" "}
-            <span className="text-slate-800 dark:text-slate-200 font-extrabold capitalize">
-              Thuruvan Communication
+            <span className="text-slate-900 dark:text-white font-extrabold capitalize">
+              {displayName}
             </span>
           </h1>
+          {activePage ? (
+            <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 mt-0.5">
+              {activePage}
+            </p>
+          ) : null}
         </div>
       </div>
 
-      {/* Global Utilities (Notifications, Settings, Theme, Mini Profile) */}
-      <div className="flex items-center gap-3">
-        {/* Wallet Balance Display (Retailers & Distributors only, hidden on Dashboard & Wallet pages) */}
-        {user?.role && ["retailer", "distributor"].includes(user.role) && activePage !== "Dashboard" && activePage !== "Wallet" && (
-          <button
-            onClick={() => router.push("/wallets")}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-[#005c3a]/20 bg-[#005c3a]/5 dark:border-emerald-500/20 dark:bg-emerald-950/20 hover:bg-[#005c3a]/10 dark:hover:bg-emerald-950/40 text-[#005c3a] dark:text-emerald-450 transition-all active:scale-95"
-            title="Go to Wallet"
-          >
-            <Wallet size={16} />
-            <span className="text-xs font-extrabold tracking-tight">
-              ₹{(user.walletBalance || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
-            </span>
-          </button>
-        )}
+      <div className="flex items-center gap-2.5 relative">
+        {user?.role &&
+          ["retailer", "distributor"].includes(user.role) &&
+          activePage !== "Dashboard" &&
+          activePage !== "Wallet" && (
+            <button
+              onClick={() => router.push("/wallets")}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-emerald-300/60 bg-gradient-to-r from-emerald-50 to-teal-50 dark:border-emerald-500/30 dark:from-emerald-950/40 dark:to-teal-950/30 hover:brightness-105 text-emerald-800 dark:text-emerald-300 transition-all active:scale-95 shadow-sm"
+              title="Go to Wallet"
+            >
+              <Wallet size={15} />
+              <span className="text-xs font-extrabold tracking-tight">
+                ₹
+                {(user.walletBalance || 0).toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                })}
+              </span>
+            </button>
+          )}
 
-        {/* Toggle Theme button */}
         <button
           onClick={toggleTheme}
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200/80 dark:border-slate-800/60 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/60 hover:text-slate-800 dark:hover:text-slate-200 active:scale-95 transition-all duration-300"
+          className="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-200/70 dark:border-amber-800/40 bg-amber-50/70 dark:bg-amber-950/20 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/40 active:scale-95 transition-all duration-300"
           aria-label="Toggle theme"
         >
           {theme === "dark" ? (
-            <Sun size={18} className="text-amber-400 animate-spin-slow" />
+            <Sun size={18} className="text-amber-400" />
           ) : (
-            <Moon size={18} className="text-slate-600" />
+            <Moon size={18} />
           )}
         </button>
 
-        {/* Notifications link */}
         <div className="relative">
           <button
             onClick={() => {
@@ -198,12 +207,10 @@ export function TopBar({ onMenuClick, activePage }: TopBarProps) {
               setIsNotifOpen(newIsOpen);
 
               if (newIsOpen && unreadCount > 0) {
-                // Immediately update local state so badge disappears
                 setNotifications((prev) =>
                   prev.map((n) => ({ ...n, isRead: true })),
                 );
 
-                // Call backend in background
                 if (user) {
                   const targetUserId =
                     user.role === "admin" ? "ADMIN" : user.id;
@@ -214,12 +221,12 @@ export function TopBar({ onMenuClick, activePage }: TopBarProps) {
                 }
               }
             }}
-            className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200/80 dark:border-slate-800/60 text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900/60 hover:text-slate-800 dark:hover:text-slate-200 active:scale-95 transition-all duration-300"
+            className="relative flex h-10 w-10 items-center justify-center rounded-xl border border-sky-200/70 dark:border-sky-800/40 bg-sky-50/80 dark:bg-sky-950/20 text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-900/40 active:scale-95 transition-all duration-300"
             aria-label="Notifications"
           >
             <Bell size={18} />
             {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#005c3a] dark:bg-emerald-600 text-[10px] font-bold text-white shadow-sm ring-2 ring-white dark:ring-[#060913]">
+              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 to-orange-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-white dark:ring-[#060913]">
                 {unreadCount}
               </span>
             )}
@@ -231,7 +238,7 @@ export function TopBar({ onMenuClick, activePage }: TopBarProps) {
                 className="fixed inset-0 z-40 cursor-default"
                 onClick={() => setIsNotifOpen(false)}
               />
-              <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50 dark:bg-[#0c101d] p-3 shadow-2xl dark:shadow-black/50 z-50 animate-in fade-in slide-in-from-top-2 duration-150 flex flex-col gap-2">
+              <div className="absolute right-0 mt-2 w-80 max-h-96 overflow-y-auto rounded-2xl border border-teal-200/60 dark:border-teal-800/60 bg-white dark:bg-[#0c101d] p-3 shadow-2xl dark:shadow-black/50 z-50 animate-in fade-in slide-in-from-top-2 duration-150 flex flex-col gap-2">
                 <h3 className="text-sm font-extrabold px-2 pt-1 pb-2 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     <span>Notifications</span>
@@ -295,30 +302,36 @@ export function TopBar({ onMenuClick, activePage }: TopBarProps) {
           )}
         </div>
 
-        {/* User profile bubble */}
-        <div className="relative pl-3 border-l border-slate-200 dark:border-slate-800/65">
+        <div className="relative pl-3 border-l border-teal-200/60 dark:border-teal-800/50">
           <button
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#005c3a] dark:bg-emerald-600 text-xs font-bold text-white shadow-inner hover:opacity-90 transition-opacity focus:outline-none"
+            className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-xs font-black text-white shadow-md shadow-emerald-900/20 hover:brightness-110 transition focus:outline-none ring-2 ring-emerald-300/40"
             aria-label="User menu"
           >
-            T
+            {initial}
           </button>
 
           {isDropdownOpen && (
             <>
-              {/* Invisible backdrop to close dropdown on click outside */}
               <div
                 className="fixed inset-0 z-40 cursor-default"
                 onClick={() => setIsDropdownOpen(false)}
               />
-              <div className="absolute right-0 mt-2 w-52 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-slate-50 dark:bg-[#0c101d] p-2 shadow-2xl dark:shadow-black/50 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+              <div className="absolute right-0 mt-2 w-52 rounded-2xl border border-teal-200/60 dark:border-teal-800/60 bg-white dark:bg-[#0c101d] p-2 shadow-2xl dark:shadow-black/50 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                <div className="px-3 py-2 mb-1 border-b border-slate-100 dark:border-slate-800">
+                  <p className="text-xs font-bold text-slate-900 dark:text-white capitalize truncate">
+                    {displayName}
+                  </p>
+                  <p className="text-[10px] font-semibold text-teal-600 dark:text-teal-400 uppercase tracking-wider mt-0.5">
+                    {user?.role || "user"}
+                  </p>
+                </div>
                 <button
                   onClick={() => {
                     setIsDropdownOpen(false);
                     router.push("/dashboard/profile");
                   }}
-                  className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-left text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/60 hover:text-slate-900 dark:hover:text-white transition-colors"
+                  className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-left text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-teal-50 dark:hover:bg-slate-900/60 hover:text-slate-900 dark:hover:text-white transition-colors"
                 >
                   <User
                     size={16}
@@ -331,7 +344,7 @@ export function TopBar({ onMenuClick, activePage }: TopBarProps) {
                     setIsDropdownOpen(false);
                     router.push("/dashboard/settings");
                   }}
-                  className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-left text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900/60 hover:text-slate-900 dark:hover:text-white transition-colors"
+                  className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-left text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-teal-50 dark:hover:bg-slate-900/60 hover:text-slate-900 dark:hover:text-white transition-colors"
                 >
                   <Settings
                     size={16}
