@@ -38,6 +38,9 @@ export interface FormSchema {
   title: string;
   subtitle?: string;
   paymentLabel?: string;
+  /** Service Payment catalog category id — live role price */
+  pricingCategoryId?: string;
+  pricingServiceId?: string;
   sections: FormSection[];
   submitButtonText?: string;
 }

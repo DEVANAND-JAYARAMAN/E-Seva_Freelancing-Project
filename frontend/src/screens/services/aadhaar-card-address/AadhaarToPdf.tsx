@@ -3,6 +3,7 @@ import { useFormEdit } from "../../../store/context/FormEditContext";
 import { CheckCircle2 } from "lucide-react";
 import { InputField, SubmitButton } from "../form/FormFields";
 import { validateField, PATTERNS } from "../form/validators";
+import { ServicePaymentBadge } from "../../../components/ServicePaymentBadge";
 
 interface AadhaarToPdfProps {
   onCancel: () => void;
@@ -124,9 +125,12 @@ export const AadhaarToPdf: React.FC<AadhaarToPdfProps> = ({ onCancel }) => {
             Aadhaar Number
           </p>
         </div>
-        <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none">
-          Service Payment : ₹ 0
-        </div>
+        <ServicePaymentBadge
+          pricingCategoryId="aadhaar-card-address"
+          serviceId="aadhaar-main"
+          serviceName="Adhaar Number to Adhaar PDF Apply"
+          fallback={0}
+        />
       </div>
 
       <div className="space-y-5">

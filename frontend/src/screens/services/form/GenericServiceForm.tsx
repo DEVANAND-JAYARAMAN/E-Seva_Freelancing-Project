@@ -4,13 +4,18 @@ import { useState } from "react";
 import Swal from "sweetalert2";
 import { useFormEdit } from "../../../store/context/FormEditContext";
 import { EditableFormHeader, InputField, SubmitButton } from "./FormFields";
+import { ServicePaymentBadge } from "../../../components/ServicePaymentBadge";
 
 export function GenericServiceForm({
   title,
   onCancel,
+  pricingCategoryId,
+  pricingServiceId,
 }: {
   title: string;
   onCancel: () => void;
+  pricingCategoryId?: string;
+  pricingServiceId?: string;
 }) {
   const { overrides } = useFormEdit();
   const [formData, setFormData] = useState<Record<string, string>>({
@@ -55,7 +60,13 @@ export function GenericServiceForm({
       <EditableFormHeader
         defaultTitle={title}
         defaultSubtitle={`Submit details to apply for ${title}`}
-        rightContent="Service Payment : ₹ 0"
+        rightContent={
+          <ServicePaymentBadge
+            pricingCategoryId={pricingCategoryId}
+            serviceId={pricingServiceId}
+            serviceName={title}
+          />
+        }
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-3">

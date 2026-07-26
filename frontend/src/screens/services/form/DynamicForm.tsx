@@ -14,6 +14,7 @@ import {
   RadioField,
   SubmitButton,
 } from "./FormFields";
+import { ServicePaymentBadge } from "../../../components/ServicePaymentBadge";
 
 interface DynamicFormProps {
   formId?: string;
@@ -144,11 +145,17 @@ const DynamicFormInner: React.FC<DynamicFormProps> = ({
             </p>
           )}
         </div>
-        {schema.paymentLabel && (
+        {schema.pricingCategoryId ? (
+          <ServicePaymentBadge
+            pricingCategoryId={schema.pricingCategoryId}
+            serviceId={schema.pricingServiceId || schema.id}
+            serviceName={schema.title}
+          />
+        ) : schema.paymentLabel ? (
           <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none">
             {schema.paymentLabel}
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Dynamic Form Sections */}

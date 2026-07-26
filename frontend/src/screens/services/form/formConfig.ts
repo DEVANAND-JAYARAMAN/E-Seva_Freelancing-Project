@@ -7,6 +7,8 @@ export const msmeApplySchema: FormSchema = {
   title: "MSME Registration",
   subtitle: "Apply for Udyam / MSME Certificate Online",
   paymentLabel: "Service Payment : ₹ 0",
+  pricingCategoryId: "msme",
+  pricingServiceId: "msme-main",
   submitButtonText: "Apply",
   sections: [
     {

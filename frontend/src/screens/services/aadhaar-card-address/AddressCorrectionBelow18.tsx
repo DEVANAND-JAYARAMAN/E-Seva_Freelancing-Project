@@ -12,6 +12,7 @@ import {
   ServicePaymentScreen,
   ServiceSuccessScreen,
 } from "../../../components/ServicePaymentScreen";
+import { ServicePaymentBadge } from "../../../components/ServicePaymentBadge";
 
 interface AddressCorrectionBelow18Props {
   onCancel: () => void;
@@ -296,9 +297,9 @@ export const AddressCorrectionBelow18: React.FC<
     return (
       <div className="py-6">
         <ServicePaymentScreen
-          serviceId="address-correction-below-18"
+          serviceId="aadhaar-address"
           serviceName="Address Correction (Below 18-Minor)"
-          retailerCharge={100} // Fallback; Service Payment matrix overrides
+          retailerCharge={200}
           pricingCategoryId="aadhaar-card-address"
           formData={formData}
           files={selectedFiles}
@@ -321,9 +322,12 @@ export const AddressCorrectionBelow18: React.FC<
             valid address proofs
           </p>
         </div>
-        <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none">
-          Service Payment : ₹ 0
-        </div>
+        <ServicePaymentBadge
+          pricingCategoryId="aadhaar-card-address"
+          serviceId="aadhaar-address"
+          serviceName="Address Correction (Below 18-Minor)"
+          fallback={200}
+        />
       </div>
 
       <div className="space-y-5">
