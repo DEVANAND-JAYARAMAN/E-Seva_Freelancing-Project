@@ -19,11 +19,18 @@ export function RetailersPage() {
   const fetchRetailers = async () => {
     try {
       const res = await authFetch(apiUrl("retailers"));
+      if (res.status === 401 || res.status === 403) {
+        alert(
+          "Admin session invalid or expired. Please logout and login again with your real admin account (not demo login).",
+        );
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
-        const mapped = (data || []).map((user: any) => ({
+        const list = Array.isArray(data) ? data : [];
+        const mapped = list.map((user: any) => ({
           id: user.userId || user.UserId || "",
-          name: user.FullName || user.name || "Unknown",
+          name: user.FullName || user.fullName || user.name || "Unknown",
           email: user.Email || user.email,
           phone: user.Mobile || user.mobile,
           city: "Tamil Nadu",
@@ -33,9 +40,14 @@ export function RetailersPage() {
           rawPassword: user.RawPassword || user.rawPassword || "N/A",
         }));
         setRetailers(mapped);
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        console.error("Failed to fetch retailers:", errData);
+        alert(errData.error || `Failed to load retailers (${res.status})`);
       }
     } catch (e) {
       console.error("Failed to fetch retailers:", e);
+      alert("Failed to connect to backend while loading retailers");
     }
   };
 

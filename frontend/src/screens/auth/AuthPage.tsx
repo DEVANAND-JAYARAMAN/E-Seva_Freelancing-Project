@@ -164,8 +164,13 @@ export function AuthPage({ initialMode = "login" }: AuthPageProps) {
         const emailKey = (formData.email || "").toLowerCase().trim();
         const passVal = formData.password;
 
-        // Intercept mapped temporary credentials
-        if (tempLogins[emailKey]) {
+        // Demo mock logins ONLY on localhost — production needs a real JWT
+        const host =
+          typeof window !== "undefined" ? window.location.hostname : "";
+        const allowMock =
+          host === "localhost" || host === "127.0.0.1";
+
+        if (allowMock && tempLogins[emailKey]) {
           const match = tempLogins[emailKey];
           if (match.pass === passVal) {
             await login(emailKey, "mock_token", match.role, match.name);

@@ -370,13 +370,6 @@ func Login(c *gin.Context) {
 func GetRetailers(c *gin.Context) {
 	out, err := db.DynamoClient.Scan(context.TODO(), &dynamodb.ScanInput{
 		TableName: aws.String("Users"),
-		FilterExpression: aws.String("#r = :role"),
-		ExpressionAttributeNames: map[string]string{
-			"#r": "role",
-		},
-		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":role": &types.AttributeValueMemberS{Value: "retailer"},
-		},
 	})
 
 	if err != nil {
@@ -384,11 +377,18 @@ func GetRetailers(c *gin.Context) {
 		return
 	}
 
-	var users []models.User
-	err = attributevalue.UnmarshalListOfMaps(out.Items, &users)
+	var all []models.User
+	err = attributevalue.UnmarshalListOfMaps(out.Items, &all)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode retailers"})
 		return
+	}
+
+	users := make([]models.User, 0, len(all))
+	for _, u := range all {
+		if strings.EqualFold(strings.TrimSpace(u.Role), "retailer") {
+			users = append(users, u)
+		}
 	}
 
 	hydrateWalletBalances(users)
@@ -399,13 +399,6 @@ func GetRetailers(c *gin.Context) {
 func GetDistributors(c *gin.Context) {
 	out, err := db.DynamoClient.Scan(context.TODO(), &dynamodb.ScanInput{
 		TableName: aws.String("Users"),
-		FilterExpression: aws.String("#r = :role"),
-		ExpressionAttributeNames: map[string]string{
-			"#r": "role",
-		},
-		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":role": &types.AttributeValueMemberS{Value: "distributor"},
-		},
 	})
 
 	if err != nil {
@@ -413,11 +406,18 @@ func GetDistributors(c *gin.Context) {
 		return
 	}
 
-	var users []models.User
-	err = attributevalue.UnmarshalListOfMaps(out.Items, &users)
+	var all []models.User
+	err = attributevalue.UnmarshalListOfMaps(out.Items, &all)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode distributors"})
 		return
+	}
+
+	users := make([]models.User, 0, len(all))
+	for _, u := range all {
+		if strings.EqualFold(strings.TrimSpace(u.Role), "distributor") {
+			users = append(users, u)
+		}
 	}
 
 	hydrateWalletBalances(users)

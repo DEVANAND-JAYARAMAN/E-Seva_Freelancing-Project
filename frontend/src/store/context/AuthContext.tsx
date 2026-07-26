@@ -82,6 +82,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const storedToken = localStorage.getItem("token");
         const storedUser = localStorage.getItem("user");
 
+        // Production never accepts demo/mock tokens (API will 401 anyway)
+        const host =
+          typeof window !== "undefined" ? window.location.hostname : "";
+        const isLocal = host === "localhost" || host === "127.0.0.1";
+        if (
+          !isLocal &&
+          storedToken &&
+          (storedToken === "mock_local_token_123" ||
+            storedToken === "mock_token" ||
+            !storedToken.includes("."))
+        ) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          setUser(null);
+          return;
+        }
+
         if (storedToken && storedUser) {
           const parsed = parseStoredUser(storedUser);
           if (parsed) {
