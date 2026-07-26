@@ -1,17 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import {
-  X,
-  Check,
-  AlertOctagon,
-  RefreshCw,
-  Loader,
-  Download,
-  Eye,
-  FileText,
-  Image as ImageIcon,
-  CheckCircle,
-  Upload,
-} from "lucide-react";
+import { X, Upload } from "lucide-react";
 import type { StatusTicket, TicketStatus } from "./types";
 import { useAuth } from "../store/context/AuthContext";
 
@@ -29,6 +17,111 @@ type StatusDetailModalProps = {
   isEditMode: boolean;
 };
 
+const FIELD_LABELS: Record<string, string> = {
+  aadhaarNo: "Aadhaar Number",
+  aadhaarNumber: "Aadhaar Number",
+  mobileNo: "Mobile Number (Aadhaar link)",
+  mobileNumber: "Mobile Number (Aadhaar link)",
+  applicantName: "Applicant Name",
+  doorNo: "Door Number",
+  addressEnglish: "Address In English",
+  addressTamil: "முகவரி தமிழில்",
+  district: "District",
+  taluk: "Taluk",
+  postalArea: "Postal Area",
+  pinCode: "Pin code",
+  photo: "Photo",
+  signature: "Signature",
+  aadhaarCard: "Aadhaar Card",
+};
+
+const FILE_FIELD_KEYS = new Set([
+  "photo",
+  "signature",
+  "aadhaarcard",
+  "aadhaar_card",
+  "aadhaarCard",
+]);
+
+const TEXTAREA_KEYS = new Set([
+  "addressenglish",
+  "addresstamil",
+  "address",
+  "remarks",
+]);
+
+const STATUS_OPTIONS: { value: TicketStatus; label: string }[] = [
+  { value: "Pending", label: "Pending" },
+  { value: "Resubmit", label: "Resubmit" },
+  { value: "Process", label: "Processing" },
+  { value: "Rejected", label: "Rejected" },
+  { value: "Approved", label: "Approved" },
+];
+
+function formatLabel(key: string): string {
+  if (FIELD_LABELS[key]) return FIELD_LABELS[key];
+  return key
+    .replace(/([A-Z])/g, " $1")
+    .replace(/_/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^\w/, (c) => c.toUpperCase());
+}
+
+function isFileLikeKey(key: string): boolean {
+  const lower = key.toLowerCase();
+  return (
+    FILE_FIELD_KEYS.has(key) ||
+    FILE_FIELD_KEYS.has(lower) ||
+    lower.includes("photo") ||
+    lower.includes("signature") ||
+    lower.includes("aadhaarcard") ||
+    lower.includes("aadhaar_card") ||
+    lower.includes("document") ||
+    lower.includes("upload") ||
+    lower.includes("file")
+  );
+}
+
+function isTextareaKey(key: string): boolean {
+  const lower = key.toLowerCase();
+  return (
+    TEXTAREA_KEYS.has(lower) ||
+    lower.includes("address") ||
+    lower.includes("remark")
+  );
+}
+
+function getFileName(path: string): string {
+  return path.split("/").pop() || "Document";
+}
+
+function isImageFile(path: string): boolean {
+  const ext = path.split(".").pop()?.toLowerCase() || "";
+  return ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"].includes(ext);
+}
+
+function resolveDocUrl(
+  value: string,
+  documents: string[],
+  baseUrl: string,
+): string | null {
+  if (!value) return null;
+  if (value.startsWith("http://") || value.startsWith("https://")) return value;
+  if (value.startsWith("/uploads/") || value.startsWith("/api/")) {
+    return value.startsWith("/api")
+      ? `${baseUrl}${value}`
+      : `${baseUrl}/api${value}`;
+  }
+  const match = documents.find(
+    (d) => d === value || d.endsWith(`/${value}`) || getFileName(d) === value,
+  );
+  if (match) {
+    return `${baseUrl}/api${match}`;
+  }
+  return null;
+}
+
 export function StatusDetailModal({
   isOpen,
   onClose,
@@ -38,24 +131,31 @@ export function StatusDetailModal({
 }: StatusDetailModalProps) {
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
-  const showEditControls = isAdmin;
+  const canEdit = isAdmin && isEditMode;
+
+  const [selectedStatus, setSelectedStatus] = useState<TicketStatus>("Pending");
   const [remarks, setRemarks] = useState("");
-  const [isCustomRemarks, setIsCustomRemarks] = useState(false);
+  const [applicationNo, setApplicationNo] = useState("");
   const [ackFiles, setAckFiles] = useState<File[]>([]);
-  const [ackType, setAckType] = useState<"file" | "text">("file");
+  const [ackType, setAckType] = useState<"text" | "file">("text");
   const [ackText, setAckText] = useState("");
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (ticket) {
-      setRemarks(ticket.remarks || "");
+      setSelectedStatus(ticket.status);
+      setRemarks(
+        ticket.remarks && ticket.remarks !== "No remarks."
+          ? ticket.remarks
+          : "",
+      );
       setAckFiles([]);
       setAckText(ticket.ackText || "");
+      setApplicationNo(ticket.ackText || "");
       setAckType(ticket.ackText ? "text" : "file");
     }
-    setIsCustomRemarks(false);
   }, [ticket, isOpen]);
 
   if (!isOpen || !ticket) return null;
@@ -64,28 +164,80 @@ export function StatusDetailModal({
     /(?:\/api|\/)+$/,
     "",
   );
+  const formData = ticket.formData || {};
+  const documents = ticket.documents || [];
 
-  const handleStatusClick = async (newStatus: TicketStatus) => {
-    if (saving) return;
+  const textEntries = Object.entries(formData).filter(
+    ([key, value]) => !isFileLikeKey(key) && value !== undefined && value !== null,
+  );
+  const fileEntries = Object.entries(formData).filter(([key]) =>
+    isFileLikeKey(key),
+  );
+
+  const unmatchedDocs = documents.filter((doc) => {
+    const name = getFileName(doc);
+    return !fileEntries.some(([, val]) => {
+      if (!val) return false;
+      return (
+        val === doc ||
+        val === name ||
+        doc.endsWith(`/${val}`) ||
+        getFileName(val) === name
+      );
+    });
+  });
+
+  const showRemarks =
+    selectedStatus === "Resubmit" || selectedStatus === "Rejected";
+  const showAckSelect =
+    selectedStatus === "Process" || selectedStatus === "Approved";
+  const showApplicationNo = selectedStatus === "Process" && ackType === "text";
+
+  const handleSubmit = async () => {
+    if (!canEdit || saving) return;
+
     let finalRemarks = remarks.trim();
-    if (!finalRemarks || !isCustomRemarks) {
-      if (newStatus === "Approved")
+    if (!finalRemarks) {
+      if (selectedStatus === "Approved") {
         finalRemarks = "Request approved and processed successfully.";
-      if (newStatus === "Rejected")
+      } else if (selectedStatus === "Rejected") {
         finalRemarks = "Rejected due to invalid documents or mismatch.";
-      if (newStatus === "Process")
-        finalRemarks = "Request is being processed.";
-      if (newStatus === "Resubmit")
+      } else if (selectedStatus === "Process") {
+        finalRemarks = applicationNo.trim()
+          ? `Processing. Application No: ${applicationNo.trim()}`
+          : "Request is being processed.";
+      } else if (selectedStatus === "Resubmit") {
         finalRemarks = "Please resubmit with corrected documents.";
+      } else {
+        finalRemarks = "Marked as pending.";
+      }
     }
+
+    let finalAckText = "";
+    let finalAckFiles: File[] = [];
+
+    if (selectedStatus === "Process") {
+      if (ackType === "text") {
+        finalAckText = applicationNo.trim() || ackText.trim();
+      } else {
+        finalAckFiles = ackFiles;
+      }
+    } else if (selectedStatus === "Approved") {
+      if (ackType === "text") {
+        finalAckText = ackText.trim();
+      } else {
+        finalAckFiles = ackFiles;
+      }
+    }
+
     setSaving(true);
     try {
       const ok = await onUpdateStatus(
         ticket.id,
-        newStatus,
+        selectedStatus,
         finalRemarks,
-        ackType === "file" ? ackFiles : [],
-        ackType === "text" ? ackText : "",
+        finalAckFiles,
+        finalAckText,
       );
       if (ok !== false) {
         onClose();
@@ -95,572 +247,423 @@ export function StatusDetailModal({
     }
   };
 
-  // Removed handleCompleted as per requirements
-
-  const getFileIcon = (path: string) => {
-    const ext = path.split(".").pop()?.toLowerCase() || "";
-    if (["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"].includes(ext)) {
-      return <ImageIcon size={14} className="text-blue-500" />;
-    }
-    return <FileText size={14} className="text-orange-500" />;
+  const openDoc = (url: string | null) => {
+    if (!url) return;
+    setPreviewUrl(url);
   };
 
-  const getFileName = (path: string) => {
-    return path.split("/").pop() || `Document`;
-  };
-
-  const isImageFile = (path: string) => {
-    const ext = path.split(".").pop()?.toLowerCase() || "";
-    return ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"].includes(ext);
-  };
-
-  let customerName = "Unknown";
-  if (ticket && ticket.formData) {
-    for (const [key, val] of Object.entries(ticket.formData)) {
-      const lowerKey = key.toLowerCase();
-      if (
-        lowerKey.includes("name") &&
-        !lowerKey.includes("father") &&
-        !lowerKey.includes("mother")
-      ) {
-        customerName = val;
-        break;
-      }
-    }
-  }
+  const statusColor =
+    ticket.status === "Approved"
+      ? "text-emerald-600"
+      : ticket.status === "Process"
+        ? "text-blue-600"
+        : ticket.status === "Pending"
+          ? "text-amber-600"
+          : ticket.status === "Resubmit"
+            ? "text-purple-600"
+            : ticket.status === "Rejected"
+              ? "text-rose-600"
+              : "text-slate-600";
 
   return (
-    <div className="fixed inset-0 z-50 flex bg-slate-50 dark:bg-[#04080f] animate-fadeIn">
-      {/* Full Page Container */}
-      <div className="relative w-full h-full bg-slate-50 dark:bg-[#090d16] shadow-2xl flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex bg-[#f0f4f8]/95 animate-fadeIn">
+      <div className="relative w-full h-full flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-slate-900/60 shrink-0 bg-slate-50 dark:bg-[#090d16] z-10">
-          <div>
-            <h3 className="text-lg font-extrabold text-slate-900 dark:text-white">
-              Service Request Details
-            </h3>
-          </div>
+        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white shrink-0">
+          <h3 className="text-base font-bold text-slate-800">
+            Pending File Details
+          </h3>
           <button
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/40 dark:hover:bg-slate-900 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+            className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors"
+            type="button"
           >
             <X size={16} />
           </button>
         </div>
 
-        {/* Scrollable Content */}
-        <div className="p-6 overflow-y-auto flex-1">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 h-full">
-            {/* Left Column: Details */}
-            <div className="space-y-6 lg:col-span-2">
-              {/* Core Details Grid */}
-              <div className="grid grid-cols-2 gap-4 bg-slate-50/50 dark:bg-[#0a0f18]/10 p-5 rounded-2xl border-2 border-black dark:border-white">
-                {/* Service Name */}
-                <div className="col-span-2 bg-slate-50 dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                  <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+          <div className="mx-auto w-full max-w-4xl space-y-5">
+            {/* Summary card — reference model */}
+            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <div className="grid grid-cols-1 sm:grid-cols-2">
+                <div className="col-span-1 sm:col-span-2 p-4 border-b border-slate-100">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
                     Requested Service
                   </span>
-                  <span className="font-bold text-slate-800 dark:text-slate-100 text-sm mt-0.5 block">
+                  <span className="text-base font-bold text-slate-900 mt-0.5 block">
                     {ticket.serviceName}
                   </span>
                 </div>
-
-                {/* Retailer */}
-                <div className="bg-slate-50 dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                  <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
+                <div className="p-4 border-b border-r border-slate-100">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
                     Retailer / Distributor
                   </span>
-                  <span className="font-semibold text-slate-700 dark:text-slate-300 text-sm mt-0.5 block">
+                  <span className="text-sm font-bold text-slate-800 mt-0.5 block">
                     {ticket.retailerName}
                   </span>
-                  {ticket.retailerMobile && (
-                    <span className="text-xs font-mono text-slate-500 block mt-1">
-                      {ticket.retailerMobile}
-                    </span>
-                  )}
+                  <span className="text-xs text-slate-500 block">
+                    {ticket.retailerMobile || "—"}
+                  </span>
                 </div>
-
-                {/* Role */}
-                <div className="bg-slate-50 dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                  <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
+                <div className="p-4 border-b border-slate-100">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
                     User Role
                   </span>
-                  <span className="font-semibold text-slate-700 dark:text-slate-300 text-sm mt-0.5 block">
+                  <span className="text-sm font-bold text-slate-800 mt-0.5 block">
                     {ticket.userRole || "Retailer"}
                   </span>
                 </div>
-
-                {/* Charge */}
-                <div className="bg-slate-50 dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                  <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
+                <div className="p-4 border-b border-r border-slate-100">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
                     Processing Charge
                   </span>
-                  <span className="font-extrabold text-[#005c3a] dark:text-emerald-400 text-sm mt-0.5 block">
+                  <span className="text-sm font-bold text-emerald-600 mt-0.5 block">
                     ₹{ticket.amount.toFixed(2)}
                   </span>
                 </div>
-
-                {/* Current Status */}
-                <div className="bg-slate-50 dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                  <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
+                <div className="p-4 border-b border-slate-100">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
                     Current Status
                   </span>
                   <span
-                    className={`inline-flex items-center px-2.5 py-1 mt-1 rounded-lg text-[10px] font-extrabold tracking-wider uppercase ${
-                      ticket.status === "Approved"
-                        ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400"
-                        : ticket.status === "Process"
-                          ? "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400"
-                          : ticket.status === "Pending"
-                            ? "bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400"
-                            : ticket.status === "Resubmit"
-                              ? "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400"
-                              : ticket.status === "Rejected"
-                                ? "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400"
-                                : "bg-slate-50 dark:bg-slate-900/40 text-slate-600 dark:text-slate-400"
-                    }`}
+                    className={`text-sm font-bold uppercase tracking-wide mt-0.5 block ${statusColor}`}
                   >
-                    {ticket.status}
+                    {ticket.status === "Process"
+                      ? "PROCESSING"
+                      : ticket.status.toUpperCase()}
                   </span>
                 </div>
-
-                {/* Created At */}
-                <div className="bg-slate-50 dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                  <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
+                <div className="p-4 border-r border-slate-100">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
                     Submission Date
                   </span>
-                  <span className="font-semibold text-slate-600 dark:text-slate-400 text-xs mt-0.5 block">
+                  <span className="text-sm font-semibold text-slate-700 mt-0.5 block">
                     {ticket.createdDate}
                   </span>
                 </div>
-
-                {/* Last Updated */}
-                <div className="bg-slate-50 dark:bg-[#090d16] p-3 rounded-xl border border-slate-200 dark:border-slate-800">
-                  <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
+                <div className="p-4">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
                     Last Status Update
                   </span>
-                  <span className="font-semibold text-slate-600 dark:text-slate-400 text-xs mt-0.5 block">
+                  <span className="text-sm font-semibold text-slate-700 mt-0.5 block">
                     {ticket.lastUpdated}
                   </span>
                 </div>
               </div>
-
-              {/* Form Data - Customer Details */}
-              {!isEditMode &&
-                ticket.formData &&
-                Object.keys(ticket.formData).length > 0 && (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <FileText
-                        size={14}
-                        className="text-slate-400 dark:text-slate-500"
-                      />
-                      <span className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
-                        Customer Application Data
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 bg-slate-50/50 dark:bg-[#0a0f18]/10 p-6 rounded-2xl border border-slate-100 dark:border-slate-900/40">
-                      {Object.entries(ticket.formData).map(([key, value]) => (
-                        <div key={key} className="space-y-1.5 flex flex-col">
-                          <label className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase block tracking-widest pl-1">
-                            {key
-                              .replace(/([A-Z])/g, " $1")
-                              .replace(/_/g, " ")
-                              .trim()}
-                          </label>
-                          <input
-                            type="text"
-                            readOnly
-                            value={value || ""}
-                            className="w-full bg-slate-50 dark:bg-[#090d16] border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm font-semibold text-slate-800 dark:text-slate-200 focus:outline-none shadow-sm cursor-default"
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-              {/* Documents & Files - With Preview and Download */}
-              {!isEditMode &&
-                ticket.documents &&
-                ticket.documents.length > 0 && (
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-2">
-                      <ImageIcon
-                        size={14}
-                        className="text-slate-400 dark:text-slate-500"
-                      />
-                      <span className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
-                        Attached Documents ({ticket.documents.length})
-                      </span>
-                    </div>
-                    <div className="space-y-3">
-                      {ticket.documents.map((doc, idx) => {
-                        const fullUrl = `${baseUrl}/api${doc}`;
-                        const fileName = getFileName(doc);
-                        const isImage = isImageFile(doc);
-
-                        return (
-                          <div
-                            key={idx}
-                            className="bg-slate-50 dark:bg-[#0a0f18]/30 rounded-xl border border-slate-100 dark:border-slate-800/50 overflow-hidden"
-                          >
-                            {/* Image Preview */}
-                            {isImage && (
-                              <div className="w-full max-h-52 overflow-hidden bg-slate-100 dark:bg-slate-900/50 flex items-center justify-center">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                  src={fullUrl}
-                                  alt={fileName}
-                                  className="w-full h-full object-contain max-h-52"
-                                  onError={(e) => {
-                                    (
-                                      e.target as HTMLImageElement
-                                    ).style.display = "none";
-                                  }}
-                                />
-                              </div>
-                            )}
-
-                            {/* File Info Bar */}
-                            <div className="flex items-center justify-between px-4 py-3">
-                              <div className="flex items-center gap-2.5 min-w-0">
-                                {getFileIcon(doc)}
-                                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
-                                  {fileName}
-                                </span>
-                              </div>
-
-                              <div className="flex items-center gap-2 shrink-0">
-                                {/* View */}
-                                {isImage ? (
-                                  <button
-                                    type="button"
-                                    onClick={() => setPreviewImage(fullUrl)}
-                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 text-blue-600 dark:text-blue-400 transition-colors"
-                                    title="Preview document"
-                                  >
-                                    <Eye size={14} />
-                                  </button>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    onClick={() => setPreviewImage(fullUrl)}
-                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/30 dark:hover:bg-blue-900/50 text-blue-600 dark:text-blue-400 transition-colors"
-                                    title="View document"
-                                  >
-                                    <Eye size={14} />
-                                  </button>
-                                )}
-
-                                {/* Download */}
-                                <a
-                                  href={fullUrl}
-                                  download={fileName}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 transition-colors"
-                                  title="Download document"
-                                >
-                                  <Download size={14} />
-                                </a>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-              {/* Acknowledgement Documents & Details - Rendered for all */}
-              {!isEditMode &&
-                ((ticket.ackFiles && ticket.ackFiles.length > 0) ||
-                  ticket.ackText) && (
-                  <div className="space-y-3">
-                    <span className="text-[11px] font-extrabold text-emerald-600 dark:text-emerald-500 uppercase tracking-widest block">
-                      ✅ Acknowledgement Details
-                    </span>
-                    {ticket.ackText && (
-                      <div className="bg-emerald-50/50 dark:bg-[#0a0f18]/30 p-4 rounded-xl border border-emerald-100 dark:border-emerald-800/50 text-sm font-semibold text-slate-800 dark:text-slate-200 whitespace-pre-wrap">
-                        {ticket.ackText}
-                      </div>
-                    )}
-                    {ticket.ackFiles && ticket.ackFiles.length > 0 && (
-                      <div className="space-y-3">
-                        {ticket.ackFiles.map((doc, idx) => {
-                          const fullUrl = `${baseUrl}/api${doc}`;
-                          const fileName = getFileName(doc);
-                          const isImage = isImageFile(doc);
-
-                          return (
-                            <div
-                              key={idx}
-                              className="bg-emerald-50/50 dark:bg-[#0a0f18]/30 rounded-xl border border-emerald-100 dark:border-emerald-800/50 overflow-hidden"
-                            >
-                              {/* Image Preview */}
-                              {isImage && (
-                                <div className="w-full max-h-52 overflow-hidden bg-emerald-100/50 dark:bg-emerald-900/50 flex items-center justify-center">
-                                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                                  <img
-                                    src={fullUrl}
-                                    alt={fileName}
-                                    className="w-full h-full object-contain max-h-52"
-                                    onError={(e) => {
-                                      (
-                                        e.target as HTMLImageElement
-                                      ).style.display = "none";
-                                    }}
-                                  />
-                                </div>
-                              )}
-
-                              {/* File Info Bar */}
-                              <div className="flex items-center justify-between px-4 py-3">
-                                <div className="flex items-center gap-2.5 min-w-0">
-                                  {getFileIcon(doc)}
-                                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
-                                    {fileName}
-                                  </span>
-                                </div>
-
-                                <div className="flex items-center gap-2 shrink-0">
-                                  {/* View in new tab */}
-                                  <button
-                                    type="button"
-                                    onClick={() => setPreviewImage(fullUrl)}
-                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100/50 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 transition-colors"
-                                    title="View document"
-                                  >
-                                    <Eye size={14} />
-                                  </button>
-
-                                  {/* Download */}
-                                  <a
-                                    href={fullUrl}
-                                    download={fileName}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 transition-colors"
-                                    title="Download document"
-                                  >
-                                    <Download size={14} />
-                                  </a>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )}
             </div>
 
-            {/* Right Column: Actions & Form Data */}
-            <div className="space-y-6 lg:col-span-1">
-              {/* Remarks Section */}
-              {ticket.remarks && (
-                <div className="bg-slate-50/50 dark:bg-[#0a0f18]/10 p-5 rounded-2xl border-2 border-black dark:border-white space-y-3">
-                  <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
-                    Admin Remarks
-                  </span>
-                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-[#090d16] p-4 rounded-xl border border-slate-200 dark:border-slate-800">
-                    {ticket.remarks}
-                  </p>
-                </div>
-              )}
+            {/* Main form — thuruvancommunication.in model */}
+            <div className="bg-white rounded-xl border-2 border-sky-300 p-5 sm:p-6 shadow-sm">
+              <h2 className="text-lg font-bold text-slate-900 mb-5">
+                {ticket.serviceName}
+              </h2>
 
-              {/* Admin: Custom Remarks Input */}
-              {showEditControls && isEditMode && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <span className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block">
-                      Update Remarks (Optional)
-                    </span>
-                    <textarea
-                      value={remarks}
-                      onChange={(e) => {
-                        setRemarks(e.target.value);
-                        setIsCustomRemarks(true);
-                      }}
-                      rows={4}
-                      placeholder="Enter custom remarks before updating status..."
-                      className="w-full h-[142px] px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0a0f18] text-sm font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 dark:focus:ring-emerald-500/20 transition-all resize-none"
-                    />
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="bg-slate-50 dark:bg-[#0a0f18]/30 p-4 rounded-xl border border-slate-100 dark:border-slate-800/50 space-y-3">
-                      <div>
-                        <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-0.5">
-                          Customer Name
-                        </span>
-                        <span className="font-semibold text-slate-700 dark:text-slate-300 text-sm">
-                          {customerName}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-0.5">
-                          Requested Service
-                        </span>
-                        <span className="font-semibold text-slate-700 dark:text-slate-300 text-sm">
-                          {ticket.serviceName}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-3">
-                      <span className="text-[11px] font-extrabold text-emerald-600 dark:text-emerald-500 uppercase tracking-widest block">
-                        Upload Acknowledgement
-                      </span>
-
-                      {/* Segmented Toggle for Text / File */}
-                      <div className="flex bg-slate-100 dark:bg-[#0a0f18] p-1 rounded-xl border border-slate-200 dark:border-slate-800">
-                        <button
-                          type="button"
-                          onClick={() => setAckType("file")}
-                          className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${ackType === "file" ? "bg-white dark:bg-slate-800 text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
-                        >
-                          File Upload
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setAckType("text")}
-                          className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${ackType === "text" ? "bg-white dark:bg-slate-800 text-emerald-600 shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
-                        >
-                          Text Input
-                        </button>
-                      </div>
-
-                      {ackType === "file" ? (
-                        <div className="space-y-2">
-                          <input
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={(e) => {
-                              if (e.target.files) {
-                                setAckFiles(Array.from(e.target.files));
-                              }
-                            }}
-                            multiple
-                            className="hidden"
-                            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.mp4"
-                          />
-                          <button
-                            type="button"
-                            onClick={() => fileInputRef.current?.click()}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-dashed border-emerald-300 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-900/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors text-xs font-bold uppercase tracking-wider"
-                          >
-                            <Upload size={16} />
-                            {ackFiles.length > 0
-                              ? `${ackFiles.length} File(s) Selected`
-                              : "Select Files"}
-                          </button>
-                          {ackFiles.length > 0 && (
-                            <p className="text-[10px] text-emerald-600/70 font-semibold truncate">
-                              {ackFiles.map((f) => f.name).join(", ")}
-                            </p>
-                          )}
-                        </div>
+              {/* Form fields 2-col */}
+              {textEntries.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                  {textEntries.map(([key, value]) => (
+                    <div key={key} className="flex flex-col gap-1">
+                      <label className="text-xs font-semibold text-[#7a1f1f]">
+                        {formatLabel(key)}
+                      </label>
+                      {isTextareaKey(key) ? (
+                        <textarea
+                          readOnly
+                          rows={3}
+                          value={value || ""}
+                          className="w-full rounded-md border border-slate-300 bg-[#e9ecef] px-3 py-2 text-sm text-slate-800 resize-y cursor-default focus:outline-none"
+                        />
                       ) : (
-                        <div className="space-y-2">
-                          <textarea
-                            value={ackText}
-                            onChange={(e) => setAckText(e.target.value)}
-                            rows={3}
-                            placeholder="Enter acknowledgement text/details..."
-                            className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#0a0f18] text-sm font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-all resize-none"
-                          />
-                        </div>
+                        <input
+                          type="text"
+                          readOnly
+                          value={value || ""}
+                          className="w-full rounded-md border border-slate-300 bg-[#e9ecef] px-3 py-2 text-sm text-slate-800 cursor-default focus:outline-none"
+                        />
                       )}
                     </div>
-                  </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500 mb-2">
+                  No application field data available for this request.
+                </p>
+              )}
+
+              {(fileEntries.length > 0 || unmatchedDocs.length > 0) && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 mt-4">
+                  {fileEntries.map(([key, value]) => {
+                    const url = resolveDocUrl(value || "", documents, baseUrl);
+                    return (
+                      <div key={key} className="flex flex-col gap-1">
+                        <label className="text-xs font-semibold text-[#7a1f1f]">
+                          {formatLabel(key)}
+                        </label>
+                        <div>
+                          <button
+                            type="button"
+                            disabled={!url}
+                            onClick={() => openDoc(url)}
+                            className="inline-flex items-center justify-center px-4 py-1.5 rounded bg-[#8B1A1A] hover:bg-[#6d1414] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold"
+                          >
+                            View
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  {unmatchedDocs.map((doc, idx) => {
+                    const url = `${baseUrl}/api${doc}`;
+                    const label =
+                      fileEntries.length > 0
+                        ? `Document ${idx + 1}`
+                        : idx === 0
+                          ? "Photo"
+                          : idx === 1
+                            ? "Signature"
+                            : idx === 2
+                              ? "Aadhaar Card"
+                              : `Document ${idx + 1}`;
+                    return (
+                      <div key={doc} className="flex flex-col gap-1">
+                        <label className="text-xs font-semibold text-[#7a1f1f]">
+                          {label}
+                        </label>
+                        <div>
+                          <button
+                            type="button"
+                            onClick={() => openDoc(url)}
+                            className="inline-flex items-center justify-center px-4 py-1.5 rounded bg-[#8B1A1A] hover:bg-[#6d1414] text-white text-sm font-semibold"
+                          >
+                            View
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
-              {/* Workflow Status Actions */}
-              {showEditControls && isEditMode && (
-                <div className="space-y-3 pt-2 border-t border-slate-100 dark:border-slate-800/50">
-                  <span className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mt-4">
-                    Workflow Status Actions
-                  </span>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {/* Approve */}
+              {/* Existing acknowledgement (view) */}
+              {!canEdit &&
+                ((ticket.ackFiles && ticket.ackFiles.length > 0) ||
+                  ticket.ackText) && (
+                  <div className="mt-5 pt-4 border-t border-slate-200 space-y-2">
+                    <label className="text-xs font-semibold text-[#7a1f1f]">
+                      Acknowledgement
+                    </label>
+                    {ticket.ackText && (
+                      <input
+                        type="text"
+                        readOnly
+                        value={ticket.ackText}
+                        className="w-full rounded-md border border-slate-300 bg-[#e9ecef] px-3 py-2 text-sm text-slate-800"
+                      />
+                    )}
+                    {ticket.ackFiles?.map((doc) => (
+                      <button
+                        key={doc}
+                        type="button"
+                        onClick={() => openDoc(`${baseUrl}/api${doc}`)}
+                        className="inline-flex items-center justify-center px-4 py-1.5 rounded bg-[#8B1A1A] hover:bg-[#6d1414] text-white text-sm font-semibold mr-2"
+                      >
+                        View {getFileName(doc)}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+              {/* Admin workflow controls */}
+              {canEdit && (
+                <div className="mt-6 pt-4 border-t border-slate-200">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                    {/* Service Status */}
+                    <div className="flex flex-col gap-1">
+                      <label className="text-xs font-semibold text-[#7a1f1f]">
+                        Service Status
+                      </label>
+                      <select
+                        value={selectedStatus}
+                        onChange={(e) =>
+                          setSelectedStatus(e.target.value as TicketStatus)
+                        }
+                        className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                      >
+                        <option value="" disabled>
+                          Select
+                        </option>
+                        {STATUS_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Remarks — Resubmit / Rejected */}
+                    {showRemarks && (
+                      <div className="flex flex-col gap-1">
+                        <label className="text-xs font-semibold text-[#7a1f1f]">
+                          Remarks
+                        </label>
+                        <input
+                          type="text"
+                          value={remarks}
+                          onChange={(e) => setRemarks(e.target.value)}
+                          placeholder="Remarks"
+                          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                        />
+                      </div>
+                    )}
+
+                    {/* Select Text / File — Process / Approved */}
+                    {showAckSelect && (
+                      <div className="flex flex-col gap-1">
+                        <label className="text-xs font-semibold text-[#7a1f1f]">
+                          Select
+                        </label>
+                        <select
+                          value={ackType}
+                          onChange={(e) =>
+                            setAckType(e.target.value as "text" | "file")
+                          }
+                          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                        >
+                          <option value="text">Text</option>
+                          <option value="file">File</option>
+                        </select>
+                      </div>
+                    )}
+
+                    {/* Application No — Processing + Text */}
+                    {showApplicationNo && (
+                      <div className="flex flex-col gap-1">
+                        <label className="text-xs font-semibold text-[#7a1f1f]">
+                          Application No
+                        </label>
+                        <input
+                          type="text"
+                          value={applicationNo}
+                          onChange={(e) => setApplicationNo(e.target.value)}
+                          placeholder="Application No"
+                          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                        />
+                      </div>
+                    )}
+
+                    {/* Ack text — Approved + Text */}
+                    {selectedStatus === "Approved" && ackType === "text" && (
+                      <div className="flex flex-col gap-1">
+                        <label className="text-xs font-semibold text-[#7a1f1f]">
+                          Acknowledgement Text
+                        </label>
+                        <input
+                          type="text"
+                          value={ackText}
+                          onChange={(e) => setAckText(e.target.value)}
+                          placeholder="Enter acknowledgement text"
+                          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                        />
+                      </div>
+                    )}
+
+                    {/* File upload — Process/Approved + File */}
+                    {showAckSelect && ackType === "file" && (
+                      <div className="flex flex-col gap-1">
+                        <label className="text-xs font-semibold text-[#7a1f1f]">
+                          Upload File
+                        </label>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          multiple
+                          className="hidden"
+                          accept="image/*,.pdf,.doc,.docx"
+                          onChange={(e) => {
+                            if (e.target.files) {
+                              setAckFiles(Array.from(e.target.files));
+                            }
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="inline-flex items-center justify-center gap-2 w-full rounded-md border border-dashed border-slate-400 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                        >
+                          <Upload size={14} />
+                          {ackFiles.length > 0
+                            ? `${ackFiles.length} file(s) selected`
+                            : "Choose file"}
+                        </button>
+                        {ackFiles.length > 0 && (
+                          <p className="text-[11px] text-slate-500 truncate">
+                            {ackFiles.map((f) => f.name).join(", ")}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Submit */}
+                  <div className="flex justify-center mt-6">
                     <button
                       type="button"
                       disabled={saving}
-                      onClick={() => handleStatusClick("Approved")}
-                      className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm active:scale-[0.98] disabled:opacity-60 ${ticket.status === "Approved" ? "col-span-2 sm:col-span-4" : ""}`}
+                      onClick={handleSubmit}
+                      className="min-w-[140px] px-8 py-2.5 rounded-md bg-[#1e88e5] hover:bg-[#1565c0] disabled:opacity-60 text-white text-sm font-bold shadow-sm"
                     >
-                      <Check size={13} />
-                      <span>
-                        {ticket.status === "Approved"
-                          ? "Update Acknowledgement"
-                          : "Approve"}
-                      </span>
+                      {saving ? "Saving..." : "Submit"}
                     </button>
-
-                    {ticket.status !== "Approved" && (
-                      <>
-                        {/* Process */}
-                        <button
-                          type="button"
-                          disabled={saving}
-                          onClick={() => handleStatusClick("Process")}
-                          className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-blue-600 hover:bg-blue-500 text-white shadow-sm active:scale-[0.98] disabled:opacity-60`}
-                        >
-                          <Loader size={13} />
-                          <span>Process</span>
-                        </button>
-
-                        {/* Reject */}
-                        <button
-                          type="button"
-                          disabled={saving}
-                          onClick={() => handleStatusClick("Rejected")}
-                          className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-rose-600 hover:bg-rose-500 text-white shadow-sm active:scale-[0.98] disabled:opacity-60`}
-                        >
-                          <AlertOctagon size={13} />
-                          <span>Reject</span>
-                        </button>
-
-                        {/* Resubmit */}
-                        <button
-                          type="button"
-                          disabled={saving}
-                          onClick={() => handleStatusClick("Resubmit")}
-                          className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-purple-600 hover:bg-purple-500 text-white shadow-sm active:scale-[0.98] disabled:opacity-60`}
-                        >
-                          <RefreshCw size={13} />
-                          <span>Resubmit</span>
-                        </button>
-                      </>
-                    )}
                   </div>
                 </div>
               )}
+
+              {/* View-only remarks */}
+              {!canEdit &&
+                ticket.remarks &&
+                ticket.remarks !== "No remarks." && (
+                  <div className="mt-5 pt-4 border-t border-slate-200">
+                    <label className="text-xs font-semibold text-[#7a1f1f]">
+                      Remarks
+                    </label>
+                    <input
+                      type="text"
+                      readOnly
+                      value={ticket.remarks}
+                      className="mt-1 w-full rounded-md border border-slate-300 bg-[#e9ecef] px-3 py-2 text-sm text-slate-800"
+                    />
+                  </div>
+                )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Image Preview Modal */}
-      {previewImage && (
+      {/* Preview overlay */}
+      {previewUrl && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4">
           <div className="relative w-full max-w-5xl h-full flex items-center justify-center">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={previewImage}
-              alt="Preview"
-              className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
-            />
+            {isImageFile(previewUrl) ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={previewUrl}
+                alt="Preview"
+                className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
+              />
+            ) : (
+              <iframe
+                src={previewUrl}
+                title="Document preview"
+                className="w-full h-[85vh] bg-white rounded-xl"
+              />
+            )}
             <button
-              onClick={() => setPreviewImage(null)}
-              className="absolute top-4 right-4 sm:top-6 sm:right-6 inline-flex h-12 w-12 items-center justify-center rounded-full bg-red-600/90 hover:bg-red-500 text-white backdrop-blur-md transition-colors shadow-2xl z-[110]"
-              title="Close preview"
+              type="button"
+              onClick={() => setPreviewUrl(null)}
+              className="absolute top-4 right-4 inline-flex h-11 w-11 items-center justify-center rounded-full bg-red-600 hover:bg-red-500 text-white shadow-xl"
             >
-              <X size={20} />
+              <X size={18} />
             </button>
           </div>
         </div>
