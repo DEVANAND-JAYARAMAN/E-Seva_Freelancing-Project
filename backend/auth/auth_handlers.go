@@ -361,6 +361,7 @@ func Login(c *gin.Context) {
 			"id":            user.UserId,
 			"fullName":      user.FullName,
 			"email":         user.Email,
+			"mobile":        user.Mobile,
 			"walletBalance": walletBalance,
 		},
 	})

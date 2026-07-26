@@ -144,6 +144,27 @@ func CreateServiceRequest(c *gin.Context) {
 		req.RetailerId = authUser
 	}
 
+	// Fill retailer name/mobile from profile when client didn't send them
+	if strings.TrimSpace(req.RetailerName) == "" || strings.TrimSpace(req.RetailerMobile) == "" {
+		uOut, uErr := db.DynamoClient.GetItem(context.TODO(), &dynamodb.GetItemInput{
+			TableName: aws.String("Users"),
+			Key: map[string]types.AttributeValue{
+				"PK": &types.AttributeValueMemberS{Value: "USER#" + req.RetailerId},
+				"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+			},
+		})
+		if uErr == nil && uOut.Item != nil {
+			var profile models.User
+			_ = attributevalue.UnmarshalMap(uOut.Item, &profile)
+			if strings.TrimSpace(req.RetailerName) == "" {
+				req.RetailerName = profile.FullName
+			}
+			if strings.TrimSpace(req.RetailerMobile) == "" {
+				req.RetailerMobile = profile.Mobile
+			}
+		}
+	}
+
 	// Prefer Service Payment matrix price (by role) over client-submitted cost when found
 	if resolved, ok := ResolveServiceChargeFromPricing(req.RetailerId, req.PricingCategoryId, req.ServiceId, req.ServiceName); ok && resolved > 0 {
 		req.Cost = resolved
@@ -958,17 +979,32 @@ func GetServiceRequests(c *gin.Context) {
 		attributevalue.UnmarshalListOfMaps(userOut.Items, &users)
 		userMap := make(map[string]models.User)
 		for _, u := range users {
-			userMap[u.UserId] = u
+			id := strings.TrimSpace(u.UserId)
+			if id == "" {
+				id = strings.TrimPrefix(u.PK, "USER#")
+			}
+			if id != "" {
+				userMap[id] = u
+			}
 		}
 
 		for i, req := range requests {
-			if req.RetailerName == "" {
-				if u, ok := userMap[req.RetailerId]; ok {
-					requests[i].RetailerName = u.FullName
-					requests[i].RetailerMobile = u.Mobile
-				} else {
-					requests[i].RetailerName = req.RetailerId // fallback
+			rid := strings.TrimSpace(req.RetailerId)
+			u, ok := userMap[rid]
+			if !ok {
+				u, ok = userMap[strings.TrimPrefix(rid, "USER#")]
+			}
+			if !ok {
+				if req.RetailerName == "" {
+					requests[i].RetailerName = req.RetailerId
 				}
+				continue
+			}
+			if strings.TrimSpace(requests[i].RetailerName) == "" {
+				requests[i].RetailerName = u.FullName
+			}
+			if strings.TrimSpace(requests[i].RetailerMobile) == "" {
+				requests[i].RetailerMobile = u.Mobile
 			}
 		}
 	}

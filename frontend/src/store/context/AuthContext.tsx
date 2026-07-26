@@ -174,6 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: data.user.email,
           role: normalizeRole(data.role),
           walletBalance: data.user.walletBalance || 0,
+          phone: data.user.mobile || data.user.phone || undefined,
         };
 
         localStorage.setItem("token", data.token);

@@ -110,7 +110,33 @@ export function StatusPage() {
             new Date(b.createdDate || b.CreatedDate || "").getTime() -
             new Date(a.createdDate || a.CreatedDate || "").getTime(),
         );
-        const mapped: StatusTicket[] = sortedData.map((app: any) => ({
+        const mapped: StatusTicket[] = sortedData.map((app: any) => {
+          const form =
+            typeof (app.formData || app.FormData) === "string"
+              ? (() => {
+                  try {
+                    return JSON.parse(app.formData || app.FormData || "{}");
+                  } catch {
+                    return {};
+                  }
+                })()
+              : app.formData || app.FormData || {};
+          const formPhone =
+            form.mobile ||
+            form.mobileNo ||
+            form.mobileNumber ||
+            form.phone ||
+            form.cellNo ||
+            form.whatsapp ||
+            "";
+          const mobile =
+            app.retailerMobile ||
+            app.RetailerMobile ||
+            formPhone ||
+            app.customerWhatsApp ||
+            app.CustomerWhatsApp ||
+            "";
+          return {
           id: app.id || app.Id,
           transactionId: app.id || app.Id,
           serviceName: app.serviceName || app.ServiceName || "Unknown Service",
@@ -120,21 +146,13 @@ export function StatusPage() {
             app.retailerId ||
             app.RetailerId ||
             "Unknown",
-          retailerMobile: app.retailerMobile || app.RetailerMobile || "-",
+          retailerMobile: mobile || "-",
           amount: app.cost || app.Cost || 0,
           status: (app.status || app.Status || "Pending") as TicketStatus,
           createdDate: (app.createdDate || app.CreatedDate || "").split("T")[0],
           lastUpdated: (app.lastUpdated || app.LastUpdated || "").split("T")[0],
           remarks: app.adminRemarks || app.AdminRemarks || "No remarks.",
-          formData: (() => {
-            const raw = app.formData || app.FormData;
-            if (typeof raw !== "string") return raw || {};
-            try {
-              return JSON.parse(raw || "{}");
-            } catch {
-              return {};
-            }
-          })(),
+          formData: form,
           documents: (() => {
             const raw = app.documents || app.Documents;
             if (typeof raw !== "string") return raw || [];
@@ -160,8 +178,9 @@ export function StatusPage() {
             app.retailerId ||
             app.RetailerId ||
             "Unknown",
-          mobileNumber: app.retailerMobile || app.RetailerMobile || "-",
-        }));
+          mobileNumber: mobile || "-",
+        };
+        });
         setTickets(mapped);
       }
     } catch (e) {
