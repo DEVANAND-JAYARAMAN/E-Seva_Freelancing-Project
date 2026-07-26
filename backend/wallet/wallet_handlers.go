@@ -382,6 +382,32 @@ func partnerBalanceAfterCredit(userId string) float64 {
 	return 0
 }
 
+// GetWalletBalance GET /api/wallet/balance?userId=...
+func GetWalletBalance(c *gin.Context) {
+	userId := strings.TrimSpace(c.Query("userId"))
+	if userId == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "userId is required"})
+		return
+	}
+	bal := partnerBalanceAfterCredit(userId)
+	// Fallback to Users.walletBalance if wallet row missing
+	if bal == 0 {
+		uOut, err := db.DynamoClient.GetItem(context.TODO(), &dynamodb.GetItemInput{
+			TableName: aws.String("Users"),
+			Key: map[string]types.AttributeValue{
+				"PK": &types.AttributeValueMemberS{Value: "USER#" + userId},
+				"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+			},
+		})
+		if err == nil && uOut.Item != nil {
+			if v, ok := uOut.Item["walletBalance"].(*types.AttributeValueMemberN); ok {
+				bal, _ = strconv.ParseFloat(v.Value, 64)
+			}
+		}
+	}
+	c.JSON(http.StatusOK, gin.H{"userId": userId, "balance": bal})
+}
+
 // ResetWallet POST /api/wallet/reset?userId=...
 // Zeros Main Wallet balance and clears that user's wallet ledger.
 func ResetWallet(c *gin.Context) {

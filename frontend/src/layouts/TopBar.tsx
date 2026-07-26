@@ -34,11 +34,26 @@ type TopBarProps = {
 
 export function TopBar({ onMenuClick, activePage }: TopBarProps) {
   const { theme, toggleTheme } = useTheme();
-  const { user, logout } = useAuth();
+  const { user, logout, refreshProfile } = useAuth();
   const router = useRouter();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    void refreshProfile();
+    const onFocus = () => {
+      void refreshProfile();
+    };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") onFocus();
+    });
+    return () => {
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [user?.id, user?.role, refreshProfile]);
 
   const fetchNotifications = useCallback(async () => {
     if (!user) return;

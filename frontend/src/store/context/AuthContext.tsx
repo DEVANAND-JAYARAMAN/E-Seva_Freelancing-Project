@@ -192,7 +192,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshProfile = useCallback(async () => {
     const current = userRef.current;
-    if (!current?.email) return;
+    if (!current?.id && !current?.email) return;
     try {
       if (current.role === "admin") {
         const res = await fetch(apiUrl("admin/dashboard"));
@@ -204,17 +204,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         return;
       }
+
+      // Prefer live wallet balance by userId (admin top-ups update this)
+      if (current.id) {
+        const balRes = await fetch(
+          `${apiUrl("wallet/balance")}?userId=${encodeURIComponent(current.id)}`,
+          { cache: "no-store" },
+        );
+        if (balRes.ok) {
+          const balData = await balRes.json();
+          if (typeof balData?.balance === "number") {
+            updateWallet(Number(balData.balance));
+            return;
+          }
+        }
+      }
+
       const endpoint =
         current.role === "retailer" ? "retailers" : "distributors";
-      const res = await fetch(apiUrl(endpoint));
+      const res = await fetch(apiUrl(endpoint), { cache: "no-store" });
       if (res.ok) {
         const data = await res.json();
         const me = (data || []).find(
-          (u: any) => u.email === current.email || u.Email === current.email,
+          (u: any) =>
+            (current.id &&
+              (u.userId === current.id ||
+                u.UserId === current.id ||
+                u.id === current.id)) ||
+            (current.email &&
+              (u.email === current.email || u.Email === current.email)),
         );
         if (me) {
           const balance = me.walletBalance || me.WalletBalance || 0;
-          updateWallet(balance);
+          updateWallet(Number(balance));
         }
       }
     } catch (e) {
