@@ -19,7 +19,7 @@ export function AppShell({
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-50/20 dark:bg-[#070b13]">
+    <div className="min-h-screen bg-gradient-to-br from-teal-50/80 via-slate-50 to-amber-50/40 dark:from-[#070b13] dark:via-[#070b13] dark:to-[#0a1218]">
       {/* Sidebar navigation */}
       <Sidebar
         activePage={activePage}
