@@ -118,10 +118,6 @@ export const PoliceVerificationForm: React.FC<PoliceVerificationFormProps> = ({
           fallback={price || 130}
         />
       </div>
-        <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none">
-          Service Payment : ₹ {price}
-        </div>
-      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-5">
         {/* Left Column */}
