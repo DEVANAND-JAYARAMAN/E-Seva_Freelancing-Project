@@ -293,11 +293,28 @@ func CreateServiceRequest(c *gin.Context) {
 }
 
 func UpdateServiceRequestStatus(c *gin.Context) {
-	appId := c.Param("id")
-	// Handle Form Data instead of JSON to support file uploads
+	appId := strings.TrimSpace(c.Param("id"))
+	appId = strings.TrimSuffix(appId, "/")
+
+	// Prefer multipart/form; also accept JSON body as fallback.
 	status := c.PostForm("status")
 	adminRemarks := c.PostForm("adminRemarks")
 	ackText := c.PostForm("ackText")
+	if status == "" {
+		var body struct {
+			Status       string `json:"status"`
+			AdminRemarks string `json:"adminRemarks"`
+			AckText      string `json:"ackText"`
+		}
+		_ = c.ShouldBindJSON(&body)
+		status = body.Status
+		if adminRemarks == "" {
+			adminRemarks = body.AdminRemarks
+		}
+		if ackText == "" {
+			ackText = body.AckText
+		}
+	}
 
 	if status == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Status is required"})
@@ -317,12 +334,11 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 		}
 	}
 
-
 	validStatuses := map[string]bool{
-		"Approved": true, "Rejected": true, "Process": true, "Resubmit": true, "Pending": true,
+		"Approved": true, "Rejected": true, "Process": true, "Resubmit": true, "Pending": true, "Completed": true,
 	}
 	if !validStatuses[status] {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid status"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid status: " + status})
 		return
 	}
 
@@ -343,192 +359,22 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 
 	var isAlreadyApproved bool
 	if app.Status == "Approved" || app.Status == "Completed" {
-		if status == "Approved" {
+		if status == "Approved" || status == "Completed" {
 			isAlreadyApproved = true
 		} else {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Request is already in a final state"})
 			return
 		}
-	} else if app.Status == "Rejected" {
+	} else if app.Status == "Rejected" && status != "Pending" {
+		// Allow reopen to Pending if admin needs to fix; block other changes
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Request is already in a final state"})
 		return
 	}
 
 	now := time.Now().UTC().Format(time.RFC3339)
 
-	if status == "Approved" && !isAlreadyApproved {
-		crmId := generateId("CRM")
-		invoiceId := generateId("INV")
-			
-			crmCust := models.CRMCustomer{
-				PK:         "CUSTOMER#" + crmId,
-				SK:         "PROFILE",
-				Id:         crmId,
-				Name:       app.CustomerWhatsApp, // Mocked to WhatsApp or retrieve from FormData
-				ShopName:   "Unknown",
-				Email:      "unknown@example.com",
-				Phone:      app.CustomerWhatsApp,
-				City:       "Unknown",
-				Type:       "RetailerCustomer",
-				Status:     "Active",
-				JoinedDate: now,
-				CreatedAt:  now,
-				UpdatedAt:  now,
-			}
-			crmItem, _ := attributevalue.MarshalMap(crmCust)
-
-			invoice := models.Invoice{
-				PK:            "INVOICE#" + invoiceId,
-				SK:            "PROFILE",
-				Id:            invoiceId,
-				InvoiceNumber: "INV-" + invoiceId,
-				RetailerName:  app.RetailerId,
-				Amount:        app.Cost,
-				Date:          now,
-				DueDate:       now,
-				Status:        "Paid",
-				UtrNumber:     app.ServiceId,
-				Category:      app.ServiceName,
-				CreatedAt:     now,
-				UpdatedAt:     now,
-			}
-			invoiceItem, _ := attributevalue.MarshalMap(invoice)
-
-			_, err = db.DynamoClient.TransactWriteItems(context.TODO(), &dynamodb.TransactWriteItemsInput{
-				TransactItems: []types.TransactWriteItem{
-					{
-						Update: &types.Update{
-							TableName: aws.String("ServiceApplications"),
-							Key: map[string]types.AttributeValue{
-								"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
-								"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
-							},
-							UpdateExpression: aws.String("SET #s = :status, lastUpdated = :time, adminRemarks = :remarks"),
-							ExpressionAttributeNames: map[string]string{
-								"#s": "status",
-							},
-							ExpressionAttributeValues: map[string]types.AttributeValue{
-								":status":  &types.AttributeValueMemberS{Value: status},
-								":time":    &types.AttributeValueMemberS{Value: now},
-								":remarks": &types.AttributeValueMemberS{Value: adminRemarks},
-							},
-						},
-					},
-					{
-						Put: &types.Put{
-							TableName: aws.String("CRMCustomers"),
-							Item:      crmItem,
-						},
-					},
-					{
-						Put: &types.Put{
-							TableName: aws.String("Invoices"),
-							Item:      invoiceItem,
-						},
-					},
-				},
-			})
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update request status"})
-			return
-		}
-
-	} else if isAlreadyApproved {
-		_, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
-			TableName: aws.String("ServiceApplications"),
-			Key: map[string]types.AttributeValue{
-				"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
-				"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
-			},
-			UpdateExpression: aws.String("SET lastUpdated = :time, adminRemarks = :remarks"),
-			ExpressionAttributeValues: map[string]types.AttributeValue{
-				":time":    &types.AttributeValueMemberS{Value: now},
-				":remarks": &types.AttributeValueMemberS{Value: adminRemarks},
-			},
-		})
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update request remarks"})
-			return
-		}
-	} else if status == "Rejected" {
-		walletPK := "WALLET#" + app.RetailerId
-		txId := generateId("TX")
-		refundTx := models.WalletTransaction{
-			PK:          walletPK,
-			SK:          "TX#" + now + "#" + txId,
-			Id:          txId,
-			WalletType:  "Main",
-			Amount:      app.Cost,
-			Type:        "Credit",
-			Status:      "Success",
-			Reference:   app.ServiceId + "-REFUND",
-			CreatedAt:   now,
-			Date:        timeutil.FormatRFC3339AsIST(now),
-			Description: "Service refund",
-		}
-		refundTxItem, _ := attributevalue.MarshalMap(refundTx)
-
-		_, err = db.DynamoClient.TransactWriteItems(context.TODO(), &dynamodb.TransactWriteItemsInput{
-			TransactItems: []types.TransactWriteItem{
-				{
-					Update: &types.Update{
-						TableName: aws.String("ServiceApplications"),
-						Key: map[string]types.AttributeValue{
-							"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
-							"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
-						},
-						UpdateExpression: aws.String("SET #s = :status, lastUpdated = :time, adminRemarks = :remarks"),
-						ExpressionAttributeNames: map[string]string{
-							"#s": "status",
-						},
-						ExpressionAttributeValues: map[string]types.AttributeValue{
-							":status":  &types.AttributeValueMemberS{Value: "Rejected"},
-							":time":    &types.AttributeValueMemberS{Value: now},
-							":remarks": &types.AttributeValueMemberS{Value: adminRemarks},
-						},
-					},
-				},
-				{
-					Put: &types.Put{
-						TableName: aws.String("WalletTransactions"),
-						Item:      refundTxItem,
-					},
-				},
-				{
-					Update: &types.Update{
-						TableName: aws.String("Wallets"),
-						Key: map[string]types.AttributeValue{
-							"PK": &types.AttributeValueMemberS{Value: walletPK},
-							"SK": &types.AttributeValueMemberS{Value: "TYPE#Main"},
-						},
-						UpdateExpression: aws.String("SET balance = balance + :cost"),
-						ExpressionAttributeValues: map[string]types.AttributeValue{
-							":cost": &types.AttributeValueMemberN{Value: fmt.Sprintf("%f", app.Cost)},
-						},
-					},
-				},
-				{
-					Update: &types.Update{
-						TableName: aws.String("Users"),
-						Key: map[string]types.AttributeValue{
-							"PK": &types.AttributeValueMemberS{Value: "USER#" + app.RetailerId},
-							"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
-						},
-						UpdateExpression: aws.String("SET walletBalance = walletBalance + :cost"),
-						ExpressionAttributeValues: map[string]types.AttributeValue{
-							":cost": &types.AttributeValueMemberN{Value: fmt.Sprintf("%f", app.Cost)},
-						},
-					},
-				},
-			},
-		})
-
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process rejection and refund"})
-			return
-		}
-	} else {
-		// Processing, Resubmit — simple status update
+	// 1) Always persist status first so UI never stays stuck on Pending
+	if !isAlreadyApproved {
 		_, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
 			TableName: aws.String("ServiceApplications"),
 			Key: map[string]types.AttributeValue{
@@ -546,8 +392,134 @@ func UpdateServiceRequestStatus(c *gin.Context) {
 			},
 		})
 		if err != nil {
+			log.Printf("UpdateServiceRequestStatus status write failed for %s: %v", appId, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update request status"})
 			return
+		}
+	} else {
+		_, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+			TableName: aws.String("ServiceApplications"),
+			Key: map[string]types.AttributeValue{
+				"PK": &types.AttributeValueMemberS{Value: "SERVICEAPP#" + appId},
+				"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+			},
+			UpdateExpression: aws.String("SET lastUpdated = :time, adminRemarks = :remarks"),
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":time":    &types.AttributeValueMemberS{Value: now},
+				":remarks": &types.AttributeValueMemberS{Value: adminRemarks},
+			},
+		})
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update request remarks"})
+			return
+		}
+	}
+
+	// 2) Side effects (best-effort after status is saved)
+	if status == "Approved" && !isAlreadyApproved {
+		crmId := generateId("CRM")
+		invoiceId := generateId("INV")
+
+		crmCust := models.CRMCustomer{
+			PK:         "CUSTOMER#" + crmId,
+			SK:         "PROFILE",
+			Id:         crmId,
+			Name:       app.CustomerWhatsApp,
+			ShopName:   "Unknown",
+			Email:      "unknown@example.com",
+			Phone:      app.CustomerWhatsApp,
+			City:       "Unknown",
+			Type:       "RetailerCustomer",
+			Status:     "Active",
+			JoinedDate: now,
+			CreatedAt:  now,
+			UpdatedAt:  now,
+		}
+		crmItem, _ := attributevalue.MarshalMap(crmCust)
+
+		invoice := models.Invoice{
+			PK:            "INVOICE#" + invoiceId,
+			SK:            "PROFILE",
+			Id:            invoiceId,
+			InvoiceNumber: "INV-" + invoiceId,
+			RetailerName:  app.RetailerId,
+			Amount:        app.Cost,
+			Date:          now,
+			DueDate:       now,
+			Status:        "Paid",
+			UtrNumber:     app.ServiceId,
+			Category:      app.ServiceName,
+			CreatedAt:     now,
+			UpdatedAt:     now,
+		}
+		invoiceItem, _ := attributevalue.MarshalMap(invoice)
+
+		if _, err = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+			TableName: aws.String("CRMCustomers"),
+			Item:      crmItem,
+		}); err != nil {
+			log.Printf("Approved CRM put failed for %s: %v", appId, err)
+		}
+		if _, err = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+			TableName: aws.String("Invoices"),
+			Item:      invoiceItem,
+		}); err != nil {
+			log.Printf("Approved invoice put failed for %s: %v", appId, err)
+		}
+	} else if status == "Rejected" && app.Status != "Rejected" {
+		walletPK := "WALLET#" + app.RetailerId
+		txId := generateId("TX")
+		refundTx := models.WalletTransaction{
+			PK:          walletPK,
+			SK:          "TX#" + now + "#" + txId,
+			Id:          txId,
+			WalletType:  "Main",
+			Amount:      app.Cost,
+			Type:        "Credit",
+			Status:      "Success",
+			Reference:   app.ServiceId + "-REFUND",
+			CreatedAt:   now,
+			Date:        timeutil.FormatRFC3339AsIST(now),
+			Description: "Service refund",
+		}
+		refundTxItem, _ := attributevalue.MarshalMap(refundTx)
+
+		costStr := fmt.Sprintf("%.2f", app.Cost)
+		if _, err = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+			TableName: aws.String("WalletTransactions"),
+			Item:      refundTxItem,
+		}); err != nil {
+			log.Printf("Reject refund tx failed for %s: %v", appId, err)
+		}
+		if _, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+			TableName: aws.String("Wallets"),
+			Key: map[string]types.AttributeValue{
+				"PK": &types.AttributeValueMemberS{Value: walletPK},
+				"SK": &types.AttributeValueMemberS{Value: "TYPE#Main"},
+			},
+			UpdateExpression: aws.String("SET balance = if_not_exists(balance, :zero) + :cost, updatedAt = :ts"),
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":cost": &types.AttributeValueMemberN{Value: costStr},
+				":zero": &types.AttributeValueMemberN{Value: "0"},
+				":ts":   &types.AttributeValueMemberS{Value: now},
+			},
+		}); err != nil {
+			log.Printf("Reject wallet credit failed for %s: %v", appId, err)
+		}
+		if _, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+			TableName: aws.String("Users"),
+			Key: map[string]types.AttributeValue{
+				"PK": &types.AttributeValueMemberS{Value: "USER#" + app.RetailerId},
+				"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+			},
+			UpdateExpression: aws.String("SET walletBalance = if_not_exists(walletBalance, :zero) + :cost, updatedAt = :ts"),
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":cost": &types.AttributeValueMemberN{Value: costStr},
+				":zero": &types.AttributeValueMemberN{Value: "0"},
+				":ts":   &types.AttributeValueMemberS{Value: now},
+			},
+		}); err != nil {
+			log.Printf("Reject user wallet credit failed for %s: %v", appId, err)
 		}
 	}
 

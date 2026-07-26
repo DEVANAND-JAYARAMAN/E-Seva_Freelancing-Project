@@ -8,6 +8,7 @@ import {
   CheckCircle,
   HelpCircle,
 } from "lucide-react";
+import Swal from "sweetalert2";
 import { AppShell } from "../layouts/AppShell";
 import { StatusTable } from "./StatusTable";
 import { StatusStats } from "./StatusStats";
@@ -15,6 +16,7 @@ import { useEffect } from "react";
 import { StatusDetailModal } from "./StatusDetailModal";
 import type { StatusTicket, TicketStatus } from "./types";
 import { useAuth } from "../store/context/AuthContext";
+import { apiUrl } from "../utils/apiBase";
 
 // Seed data with precisely the 5 statuses requested by the user
 const seedTickets: StatusTicket[] = [
@@ -94,15 +96,13 @@ export function StatusPage() {
   // Fetch real data from backend
   const fetchTickets = async () => {
     try {
-      const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(
-        /(?:\/api|\/)+$/,
-        "",
-      );
-      let url = `${baseUrl}/api/services/requests`;
+      let url = apiUrl("services/requests");
       if (user?.role && user.role !== "admin") {
-        url += `?userId=${user.id}`;
+        url +=
+          (url.includes("?") ? "&" : "?") +
+          `userId=${encodeURIComponent(user.id)}`;
       }
-      const res = await fetch(url);
+      const res = await fetch(url, { cache: "no-store" });
       if (res.ok) {
         const data = await res.json();
         const sortedData = (data || []).sort(
@@ -110,7 +110,6 @@ export function StatusPage() {
             new Date(b.createdDate || b.CreatedDate || "").getTime() -
             new Date(a.createdDate || a.CreatedDate || "").getTime(),
         );
-        // map backend model to StatusTicket
         const mapped: StatusTicket[] = sortedData.map((app: any) => ({
           id: app.id || app.Id,
           transactionId: app.id || app.Id,
@@ -123,7 +122,7 @@ export function StatusPage() {
             "Unknown",
           retailerMobile: app.retailerMobile || app.RetailerMobile || "-",
           amount: app.cost || app.Cost || 0,
-          status: (app.status || app.Status || "Resubmit") as TicketStatus,
+          status: (app.status || app.Status || "Pending") as TicketStatus,
           createdDate: (app.createdDate || app.CreatedDate || "").split("T")[0],
           lastUpdated: (app.lastUpdated || app.LastUpdated || "").split("T")[0],
           remarks: app.adminRemarks || app.AdminRemarks || "No remarks.",
@@ -170,11 +169,11 @@ export function StatusPage() {
     remarks: string,
     ackFiles?: File[],
     ackText?: string,
-  ) => {
+  ): Promise<boolean> => {
     try {
       const formData = new FormData();
       formData.append("status", newStatus);
-      formData.append("adminRemarks", remarks);
+      formData.append("adminRemarks", remarks || "");
 
       if (ackFiles && ackFiles.length > 0) {
         ackFiles.forEach((file) => {
@@ -185,21 +184,38 @@ export function StatusPage() {
         formData.append("ackText", ackText);
       }
 
-      const res = await fetch(
-        `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/${id}/status`,
-        {
-          method: "POST",
-          body: formData,
-        },
-      );
-      if (res.ok) {
-        fetchTickets(); // Refresh data
-        setIsDetailOpen(false);
-      } else {
-        console.error("Failed to update status");
+      const res = await fetch(apiUrl(`services/${id}/status`), {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        await Swal.fire({
+          icon: "error",
+          title: "Status update failed",
+          text: data.error || data.message || `Could not set status to ${newStatus}`,
+        });
+        return false;
       }
+
+      await fetchTickets();
+      setIsDetailOpen(false);
+      await Swal.fire({
+        icon: "success",
+        title: "Updated",
+        text: `Status changed to ${newStatus}`,
+        timer: 1400,
+        showConfirmButton: false,
+      });
+      return true;
     } catch (e) {
       console.error(e);
+      await Swal.fire({
+        icon: "error",
+        title: "Network error",
+        text: "Could not reach server to update status",
+      });
+      return false;
     }
   };
 

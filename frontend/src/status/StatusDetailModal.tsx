@@ -25,7 +25,7 @@ type StatusDetailModalProps = {
     remarks: string,
     ackFiles?: File[],
     ackText?: string,
-  ) => void;
+  ) => void | Promise<boolean | void>;
   isEditMode: boolean;
 };
 
@@ -45,6 +45,7 @@ export function StatusDetailModal({
   const [ackType, setAckType] = useState<"file" | "text">("file");
   const [ackText, setAckText] = useState("");
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -64,22 +65,34 @@ export function StatusDetailModal({
     "",
   );
 
-  const handleStatusClick = (newStatus: TicketStatus) => {
+  const handleStatusClick = async (newStatus: TicketStatus) => {
+    if (saving) return;
     let finalRemarks = remarks.trim();
     if (!finalRemarks || !isCustomRemarks) {
       if (newStatus === "Approved")
         finalRemarks = "Request approved and processed successfully.";
       if (newStatus === "Rejected")
         finalRemarks = "Rejected due to invalid documents or mismatch.";
+      if (newStatus === "Process")
+        finalRemarks = "Request is being processed.";
+      if (newStatus === "Resubmit")
+        finalRemarks = "Please resubmit with corrected documents.";
     }
-    onUpdateStatus(
-      ticket.id,
-      newStatus,
-      finalRemarks,
-      ackType === "file" ? ackFiles : [],
-      ackType === "text" ? ackText : "",
-    );
-    onClose();
+    setSaving(true);
+    try {
+      const ok = await onUpdateStatus(
+        ticket.id,
+        newStatus,
+        finalRemarks,
+        ackType === "file" ? ackFiles : [],
+        ackType === "text" ? ackText : "",
+      );
+      if (ok !== false) {
+        onClose();
+      }
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Removed handleCompleted as per requirements
@@ -576,8 +589,9 @@ export function StatusDetailModal({
                     {/* Approve */}
                     <button
                       type="button"
+                      disabled={saving}
                       onClick={() => handleStatusClick("Approved")}
-                      className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm active:scale-[0.98] ${ticket.status === "Approved" ? "col-span-2 sm:col-span-4" : ""}`}
+                      className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm active:scale-[0.98] disabled:opacity-60 ${ticket.status === "Approved" ? "col-span-2 sm:col-span-4" : ""}`}
                     >
                       <Check size={13} />
                       <span>
@@ -592,8 +606,9 @@ export function StatusDetailModal({
                         {/* Process */}
                         <button
                           type="button"
+                          disabled={saving}
                           onClick={() => handleStatusClick("Process")}
-                          className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-blue-600 hover:bg-blue-500 text-white shadow-sm active:scale-[0.98]`}
+                          className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-blue-600 hover:bg-blue-500 text-white shadow-sm active:scale-[0.98] disabled:opacity-60`}
                         >
                           <Loader size={13} />
                           <span>Process</span>
@@ -602,8 +617,9 @@ export function StatusDetailModal({
                         {/* Reject */}
                         <button
                           type="button"
+                          disabled={saving}
                           onClick={() => handleStatusClick("Rejected")}
-                          className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-rose-600 hover:bg-rose-500 text-white shadow-sm active:scale-[0.98]`}
+                          className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-rose-600 hover:bg-rose-500 text-white shadow-sm active:scale-[0.98] disabled:opacity-60`}
                         >
                           <AlertOctagon size={13} />
                           <span>Reject</span>
@@ -612,8 +628,9 @@ export function StatusDetailModal({
                         {/* Resubmit */}
                         <button
                           type="button"
+                          disabled={saving}
                           onClick={() => handleStatusClick("Resubmit")}
-                          className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-purple-600 hover:bg-purple-500 text-white shadow-sm active:scale-[0.98]`}
+                          className={`inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all duration-200 bg-purple-600 hover:bg-purple-500 text-white shadow-sm active:scale-[0.98] disabled:opacity-60`}
                         >
                           <RefreshCw size={13} />
                           <span>Resubmit</span>
