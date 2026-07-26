@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { X, Upload } from "lucide-react";
+import Swal from "sweetalert2";
 import type { StatusTicket, TicketStatus } from "./types";
 import { useAuth } from "../store/context/AuthContext";
+import { getApiBaseUrl } from "../utils/apiBase";
 
 type StatusDetailModalProps = {
   isOpen: boolean;
@@ -101,23 +103,51 @@ function isImageFile(path: string): boolean {
   return ["jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"].includes(ext);
 }
 
+/** Build a browser-openable URL for an uploaded document path. */
+function toPublicDocUrl(pathOrUrl: string): string | null {
+  const raw = (pathOrUrl || "").trim();
+  if (!raw) return null;
+  if (raw.startsWith("http://") || raw.startsWith("https://")) return raw;
+  if (raw.startsWith("blob:") || raw.startsWith("data:")) return raw;
+
+  const base = getApiBaseUrl().replace(/\/+$/, ""); // .../api or /backend-api
+  let path = raw;
+  if (path.startsWith("/api/")) path = path.slice(4); // -> /uploads/...
+  if (!path.startsWith("/")) path = `/${path}`;
+  // Static files live at /api/uploads/...
+  if (path.startsWith("/uploads/")) {
+    return `${base}${path}`;
+  }
+  return `${base}${path}`;
+}
+
 function resolveDocUrl(
   value: string,
   documents: string[],
-  baseUrl: string,
+  fieldIndex?: number,
 ): string | null {
-  if (!value) return null;
-  if (value.startsWith("http://") || value.startsWith("https://")) return value;
-  if (value.startsWith("/uploads/") || value.startsWith("/api/")) {
-    return value.startsWith("/api")
-      ? `${baseUrl}${value}`
-      : `${baseUrl}/api${value}`;
+  if (value) {
+    const direct = toPublicDocUrl(value);
+    if (value.startsWith("http") || value.startsWith("/uploads/") || value.startsWith("/api/")) {
+      return direct;
+    }
+    const match = documents.find(
+      (d) =>
+        d === value ||
+        d.endsWith(`/${value}`) ||
+        getFileName(d) === value ||
+        getFileName(d).endsWith(`_${value}`) ||
+        getFileName(d).includes(value),
+    );
+    if (match) return toPublicDocUrl(match);
   }
-  const match = documents.find(
-    (d) => d === value || d.endsWith(`/${value}`) || getFileName(d) === value,
-  );
-  if (match) {
-    return `${baseUrl}/api${match}`;
+  // Fallback: map Photo / Signature / Aadhaar by position when only documents[] exists
+  if (
+    typeof fieldIndex === "number" &&
+    fieldIndex >= 0 &&
+    fieldIndex < documents.length
+  ) {
+    return toPublicDocUrl(documents[fieldIndex]);
   }
   return null;
 }
@@ -160,10 +190,6 @@ export function StatusDetailModal({
 
   if (!isOpen || !ticket) return null;
 
-  const baseUrl = (process.env.NEXT_PUBLIC_API_URL || "").replace(
-    /(?:\/api|\/)+$/,
-    "",
-  );
   const formData = ticket.formData || {};
   const documents = ticket.documents || [];
 
@@ -247,8 +273,31 @@ export function StatusDetailModal({
     }
   };
 
-  const openDoc = (url: string | null) => {
-    if (!url) return;
+  const openDoc = async (url: string | null, label?: string) => {
+    if (!url) {
+      await Swal.fire({
+        icon: "warning",
+        title: "Document not available",
+        text:
+          (label ? `${label}: ` : "") +
+          "File was not saved with this request. Ask the retailer to resubmit with documents attached.",
+      });
+      return;
+    }
+    // Prefer preview modal; also verify the file is reachable
+    try {
+      const head = await fetch(url, { method: "GET", cache: "no-store" });
+      if (!head.ok) {
+        await Swal.fire({
+          icon: "error",
+          title: "Cannot open document",
+          text: `Server returned ${head.status}. File may be missing on the server.`,
+        });
+        return;
+      }
+    } catch {
+      // Still try preview — CORS HEAD may fail even when GET/img works
+    }
     setPreviewUrl(url);
   };
 
@@ -393,19 +442,25 @@ export function StatusDetailModal({
 
               {(fileEntries.length > 0 || unmatchedDocs.length > 0) && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 mt-4">
-                  {fileEntries.map(([key, value]) => {
-                    const url = resolveDocUrl(value || "", documents, baseUrl);
+                  {fileEntries.map(([key, value], idx) => {
+                    const orderKeys = ["photo", "signature", "aadhaarcard"];
+                    const orderIdx = orderKeys.indexOf(key.toLowerCase());
+                    const url = resolveDocUrl(
+                      value || "",
+                      documents,
+                      orderIdx >= 0 ? orderIdx : idx,
+                    );
+                    const label = formatLabel(key);
                     return (
                       <div key={key} className="flex flex-col gap-1">
                         <label className="text-xs font-semibold text-[#7a1f1f]">
-                          {formatLabel(key)}
+                          {label}
                         </label>
                         <div>
                           <button
                             type="button"
-                            disabled={!url}
-                            onClick={() => openDoc(url)}
-                            className="inline-flex items-center justify-center px-4 py-1.5 rounded bg-[#8B1A1A] hover:bg-[#6d1414] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold"
+                            onClick={() => openDoc(url, label)}
+                            className="inline-flex items-center justify-center px-4 py-1.5 rounded bg-[#8B1A1A] hover:bg-[#6d1414] text-white text-sm font-semibold"
                           >
                             View
                           </button>
@@ -414,7 +469,7 @@ export function StatusDetailModal({
                     );
                   })}
                   {unmatchedDocs.map((doc, idx) => {
-                    const url = `${baseUrl}/api${doc}`;
+                    const url = toPublicDocUrl(doc);
                     const label =
                       fileEntries.length > 0
                         ? `Document ${idx + 1}`
@@ -433,7 +488,7 @@ export function StatusDetailModal({
                         <div>
                           <button
                             type="button"
-                            onClick={() => openDoc(url)}
+                            onClick={() => openDoc(url, label)}
                             className="inline-flex items-center justify-center px-4 py-1.5 rounded bg-[#8B1A1A] hover:bg-[#6d1414] text-white text-sm font-semibold"
                           >
                             View
@@ -465,7 +520,9 @@ export function StatusDetailModal({
                       <button
                         key={doc}
                         type="button"
-                        onClick={() => openDoc(`${baseUrl}/api${doc}`)}
+                        onClick={() =>
+                          openDoc(toPublicDocUrl(doc), getFileName(doc))
+                        }
                         className="inline-flex items-center justify-center px-4 py-1.5 rounded bg-[#8B1A1A] hover:bg-[#6d1414] text-white text-sm font-semibold mr-2"
                       >
                         View {getFileName(doc)}

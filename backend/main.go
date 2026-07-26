@@ -106,6 +106,9 @@ func main() {
 			settingsGroup.PUT("/:key", service.UpdateSetting)
 		}
 
+		api.POST("/uploads", service.UploadFile)
+		api.POST("/uploads/", service.UploadFile)
+
 		serviceGroup := api.Group("/services")
 		{
 			serviceGroup.POST("/request", service.CreateServiceRequest)

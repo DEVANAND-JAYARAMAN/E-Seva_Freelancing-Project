@@ -26,16 +26,47 @@ import (
 )
 
 type CreateServiceReq struct {
-	RetailerId        string  `form:"retailerId" json:"retailerId" binding:"required"`
-	RetailerName      string  `form:"retailerName" json:"retailerName"`
-	RetailerMobile    string  `form:"retailerMobile" json:"retailerMobile"`
-	ServiceId         string  `form:"serviceId" json:"serviceId" binding:"required"`
-	ServiceName       string  `form:"serviceName" json:"serviceName" binding:"required"`
-	PricingCategoryId string  `form:"pricingCategoryId" json:"pricingCategoryId"`
-	Cost              float64 `form:"cost" json:"cost"`
-	CustomerWhatsApp  string  `form:"customerWhatsApp" json:"customerWhatsApp"`
-	WalletType        string  `form:"walletType" json:"walletType"`
-	FormData          string  `form:"formData" json:"formData"`
+	RetailerId        string   `form:"retailerId" json:"retailerId" binding:"required"`
+	RetailerName      string   `form:"retailerName" json:"retailerName"`
+	RetailerMobile    string   `form:"retailerMobile" json:"retailerMobile"`
+	ServiceId         string   `form:"serviceId" json:"serviceId" binding:"required"`
+	ServiceName       string   `form:"serviceName" json:"serviceName" binding:"required"`
+	PricingCategoryId string   `form:"pricingCategoryId" json:"pricingCategoryId"`
+	Cost              float64  `form:"cost" json:"cost"`
+	CustomerWhatsApp  string   `form:"customerWhatsApp" json:"customerWhatsApp"`
+	WalletType        string   `form:"walletType" json:"walletType"`
+	FormData          string   `form:"formData" json:"formData"`
+	Documents         []string `json:"documents"`
+}
+
+// UploadFile saves a single multipart file and returns its public API path.
+func UploadFile(c *gin.Context) {
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "file is required"})
+		return
+	}
+	if err := os.MkdirAll("uploads", os.ModePerm); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create uploads directory"})
+		return
+	}
+
+	safeName := strings.ReplaceAll(file.Filename, "..", "")
+	safeName = strings.ReplaceAll(safeName, "/", "_")
+	safeName = strings.ReplaceAll(safeName, "\\", "_")
+	filename := fmt.Sprintf("%s_%s", generateId("UP"), safeName)
+	filepath := "uploads/" + filename
+	if err := c.SaveUploadedFile(file, filepath); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save file"})
+		return
+	}
+
+	path := "/uploads/" + filename
+	c.JSON(http.StatusOK, gin.H{
+		"path": path,
+		"url":  "/api" + path,
+		"name": file.Filename,
+	})
 }
 
 type UpdateServiceStatusReq struct {
@@ -171,8 +202,23 @@ func CreateServiceRequest(c *gin.Context) {
 	if formDataStr != "" {
 		_ = json.Unmarshal([]byte(formDataStr), &formData)
 	}
+	if formData == nil {
+		formData = map[string]string{}
+	}
 
 	var documents []string
+	seenDocs := map[string]bool{}
+	addDoc := func(path string) {
+		path = strings.TrimSpace(path)
+		if path == "" || seenDocs[path] {
+			return
+		}
+		seenDocs[path] = true
+		documents = append(documents, path)
+	}
+	for _, p := range req.Documents {
+		addDoc(p)
+	}
 	form, err := c.MultipartForm()
 	if err == nil {
 		files := form.File["documents"]
@@ -180,8 +226,14 @@ func CreateServiceRequest(c *gin.Context) {
 			filename := fmt.Sprintf("%s_%s", appId, file.Filename)
 			filepath := "uploads/" + filename
 			if err := c.SaveUploadedFile(file, filepath); err == nil {
-				documents = append(documents, "/uploads/"+filename)
+				addDoc("/uploads/" + filename)
 			}
+		}
+	}
+	// Also pick up any /uploads paths already written into form fields (photo, signature, etc.)
+	for _, v := range formData {
+		if strings.HasPrefix(v, "/uploads/") {
+			addDoc(v)
 		}
 	}
 

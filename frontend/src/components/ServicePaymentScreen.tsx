@@ -80,6 +80,66 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
     setIsSubmitting(true);
 
     try {
+      // Upload binary attachments first (JSON create alone cannot carry files)
+      const updatedForm: Record<string, string> = { ...(formData || {}) };
+      const documentPaths: string[] = [];
+      const uploadErrors: string[] = [];
+
+      if (files && files.length > 0) {
+        for (const file of files) {
+          try {
+            const uploadBody = new FormData();
+            uploadBody.append("file", file);
+            const upRes = await fetch(apiUrl("uploads"), {
+              method: "POST",
+              body: uploadBody,
+            });
+            const upData = await upRes.json().catch(() => ({}));
+            if (!upRes.ok || !upData.path) {
+              uploadErrors.push(file.name);
+              continue;
+            }
+            const path = String(upData.path);
+            documentPaths.push(path);
+            // Replace matching filename fields (photo / signature / aadhaarCard)
+            let mapped = false;
+            for (const [key, val] of Object.entries(updatedForm)) {
+              if (val === file.name) {
+                updatedForm[key] = path;
+                mapped = true;
+              }
+            }
+            // If form only had empty file field, fill first empty file-like key
+            if (!mapped) {
+              const emptyKey = Object.keys(updatedForm).find((key) => {
+                const lower = key.toLowerCase();
+                const isFileKey =
+                  lower.includes("photo") ||
+                  lower.includes("signature") ||
+                  lower.includes("aadhaarcard") ||
+                  lower.includes("document") ||
+                  lower.includes("upload") ||
+                  lower.includes("file");
+                return isFileKey && !String(updatedForm[key] || "").startsWith("/uploads/");
+              });
+              if (emptyKey) {
+                updatedForm[emptyKey] = path;
+              }
+            }
+          } catch {
+            uploadErrors.push(file.name);
+          }
+        }
+      }
+
+      if (uploadErrors.length > 0 && documentPaths.length === 0 && files && files.length > 0) {
+        setError(
+          `Could not upload documents (${uploadErrors.join(", ")}). Check internet and try again.`,
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
       const payload = {
         retailerId: user?.id || "unknown_retailer",
         retailerName: user?.name || "",
@@ -91,18 +151,14 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
         cost: resolvedCharge,
         customerWhatsApp: customerWhatsApp.trim(),
         walletType: "Main",
-        formData: formData ? JSON.stringify(formData) : "",
+        formData: JSON.stringify(updatedForm),
+        documents: documentPaths,
       };
 
-      // Always JSON submit — avoids multipart/nginx upload timeouts that show as "Network error"
       const res = await fetch(apiUrl("services/request"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...payload,
-          // Keep filenames in formData if present; binary upload is optional
-          documentCount: files?.length || 0,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
