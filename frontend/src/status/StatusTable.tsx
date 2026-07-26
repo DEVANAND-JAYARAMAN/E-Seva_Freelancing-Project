@@ -54,7 +54,13 @@ export function StatusTable({
     const matchesSearch =
       ticket.serviceName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ticket.transactionId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ticket.retailerName.toLowerCase().includes(searchTerm.toLowerCase());
+      ticket.retailerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (ticket.applicantName || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase()) ||
+      (ticket.customerName || "")
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
 
     const matchesStatus =
       activeFilter === "All" ? true : ticket.status === activeFilter;
@@ -73,7 +79,7 @@ export function StatusTable({
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Search by Service, Transaction ID or Retailer..."
+          placeholder="Search by Service, Applicant, Transaction ID or Retailer..."
           className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-100 dark:border-slate-900/80 bg-slate-50/50 dark:bg-[#0a0f18]/30 focus:outline-none focus:ring-2 focus:ring-[#005c3a]/25 dark:focus:ring-emerald-500/20 text-sm font-semibold transition-all duration-200 focus:border-[#005c3a] dark:focus:border-emerald-500 text-slate-800 dark:text-slate-200"
         />
       </div>
@@ -91,6 +97,9 @@ export function StatusTable({
               </th>
               <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
                 Role
+              </th>
+              <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                Applicant Name
               </th>
               <th className="py-4 px-6 text-[10px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest text-right">
                 Charge (INR)
@@ -121,13 +130,13 @@ export function StatusTable({
                     </div>
                   </td>
 
-                  {/* Contact Details: Name + Mobile */}
+                  {/* Contact Details: Retailer Name + Mobile */}
                   <td className="py-4 px-6">
                     <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
                         <User size={11} className="text-slate-400 shrink-0" />
                         <span className="text-sm font-semibold truncate">
-                          {ticket.customerName || ticket.retailerName || "—"}
+                          {ticket.retailerName || "—"}
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
@@ -149,6 +158,13 @@ export function StatusTable({
                       }`}
                     >
                       {ticket.userRole || "Retailer"}
+                    </span>
+                  </td>
+
+                  {/* Applicant Name from form upload */}
+                  <td className="py-4 px-6">
+                    <span className="text-sm font-bold text-slate-800 dark:text-slate-100 truncate block max-w-[180px]">
+                      {ticket.applicantName || ticket.customerName || "—"}
                     </span>
                   </td>
 
@@ -203,7 +219,7 @@ export function StatusTable({
               ))
             ) : (
               <tr>
-                <td colSpan={7} className="py-12 text-center">
+                <td colSpan={8} className="py-12 text-center">
                   <div className="flex flex-col items-center justify-center space-y-2 text-slate-400">
                     <AlertCircle
                       size={24}

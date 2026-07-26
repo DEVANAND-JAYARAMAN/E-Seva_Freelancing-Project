@@ -18,6 +18,8 @@ export interface StatusTicket {
   remarks?: string;
   userRole?: "Retailer" | "Distributor";
   customerName?: string;
+  /** Applicant name from submitted form (e.g. formData.applicantName). */
+  applicantName?: string;
   mobileNumber?: string;
   formData?: Record<string, string>;
   documents?: string[];

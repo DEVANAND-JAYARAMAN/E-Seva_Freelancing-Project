@@ -135,6 +135,15 @@ export function StatusPage() {
             form.cellNo ||
             form.whatsapp ||
             "";
+          const applicantName = String(
+            form.applicantName ||
+              form.applicant_name ||
+              form.ApplicantName ||
+              form.name ||
+              form.fullName ||
+              form.customerName ||
+              "",
+          ).trim();
           const mobile =
             app.retailerMobile ||
             app.RetailerMobile ||
@@ -142,6 +151,13 @@ export function StatusPage() {
             app.customerWhatsApp ||
             app.CustomerWhatsApp ||
             "";
+          const roleRaw = String(
+            app.userRole || app.UserRole || app.role || app.Role || "",
+          ).toLowerCase();
+          const userRole =
+            roleRaw === "distributor"
+              ? ("Distributor" as const)
+              : ("Retailer" as const);
           return {
           id: app.id || app.Id,
           transactionId: app.id || app.Id,
@@ -178,12 +194,9 @@ export function StatusPage() {
             }
           })(),
           ackText: app.ackText || app.AckText || "",
-          customerName:
-            app.retailerName ||
-            app.RetailerName ||
-            app.retailerId ||
-            app.RetailerId ||
-            "Unknown",
+          userRole,
+          applicantName: applicantName || "—",
+          customerName: applicantName || "—",
           mobileNumber: mobile || "-",
         };
         });
