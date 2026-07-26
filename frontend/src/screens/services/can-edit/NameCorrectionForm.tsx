@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { ServicePaymentBadge } from "../../../components/ServicePaymentBadge";
 import { usePaidServiceFlow } from "../../../hooks/usePaidServiceFlow";
 import { useFormEdit } from "../../../store/context/FormEditContext";
-import { InputField, SelectField, SubmitButton } from "../form/FormFields";
+import { InputField, SubmitButton } from "../form/FormFields";
 import { validateField } from "../form/validators";
 
 interface NameCorrectionFormProps {
@@ -14,11 +14,11 @@ export const NameCorrectionForm: React.FC<NameCorrectionFormProps> = ({
 }) => {
   const { overrides } = useFormEdit();
   const [formData, setFormData] = useState<Record<string, string>>({
-    district: "",
-    candidateName: "",
-    panNumber: "",
-    aadhaarFront: "",
+    canNumber: "",
+    newNameEnglish: "",
+    newNameTamil: "",
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const { isForm, startPayment, paymentView } = usePaidServiceFlow({
     serviceId: "name-correction",
@@ -26,29 +26,16 @@ export const NameCorrectionForm: React.FC<NameCorrectionFormProps> = ({
     pricingCategoryId: "can-edit",
     retailerCharge: 50,
     formData,
-    
     onDone: onCancel,
   });
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-const handleFieldChange = (name: string, value: string, file?: File) => {
+  const handleFieldChange = (name: string, value: string) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
       if (errors[name]) {
-        const err = validateField(
-          name,
-          value,
-          { required: true, requiredMessage: "This field is required" },
-          updated,
-        );
         setErrors((prevErrors) => {
           const next = { ...prevErrors };
-          if (err) {
-            next[name] = err;
-          } else {
-            delete next[name];
-          }
+          delete next[name];
           return next;
         });
       }
@@ -61,11 +48,10 @@ const handleFieldChange = (name: string, value: string, file?: File) => {
     const newErrors: Record<string, string> = {};
 
     const requiredFields = [
-      { name: "district", label: "District" },
-      { name: "candidateName", label: "Name" },
-      { name: "panNumber", label: "PAN Number" },
-      { name: "aadhaarFront", label: "Aadhaar Card (Front)" },
-    ];
+      { name: "canNumber", label: "Can Number" },
+      { name: "newNameEnglish", label: "New Name English" },
+      { name: "newNameTamil", label: "New Name Tamil" },
+    ].filter((f) => !(overrides.deletedFields || []).includes(f.name));
 
     requiredFields.forEach((f) => {
       const err = validateField(
@@ -77,6 +63,17 @@ const handleFieldChange = (name: string, value: string, file?: File) => {
       if (err) newErrors[f.name] = err;
     });
 
+    // Also require any admin-added fields that are visible
+    (overrides.addedFields || []).forEach((field) => {
+      const err = validateField(
+        field.name,
+        formData[field.name] || "",
+        { required: true, requiredMessage: `${field.label} is required` },
+        formData,
+      );
+      if (err) newErrors[field.name] = err;
+    });
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
@@ -85,13 +82,10 @@ const handleFieldChange = (name: string, value: string, file?: File) => {
     startPayment();
   };
 
-    if (!isForm) return paymentView;
+  if (!isForm) return paymentView;
 
-
-    return (
-
-
-      <form onSubmit={handleSubmit} className="space-y-8 w-full">
+  return (
+    <form onSubmit={handleSubmit} className="space-y-8 w-full">
       <div className="flex flex-col sm:flex-row sm:items-start justify-between border-b border-slate-100 dark:border-slate-900/50 pb-4 gap-2">
         <div>
           <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
@@ -111,98 +105,36 @@ const handleFieldChange = (name: string, value: string, file?: File) => {
 
       <div className="space-y-5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div>
-            <SelectField
-              name="district"
-              label="District"
-              options={[
-                         { label: "Ariyalur", value: "Ariyalur" },
-                         { label: "Chengalpattu", value: "Chengalpattu" },
-                         { label: "Chennai", value: "Chennai" },
-                         { label: "Coimbatore", value: "Coimbatore" },
-                         { label: "Cuddalore", value: "Cuddalore" },
-                         { label: "Dharmapuri", value: "Dharmapuri" },
-                         { label: "Dindigul", value: "Dindigul" },
-                         { label: "Erode", value: "Erode" },
-                         { label: "Kallakurichi", value: "Kallakurichi" },
-                         { label: "Kanchipuram", value: "Kanchipuram" },
-                         { label: "Kanyakumari", value: "Kanyakumari" },
-                         { label: "Karur", value: "Karur" },
-                         { label: "Krishnagiri", value: "Krishnagiri" },
-                         { label: "Madurai", value: "Madurai" },
-                         { label: "Mayiladuthurai", value: "Mayiladuthurai" },
-                         { label: "Nagapattinam", value: "Nagapattinam" },
-                         { label: "Namakkal", value: "Namakkal" },
-                         { label: "Nilgiris", value: "Nilgiris" },
-                         { label: "Perambalur", value: "Perambalur" },
-                         { label: "Pudukkottai", value: "Pudukkottai" },
-                         { label: "Ramanathapuram", value: "Ramanathapuram" },
-                         { label: "Ranipet", value: "Ranipet" },
-                         { label: "Salem", value: "Salem" },
-                         { label: "Sivaganga", value: "Sivaganga" },
-                         { label: "Tenkasi", value: "Tenkasi" },
-                         { label: "Thanjavur", value: "Thanjavur" },
-                         { label: "Theni", value: "Theni" },
-                         { label: "Thoothukudi", value: "Thoothukudi" },
-                         { label: "Tiruchirappalli (Trichy)", value: "Tiruchirappalli" },
-                         { label: "Tirunelveli", value: "Tirunelveli" },
-                         { label: "Tirupathur", value: "Tirupathur" },
-                         { label: "Tiruppur", value: "Tiruppur" },
-                         { label: "Tiruvallur", value: "Tiruvallur" },
-                         { label: "Tiruvannamalai", value: "Tiruvannamalai" },
-                         { label: "Tiruvarur", value: "Tiruvarur" },
-                         { label: "Vellore", value: "Vellore" },
-                         { label: "Viluppuram", value: "Viluppuram" },
-                         { label: "Virudhunagar", value: "Virudhunagar" }
-                       ]}
-              value={formData.district}
-              error={errors.district}
-              disabled={isSubmitting}
-              onChange={(val, file) => handleFieldChange("district", val, file)}
-            />
-          </div>
-
-          <div>
-            <SelectField
-              name="candidateName"
-              label="Name"
-              options={[]}
-              value={formData.candidateName}
-              error={errors.candidateName}
-              disabled={isSubmitting}
-              onChange={(val, file) => handleFieldChange("candidateName", val, file)}
-            />
-          </div>
-
-          <div>
-            <InputField
-              name="panNumber"
-              label="PAN Number"
-              type="text"
-              placeholder="Enter PAN Number"
-              value={formData.panNumber}
-              error={errors.panNumber}
-              disabled={isSubmitting}
-              onChange={(val, file) => handleFieldChange("panNumber", val, file)}
-            />
-          </div>
-
-          <div>
-            <InputField
-              name="aadhaarFront"
-              label="Aadhaar Card (Front)"
-              type="file"
-              value={formData.aadhaarFront}
-              error={errors.aadhaarFront}
-              disabled={isSubmitting}
-              onChange={(val, file) => handleFieldChange("aadhaarFront", val, file)}
-            />
-          </div>
+          <InputField
+            name="canNumber"
+            label="Can Number"
+            type="text"
+            placeholder="Enter Can Number"
+            value={formData.canNumber}
+            error={errors.canNumber}
+            onChange={(val) => handleFieldChange("canNumber", val)}
+          />
+          <InputField
+            name="newNameEnglish"
+            label="New Name English"
+            type="text"
+            placeholder="Enter new name in English"
+            value={formData.newNameEnglish}
+            error={errors.newNameEnglish}
+            onChange={(val) => handleFieldChange("newNameEnglish", val)}
+          />
+          <InputField
+            name="newNameTamil"
+            label="New Name Tamil"
+            type="text"
+            placeholder="புதிய பெயர் தமிழில்"
+            value={formData.newNameTamil}
+            error={errors.newNameTamil}
+            onChange={(val) => handleFieldChange("newNameTamil", val)}
+          />
         </div>
       </div>
 
-      
-      {/* Added Extra Fields */}
       {overrides.addedFields && overrides.addedFields.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
           {overrides.addedFields.map((field) => (
@@ -210,32 +142,28 @@ const handleFieldChange = (name: string, value: string, file?: File) => {
               key={field.name}
               name={field.name}
               label={field.label}
-              type={(field.type as any) || "text"}
+              type={
+                (field.type as "text" | "number" | "email" | "date" | "file") ||
+                "text"
+              }
               placeholder={field.placeholder}
               value={formData[field.name] || ""}
-              error={errors && errors[field.name]}
-              disabled={isSubmitting}
-              onChange={(val, file) => {
-                handleFieldChange(field.name, val, file);
-              }}
+              error={errors[field.name]}
+              onChange={(val) => handleFieldChange(field.name, val)}
             />
           ))}
         </div>
       )}
-<div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-900/60 mt-8">
+
+      <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-900/60 mt-8">
         <button
           type="button"
           onClick={onCancel}
-          disabled={isSubmitting}
-          className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
+          className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-transparent text-slate-500 hover:text-slate-800 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all select-none"
         >
           Cancel
         </button>
-        <SubmitButton
-          text="Apply"
-          loading={isSubmitting}
-          disabled={isSubmitting}
-        />
+        <SubmitButton text="Apply" hideEditButton />
       </div>
     </form>
   );
