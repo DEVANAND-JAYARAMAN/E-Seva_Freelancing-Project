@@ -7,6 +7,7 @@ import React, {
   useEffect,
   useMemo,
   useCallback,
+  useRef,
   type ReactNode,
 } from "react";
 import { apiUrl } from "../../utils/apiBase";
@@ -70,6 +71,10 @@ function parseStoredUser(raw: string): User | null {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const userRef = useRef<User | null>(null);
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -175,19 +180,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const updateWallet = useCallback((newBalance: number) => {
     setUser((prevUser) => {
-      if (prevUser) {
-        const updatedUser = { ...prevUser, walletBalance: newBalance };
-        localStorage.setItem("user", JSON.stringify(updatedUser));
-        return updatedUser;
+      if (!prevUser) return null;
+      if (Number(prevUser.walletBalance) === Number(newBalance)) {
+        return prevUser;
       }
-      return null;
+      const updatedUser = { ...prevUser, walletBalance: newBalance };
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      return updatedUser;
     });
   }, []);
 
   const refreshProfile = useCallback(async () => {
-    if (!user?.email) return;
+    const current = userRef.current;
+    if (!current?.email) return;
     try {
-      if (user.role === "admin") {
+      if (current.role === "admin") {
         const res = await fetch(apiUrl("admin/dashboard"));
         if (res.ok) {
           const data = await res.json();
@@ -198,12 +205,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       const endpoint =
-        user.role === "retailer" ? "retailers" : "distributors";
+        current.role === "retailer" ? "retailers" : "distributors";
       const res = await fetch(apiUrl(endpoint));
       if (res.ok) {
         const data = await res.json();
         const me = (data || []).find(
-          (u: any) => u.email === user.email || u.Email === user.email,
+          (u: any) => u.email === current.email || u.Email === current.email,
         );
         if (me) {
           const balance = me.walletBalance || me.WalletBalance || 0;
@@ -213,7 +220,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       console.error("Failed to refresh profile:", e);
     }
-  }, [user, updateWallet]);
+  }, [updateWallet]);
 
   const authContextValue = useMemo(
     () => ({

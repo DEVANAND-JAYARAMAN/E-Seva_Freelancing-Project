@@ -83,15 +83,17 @@ export function AdminWalletPage() {
   }, [updateWallet]);
 
   useEffect(() => {
-    loadLedger();
-    refreshProfile();
+    void loadLedger();
+    void refreshProfile();
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       if (params.get("add") === "1") {
         setIsModalOpen(true);
       }
     }
-  }, [loadLedger, refreshProfile]);
+    // Mount once — avoid reload loop when wallet/profile updates
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const filtered = useMemo(() => {
     return rows.filter((r) => {
