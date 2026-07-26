@@ -1298,14 +1298,8 @@ func RechargeGateway(c *gin.Context) {
 
 	webhookURL := "https://api.thuruvancommunications.com/api/v1/wallet/recharge/webhook"
 	// Browser must NEVER land on api.* (Edge returns HTTP 403 for some users).
-	// Always send humans back to the site; credit via webhook + /confirm.
-	siteReturn := "https://thuruvancommunications.com/wallets/#payment-return"
-	if req.RedirectURL != "" {
-		low := strings.ToLower(req.RedirectURL)
-		if strings.Contains(low, "thuruvancommunications.com") && !strings.Contains(low, "api.thuruvan") {
-			siteReturn = req.RedirectURL
-		}
-	}
+	// Always use query ?paid=1 — gateways strip #hash fragments, so never trust client redirect_url.
+	siteReturn := "https://thuruvancommunications.com/wallets/?paid=1"
 
 	// Prepare request body for Mugavai API
 	mugavaiReqBody := MugavaiCreateOrderReq{
@@ -1432,9 +1426,15 @@ type RechargeWebhookReq struct {
 
 // ProcessMugavaiPayment extracts parameters from the request, verifies idempotency, and credits the wallet
 func ProcessMugavaiPayment(c *gin.Context) (bool, string) {
+	bodyBytes, _ := io.ReadAll(c.Request.Body)
+	c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 	_ = c.Request.ParseForm()
+	c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
 	var jsonBody map[string]interface{}
-	c.ShouldBindJSON(&jsonBody)
+	if len(bodyBytes) > 0 {
+		_ = json.Unmarshal(bodyBytes, &jsonBody)
+	}
 
 	getParam := func(keys ...string) string {
 		for _, k := range keys {
@@ -1445,17 +1445,27 @@ func ProcessMugavaiPayment(c *gin.Context) (bool, string) {
 				return v
 			}
 			if jsonBody != nil {
-				if v, ok := jsonBody[k]; ok {
-					return fmt.Sprintf("%v", v)
+				if v, ok := jsonBody[k]; ok && v != nil {
+					s := strings.TrimSpace(fmt.Sprintf("%v", v))
+					if s != "" && s != "<nil>" {
+						return s
+					}
 				}
 			}
 		}
 		return ""
 	}
 
-	actualOrderID := getParam("order_id", "client_txn_id", "txn_id")
-	actualUTR := getParam("utr", "upi_txn_id", "bank_txn_id", "transaction_id")
-	status := getParam("status")
+	actualOrderID := getParam("order_id", "client_txn_id", "txn_id", "OrderId", "orderId")
+	actualUTR := getParam("utr", "upi_txn_id", "bank_txn_id", "transaction_id", "UTR")
+	status := getParam("status", "Status", "payment_status")
+	return creditGatewayOrder(actualOrderID, status, actualUTR)
+}
+
+func creditGatewayOrder(actualOrderID, status, actualUTR string) (bool, string) {
+	actualOrderID = strings.TrimSpace(actualOrderID)
+	status = strings.TrimSpace(status)
+	actualUTR = strings.TrimSpace(actualUTR)
 
 	if actualOrderID == "" {
 		return false, "missing order_id"
@@ -1463,12 +1473,10 @@ func ProcessMugavaiPayment(c *gin.Context) (bool, string) {
 
 	log.Printf("[Payment Processing] Order=%s Status=%s UTR=%s", actualOrderID, status, actualUTR)
 
-	// Some gateways omit status on redirect but include UTR when paid
 	if status == "" && actualUTR != "" {
 		status = "SUCCESS"
 	}
-
-	if status != "SUCCESS" && status != "success" && status != "COMPLETED" && status != "Completed" && status != "Success" {
+	if status != "SUCCESS" && status != "success" && status != "COMPLETED" && status != "Completed" && status != "Success" && status != "PAID" && status != "Paid" {
 		return false, "not a success status"
 	}
 
@@ -1484,10 +1492,24 @@ func ProcessMugavaiPayment(c *gin.Context) (bool, string) {
 		return false, "order_not_found"
 	}
 
-	// Idempotency: already Success
+	canonicalID := actualOrderID
+	if alias, ok := meta.Item["aliasOf"].(*types.AttributeValueMemberS); ok && strings.TrimSpace(alias.Value) != "" {
+		canonicalID = strings.TrimSpace(alias.Value)
+		meta2, err2 := db.DynamoClient.GetItem(context.TODO(), &dynamodb.GetItemInput{
+			TableName: aws.String("WalletTransactions"),
+			Key: map[string]types.AttributeValue{
+				"PK": &types.AttributeValueMemberS{Value: "ORDER#" + canonicalID},
+				"SK": &types.AttributeValueMemberS{Value: "META"},
+			},
+		})
+		if err2 == nil && meta2.Item != nil {
+			meta = meta2
+		}
+	}
+
 	if s, ok := meta.Item["status"].(*types.AttributeValueMemberS); ok {
 		if s.Value == "Success" || s.Value == "SUCCESS" {
-			log.Printf("[Payment Processing] Order %s already processed", actualOrderID)
+			log.Printf("[Payment Processing] Order %s already processed", canonicalID)
 			return true, "already processed"
 		}
 	}
@@ -1498,7 +1520,6 @@ func ProcessMugavaiPayment(c *gin.Context) (bool, string) {
 	}
 	userId := userIdAttr.Value
 
-	// Credit ONLY the amount stored at order creation (ignore gateway callback amount)
 	creditAmount := 0.0
 	if amtAttr, ok := meta.Item["amount"].(*types.AttributeValueMemberN); ok {
 		fmt.Sscanf(amtAttr.Value, "%f", &creditAmount)
@@ -1508,12 +1529,14 @@ func ProcessMugavaiPayment(c *gin.Context) (bool, string) {
 	}
 	amountStr := fmt.Sprintf("%.2f", creditAmount)
 	now := time.Now().UTC()
+	if actualUTR == "" {
+		actualUTR = "GW-" + canonicalID
+	}
 
-	// Atomic claim: only one callback may flip Pending → Success
 	_, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
 		TableName: aws.String("WalletTransactions"),
 		Key: map[string]types.AttributeValue{
-			"PK": &types.AttributeValueMemberS{Value: "ORDER#" + actualOrderID},
+			"PK": &types.AttributeValueMemberS{Value: "ORDER#" + canonicalID},
 			"SK": &types.AttributeValueMemberS{Value: "META"},
 		},
 		UpdateExpression:    aws.String("SET #s = :success, utr = :utr, processedAt = :ts"),
@@ -1530,31 +1553,48 @@ func ProcessMugavaiPayment(c *gin.Context) (bool, string) {
 		},
 	})
 	if err != nil {
-		log.Printf("[Payment Processing] Idempotent claim failed for %s: %v", actualOrderID, err)
+		log.Printf("[Payment Processing] Idempotent claim failed for %s: %v", canonicalID, err)
 		return true, "already processed"
 	}
 
-	// Credit Wallets table
+	if canonicalID != actualOrderID {
+		_, _ = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+			TableName: aws.String("WalletTransactions"),
+			Key: map[string]types.AttributeValue{
+				"PK": &types.AttributeValueMemberS{Value: "ORDER#" + actualOrderID},
+				"SK": &types.AttributeValueMemberS{Value: "META"},
+			},
+			UpdateExpression: aws.String("SET #s = :success, processedAt = :ts"),
+			ExpressionAttributeNames: map[string]string{
+				"#s": "status",
+			},
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":success": &types.AttributeValueMemberS{Value: "Success"},
+				":ts":      &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
+			},
+		})
+	}
+
 	_, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
 		TableName: aws.String("Wallets"),
 		Key: map[string]types.AttributeValue{
 			"PK": &types.AttributeValueMemberS{Value: "WALLET#" + userId},
 			"SK": &types.AttributeValueMemberS{Value: "TYPE#Main"},
 		},
-		UpdateExpression: aws.String("ADD balance :amt SET updatedAt = :ts, userId = if_not_exists(userId, :uid)"),
+		UpdateExpression: aws.String("SET balance = if_not_exists(balance, :zero) + :amt, totalCredits = if_not_exists(totalCredits, :zero) + :amt, updatedAt = :ts, userId = if_not_exists(userId, :uid)"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":amt": &types.AttributeValueMemberN{Value: amountStr},
-			":ts":  &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
-			":uid": &types.AttributeValueMemberS{Value: userId},
+			":amt":  &types.AttributeValueMemberN{Value: amountStr},
+			":zero": &types.AttributeValueMemberN{Value: "0"},
+			":ts":   &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
+			":uid":  &types.AttributeValueMemberS{Value: userId},
 		},
 	})
 	if err != nil {
 		log.Printf("[Payment Processing] Failed to credit Wallets for user %s: %v", userId, err)
-		// Roll META back so a later retry can recover
 		_, _ = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
 			TableName: aws.String("WalletTransactions"),
 			Key: map[string]types.AttributeValue{
-				"PK": &types.AttributeValueMemberS{Value: "ORDER#" + actualOrderID},
+				"PK": &types.AttributeValueMemberS{Value: "ORDER#" + canonicalID},
 				"SK": &types.AttributeValueMemberS{Value: "META"},
 			},
 			UpdateExpression: aws.String("SET #s = :pending"),
@@ -1568,7 +1608,6 @@ func ProcessMugavaiPayment(c *gin.Context) (bool, string) {
 		return false, "wallet credit failed"
 	}
 
-	// Credit Users.walletBalance (keep in sync with Wallets)
 	_, _ = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
 		TableName: aws.String("Users"),
 		Key: map[string]types.AttributeValue{
@@ -1583,14 +1622,13 @@ func ProcessMugavaiPayment(c *gin.Context) (bool, string) {
 		},
 	})
 
-	// Write transaction record
-	txId := "TX#" + now.Format("20060102150405") + "#" + actualOrderID
+	txId := "TX#" + now.Format("20060102150405") + "#" + canonicalID
 	_, _ = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
 		TableName: aws.String("WalletTransactions"),
 		Item: map[string]types.AttributeValue{
 			"PK":          &types.AttributeValueMemberS{Value: "WALLET#" + userId},
 			"SK":          &types.AttributeValueMemberS{Value: txId},
-			"id":          &types.AttributeValueMemberS{Value: actualOrderID},
+			"id":          &types.AttributeValueMemberS{Value: canonicalID},
 			"type":        &types.AttributeValueMemberS{Value: "credit"},
 			"amount":      &types.AttributeValueMemberN{Value: amountStr},
 			"reference":   &types.AttributeValueMemberS{Value: actualUTR},
@@ -1749,12 +1787,12 @@ func RechargeReturn(c *gin.Context) {
 	c.Header("Content-Type", "text/html; charset=utf-8")
 	// Use meta-refresh + JS so even if 302 is blocked, the page still leaves api.*
 	c.String(http.StatusOK, `<!DOCTYPE html><html><head><meta charset="utf-8">
-<meta http-equiv="refresh" content="0;url=https://thuruvancommunications.com/wallets/#payment-return">
+<meta http-equiv="refresh" content="0;url=https://thuruvancommunications.com/wallets/?paid=1">
 <title>Redirecting…</title></head>
 <body style="font-family:system-ui;text-align:center;padding:3rem;background:#f0fdfa;color:#064e3b">
 <p>Payment received. Returning to wallet…</p>
-<p><a href="https://thuruvancommunications.com/wallets/#payment-return">Continue to Wallet</a></p>
-<script>location.replace("https://thuruvancommunications.com/wallets/#payment-return");</script>
+<p><a href="https://thuruvancommunications.com/wallets/?paid=1">Continue to Wallet</a></p>
+<script>location.replace("https://thuruvancommunications.com/wallets/?paid=1");</script>
 </body></html>`)
 }
 
@@ -1794,26 +1832,14 @@ func ConfirmGatewayRecharge(c *gin.Context) {
 		return
 	}
 
-	// Inject params into context-compatible processing via query override trick:
-	// clone request URL with params then call shared processor helper.
+	// User returned from gateway after paying; webhook may lag — credit now.
 	status := strings.TrimSpace(body.Status)
 	utr := strings.TrimSpace(body.UTR)
-	if status == "" && utr != "" {
+	if status == "" {
 		status = "SUCCESS"
 	}
-	if status == "" {
-		status = "SUCCESS" // user returned from gateway after paying; webhook may lag
-	}
 
-	q := c.Request.URL.Query()
-	q.Set("order_id", orderID)
-	q.Set("status", status)
-	if utr != "" {
-		q.Set("utr", utr)
-	}
-	c.Request.URL.RawQuery = q.Encode()
-
-	ok, msg := ProcessMugavaiPayment(c)
+	ok, msg := creditGatewayOrder(orderID, status, utr)
 	if ok {
 		c.JSON(http.StatusOK, gin.H{"status": "Success", "message": msg})
 		return

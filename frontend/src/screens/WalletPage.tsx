@@ -49,12 +49,19 @@ export function WalletPage() {
     refreshProfile();
   }, [refreshProfile]);
 
-  // After gateway redirect back to /wallets/#payment-return (or ?add=1)
+  // After gateway redirect back to /wallets/?paid=1 (hash often stripped by gateways)
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     const hash = (window.location.hash || "").replace(/^#/, "");
+    let storedOrder = "";
+    try {
+      storedOrder = sessionStorage.getItem("wallet_recharge_order") || "";
+    } catch {
+      /* ignore */
+    }
     const paymentReturn =
+      params.get("paid") === "1" ||
       params.get("payment") === "return" ||
       hash === "payment-return" ||
       hash.startsWith("payment-return") ||
@@ -71,14 +78,8 @@ export function WalletPage() {
         params.get("order_id") ||
         params.get("client_txn_id") ||
         params.get("txn_id") ||
+        storedOrder ||
         "";
-      try {
-        if (!orderId) {
-          orderId = sessionStorage.getItem("wallet_recharge_order") || "";
-        }
-      } catch {
-        /* ignore */
-      }
       const statusParam = params.get("status") || "";
       const utrParam =
         params.get("utr") ||
@@ -370,9 +371,9 @@ export function WalletPage() {
             amount: amtNum,
             customer_mobile: mobileNumber,
             customer_email: user?.email || "user@thuruvan.com",
-            // Never send browsers to api.* (Edge HTTP 403). Site return only.
+            // Never send browsers to api.* (Edge HTTP 403). Query survives redirects; hash often does not.
             redirect_url:
-              window.location.origin + "/wallets/#payment-return",
+              window.location.origin + "/wallets/?paid=1",
             user_id: user?.id || "",
           }),
         });
