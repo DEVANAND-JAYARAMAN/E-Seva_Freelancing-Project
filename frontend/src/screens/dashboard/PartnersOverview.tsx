@@ -9,6 +9,7 @@ import {
   Network,
   Wallet,
   Users,
+  X,
 } from "lucide-react";
 import { apiUrl } from "../../utils/apiBase";
 import { formatTxnDateTime } from "../../utils/formatters";
@@ -59,82 +60,70 @@ function money(n: number) {
   });
 }
 
-/** Compact metric tile — same look as Main Wallet / Retailers cards */
+/**
+ * PARTNERS LIVE metric card — details open INSIDE this card (modal),
+ * not as a separate section on the dashboard.
+ */
 export function PartnersMetricCard({
-  retailers = 0,
-  distributors = 0,
-  onClick,
+  retailers: retailersProp,
+  distributors: distributorsProp,
 }: {
   retailers?: number;
   distributors?: number;
-  onClick?: () => void;
-}) {
-  const total = retailers + distributors;
-  return (
-    <article
-      id="partners-metric-card"
-      onClick={onClick}
-      className="flex items-center justify-between bg-gradient-to-br from-[#0f766e] to-[#115e59] dark:from-[#134e4a] dark:to-[#042f2e] rounded-2xl px-4 py-4 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 cursor-pointer min-h-[5.5rem]"
-    >
-      <div className="space-y-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <p className="text-[11px] font-black uppercase tracking-wider text-white truncate">
-            Partners
-          </p>
-          <span className="shrink-0 rounded-md bg-white/20 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-white">
-            Live
-          </span>
-        </div>
-        <strong className="block text-2xl font-black text-white tracking-tight leading-tight">
-          {total}
-        </strong>
-        <span className="text-[11px] text-white font-bold block truncate">
-          {retailers} retailers · {distributors} distributors
-        </span>
-      </div>
-      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white">
-        <Users size={20} />
-      </span>
-    </article>
-  );
-}
-
-export function PartnersOverview({
-  onCounts,
-}: {
-  onCounts?: (c: { retailers: number; distributors: number }) => void;
-}) {
+} = {}) {
+  const [open, setOpen] = useState(false);
   const [partners, setPartners] = useState<PartnerRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
   const [search, setSearch] = useState("");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-  const [counts, setCounts] = useState({ retailers: 0, distributors: 0 });
+  const [counts, setCounts] = useState({
+    retailers: retailersProp ?? 0,
+    distributors: distributorsProp ?? 0,
+  });
 
-  useEffect(() => {
-    let cancelled = false;
+  const load = () => {
     setLoading(true);
     fetch(apiUrl("admin/partners-overview"), { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
-        if (cancelled) return;
         const list = Array.isArray(data?.partners) ? data.partners : [];
-        const next = {
+        setPartners(list);
+        setCounts({
           retailers: Number(data?.retailerCount || 0),
           distributors: Number(data?.distributorCount || 0),
-        };
-        setPartners(list);
-        setCounts(next);
-        onCounts?.(next);
+        });
       })
       .catch(console.error)
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  useEffect(() => {
+    if (typeof retailersProp === "number" || typeof distributorsProp === "number") {
+      setCounts((prev) => ({
+        retailers: retailersProp ?? prev.retailers,
+        distributors: distributorsProp ?? prev.distributors,
+      }));
+    }
+  }, [retailersProp, distributorsProp]);
+
+  useEffect(() => {
+    if (!open) return;
+    load();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
     };
-  }, [onCounts]);
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -152,147 +141,204 @@ export function PartnersOverview({
     });
   }, [partners, roleFilter, search]);
 
-  const totalPartners = counts.retailers + counts.distributors;
+  const total = counts.retailers + counts.distributors;
   const totalCut = partners.reduce((s, p) => s + (p.totalDebited || 0), 0);
 
   const toggle = (id: string) =>
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
   return (
-    <article
-      id="partners-services-card"
-      className="rounded-2xl shadow-md overflow-hidden ring-1 ring-black/5 dark:ring-white/10"
-    >
-      {/* First-image style colored header card */}
-      <div className="bg-gradient-to-br from-[#0f766e] to-[#115e59] dark:from-[#134e4a] dark:to-[#042f2e] px-5 py-5 sm:px-6">
-        <div className="flex items-center justify-between gap-4">
-          <div className="space-y-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-[11px] font-black uppercase tracking-wider text-white">
-                Partners &amp; Services
-              </p>
-              <span className="shrink-0 rounded-md bg-white/20 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-white">
-                Live
-              </span>
-            </div>
-            <strong className="block text-3xl font-black text-white tracking-tight leading-tight">
-              {loading ? "…" : totalPartners}
-            </strong>
-            <span className="text-[11px] text-white/95 font-bold block">
-              Retailers &amp; distributors — wallet cut per service &amp; live
-              balance
+    <>
+      <article
+        id="partners-metric-card"
+        onClick={() => setOpen(true)}
+        className="flex items-center justify-between bg-gradient-to-br from-[#0f766e] to-[#115e59] dark:from-[#134e4a] dark:to-[#042f2e] rounded-2xl px-4 py-4 shadow-md hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 cursor-pointer min-h-[5.5rem]"
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setOpen(true);
+          }
+        }}
+        aria-haspopup="dialog"
+        aria-expanded={open}
+      >
+        <div className="space-y-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="text-[11px] font-black uppercase tracking-wider text-white truncate">
+              Partners
+            </p>
+            <span className="shrink-0 rounded-md bg-white/20 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-white">
+              Live
             </span>
-            <div className="flex flex-wrap gap-2 pt-2">
-              <span className="inline-flex items-center gap-1 rounded-md bg-white/15 px-2 py-0.5 text-[10px] font-extrabold text-white">
-                <Store size={11} /> {counts.retailers} Retailers
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-md bg-white/15 px-2 py-0.5 text-[10px] font-extrabold text-white">
-                <Network size={11} /> {counts.distributors} Distributors
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-md bg-white/15 px-2 py-0.5 text-[10px] font-extrabold text-white">
-                Total cut ₹{money(totalCut)}
-              </span>
-            </div>
           </div>
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white">
-            <Users size={24} />
+          <strong className="block text-2xl font-black text-white tracking-tight leading-tight">
+            {total}
+          </strong>
+          <span className="text-[11px] text-white font-bold block truncate">
+            {counts.retailers} retailers · {counts.distributors} distributors
           </span>
         </div>
-      </div>
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white">
+          <Users size={20} />
+        </span>
+      </article>
 
-      {/* Second-image details inside the same card */}
-      <div className="bg-white dark:bg-[#090d16] p-4 sm:p-5">
-        <div className="flex flex-col sm:flex-row gap-3 mb-4">
-          <div className="flex rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden text-[11px] font-extrabold uppercase tracking-wide">
-            {(
-              [
-                ["all", "All"],
-                ["retailer", "Retailers"],
-                ["distributor", "Distributors"],
-              ] as const
-            ).map(([key, label]) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setRoleFilter(key)}
-                className={`px-3 py-2 transition-colors ${
-                  roleFilter === key
-                    ? "bg-[#005c3a] text-white"
-                    : "bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          <div className="relative flex-1 min-w-[12rem]">
-            <Search
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-            />
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search name, ID, mobile, service…"
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 pl-9 pr-3 py-2 text-sm font-medium text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-[#0f766e]/35"
-            />
+      {open && (
+        <div
+          className="fixed inset-0 z-[80] flex items-end sm:items-center justify-center p-0 sm:p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="partners-dialog-title"
+        >
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
+            aria-label="Close partners details"
+            onClick={() => setOpen(false)}
+          />
+          <div className="relative z-[81] w-full sm:max-w-5xl max-h-[92vh] sm:max-h-[88vh] flex flex-col rounded-t-2xl sm:rounded-2xl overflow-hidden shadow-2xl bg-white dark:bg-[#090d16]">
+            {/* Same teal header as the PARTNERS card — details live inside */}
+            <div className="bg-gradient-to-br from-[#0f766e] to-[#115e59] dark:from-[#134e4a] dark:to-[#042f2e] px-5 py-4 sm:px-6 shrink-0">
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p
+                      id="partners-dialog-title"
+                      className="text-[11px] font-black uppercase tracking-wider text-white"
+                    >
+                      Partners &amp; Services
+                    </p>
+                    <span className="shrink-0 rounded-md bg-white/20 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide text-white">
+                      Live
+                    </span>
+                  </div>
+                  <strong className="block text-3xl font-black text-white tracking-tight leading-tight">
+                    {loading ? "…" : total}
+                  </strong>
+                  <span className="text-[11px] text-white/95 font-bold block">
+                    Retailers &amp; distributors — wallet cut per service &amp;
+                    live balance
+                  </span>
+                  <div className="flex flex-wrap gap-2 pt-2">
+                    <span className="inline-flex items-center gap-1 rounded-md bg-white/15 px-2 py-0.5 text-[10px] font-extrabold text-white">
+                      <Store size={11} /> {counts.retailers} Retailers
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-md bg-white/15 px-2 py-0.5 text-[10px] font-extrabold text-white">
+                      <Network size={11} /> {counts.distributors} Distributors
+                    </span>
+                    <span className="inline-flex items-center gap-1 rounded-md bg-white/15 px-2 py-0.5 text-[10px] font-extrabold text-white">
+                      Total cut ₹{money(totalCut)}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/20 text-white hover:bg-white/30 transition-colors"
+                  aria-label="Close"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 sm:p-5">
+              <div className="flex flex-col sm:flex-row gap-3 mb-4">
+                <div className="flex rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden text-[11px] font-extrabold uppercase tracking-wide">
+                  {(
+                    [
+                      ["all", "All"],
+                      ["retailer", "Retailers"],
+                      ["distributor", "Distributors"],
+                    ] as const
+                  ).map(([key, label]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setRoleFilter(key)}
+                      className={`px-3 py-2 transition-colors ${
+                        roleFilter === key
+                          ? "bg-[#005c3a] text-white"
+                          : "bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <div className="relative flex-1 min-w-[12rem]">
+                  <Search
+                    size={14}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                  />
+                  <input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Search name, ID, mobile, service…"
+                    className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 pl-9 pr-3 py-2 text-sm font-medium text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-[#0f766e]/35"
+                  />
+                </div>
+              </div>
+
+              <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800">
+                <table className="w-full min-w-[720px] text-left text-sm">
+                  <thead>
+                    <tr className="bg-slate-100/80 dark:bg-slate-900/60 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                      <th className="px-3 py-3 w-8" />
+                      <th className="px-3 py-3">Partner</th>
+                      <th className="px-3 py-3">Role</th>
+                      <th className="px-3 py-3 text-right">Wallet Balance</th>
+                      <th className="px-3 py-3 text-right">Total Cut</th>
+                      <th className="px-3 py-3 text-center">Services</th>
+                      <th className="px-3 py-3">Latest Service</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      <tr>
+                        <td
+                          colSpan={7}
+                          className="px-4 py-10 text-center text-slate-500 font-semibold"
+                        >
+                          Loading partners…
+                        </td>
+                      </tr>
+                    ) : filtered.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={7}
+                          className="px-4 py-10 text-center text-slate-500 font-semibold"
+                        >
+                          No partners found
+                        </td>
+                      </tr>
+                    ) : (
+                      filtered.map((p) => {
+                        const rowOpen = !!expanded[p.userId];
+                        const latest = p.recentServices[0];
+                        const isRetailer = p.role === "retailer";
+                        return (
+                          <PartnerBlock
+                            key={p.userId}
+                            partner={p}
+                            open={rowOpen}
+                            latest={latest}
+                            isRetailer={isRetailer}
+                            onToggle={() => toggle(p.userId)}
+                          />
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </div>
-
-        <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800">
-          <table className="w-full min-w-[720px] text-left text-sm">
-            <thead>
-              <tr className="bg-slate-100/80 dark:bg-slate-900/60 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                <th className="px-3 py-3 w-8" />
-                <th className="px-3 py-3">Partner</th>
-                <th className="px-3 py-3">Role</th>
-                <th className="px-3 py-3 text-right">Wallet Balance</th>
-                <th className="px-3 py-3 text-right">Total Cut</th>
-                <th className="px-3 py-3 text-center">Services</th>
-                <th className="px-3 py-3">Latest Service</th>
-              </tr>
-            </thead>
-            <tbody>
-              {loading ? (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="px-4 py-10 text-center text-slate-500 font-semibold"
-                  >
-                    Loading partners…
-                  </td>
-                </tr>
-              ) : filtered.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={7}
-                    className="px-4 py-10 text-center text-slate-500 font-semibold"
-                  >
-                    No partners found
-                  </td>
-                </tr>
-              ) : (
-                filtered.map((p) => {
-                  const open = !!expanded[p.userId];
-                  const latest = p.recentServices[0];
-                  const isRetailer = p.role === "retailer";
-                  return (
-                    <PartnerBlock
-                      key={p.userId}
-                      partner={p}
-                      open={open}
-                      latest={latest}
-                      isRetailer={isRetailer}
-                      onToggle={() => toggle(p.userId)}
-                    />
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </article>
+      )}
+    </>
   );
 }
 
