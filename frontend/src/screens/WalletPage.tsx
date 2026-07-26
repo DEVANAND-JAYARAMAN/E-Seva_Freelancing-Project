@@ -49,18 +49,22 @@ export function WalletPage() {
     refreshProfile();
   }, [refreshProfile]);
 
-  // After gateway redirect back to /wallets/?payment=return (or ?add=1)
+  // After gateway redirect back to /wallets/#payment-return (or ?add=1 / ?payment=return)
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
-    const paymentReturn = params.get("payment") === "return";
+    const hash = (window.location.hash || "").replace(/^#/, "");
+    const paymentReturn =
+      params.get("payment") === "return" ||
+      hash === "payment-return" ||
+      hash.startsWith("payment-return");
     const openAdd = params.get("add") === "1";
 
     if (paymentReturn) {
       void refreshProfile();
+      // Reload ledger
       setFormSuccess(true);
       setIsModalOpen(true);
-      // Clean query so refresh doesn't re-trigger
       const clean = window.location.pathname;
       window.history.replaceState({}, "", clean);
       setTimeout(() => {
@@ -251,13 +255,10 @@ export function WalletPage() {
             amount: amtNum,
             customer_mobile: mobileNumber,
             customer_email: user?.email || "user@thuruvan.com",
+            // Land on the site only — never open api.* in the payment window (avoids Edge 403).
+            // Use hash so gateways cannot strip/mangle "?payment=".
             redirect_url:
-              baseUrl +
-              "/api/v1/wallet/recharge/return?redirect_url=" +
-              encodeURIComponent(
-                window.location.origin +
-                  "/wallets/?payment=return",
-              ),
+              window.location.origin + "/wallets/#payment-return",
             user_id: user?.id || "",
           }),
         });

@@ -1721,51 +1721,48 @@ func DeleteDynamicService(c *gin.Context) {
 }
 
 // RechargeReturn handles the redirect from Mugavai payment gateway.
-// Prefer sending the browser back to the site (not the API host) so retailers
-// never see an API 403 / blank window.close page in the payment popup.
+// Prefer sending the browser back to the site (not the API host).
 func RechargeReturn(c *gin.Context) {
 	ProcessMugavaiPayment(c)
+
+	const fallbackFrontend = "https://thuruvancommunications.com/wallets/#payment-return"
 
 	redirectURL := strings.TrimSpace(c.Query("redirect_url"))
 	if redirectURL == "" {
 		redirectURL = strings.TrimSpace(c.PostForm("redirect_url"))
 	}
 
+	target := fallbackFrontend
 	if redirectURL != "" && isSafeFrontendRedirect(redirectURL) {
-		// Preserve gateway query params useful for the wallets page
 		u, err := url.Parse(redirectURL)
 		if err == nil {
-			q := u.Query()
-			if q.Get("payment") == "" {
-				q.Set("payment", "return")
-			}
-			for _, key := range []string{"order_id", "status", "utr", "client_txn_id"} {
-				if v := c.Query(key); v != "" && q.Get(key) == "" {
-					q.Set(key, v)
+			// Normalize to wallets + hash (avoid broken /wallets/payment=return paths)
+			if strings.HasPrefix(u.Path, "/wallets") {
+				u.Path = "/wallets/"
+				u.RawQuery = ""
+				u.Fragment = "payment-return"
+			} else if u.Fragment == "" {
+				q := u.Query()
+				if q.Get("payment") == "" {
+					q.Set("payment", "return")
 				}
+				u.RawQuery = q.Encode()
 			}
-			u.RawQuery = q.Encode()
-			c.Redirect(http.StatusFound, u.String())
-			return
+			target = u.String()
+		} else {
+			target = redirectURL
 		}
-		c.Redirect(http.StatusFound, redirectURL)
-		return
 	}
 
-	// Fallback: try to close popup; show a clear message if the browser blocks it
-	c.Header("Content-Type", "text/html; charset=utf-8")
-	c.String(http.StatusOK, `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Payment</title>
-<style>body{font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;background:#f0fdfa;color:#064e3b}
-.box{text-align:center;padding:2rem;background:#fff;border-radius:1rem;box-shadow:0 8px 30px rgba(0,0,0,.08);max-width:22rem}
-a{display:inline-block;margin-top:1rem;padding:.75rem 1.25rem;background:#005c3a;color:#fff;text-decoration:none;border-radius:.75rem;font-weight:700}</style></head>
-<body><div class="box"><h1>Payment complete</h1><p>You can close this window and return to your wallet.</p>
-a href="https://thuruvancommunications.com/wallets/">Back to Wallet</a></div>
-<script>try{window.close();}catch(e){}</script></body></html>`)
+	c.Redirect(http.StatusFound, target)
 }
 
 func isSafeFrontendRedirect(raw string) bool {
 	u, err := url.Parse(raw)
-	if err != nil || u.Scheme != "https" && u.Scheme != "http" {
+	if err != nil {
+		return false
+	}
+	if u.Scheme != "https" && u.Scheme != "http" {
 		return false
 	}
 	host := strings.ToLower(u.Hostname())
@@ -1775,5 +1772,13 @@ func isSafeFrontendRedirect(raw string) bool {
 		"localhost":                      true,
 		"127.0.0.1":                      true,
 	}
-	return allowed[host]
+	if !allowed[host] {
+		return false
+	}
+	// Reject broken mangled paths like /wallets/payment=return (missing ?)
+	path := strings.ToLower(u.EscapedPath())
+	if strings.Contains(path, "payment=") {
+		return false
+	}
+	return true
 }
