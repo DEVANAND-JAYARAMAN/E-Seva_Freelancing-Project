@@ -1,20 +1,19 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { FileText, ArrowLeft, Send } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
-import { useAuth } from "../../../store/context/AuthContext";
 import {
   ServicePaymentScreen,
   ServiceSuccessScreen,
 } from "../../../components/ServicePaymentScreen";
 import { ServiceMessageManager } from "../../../components/ServiceMessageManager";
+import { apiUrl } from "../../../utils/apiBase";
 import { EService } from "../ServicesPage";
 
 export function DynamicServicePage({ serviceId }: { serviceId: string }) {
   const router = useRouter();
-  const { user } = useAuth();
   
   const [service, setService] = useState<EService | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -23,11 +22,12 @@ export function DynamicServicePage({ serviceId }: { serviceId: string }) {
   const [errors, setErrors] = useState<Record<string, boolean>>({});
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [paymentPhase, setPaymentPhase] = useState<"form" | "payment" | "success">("form");
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   useEffect(() => {
     const fetchService = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}/api/services/dynamic`);
+        const response = await fetch(apiUrl("services/dynamic"));
         if (response.ok) {
           const data = await response.json();
           const found = data.find((d: any) => d.id === serviceId);
@@ -57,7 +57,10 @@ export function DynamicServicePage({ serviceId }: { serviceId: string }) {
     setFormData((prev) => ({ ...prev, [field]: val }));
     setErrors((prev) => ({ ...prev, [field]: false }));
     if (file) {
-      setSelectedFiles((prev) => [...prev, file]);
+      setSelectedFiles((prev) => [
+        ...prev.filter((f) => f.name !== file.name),
+        file,
+      ]);
     }
   };
 
@@ -83,44 +86,8 @@ export function DynamicServicePage({ serviceId }: { serviceId: string }) {
     setPaymentPhase("payment");
   };
 
-  const handlePaymentSuccess = async (customerWhatsApp?: string) => {
-    if (user && service) {
-      try {
-        const payload = new FormData();
-        payload.append("retailerId", user.id);
-        payload.append("retailerName", user.name || "Unknown");
-        payload.append("retailerMobile", user.phone || "");
-        payload.append("serviceId", service.id);
-        payload.append("serviceName", service.name);
-        payload.append("cost", String(service.price?.retailer || 0));
-        payload.append("customerWhatsApp", customerWhatsApp || "");
-        payload.append("walletType", user.role === "distributor" ? "Distributor" : "Retailer");
-        payload.append("formData", JSON.stringify(formData));
-
-        if (typeof selectedFiles !== 'undefined') {
-          selectedFiles.forEach((file: File) => {
-            payload.append("documents", file);
-          });
-        }
-
-        const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(/\/api$/, "");
-        const res = await fetch(`${apiUrl}/api/services/request`, {
-          method: "POST",
-          body: payload,
-        });
-
-        if (!res.ok) {
-           const errData = await res.json().catch(() => ({}));
-           alert(errData.error || "Failed to submit request");
-           return;
-        }
-      } catch (err) {
-        console.error(err);
-        alert("Failed to connect to backend");
-        return;
-      }
-    }
-
+  // ServicePaymentScreen already POSTs /services/request + debits wallet
+  const handlePaymentSuccess = () => {
     setPaymentPhase("success");
     setTimeout(() => {
       setPaymentPhase("form");
@@ -149,7 +116,8 @@ export function DynamicServicePage({ serviceId }: { serviceId: string }) {
     );
   }
 
-  const retailerCharge = Number(service.price?.retailer) || 0;
+  const rawCharge = Number(service.price?.retailer) || 0;
+  const retailerCharge = rawCharge > 0 ? rawCharge : 50;
 
   return (
     <AppShell activePage="Services">
@@ -178,6 +146,8 @@ export function DynamicServicePage({ serviceId }: { serviceId: string }) {
             <ServiceSuccessScreen serviceName={service.name} />
           ) : paymentPhase === "payment" ? (
             <ServicePaymentScreen
+              serviceId={service.id}
+              pricingCategoryId={service.id}
               serviceName={service.name}
               retailerCharge={retailerCharge}
               formData={formData}
@@ -209,15 +179,27 @@ export function DynamicServicePage({ serviceId }: { serviceId: string }) {
                             ? "border-rose-300 dark:border-rose-900/50 bg-rose-50/10"
                             : "border-slate-200 dark:border-slate-850 hover:bg-slate-50/50 dark:hover:bg-slate-950/20"
                         }`}
-                        onClick={() =>
-                          handleFieldChange(field, "attached_doc_mock.pdf")
-                        }
+                        onClick={() => fileInputRefs.current[field]?.click()}
                       >
+                        <input
+                          ref={(el) => {
+                            fileInputRefs.current[field] = el;
+                          }}
+                          type="file"
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              handleFieldChange(field, file.name, file);
+                            }
+                          }}
+                        />
                         {formData[field] ? (
                           <div className="flex flex-col items-center gap-1 text-[#005c3a] dark:text-emerald-400">
                             <FileText size={24} />
                             <span className="text-xs font-bold font-mono">
-                              attached_doc_mock.pdf
+                              {formData[field]}
                             </span>
                           </div>
                         ) : (

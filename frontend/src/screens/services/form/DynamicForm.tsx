@@ -36,6 +36,7 @@ const DynamicFormInner: React.FC<DynamicFormProps> = ({
   const { overrides } = useFormEdit();
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const { isForm, startPayment, paymentView } = usePaidServiceFlow({
     serviceId: schema.pricingServiceId || schema.id,
@@ -43,6 +44,7 @@ const DynamicFormInner: React.FC<DynamicFormProps> = ({
     pricingCategoryId: schema.pricingCategoryId || "",
     retailerCharge: schema.pricingFallback ?? 100,
     formData,
+    files: selectedFiles,
     onDone: onCancel,
   });
 
@@ -55,12 +57,24 @@ const DynamicFormInner: React.FC<DynamicFormProps> = ({
       });
     });
     setFormData(initialData);
+    setSelectedFiles([]);
     setErrors({});
   }, [schema]);
 
-  const handleFieldChange = (name: string, value: string | boolean) => {
+  const handleFieldChange = (
+    name: string,
+    value: string | boolean,
+    file?: File,
+  ) => {
     const stringValue =
       typeof value === "boolean" ? (value ? "true" : "false") : value;
+
+    if (file) {
+      setSelectedFiles((prev) => [
+        ...prev.filter((f) => f.name !== file.name),
+        file,
+      ]);
+    }
 
     setFormData((prev: Record<string, string>) => {
       const updated = { ...prev, [name]: stringValue };
@@ -270,8 +284,8 @@ const DynamicFormInner: React.FC<DynamicFormProps> = ({
                             value={value}
                             error={error}
                             disabled={isLoading}
-                            onChange={(val) =>
-                              handleFieldChange(field.name, val)
+                            onChange={(val, file) =>
+                              handleFieldChange(field.name, val, file)
                             }
                           />
                         );
@@ -301,8 +315,8 @@ const DynamicFormInner: React.FC<DynamicFormProps> = ({
               value={formData[field.name] || ""}
               error={errors && errors[field.name]}
               disabled={isLoading}
-              onChange={(val) => {
-                handleFieldChange(field.name, val as string);
+              onChange={(val, file) => {
+                handleFieldChange(field.name, val as string, file);
               }}
             />
           ))}

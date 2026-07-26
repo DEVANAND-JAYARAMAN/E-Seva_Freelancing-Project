@@ -26,6 +26,7 @@ import {
 interface VoterService {
   id: string;
   name: string;
+  logoUrl?: string;
 }
 
 function GenericVoterServiceForm({

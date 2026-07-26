@@ -1,56 +1,36 @@
 "use client";
 
 import { ServiceNavigation } from "../../../components/ServiceNavigation/ServiceNavigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCategoryServices } from "../../../hooks/useCategoryServices";
-import { useRouter } from "next/navigation";
-import { CheckCircle2 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { PvcCardPrintForm } from "./PvcCardPrintForm";
-import { useServicePricing } from "../../../hooks/useServicePricing";
 import { ServiceCard } from "../ServiceCard";
-import { PATHS } from "../../../routes/paths";
 import { useAuth } from "../../../store/context/AuthContext";
+import { useFormEdit } from "../../../store/context/FormEditContext";
 import Swal from "sweetalert2";
 
 interface PvcService {
   id: string;
   name: string;
+  logoUrl?: string;
 }
 
 export function PvcCardPrintPage() {
-  const router = useRouter();
   const { user } = useAuth();
-  const { getCharge } = useServicePricing();
+  const { setFormScope } = useFormEdit();
   const isAdmin = user?.role === "admin";
   const [activeForm, setActiveForm] = useState<string | null>(null);
-const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    setFormScope(activeForm);
+    return () => setFormScope(null);
+  }, [activeForm, setFormScope]);
 
   const [servicesList, setServicesList] = useCategoryServices<PvcService>(
     "pvc-card-print",
-    [
-    { id: "pvc-card-print", name: "PVC CARD PRINT(ALL TYPE)" },
-  ]
+    [{ id: "pvc-card-print", name: "PVC CARD PRINT(ALL TYPE)" }],
   );
-
-  const handleEditCard = (id: string, currentName: string) => {
-    Swal.fire({
-      title: "Rename Service",
-      input: "text",
-      inputValue: currentName,
-      showCancelButton: true,
-      confirmButtonColor: "#005C3A",
-      confirmButtonText: "Save",
-    }).then((result) => {
-      if (result.isConfirmed && result.value?.trim()) {
-        setServicesList((prev) =>
-          prev.map((s) =>
-            s.id === id ? { ...s, name: result.value.trim() } : s,
-          ),
-        );
-      }
-    });
-  };
 
   const handleDeleteCard = (id: string) => {
     Swal.fire({
@@ -64,6 +44,7 @@ const [isSubmitting, setIsSubmitting] = useState(false);
     }).then((result) => {
       if (result.isConfirmed) {
         setServicesList((prev) => prev.filter((s) => s.id !== id));
+        if (activeForm === id) setActiveForm(null);
         Swal.fire({
           title: "Deleted!",
           icon: "success",
@@ -75,26 +56,7 @@ const [isSubmitting, setIsSubmitting] = useState(false);
     });
   };
 
-  // Helper to resolve dynamic price from admin pricing matrix
-  const getServicePrice = () =>
-    getCharge({
-      categoryId: "pvc-card-print",
-      serviceId: "pvc-main",
-      fallback: 160,
-    });
-
-  const handleFormSubmit = (data: any) => {
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-setTimeout(() => {
-setActiveForm(null);
-        router.push(PATHS.SERVICES);
-      }, 3000);
-    }, 1500);
-  };
-
-  const renderServiceIcon = (id: string, className = "w-16 h-16") => {
+  const renderServiceIcon = (className = "w-16 h-16") => {
     return (
       <svg
         className={className}
@@ -152,7 +114,6 @@ setActiveForm(null);
   return (
     <AppShell activePage="Our Service">
       <section className="flex flex-col gap-6 w-full pb-8">
-        {/* Navigation Breadcrumb Bar */}
         <ServiceNavigation
           pageName="PVC Card Print"
           activeForm={activeForm}
@@ -161,7 +122,6 @@ setActiveForm(null);
         />
 
         {!activeForm ? (
-          /* APPLY SERVICE SECTION WITH CARDS */
           <div className="space-y-4">
             <div className="flex items-center gap-2 border-b border-slate-50 dark:border-slate-900/40 pb-3">
               <span className="flex h-2 w-2 rounded-full bg-[#005c3a] animate-pulse" />
@@ -176,8 +136,8 @@ setActiveForm(null);
                   key={service.id}
                   id={service.id}
                   name={service.name}
-                  icon={renderServiceIcon(service.id, "w-16 h-16")}
-                  onClick={() => setActiveForm(service.name)}
+                  icon={renderServiceIcon("w-16 h-16")}
+                  onClick={() => setActiveForm(service.id)}
                   isAdmin={isAdmin}
                   logoUrl={service.logoUrl}
                   onEditSave={(data) =>
@@ -193,18 +153,12 @@ setActiveForm(null);
             </div>
           </div>
         ) : (
-          /* FORM SECTION */
           <div className="w-full">
             <div className="w-full bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 md:p-8 shadow-sm flex flex-col gap-6 relative overflow-hidden animate-in fade-in duration-200">
-              
-                <PvcCardPrintForm
-                  cardType={activeForm}
-                  price={getServicePrice()}
-                  onCancel={() => setActiveForm(null)}
-                  onSubmit={handleFormSubmit}
-                  isLoading={isSubmitting}
-                />
-              
+              <PvcCardPrintForm
+                cardType={activeForm}
+                onCancel={() => setActiveForm(null)}
+              />
             </div>
           </div>
         )}

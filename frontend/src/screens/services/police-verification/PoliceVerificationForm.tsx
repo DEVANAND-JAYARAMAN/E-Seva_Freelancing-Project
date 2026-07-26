@@ -32,6 +32,7 @@ export const PoliceVerificationForm: React.FC<PoliceVerificationFormProps> = ({
     photo: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const { isForm, startPayment, paymentView } = usePaidServiceFlow({
     serviceId: "police-verification-request",
@@ -39,11 +40,18 @@ export const PoliceVerificationForm: React.FC<PoliceVerificationFormProps> = ({
     pricingCategoryId: "police-verification",
     retailerCharge: price || 130,
     formData,
+    files: selectedFiles,
     onDone: onCancel,
   });
 
   const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (file) {
+      setSelectedFiles((prev) => [
+        ...prev.filter((f) => f.name !== file.name),
+        file,
+      ]);
+    }
     if (errors[name]) {
       setErrors((prev) => {
         const next = { ...prev };
@@ -198,7 +206,11 @@ export const PoliceVerificationForm: React.FC<PoliceVerificationFormProps> = ({
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
-                    handleFieldChange("aadhaarCard", file ? file.name : "");
+                    handleFieldChange(
+                      "aadhaarCard",
+                      file ? file.name : "",
+                      file,
+                    );
                   }}
                 />
               </label>
@@ -302,7 +314,7 @@ export const PoliceVerificationForm: React.FC<PoliceVerificationFormProps> = ({
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
-                    handleFieldChange("photo", file ? file.name : "");
+                    handleFieldChange("photo", file ? file.name : "", file);
                   }}
                 />
               </label>

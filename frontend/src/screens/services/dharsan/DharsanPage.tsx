@@ -21,6 +21,7 @@ interface DharsanSubService {
   name: string;
   subName?: string;
   price: { retailer: number; distributor: number };
+  logoUrl?: string;
 }
 
 const timeOptions = [

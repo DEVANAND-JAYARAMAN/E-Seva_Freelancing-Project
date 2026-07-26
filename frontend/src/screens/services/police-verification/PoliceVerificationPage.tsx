@@ -1,28 +1,35 @@
 "use client";
 
 import { ServiceNavigation } from "../../../components/ServiceNavigation/ServiceNavigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCategoryServices } from "../../../hooks/useCategoryServices";
 import { CheckCircle2 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { PoliceVerificationForm } from "./PoliceVerificationForm";
 import { ServiceCard } from "../ServiceCard";
 import { useAuth } from "../../../store/context/AuthContext";
+import { useFormEdit } from "../../../store/context/FormEditContext";
 import Swal from "sweetalert2";
 
 interface PoliceVerificationService {
   id: string;
   name: string;
   price: number;
+  logoUrl?: string;
 }
 
 export function PoliceVerificationPage() {
   const { user } = useAuth();
+  const { setFormScope } = useFormEdit();
   const isAdmin = user?.role === "admin";
   const [activeForm, setActiveForm] = useState<string | null>(null);
   const [selectedService, setSelectedService] =
     useState<PoliceVerificationService | null>(null);
-const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    setFormScope(activeForm);
+    return () => setFormScope(null);
+  }, [activeForm, setFormScope]);
 
   const [servicesList, setServicesList] = useCategoryServices<PoliceVerificationService>("police-verification",
     [
@@ -81,16 +88,6 @@ if (service.id === "police-verification-request") {
         });
       }
     });
-  };
-
-  const handleFormSubmit = (data: any) => {
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-setTimeout(() => {
-        setActiveForm(null);
-}, 3000);
-    }, 1500);
   };
 
   const renderServiceIcon = (id: string, className = "w-16 h-16") => {
@@ -244,8 +241,6 @@ setTimeout(() => {
                 <PoliceVerificationForm
                   price={selectedService.price}
                   onCancel={() => setActiveForm(null)}
-                  onSubmit={handleFormSubmit}
-                  isLoading={isSubmitting}
                 />
               ) : (
                 <div className="py-8 text-center text-slate-500">

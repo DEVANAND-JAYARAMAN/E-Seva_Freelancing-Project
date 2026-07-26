@@ -1,37 +1,14 @@
 "use client";
 
-import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { AgriStackPdfForm } from "./AgriStackPdfForm";
-import { useServicePricing } from "../../../hooks/useServicePricing";
 import { PATHS } from "../../../routes/paths";
 
 export function AgriStackPdfPage() {
   const router = useRouter();
-const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Read pricing from Service Payment API (role-based)
-  const { getCharge } = useServicePricing();
-  const getServicePrice = () =>
-    getCharge({
-      categoryId: "agri-stack-pdf",
-      serviceId: "agri-main",
-      serviceName: "Agri Stack PDF",
-      fallback: 35,
-    });
-
-  const handleFormSubmit = (data: any) => {
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-setTimeout(() => {
-router.push(PATHS.SERVICES);
-      }, 3000);
-    }, 1500);
-  };
 
   return (
     <AppShell activePage="Our Service">
@@ -65,14 +42,7 @@ router.push(PATHS.SERVICES);
         {/* FORM SECTION */}
         <div className="w-full">
           <div className="w-full bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 md:p-8 shadow-sm flex flex-col gap-6 relative overflow-hidden animate-in fade-in duration-200">
-            
-              <AgriStackPdfForm
-                price={getServicePrice()}
-                onCancel={() => router.push(PATHS.SERVICES)}
-                onSubmit={handleFormSubmit}
-                isLoading={isSubmitting}
-              />
-            
+            <AgriStackPdfForm onCancel={() => router.push(PATHS.SERVICES)} />
           </div>
         </div>
       </section>

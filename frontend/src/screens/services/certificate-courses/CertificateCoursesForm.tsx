@@ -2,13 +2,15 @@ import React, { useState } from "react";
 import { useFormEdit } from "../../../store/context/FormEditContext";
 import { InputField, SelectField, SubmitButton } from "../form/FormFields";
 import { Upload, FileText } from "lucide-react";
+import { ServicePaymentBadge } from "../../../components/ServicePaymentBadge";
+import { usePaidServiceFlow } from "../../../hooks/usePaidServiceFlow";
+import { useServicePricing } from "../../../hooks/useServicePricing";
 
 interface CertificateCoursesFormProps {
   courseName: string;
-  price: number;
+  serviceId: string;
+  fallbackPrice?: number;
   onCancel: () => void;
-  onSubmit: (data: any) => void;
-  isLoading?: boolean;
 }
 
 const DISTRICTS = [
@@ -95,13 +97,19 @@ const GET_COURSE_OPTIONS = (courseName: string) => {
 
 export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
   courseName,
-  price,
+  serviceId,
+  fallbackPrice = 300,
   onCancel,
-  onSubmit,
-  isLoading = false,
 }) => {
   const { overrides } = useFormEdit();
+  const { getCharge } = useServicePricing();
   const courseOptions = GET_COURSE_OPTIONS(courseName);
+  const retailerCharge = getCharge({
+    categoryId: "certificate-courses",
+    serviceId,
+    serviceName: courseName,
+    fallback: fallbackPrice,
+  });
   const [formData, setFormData] = useState<Record<string, string>>({
     name: "",
     significant: "",
@@ -116,10 +124,24 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
     courseName: courseOptions[0]?.value || courseName,
     photo: "",
   });
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const { isForm, startPayment, paymentView } = usePaidServiceFlow({
+    serviceId,
+    serviceName: `${courseName} Registration`,
+    pricingCategoryId: "certificate-courses",
+    retailerCharge,
+    formData,
+    files: photoFile ? [photoFile] : [],
+    onDone: onCancel,
+  });
 
   const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (file) {
+      if (name === "photo") setPhotoFile(file);
+    }
     if (errors[name]) {
       setErrors((prev) => {
         const next = { ...prev };
@@ -159,15 +181,17 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
     }
 
     if (!formData.courseName) newErrors.courseName = "Course name is required";
-    if (!formData.photo) newErrors.photo = "Photo is required";
+    if (!formData.photo || !photoFile) newErrors.photo = "Photo is required";
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
 
-    onSubmit(formData);
+    startPayment();
   };
+
+  if (!isForm) return paymentView;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 w-full">
@@ -180,14 +204,15 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
             Submit applicant details for Certification Course
           </p>
         </div>
-        <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none">
-          Course Fee : ₹ {price}
-        </div>
+        <ServicePaymentBadge
+          pricingCategoryId="certificate-courses"
+          serviceId={serviceId}
+          serviceName={courseName}
+          fallback={fallbackPrice}
+        />
       </div>
 
-      {/* 3-Column Responsive Grid Layout */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Column 1 */}
         <div className="space-y-4">
           <InputField
             name="name"
@@ -196,7 +221,6 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
             placeholder="Name"
             value={formData.name}
             error={errors.name}
-            disabled={isLoading}
             onChange={(val, file) => handleFieldChange("name", val, file)}
           />
 
@@ -207,7 +231,6 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
             placeholder="Door No"
             value={formData.doorNo}
             error={errors.doorNo}
-            disabled={isLoading}
             onChange={(val, file) => handleFieldChange("doorNo", val, file)}
           />
 
@@ -217,7 +240,6 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
             options={DISTRICTS.map((d) => ({ label: d, value: d }))}
             value={formData.district}
             error={errors.district}
-            disabled={isLoading}
             onChange={(val, file) => handleFieldChange("district", val, file)}
           />
 
@@ -228,7 +250,6 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
             placeholder="Aadhaar Number"
             value={formData.aadhaarNumber}
             error={errors.aadhaarNumber}
-            disabled={isLoading}
             onChange={(val) =>
               handleFieldChange(
                 "aadhaarNumber",
@@ -238,7 +259,6 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
           />
         </div>
 
-        {/* Column 2 */}
         <div className="space-y-4">
           <SelectField
             name="significant"
@@ -246,8 +266,9 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
             options={SIGNIFICANT_OPTIONS}
             value={formData.significant}
             error={errors.significant}
-            disabled={isLoading}
-            onChange={(val, file) => handleFieldChange("significant", val, file)}
+            onChange={(val, file) =>
+              handleFieldChange("significant", val, file)
+            }
           />
 
           <InputField
@@ -257,8 +278,9 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
             placeholder="Street name"
             value={formData.streetName}
             error={errors.streetName}
-            disabled={isLoading}
-            onChange={(val, file) => handleFieldChange("streetName", val, file)}
+            onChange={(val, file) =>
+              handleFieldChange("streetName", val, file)
+            }
           />
 
           <InputField
@@ -268,7 +290,6 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
             placeholder="Taluk"
             value={formData.taluk}
             error={errors.taluk}
-            disabled={isLoading}
             onChange={(val, file) => handleFieldChange("taluk", val, file)}
           />
 
@@ -278,12 +299,12 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
             options={courseOptions}
             value={formData.courseName}
             error={errors.courseName}
-            disabled={isLoading}
-            onChange={(val, file) => handleFieldChange("courseName", val, file)}
+            onChange={(val, file) =>
+              handleFieldChange("courseName", val, file)
+            }
           />
         </div>
 
-        {/* Column 3 */}
         <div className="space-y-4">
           <InputField
             name="fatherName"
@@ -292,8 +313,9 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
             placeholder="Father or Husband Name"
             value={formData.fatherName}
             error={errors.fatherName}
-            disabled={isLoading}
-            onChange={(val, file) => handleFieldChange("fatherName", val, file)}
+            onChange={(val, file) =>
+              handleFieldChange("fatherName", val, file)
+            }
           />
 
           <InputField
@@ -303,8 +325,9 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
             placeholder="Postal Area"
             value={formData.postalArea}
             error={errors.postalArea}
-            disabled={isLoading}
-            onChange={(val, file) => handleFieldChange("postalArea", val, file)}
+            onChange={(val, file) =>
+              handleFieldChange("postalArea", val, file)
+            }
           />
 
           <InputField
@@ -314,7 +337,6 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
             placeholder="Pincode"
             value={formData.pincode}
             error={errors.pincode}
-            disabled={isLoading}
             onChange={(val) =>
               handleFieldChange(
                 "pincode",
@@ -323,7 +345,6 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
             }
           />
 
-          {/* Photo File Upload */}
           <div className="flex flex-col gap-1.5 w-full">
             <label className="text-[11px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider">
               Photo
@@ -351,11 +372,10 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
                 <input
                   type="file"
                   accept="image/*"
-                  disabled={isLoading}
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
-                    handleFieldChange("photo", file ? file.name : "");
+                    handleFieldChange("photo", file ? file.name : "", file);
                   }}
                 />
               </label>
@@ -369,8 +389,6 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
         </div>
       </div>
 
-      
-      {/* Added Extra Fields */}
       {overrides.addedFields && overrides.addedFields.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
           {overrides.addedFields.map((field) => (
@@ -382,7 +400,6 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
               placeholder={field.placeholder}
               value={formData[field.name] || ""}
               error={errors && errors[field.name]}
-              disabled={isLoading}
               onChange={(val, file) => {
                 handleFieldChange(field.name, val, file);
               }}
@@ -390,16 +407,15 @@ export const CertificateCoursesForm: React.FC<CertificateCoursesFormProps> = ({
           ))}
         </div>
       )}
-<div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-900/60 mt-8">
+      <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-900/60 mt-8">
         <button
           type="button"
           onClick={onCancel}
-          disabled={isLoading}
-          className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-880 bg-slate-50 dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
+          className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-880 bg-slate-50 dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all select-none"
         >
           Cancel
         </button>
-        <SubmitButton text="Submit" loading={isLoading} disabled={isLoading} />
+        <SubmitButton text="Submit" />
       </div>
     </form>
   );

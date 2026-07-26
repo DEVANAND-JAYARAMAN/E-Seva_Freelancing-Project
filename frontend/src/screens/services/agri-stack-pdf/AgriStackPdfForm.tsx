@@ -1,25 +1,38 @@
 import React, { useState } from "react";
+import { ServicePaymentBadge } from "../../../components/ServicePaymentBadge";
+import { usePaidServiceFlow } from "../../../hooks/usePaidServiceFlow";
+import { useServicePricing } from "../../../hooks/useServicePricing";
 
 interface AgriStackPdfFormProps {
-  price: number;
   onCancel: () => void;
-  onSubmit: (data: any) => void;
-  isLoading?: boolean;
 }
 
 export const AgriStackPdfForm: React.FC<AgriStackPdfFormProps> = ({
-  price,
   onCancel,
-  onSubmit,
-  isLoading = false,
 }) => {
+  const { getCharge } = useServicePricing();
+  const retailerCharge = getCharge({
+    categoryId: "agri-stack-pdf",
+    serviceId: "agri-main",
+    serviceName: "Agri Stack PDF",
+    fallback: 35,
+  });
+
   const [formData, setFormData] = useState<Record<string, string>>({
     aadhaarNo: "",
   });
-
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleFieldChange = (name: string, value: string, file?: File) => {
+  const { isForm, startPayment, paymentView } = usePaidServiceFlow({
+    serviceId: "agri-main",
+    serviceName: "Agri Stack PDF",
+    pricingCategoryId: "agri-stack-pdf",
+    retailerCharge,
+    formData,
+    onDone: onCancel,
+  });
+
+  const handleFieldChange = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
       setErrors((prev) => {
@@ -45,8 +58,10 @@ export const AgriStackPdfForm: React.FC<AgriStackPdfFormProps> = ({
       return;
     }
 
-    onSubmit(formData);
+    startPayment();
   };
+
+  if (!isForm) return paymentView;
 
   return (
     <form
@@ -62,10 +77,12 @@ export const AgriStackPdfForm: React.FC<AgriStackPdfFormProps> = ({
             Locate your Agri Stack details by verifying Aadhaar Number
           </p>
         </div>
-        <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-          Service Payment :{" "}
-          <span className="font-bold">₹ {price.toFixed(2)}</span>
-        </div>
+        <ServicePaymentBadge
+          pricingCategoryId="agri-stack-pdf"
+          serviceId="agri-main"
+          serviceName="Agri Stack PDF"
+          fallback={35}
+        />
       </div>
 
       <div className="space-y-2">
@@ -87,7 +104,6 @@ export const AgriStackPdfForm: React.FC<AgriStackPdfFormProps> = ({
               ? "border-rose-500 focus:border-rose-500 focus:ring-1 focus:ring-rose-500/20"
               : "border-slate-250 dark:border-slate-800 focus:border-[#005c3a] dark:focus:border-emerald-500 focus:ring-1 focus:ring-[#005c3a]/20"
           }`}
-          disabled={isLoading}
         />
         {errors.aadhaarNo && (
           <span className="text-[10px] font-semibold text-rose-500 block mt-1">
@@ -100,17 +116,15 @@ export const AgriStackPdfForm: React.FC<AgriStackPdfFormProps> = ({
         <button
           type="button"
           onClick={onCancel}
-          disabled={isLoading}
           className="px-6 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-transparent text-slate-655 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider transition-all select-none"
         >
           CANCEL
         </button>
         <button
           type="submit"
-          disabled={isLoading}
           className="px-6 py-2 rounded-xl bg-[#005c3a] dark:bg-emerald-700 text-white font-bold text-xs uppercase tracking-wider hover:bg-[#004d30] dark:hover:bg-emerald-600 transition-all select-none shadow"
         >
-          {isLoading ? "SUBMITTING..." : "SUBMIT REQUEST"}
+          SUBMIT REQUEST
         </button>
       </div>
     </form>

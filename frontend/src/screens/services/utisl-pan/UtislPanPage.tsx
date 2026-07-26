@@ -1,25 +1,32 @@
 "use client";
 
 import { ServiceNavigation } from "../../../components/ServiceNavigation/ServiceNavigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCategoryServices } from "../../../hooks/useCategoryServices";
 import { CheckCircle2 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { PanToAdhaarNumberFind } from "./PanToAdhaarNumberFind";
 import { ServiceCard } from "../ServiceCard";
 import { useAuth } from "../../../store/context/AuthContext";
+import { useFormEdit } from "../../../store/context/FormEditContext";
 import Swal from "sweetalert2";
 
 interface UtislPanService {
   id: string;
   name: string;
+  logoUrl?: string;
 }
 
 export function UtislPanPage() {
   const { user } = useAuth();
+  const { setFormScope } = useFormEdit();
   const isAdmin = user?.role === "admin";
   const [activeForm, setActiveForm] = useState<string | null>(null);
-const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    setFormScope(activeForm);
+    return () => setFormScope(null);
+  }, [activeForm, setFormScope]);
 
   const [utislPanServicesList, setUtislPanServicesList] = useCategoryServices<UtislPanService>(
     "utisl-pan",

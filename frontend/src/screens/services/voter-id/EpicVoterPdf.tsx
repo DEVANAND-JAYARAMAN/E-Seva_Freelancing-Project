@@ -161,7 +161,7 @@ export const EpicVoterPdf: React.FC<EpicVoterPdfProps> = ({ onCancel }) => {
               key={field.name}
               name={field.name}
               label={field.label}
-              type={(field.type as "text" | "number" | "tel" | "email" | "date" | "file") || "text"}
+              type={(field.type as "text" | "number" | "email" | "date" | "file" | "password") || "text"}
               placeholder={field.placeholder}
               value={formData[field.name] || ""}
               error={errors && errors[field.name]}

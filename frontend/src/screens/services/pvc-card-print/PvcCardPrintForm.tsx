@@ -7,13 +7,13 @@ import {
   TextAreaField,
   SubmitButton,
 } from "../form/FormFields";
+import { ServicePaymentBadge } from "../../../components/ServicePaymentBadge";
+import { usePaidServiceFlow } from "../../../hooks/usePaidServiceFlow";
+import { useServicePricing } from "../../../hooks/useServicePricing";
 
 interface PvcCardPrintFormProps {
-  cardType: string;
-  price: number;
+  cardType?: string;
   onCancel: () => void;
-  onSubmit: (data: any) => void;
-  isLoading?: boolean;
 }
 
 interface PrintItem {
@@ -21,16 +21,21 @@ interface PrintItem {
   service: string;
   fileName: string;
   password?: string;
+  file?: File;
 }
 
 export const PvcCardPrintForm: React.FC<PvcCardPrintFormProps> = ({
-  cardType,
-  price = 160,
   onCancel,
-  onSubmit,
-  isLoading = false,
 }) => {
   const { overrides } = useFormEdit();
+  const { getCharge } = useServicePricing();
+  const unitPrice = getCharge({
+    categoryId: "pvc-card-print",
+    serviceId: "pvc-main",
+    serviceName: "PVC CARD PRINT(ALL TYPE)",
+    fallback: 160,
+  });
+
   const [items, setItems] = useState<PrintItem[]>([]);
   const [currentService, setCurrentService] = useState("");
   const [currentFile, setCurrentFile] = useState<File | null>(null);
@@ -44,10 +49,42 @@ export const PvcCardPrintForm: React.FC<PvcCardPrintFormProps> = ({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [formData, setFormData] = useState<Record<string, string>>({});
+  const [extraFields, setExtraFields] = useState<Record<string, string>>({});
 
-  const handleFieldChange = (name: string, value: string, file?: File) => {
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const itemFiles = items
+    .map((item) => item.file)
+    .filter((f): f is File => Boolean(f));
+
+  const paymentFormData: Record<string, string> = {
+    items: JSON.stringify(
+      items.map(({ id, service, fileName, password }) => ({
+        id,
+        service,
+        fileName,
+        password,
+      })),
+    ),
+    fullName: addressData.fullName,
+    mobile: addressData.mobile,
+    address: addressData.address,
+    pincode: addressData.pincode,
+    ...extraFields,
+  };
+
+  const retailerCharge = unitPrice * Math.max(1, items.length);
+
+  const { isForm, startPayment, paymentView } = usePaidServiceFlow({
+    serviceId: "pvc-main",
+    serviceName: "PVC CARD PRINT(ALL TYPE)",
+    pricingCategoryId: "pvc-card-print",
+    retailerCharge,
+    formData: paymentFormData,
+    files: itemFiles,
+    onDone: onCancel,
+  });
+
+  const handleFieldChange = (name: string, value: string) => {
+    setExtraFields((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) {
       setErrors((prev) => {
         const copy = { ...prev };
@@ -72,11 +109,11 @@ export const PvcCardPrintForm: React.FC<PvcCardPrintFormProps> = ({
       service: currentService,
       fileName: currentFile ? currentFile.name : "",
       password: currentPassword,
+      file: currentFile || undefined,
     };
 
     setItems((prev) => [...prev, newItem]);
 
-    // Clear item inputs
     setCurrentService("");
     setCurrentFile(null);
     setCurrentPassword("");
@@ -130,19 +167,16 @@ export const PvcCardPrintForm: React.FC<PvcCardPrintFormProps> = ({
       return;
     }
 
-    onSubmit({
-      items,
-      deliveryAddress: addressData,
-      totalAmount: items.length * price,
-    });
+    startPayment();
   };
+
+  if (!isForm) return paymentView;
 
   return (
     <form
       onSubmit={handleSubmit}
       className="space-y-8 w-full text-slate-800 dark:text-slate-200"
     >
-      {/* Form Header matching MSME Registration layout exactly */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between border-b border-slate-100 dark:border-slate-900/50 pb-4 gap-2">
         <div>
           <h2 className="text-xl font-extrabold text-slate-900 dark:text-white uppercase tracking-tight">
@@ -153,12 +187,14 @@ export const PvcCardPrintForm: React.FC<PvcCardPrintFormProps> = ({
             schemes
           </p>
         </div>
-        <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none">
-          Service Cost : ₹ {price.toFixed(2)}
-        </div>
+        <ServicePaymentBadge
+          pricingCategoryId="pvc-card-print"
+          serviceId="pvc-main"
+          serviceName="PVC CARD PRINT(ALL TYPE)"
+          fallback={160}
+        />
       </div>
 
-      {/* Section 1: Print Queue & Card Selector */}
       <div className="space-y-5">
         <div className="border-b border-slate-100 dark:border-slate-900/60 pb-2 text-center">
           <h3 className="text-sm font-extrabold text-slate-800 dark:text-slate-200 tracking-wide uppercase">
@@ -166,7 +202,6 @@ export const PvcCardPrintForm: React.FC<PvcCardPrintFormProps> = ({
           </h3>
         </div>
 
-        {/* Dynamic Services Selector Table */}
         <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-950">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs font-semibold">
@@ -244,7 +279,6 @@ export const PvcCardPrintForm: React.FC<PvcCardPrintFormProps> = ({
             </table>
           </div>
 
-          {/* List of Added Cards Area */}
           <div className="p-4 bg-slate-50/30 dark:bg-slate-950/20 min-h-[100px] border-b border-slate-200 dark:border-slate-800">
             {items.length === 0 ? (
               <div className="flex items-center justify-center h-[80px] text-slate-400 text-xs font-bold select-none">
@@ -287,7 +321,6 @@ export const PvcCardPrintForm: React.FC<PvcCardPrintFormProps> = ({
             )}
           </div>
 
-          {/* Table/List Summary Footer panel */}
           <div className="flex flex-col items-end gap-1 px-6 py-3 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-600 dark:text-slate-350 select-none">
             <div>
               Total Services :{" "}
@@ -298,7 +331,7 @@ export const PvcCardPrintForm: React.FC<PvcCardPrintFormProps> = ({
             <div>
               Total Amount :{" "}
               <span className="font-black text-[#005c3a] dark:text-emerald-400 text-sm">
-                ₹ {items.length * price}
+                ₹ {items.length * unitPrice}
               </span>
             </div>
           </div>
@@ -311,7 +344,6 @@ export const PvcCardPrintForm: React.FC<PvcCardPrintFormProps> = ({
         </span>
       )}
 
-      {/* Section 2: Delivery Address */}
       <div className="space-y-5">
         <div className="border-b border-slate-100 dark:border-slate-900/60 pb-2 text-center">
           <h3 className="text-sm font-extrabold text-slate-800 dark:text-slate-200 tracking-wide uppercase">
@@ -327,7 +359,6 @@ export const PvcCardPrintForm: React.FC<PvcCardPrintFormProps> = ({
             placeholder="Enter full name"
             value={addressData.fullName}
             error={errors.fullName}
-            disabled={isLoading}
             onChange={(val) => handleAddressChange("fullName", val)}
           />
 
@@ -337,7 +368,6 @@ export const PvcCardPrintForm: React.FC<PvcCardPrintFormProps> = ({
             placeholder="Enter contact mobile number"
             value={addressData.mobile}
             error={errors.mobile}
-            disabled={isLoading}
             onChange={(val) => handleAddressChange("mobile", val)}
           />
 
@@ -348,7 +378,6 @@ export const PvcCardPrintForm: React.FC<PvcCardPrintFormProps> = ({
             rows={2}
             value={addressData.address}
             error={errors.address}
-            disabled={isLoading}
             onChange={(val) => handleAddressChange("address", val)}
           />
 
@@ -359,7 +388,6 @@ export const PvcCardPrintForm: React.FC<PvcCardPrintFormProps> = ({
             placeholder="Enter 6-digit pin code"
             value={addressData.pincode}
             error={errors.pincode}
-            disabled={isLoading}
             onChange={(val) =>
               handleAddressChange(
                 "pincode",
@@ -370,9 +398,6 @@ export const PvcCardPrintForm: React.FC<PvcCardPrintFormProps> = ({
         </div>
       </div>
 
-      {/* Button Footer matching MSME dynamic form styling exactly */}
-      
-      {/* Added Extra Fields */}
       {overrides.addedFields && overrides.addedFields.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
           {overrides.addedFields.map((field) => (
@@ -382,30 +407,24 @@ export const PvcCardPrintForm: React.FC<PvcCardPrintFormProps> = ({
               label={field.label}
               type={(field.type as any) || "text"}
               placeholder={field.placeholder}
-              value={formData[field.name] || ""}
+              value={extraFields[field.name] || ""}
               error={errors && errors[field.name]}
-              disabled={isLoading}
-              onChange={(val, file) => {
-                handleFieldChange(field.name, val, file);
+              onChange={(val) => {
+                handleFieldChange(field.name, val);
               }}
             />
           ))}
         </div>
       )}
-<div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-900/60 mt-8">
+      <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-900/60 mt-8">
         <button
           type="button"
           onClick={onCancel}
-          disabled={isLoading}
-          className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all disabled:opacity-50 select-none"
+          className="px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-350 font-bold text-xs uppercase tracking-wider active:scale-[0.98] transition-all select-none"
         >
           Cancel
         </button>
-        <SubmitButton
-          text={isLoading ? "Ordering..." : "Place Order"}
-          loading={isLoading}
-          disabled={isLoading}
-        />
+        <SubmitButton text="Place Order" />
       </div>
     </form>
   );

@@ -1,29 +1,36 @@
 "use client";
 
 import { ServiceNavigation } from "../../../components/ServiceNavigation/ServiceNavigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCategoryServices } from "../../../hooks/useCategoryServices";
 import { CheckCircle2 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { ServiceCard } from "../ServiceCard";
 import { GstRegistrationForm } from "./GstRegistrationForm";
 import { useAuth } from "../../../store/context/AuthContext";
+import { useFormEdit } from "../../../store/context/FormEditContext";
 import Swal from "sweetalert2";
 
 interface GstServiceItem {
   id: string;
   name: string;
   price: number;
+  logoUrl?: string;
 }
 
 export function GstPage() {
   const { user } = useAuth();
+  const { setFormScope } = useFormEdit();
   const isAdmin = user?.role === "admin";
   const [activeForm, setActiveForm] = useState<string | null>(null);
   const [selectedService, setSelectedService] = useState<GstServiceItem | null>(
     null,
   );
-const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    setFormScope(activeForm);
+    return () => setFormScope(null);
+  }, [activeForm, setFormScope]);
 
   const [gstServicesList, setGstServicesList] = useCategoryServices<GstServiceItem>(
     "gst",
@@ -81,16 +88,6 @@ if (service.id === "gst-reg") {
         });
       }
     });
-  };
-
-  const handleFormSubmit = (data: any) => {
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-setTimeout(() => {
-        setActiveForm(null);
-}, 2500);
-    }, 1500);
   };
 
   const renderServiceIcon = (id: string, className = "w-16 h-16") => {
@@ -378,8 +375,6 @@ setTimeout(() => {
                 <GstRegistrationForm
                   price={selectedService.price}
                   onCancel={() => setActiveForm(null)}
-                  onSubmit={handleFormSubmit}
-                  isLoading={isSubmitting}
                 />
               ) : (
                 /* FALLBACK SIMPLE FORM FOR FILING/CORRECTION FOR COMPLETENESS */

@@ -126,18 +126,33 @@ export function StatusPage() {
           createdDate: (app.createdDate || app.CreatedDate || "").split("T")[0],
           lastUpdated: (app.lastUpdated || app.LastUpdated || "").split("T")[0],
           remarks: app.adminRemarks || app.AdminRemarks || "No remarks.",
-          formData:
-            typeof (app.formData || app.FormData) === "string"
-              ? JSON.parse(app.formData || app.FormData || "{}")
-              : app.formData || app.FormData || {},
-          documents:
-            typeof (app.documents || app.Documents) === "string"
-              ? JSON.parse(app.documents || app.Documents || "[]")
-              : app.documents || app.Documents || [],
-          ackFiles:
-            typeof (app.ackFiles || app.AckFiles) === "string"
-              ? JSON.parse(app.ackFiles || app.AckFiles || "[]")
-              : app.ackFiles || app.AckFiles || [],
+          formData: (() => {
+            const raw = app.formData || app.FormData;
+            if (typeof raw !== "string") return raw || {};
+            try {
+              return JSON.parse(raw || "{}");
+            } catch {
+              return {};
+            }
+          })(),
+          documents: (() => {
+            const raw = app.documents || app.Documents;
+            if (typeof raw !== "string") return raw || [];
+            try {
+              return JSON.parse(raw || "[]");
+            } catch {
+              return [];
+            }
+          })(),
+          ackFiles: (() => {
+            const raw = app.ackFiles || app.AckFiles;
+            if (typeof raw !== "string") return raw || [];
+            try {
+              return JSON.parse(raw || "[]");
+            } catch {
+              return [];
+            }
+          })(),
           ackText: app.ackText || app.AckText || "",
           customerName:
             app.retailerName ||

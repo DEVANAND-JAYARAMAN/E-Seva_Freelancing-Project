@@ -1,56 +1,36 @@
 "use client";
 
 import { ServiceNavigation } from "../../../components/ServiceNavigation/ServiceNavigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCategoryServices } from "../../../hooks/useCategoryServices";
-import { useRouter } from "next/navigation";
-import { CheckCircle2 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { CmHealthCardForm } from "./CmHealthCardForm";
-import { useServicePricing } from "../../../hooks/useServicePricing";
 import { ServiceCard } from "../ServiceCard";
-import { PATHS } from "../../../routes/paths";
 import { useAuth } from "../../../store/context/AuthContext";
+import { useFormEdit } from "../../../store/context/FormEditContext";
 import Swal from "sweetalert2";
 
 interface HealthService {
   id: string;
   name: string;
+  logoUrl?: string;
 }
 
 export function CmHealthCardPage() {
-  const router = useRouter();
   const { user } = useAuth();
-  const { getCharge } = useServicePricing();
+  const { setFormScope } = useFormEdit();
   const isAdmin = user?.role === "admin";
   const [activeForm, setActiveForm] = useState<string | null>(null);
-const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    setFormScope(activeForm);
+    return () => setFormScope(null);
+  }, [activeForm, setFormScope]);
 
   const [servicesList, setServicesList] = useCategoryServices<HealthService>(
     "cm-health-card",
-    [
-    { id: "cm-health-card", name: "CM Health Card" },
-  ]
+    [{ id: "cm-health-card", name: "CM Health Card" }],
   );
-
-  const handleEditCard = (id: string, currentName: string) => {
-    Swal.fire({
-      title: "Rename Service",
-      input: "text",
-      inputValue: currentName,
-      showCancelButton: true,
-      confirmButtonColor: "#005C3A",
-      confirmButtonText: "Save",
-    }).then((result) => {
-      if (result.isConfirmed && result.value?.trim()) {
-        setServicesList((prev) =>
-          prev.map((s) =>
-            s.id === id ? { ...s, name: result.value.trim() } : s,
-          ),
-        );
-      }
-    });
-  };
 
   const handleDeleteCard = (id: string) => {
     Swal.fire({
@@ -64,6 +44,7 @@ const [isSubmitting, setIsSubmitting] = useState(false);
     }).then((result) => {
       if (result.isConfirmed) {
         setServicesList((prev) => prev.filter((s) => s.id !== id));
+        if (activeForm === id) setActiveForm(null);
         Swal.fire({
           title: "Deleted!",
           icon: "success",
@@ -73,25 +54,6 @@ const [isSubmitting, setIsSubmitting] = useState(false);
         });
       }
     });
-  };
-
-  // Helper to resolve dynamic price from admin Service Payment matrix
-  const getServicePrice = () =>
-    getCharge({
-      categoryId: "cm-health-card",
-      serviceId: "cm-main",
-      fallback: 200,
-    });
-
-  const handleFormSubmit = (data: any) => {
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-setTimeout(() => {
-setActiveForm(null);
-        router.push(PATHS.SERVICES);
-      }, 3000);
-    }, 1500);
   };
 
   const renderServiceIcon = (className = "w-16 h-16") => {
@@ -149,7 +111,6 @@ setActiveForm(null);
   return (
     <AppShell activePage="Our Service">
       <section className="flex flex-col gap-6 w-full pb-8">
-        {/* Navigation Breadcrumb Bar */}
         <ServiceNavigation
           pageName="CM Health Card"
           activeForm={activeForm}
@@ -158,7 +119,6 @@ setActiveForm(null);
         />
 
         {!activeForm ? (
-          /* APPLY SERVICE SECTION WITH CARDS */
           <div className="space-y-4">
             <div className="flex items-center gap-2 border-b border-slate-50 dark:border-slate-900/40 pb-3">
               <span className="flex h-2 w-2 rounded-full bg-[#005c3a] animate-pulse" />
@@ -190,17 +150,9 @@ setActiveForm(null);
             </div>
           </div>
         ) : (
-          /* FORM SECTION */
           <div className="w-full">
             <div className="w-full bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 md:p-8 shadow-sm flex flex-col gap-6 relative overflow-hidden animate-in fade-in duration-200">
-              
-                <CmHealthCardForm
-                  price={getServicePrice()}
-                  onCancel={() => setActiveForm(null)}
-                  onSubmit={handleFormSubmit}
-                  isLoading={isSubmitting}
-                />
-              
+              <CmHealthCardForm onCancel={() => setActiveForm(null)} />
             </div>
           </div>
         )}

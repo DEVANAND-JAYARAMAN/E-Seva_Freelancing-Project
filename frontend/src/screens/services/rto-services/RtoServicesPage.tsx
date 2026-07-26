@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCategoryServices } from "../../../hooks/useCategoryServices";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus } from "lucide-react";
@@ -12,6 +12,7 @@ import { DlToCell } from "./DlToCell";
 import { ServiceCard } from "../ServiceCard";
 import { GenericServiceForm } from "../form/GenericServiceForm";
 import { useAuth } from "../../../store/context/AuthContext";
+import { useFormEdit } from "../../../store/context/FormEditContext";
 import Swal from "sweetalert2";
 
 interface RtoService {
@@ -23,9 +24,14 @@ interface RtoService {
 export function RtoServicesPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { setFormScope } = useFormEdit();
   const isAdmin = user?.role === "admin";
   const [activeForm, setActiveForm] = useState<string | null>(null);
-const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    setFormScope(activeForm);
+    return () => setFormScope(null);
+  }, [activeForm, setFormScope]);
 
   const [rtoServicesList, setRtoServicesList] = useCategoryServices<RtoService>("rto-services", [
     { id: "chassis-to-rc", name: "Chassis Number To Rc Find" },

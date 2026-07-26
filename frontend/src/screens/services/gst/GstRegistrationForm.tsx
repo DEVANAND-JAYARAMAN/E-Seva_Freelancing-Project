@@ -36,6 +36,7 @@ export const GstRegistrationForm: React.FC<GstRegistrationFormProps> = ({
     businessAddress: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const { isForm, startPayment, paymentView } = usePaidServiceFlow({
     serviceId: "gst-reg",
@@ -43,11 +44,18 @@ export const GstRegistrationForm: React.FC<GstRegistrationFormProps> = ({
     pricingCategoryId: "gst",
     retailerCharge: price || 400,
     formData,
+    files: selectedFiles,
     onDone: onCancel,
   });
 
   const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (file) {
+      setSelectedFiles((prev) => [
+        ...prev.filter((f) => f.name !== file.name),
+        file,
+      ]);
+    }
     if (errors[name]) {
       setErrors((prev) => {
         const next = { ...prev };

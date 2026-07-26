@@ -69,6 +69,11 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
   const insufficient = walletBalance < resolvedCharge;
 
   const handlePaymentSubmit = async () => {
+    if (resolvedCharge <= 0) {
+      setError("Service charge is not configured. Contact admin.");
+      return;
+    }
+
     if (insufficient) {
       setError(
         `Insufficient wallet balance (₹${walletBalance.toFixed(2)}). Need ₹${resolvedCharge.toFixed(2)} — please add funds.`,
@@ -299,7 +304,7 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
         <button
           type="button"
           onClick={handlePaymentSubmit}
-          disabled={isSubmitting || insufficient}
+          disabled={isSubmitting || insufficient || resolvedCharge <= 0}
           className="flex-1 flex justify-center items-center gap-2 px-4 py-3 rounded-xl bg-[#005c3a] dark:bg-emerald-600 hover:bg-[#004d30] dark:hover:bg-emerald-500 text-white font-extrabold text-xs uppercase tracking-wider shadow-sm transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting ? (
@@ -307,6 +312,8 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
               <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               Processing...
             </>
+          ) : resolvedCharge <= 0 ? (
+            "Charge Not Configured"
           ) : insufficient ? (
             "Add Funds First"
           ) : (
@@ -331,7 +338,7 @@ export const ServiceSuccessScreen: React.FC<{
         <h5 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
           Application Placed Successfully!
         </h5>
-        <p className="text-sm text-slate-400 dark:text-slate-555 mt-2 max-w-md leading-relaxed">
+        <p className="text-sm text-slate-400 dark:text-slate-500 mt-2 max-w-md leading-relaxed">
           Your request for <strong>{serviceName}</strong> has been successfully
           registered and forwarded to the Admin Panel.
           <br />

@@ -1,7 +1,7 @@
 "use client";
 
 import { ServiceNavigation } from "../../../components/ServiceNavigation/ServiceNavigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCategoryServices } from "../../../hooks/useCategoryServices";
 import { CheckCircle2, X } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
@@ -12,19 +12,26 @@ import { PanToMsmeUdhayamFind } from "./PanToMsmeUdhayamFind";
 import { MobileToMsmeUdhayamFind } from "./MobileToMsmeUdhayamFind";
 import { ServiceCard } from "../ServiceCard";
 import { useAuth } from "../../../store/context/AuthContext";
+import { useFormEdit } from "../../../store/context/FormEditContext";
 import Swal from "sweetalert2";
 
 interface MsmeService {
   id: string;
   name: string;
   schema?: FormSchema;
+  logoUrl?: string;
 }
 
 export function MsmePage() {
   const { user } = useAuth();
+  const { setFormScope } = useFormEdit();
   const isAdmin = user?.role === "admin";
   const [activeForm, setActiveForm] = useState<string | null>(null); // "msme-main" | "msme-pan" | "msme-mobile" | null
-const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    setFormScope(activeForm);
+    return () => setFormScope(null);
+  }, [activeForm, setFormScope]);
 
   const [msmeServicesList, setMsmeServicesList] = useCategoryServices<MsmeService>(
     "msme",
@@ -97,17 +104,8 @@ if (service.id === "msme-main") {
     });
   };
 
-  const handleFormSubmit = (data: Record<string, string>) => {
-    setIsSubmitting(true);
-
-    // Simulate API registration call
-    setTimeout(() => {
-      setIsSubmitting(false);
-// Auto close or reset state after submission
-      setTimeout(() => {
-        setActiveForm(null);
-}, 2500);
-    }, 1500);
+  const handleFormSubmit = (_data: Record<string, string>) => {
+    // Payment is handled inside DynamicForm via usePaidServiceFlow
   };
 
   const renderServiceIcon = (id: string, className = "w-14 h-14") => {
@@ -337,7 +335,6 @@ if (service.id === "msme-main") {
                     schema={msmeApplySchema}
                     onSubmit={handleFormSubmit}
                     onCancel={() => setActiveForm(null)}
-                    isLoading={isSubmitting}
                   />
               ) : activeForm === "msme-pan" ? (
                 <PanToMsmeUdhayamFind onCancel={() => setActiveForm(null)} />

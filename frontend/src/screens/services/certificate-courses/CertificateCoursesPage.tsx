@@ -1,14 +1,14 @@
 "use client";
 
 import { ServiceNavigation } from "../../../components/ServiceNavigation/ServiceNavigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCategoryServices } from "../../../hooks/useCategoryServices";
-import { CheckCircle2, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { CertificateCoursesForm } from "./CertificateCoursesForm";
 import { ServiceCard } from "../ServiceCard";
-import { useServicePricing } from "../../../hooks/useServicePricing";
 import { useAuth } from "../../../store/context/AuthContext";
+import { useFormEdit } from "../../../store/context/FormEditContext";
 import Swal from "sweetalert2";
 
 interface CertificateService {
@@ -21,12 +21,16 @@ interface CertificateService {
 
 export function CertificateCoursesPage() {
   const { user } = useAuth();
-  const { getCharge } = useServicePricing();
+  const { setFormScope } = useFormEdit();
   const isAdmin = user?.role === "admin";
   const [activeForm, setActiveForm] = useState<string | null>(null);
   const [selectedService, setSelectedService] =
     useState<CertificateService | null>(null);
-const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    setFormScope(activeForm);
+    return () => setFormScope(null);
+  }, [activeForm, setFormScope]);
 
   const [servicesList, setServicesList] = useCategoryServices<CertificateService>(
     "certificate-courses",
@@ -115,28 +119,9 @@ const [isSubmitting, setIsSubmitting] = useState(false);
     });
   };
 
-  // Helper to resolve dynamic price from admin Service Payment matrix
-  const getServicePrice = (service: CertificateService) =>
-    getCharge({
-      categoryId: "certificate-courses",
-      serviceId: service.priceKey,
-      serviceName: service.name,
-      fallback: service.defaultPrice,
-    });
-
   const handleCardClick = (service: CertificateService) => {
     setSelectedService(service);
-setActiveForm(service.id);
-  };
-
-  const handleFormSubmit = (data: any) => {
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-setTimeout(() => {
-        setActiveForm(null);
-}, 3000);
-    }, 1500);
+    setActiveForm(service.id);
   };
 
   const renderServiceIcon = (id: string, className = "w-24 h-24") => {
@@ -728,10 +713,12 @@ setTimeout(() => {
               {selectedService ? (
                 <CertificateCoursesForm
                   courseName={selectedService.name}
-                  price={getServicePrice(selectedService)}
-                  onCancel={() => setActiveForm(null)}
-                  onSubmit={handleFormSubmit}
-                  isLoading={isSubmitting}
+                  serviceId={selectedService.priceKey}
+                  fallbackPrice={selectedService.defaultPrice}
+                  onCancel={() => {
+                    setActiveForm(null);
+                    setSelectedService(null);
+                  }}
                 />
               ) : null}
             </div>

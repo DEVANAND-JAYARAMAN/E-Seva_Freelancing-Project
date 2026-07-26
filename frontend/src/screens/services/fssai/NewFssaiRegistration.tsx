@@ -36,6 +36,7 @@ export const NewFssaiRegistration: React.FC<NewFssaiRegistrationProps> = ({
     aadhaarCard: "",
     applicantPhoto: "",
   });
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
 
   const { isForm, startPayment, paymentView } = usePaidServiceFlow({
     serviceId: "fssai-reg",
@@ -43,13 +44,19 @@ export const NewFssaiRegistration: React.FC<NewFssaiRegistrationProps> = ({
     pricingCategoryId: "fssai",
     retailerCharge: 180,
     formData,
-    
+    files: selectedFiles,
     onDone: onCancel,
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 const handleFieldChange = (name: string, value: string, file?: File) => {
+    if (file) {
+      setSelectedFiles((prev) => [
+        ...prev.filter((f) => f.name !== file.name),
+        file,
+      ]);
+    }
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { ServiceNavigation } from "../../../components/ServiceNavigation/ServiceNavigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCategoryServices } from "../../../hooks/useCategoryServices";
 import { Plus } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
@@ -9,6 +9,7 @@ import { LapsedRegistrationRenewal } from "./LapsedRegistrationRenewal";
 import { ServiceCard } from "../ServiceCard";
 import { GenericServiceForm } from "../form/GenericServiceForm";
 import { useAuth } from "../../../store/context/AuthContext";
+import { useFormEdit } from "../../../store/context/FormEditContext";
 import Swal from "sweetalert2";
 
 interface EmploymentService {
@@ -19,9 +20,14 @@ interface EmploymentService {
 
 export function EmploymentServicesPage() {
   const { user } = useAuth();
+  const { setFormScope } = useFormEdit();
   const isAdmin = user?.role === "admin";
   const [activeForm, setActiveForm] = useState<string | null>(null);
-const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    setFormScope(activeForm);
+    return () => setFormScope(null);
+  }, [activeForm, setFormScope]);
 
   const [employmentServicesList, setEmploymentServicesList] = useCategoryServices<EmploymentService>("employment-services",
     [{ id: "lapsed-renewal", name: "Lapsed Registration Renewal" }]);

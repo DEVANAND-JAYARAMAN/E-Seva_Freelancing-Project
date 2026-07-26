@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 import { PATHS } from "../../routes/paths";
@@ -1429,6 +1429,7 @@ export function ServicesPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const handleDeleteService = async (serviceId?: string) => {
     const idToDelete = serviceId || editingService?.id;
@@ -2055,6 +2056,12 @@ export function ServicesPage() {
   // Form field value change
   const handleFieldChange = (field: string, val: string, file?: File) => {
     setFormData((prev) => ({ ...prev, [field]: val }));
+    if (file) {
+      setSelectedFiles((prev) => [
+        ...prev.filter((f) => f.name !== file.name),
+        file,
+      ]);
+    }
     if (errors[field]) {
       setErrors((prev) => {
         const next = { ...prev };
@@ -2092,50 +2099,8 @@ export function ServicesPage() {
     setPaymentPhase("payment");
   };
 
-  const handlePaymentSuccess = async (customerWhatsApp?: string) => {
-    if (user && selectedService) {
-      try {
-        const payload = new FormData();
-        payload.append("retailerId", user.id);
-        payload.append("retailerName", user.name || "Unknown");
-        payload.append("retailerMobile", user.phone || "");
-        payload.append("serviceId", selectedService.id);
-        payload.append("serviceName", selectedService.name);
-        payload.append("cost", String(selectedService.price?.retailer || 0));
-        payload.append("customerWhatsApp", customerWhatsApp || "");
-        payload.append(
-          "walletType",
-          user.role === "distributor" ? "Distributor" : "Retailer",
-        );
-        payload.append("formData", JSON.stringify(formData));
-
-        if (typeof selectedFiles !== "undefined") {
-          selectedFiles.forEach((file: File) => {
-            payload.append("documents", file);
-          });
-        }
-
-        const res = await fetch(apiUrl("services/request"), {
-          method: "POST",
-          body: payload,
-        });
-
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          Swal.fire(
-            "Error",
-            errData.error || "Failed to submit request",
-            "error",
-          );
-          return;
-        }
-      } catch (err) {
-        console.error(err);
-        Swal.fire("Error", "Failed to connect to backend", "error");
-        return;
-      }
-    }
-
+  // ServicePaymentScreen already POSTs /services/request + debits wallet
+  const handlePaymentSuccess = () => {
     setPaymentPhase("success");
     setTimeout(() => {
       setIsModalOpen(false);
@@ -2246,7 +2211,7 @@ export function ServicesPage() {
                           ? {
                               ...s,
                               name: data.name,
-                              customImage: data.logoUrl || null,
+                              customImage: data.logoUrl || undefined,
                             }
                           : s,
                       ),
@@ -2304,7 +2269,7 @@ export function ServicesPage() {
                           ? {
                               ...s,
                               name: data.name,
-                              customImage: data.logoUrl || null,
+                              customImage: data.logoUrl || undefined,
                             }
                           : s,
                       ),
@@ -2422,17 +2387,28 @@ export function ServicesPage() {
                                   : "border-slate-200 dark:border-slate-850 hover:bg-slate-50/50 dark:hover:bg-slate-950/20"
                               }`}
                               onClick={() =>
-                                handleFieldChange(
-                                  field,
-                                  "attached_doc_mock.pdf",
-                                )
+                                fileInputRefs.current[field]?.click()
                               }
                             >
+                              <input
+                                ref={(el) => {
+                                  fileInputRefs.current[field] = el;
+                                }}
+                                type="file"
+                                accept=".pdf,.jpg,.jpeg,.png"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    handleFieldChange(field, file.name, file);
+                                  }
+                                }}
+                              />
                               {formData[field] ? (
                                 <div className="flex flex-col items-center gap-1 text-[#005c3a] dark:text-emerald-400">
                                   <FileText size={24} />
                                   <span className="text-xs font-bold font-mono">
-                                    attached_doc_mock.pdf
+                                    {formData[field]}
                                   </span>
                                 </div>
                               ) : (

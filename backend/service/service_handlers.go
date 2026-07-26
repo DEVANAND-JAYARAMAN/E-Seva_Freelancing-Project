@@ -138,6 +138,11 @@ func CreateServiceRequest(c *gin.Context) {
 		req.Cost = resolved
 	}
 
+	if req.Cost <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Service charge not configured"})
+		return
+	}
+
 	walletPK := "WALLET#" + req.RetailerId
 	out, err := db.DynamoClient.GetItem(context.TODO(), &dynamodb.GetItemInput{
 		TableName: aws.String("Wallets"),
@@ -200,7 +205,10 @@ func CreateServiceRequest(c *gin.Context) {
 	}
 
 	if formDataStr != "" {
-		_ = json.Unmarshal([]byte(formDataStr), &formData)
+		if err := json.Unmarshal([]byte(formDataStr), &formData); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid formData"})
+			return
+		}
 	}
 	if formData == nil {
 		formData = map[string]string{}
