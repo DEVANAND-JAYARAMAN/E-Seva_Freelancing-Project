@@ -72,7 +72,7 @@ export const Epro14Form: React.FC<Epro14FormProps> = ({
 
         {/* Form Fields Grid */}
         <div className="space-y-5">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div data-form-fields-grid className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
               <InputField
                 name="mobileNumber"

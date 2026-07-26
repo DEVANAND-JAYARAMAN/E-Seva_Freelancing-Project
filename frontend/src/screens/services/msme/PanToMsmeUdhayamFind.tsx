@@ -113,7 +113,7 @@ const handleFieldChange = (name: string, value: string, file?: File) => {
 
       {/* Form Sections */}
       <div className="space-y-5">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div data-form-fields-grid className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="md:col-span-2">
             <InputField
               name="panNo"
@@ -132,7 +132,7 @@ const handleFieldChange = (name: string, value: string, file?: File) => {
       
       {/* Added Extra Fields */}
       {overrides.addedFields && overrides.addedFields.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+        <div data-form-fields-grid className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
           {overrides.addedFields.map((field) => (
             <InputField
               key={field.name}

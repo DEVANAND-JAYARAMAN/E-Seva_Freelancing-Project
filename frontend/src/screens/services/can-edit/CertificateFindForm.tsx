@@ -141,7 +141,7 @@ const handleFieldChange = (name: string, value: string, file?: File) => {
       
         <>
           <div className="space-y-5">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div data-form-fields-grid className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
                 <InputField
                   name="applicantName"
@@ -198,14 +198,8 @@ const handleFieldChange = (name: string, value: string, file?: File) => {
                   onChange={(val, file) => handleFieldChange("certificateName", val, file)}
                 />
               </div>
-            </div>
-          </div>
-
-          
-      {/* Added Extra Fields */}
-      {overrides.addedFields && overrides.addedFields.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
-          {overrides.addedFields.map((field) => (
+            
+              {overrides.addedFields?.map((field) => (
             <InputField
               key={field.name}
               name={field.name}
@@ -220,8 +214,11 @@ const handleFieldChange = (name: string, value: string, file?: File) => {
               }}
             />
           ))}
-        </div>
-      )}
+            </div>
+          </div>
+
+          
+
 <div className="flex items-center justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-900/60 mt-8">
             <button
               type="button"

@@ -144,7 +144,7 @@ export const CmHealthCardForm: React.FC<CmHealthCardFormProps> = ({
           </h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div data-form-fields-grid className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div className="flex flex-col gap-1.5 w-full">
             <label className="text-[11px] font-extrabold text-slate-400 dark:text-slate-550 uppercase tracking-wider">
               VAO Certificate Template
@@ -249,7 +249,7 @@ export const CmHealthCardForm: React.FC<CmHealthCardFormProps> = ({
           </h3>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div data-form-fields-grid className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <InputField
             name="vaoCertificateFile"
             label="VAO Certificate / Income Certificate (1,20,000)"
@@ -308,7 +308,7 @@ export const CmHealthCardForm: React.FC<CmHealthCardFormProps> = ({
       </div>
 
       {overrides.addedFields && overrides.addedFields.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+        <div data-form-fields-grid className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
           {overrides.addedFields.map((field) => (
             <InputField
               key={field.name}

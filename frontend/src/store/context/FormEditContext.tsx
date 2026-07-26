@@ -28,6 +28,8 @@ export interface FormOverrides {
   deletedFields: string[];
   fieldOverrides: Record<string, FieldOverride>;
   addedFields?: AddedField[];
+  /** Display order of field `name`s (admin drag / up-down). */
+  fieldOrder?: string[];
   title?: string;
   subtitle?: string;
 }
@@ -45,6 +47,11 @@ interface FormEditContextType {
   editFormHeader: (title: string, subtitle: string) => Promise<boolean>;
   resetFormConfig: () => void;
   addField: (label: string, placeholder: string, type: string) => void;
+  registerField: (fieldName: string) => void;
+  unregisterField: (fieldName: string) => void;
+  getFieldOrderIndex: (fieldName: string) => number;
+  moveField: (fieldName: string, direction: "up" | "down") => void;
+  reorderField: (fromName: string, toName: string) => void;
 }
 
 const FormEditContext = createContext<FormEditContextType | undefined>(
@@ -55,6 +62,7 @@ const EMPTY_OVERRIDES: FormOverrides = {
   deletedFields: [],
   fieldOverrides: {},
   addedFields: [],
+  fieldOrder: [],
 };
 
 const LOCAL_STORAGE_KEY = "eseva_form_overrides_v1";
@@ -82,6 +90,7 @@ function normalizeOverridesMap(
         deletedFields: value.deletedFields || [],
         fieldOverrides: value.fieldOverrides || {},
         addedFields: value.addedFields || [],
+        fieldOrder: value.fieldOrder || [],
         title: value.title,
         subtitle: value.subtitle,
       };
@@ -103,6 +112,10 @@ function normalizeOverridesMap(
         ...(existing.addedFields || []),
         ...(value.addedFields || []),
       ],
+      fieldOrder:
+        value.fieldOrder && value.fieldOrder.length > 0
+          ? value.fieldOrder
+          : existing.fieldOrder || [],
       title: value.title ?? existing.title,
       subtitle: value.subtitle ?? existing.subtitle,
     };
@@ -153,10 +166,16 @@ export const FormEditProvider: React.FC<{ children: React.ReactNode }> = ({
   const allOverridesRef = useRef(allOverrides);
   allOverridesRef.current = allOverrides;
 
+  /** Mount order of fields on the active form (fallback before fieldOrder is saved). */
+  const registeredByFormRef = useRef<Record<string, string[]>>({});
+  const [, bumpRegistry] = useState(0);
+
   const isAdmin = user?.role === "admin";
 
   const baseFormId = normalizePath(pathname || "default");
   const formId = formScope ? `${baseFormId}::${formScope}` : baseFormId;
+  const formIdRef = useRef(formId);
+  formIdRef.current = formId;
 
   useEffect(() => {
     if (pathname !== prevPath) {
@@ -282,6 +301,9 @@ export const FormEditProvider: React.FC<{ children: React.ReactNode }> = ({
     } else if (!formConfig.deletedFields.includes(fieldName)) {
       formConfig.deletedFields = [...formConfig.deletedFields, fieldName];
     }
+    formConfig.fieldOrder = (formConfig.fieldOrder || []).filter(
+      (n) => n !== fieldName,
+    );
     void persistOverrides({
       ...allOverridesRef.current,
       [formId]: formConfig,
@@ -317,6 +339,86 @@ export const FormEditProvider: React.FC<{ children: React.ReactNode }> = ({
     });
   };
 
+  const buildOrderList = useCallback(
+    (id: string, preferred?: string[]) => {
+      const formConfig = getFormConfig(id);
+      const registered = registeredByFormRef.current[id] || [];
+      const base =
+        preferred && preferred.length > 0
+          ? [...preferred]
+          : formConfig.fieldOrder && formConfig.fieldOrder.length > 0
+            ? [...formConfig.fieldOrder]
+            : [...registered];
+      for (const n of registered) {
+        if (!base.includes(n)) base.push(n);
+      }
+      // Drop names no longer on the form (except keep custom until deleted)
+      return base.filter(
+        (n) => registered.includes(n) || n.startsWith("custom_"),
+      );
+    },
+    [getFormConfig],
+  );
+
+  const registerField = useCallback((fieldName: string) => {
+    const id = formIdRef.current;
+    const list = registeredByFormRef.current[id] || [];
+    if (list.includes(fieldName)) return;
+    registeredByFormRef.current[id] = [...list, fieldName];
+    bumpRegistry((n) => n + 1);
+  }, []);
+
+  const unregisterField = useCallback((fieldName: string) => {
+    const id = formIdRef.current;
+    const list = registeredByFormRef.current[id] || [];
+    if (!list.includes(fieldName)) return;
+    registeredByFormRef.current[id] = list.filter((n) => n !== fieldName);
+    bumpRegistry((n) => n + 1);
+  }, []);
+
+  const getFieldOrderIndex = useCallback(
+    (fieldName: string) => {
+      const order = buildOrderList(formId);
+      const idx = order.indexOf(fieldName);
+      return idx >= 0 ? idx : order.length;
+    },
+    [buildOrderList, formId],
+  );
+
+  const persistFieldOrder = (id: string, nextOrder: string[]) => {
+    const formConfig = { ...getFormConfig(id), fieldOrder: nextOrder };
+    void persistOverrides({
+      ...allOverridesRef.current,
+      [id]: formConfig,
+    });
+  };
+
+  const moveField = (fieldName: string, direction: "up" | "down") => {
+    const id = formIdRef.current;
+    const base = buildOrderList(id);
+    const i = base.indexOf(fieldName);
+    if (i < 0) return;
+    const j = direction === "up" ? i - 1 : i + 1;
+    if (j < 0 || j >= base.length) return;
+    const next = [...base];
+    [next[i], next[j]] = [next[j], next[i]];
+    persistFieldOrder(id, next);
+  };
+
+  const reorderField = (fromName: string, toName: string) => {
+    if (!fromName || !toName || fromName === toName) return;
+    const id = formIdRef.current;
+    const base = buildOrderList(id);
+    const from = base.indexOf(fromName);
+    const to = base.indexOf(toName);
+    if (from < 0 || to < 0) return;
+    const next = [...base];
+    next.splice(from, 1);
+    const insertAt = next.indexOf(toName);
+    next.splice(insertAt < 0 ? to : insertAt, 0, fromName);
+    persistFieldOrder(id, next);
+  };
+
   const addField = (label: string, placeholder: string, type: string) => {
     const formConfig = { ...getFormConfig(formId) };
     const name = `custom_${type}_${Date.now()}`;
@@ -324,6 +426,9 @@ export const FormEditProvider: React.FC<{ children: React.ReactNode }> = ({
       ...(formConfig.addedFields || []),
       { name, label, placeholder, type },
     ];
+    const order = buildOrderList(formId, formConfig.fieldOrder);
+    if (!order.includes(name)) order.push(name);
+    formConfig.fieldOrder = order;
     void persistOverrides({
       ...allOverridesRef.current,
       [formId]: formConfig,
@@ -378,6 +483,11 @@ export const FormEditProvider: React.FC<{ children: React.ReactNode }> = ({
         editFormHeader,
         resetFormConfig,
         addField,
+        registerField,
+        unregisterField,
+        getFieldOrderIndex,
+        moveField,
+        reorderField,
       }}
     >
       {children}

@@ -1,7 +1,39 @@
-import React, { useState, useEffect } from "react";
-import { Upload, FileText, Pencil, Trash2, Eye, EyeOff } from "lucide-react";
+import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
+import {
+  Upload,
+  FileText,
+  Pencil,
+  Trash2,
+  Eye,
+  EyeOff,
+  GripVertical,
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react";
 import { FieldOption } from "./types";
 import { useFormEdit } from "../../../store/context/FormEditContext";
+
+function findSortableGridItem(el: HTMLElement): HTMLElement {
+  const marked = el.closest("[data-form-fields-grid]");
+  if (marked instanceof HTMLElement) {
+    let cur: HTMLElement | null = el;
+    while (cur && cur.parentElement !== marked) {
+      cur = cur.parentElement;
+    }
+    return cur || el;
+  }
+
+  let cur: HTMLElement | null = el;
+  while (cur?.parentElement) {
+    const parent = cur.parentElement;
+    const display = window.getComputedStyle(parent).display;
+    if (display === "grid" || display === "inline-grid") {
+      return cur;
+    }
+    cur = parent;
+  }
+  return el;
+}
 
 // --- FIELD EDIT WRAPPER ---
 interface FieldWrapperProps {
@@ -22,10 +54,23 @@ export const FieldWrapper: React.FC<FieldWrapperProps> = ({
   disableEdit,
   children,
 }) => {
-  const { overrides, isEditMode, deleteField, editField } = useFormEdit();
+  const {
+    overrides,
+    isEditMode,
+    deleteField,
+    editField,
+    registerField,
+    unregisterField,
+    getFieldOrderIndex,
+    moveField,
+    reorderField,
+  } = useFormEdit();
   const [isEditing, setIsEditing] = useState(false);
   const [tempLabel, setTempLabel] = useState("");
   const [tempPlaceholder, setTempPlaceholder] = useState("");
+  const [dragging, setDragging] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const orderTargetRef = useRef<HTMLElement | null>(null);
 
   const isDeleted = !disableEdit && overrides.deletedFields.includes(name);
   const label =
@@ -33,28 +78,101 @@ export const FieldWrapper: React.FC<FieldWrapperProps> = ({
   const placeholder =
     (!disableEdit && overrides.fieldOverrides[name]?.placeholder) ||
     defaultPlaceholder;
+  const orderIndex = getFieldOrderIndex(name);
 
   useEffect(() => {
     setTempLabel(label);
     setTempPlaceholder(placeholder || "");
   }, [label, placeholder]);
 
+  useEffect(() => {
+    if (disableEdit || isDeleted) return;
+    registerField(name);
+    return () => unregisterField(name);
+  }, [name, disableEdit, isDeleted, registerField, unregisterField]);
+
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root || disableEdit || isDeleted) return;
+
+    const target = findSortableGridItem(root);
+    orderTargetRef.current = target;
+    target.dataset.fieldName = name;
+    target.style.order = String(orderIndex);
+
+    return () => {
+      if (orderTargetRef.current === target) {
+        // Keep last order if remounting; clear only if still ours
+        if (target.dataset.fieldName === name) {
+          delete target.dataset.fieldName;
+          target.style.removeProperty("order");
+        }
+      }
+    };
+  }, [name, orderIndex, disableEdit, isDeleted, isEditMode]);
+
   if (isDeleted) return null;
+
+  const canReorder = isEditMode && !disableEdit;
 
   return (
     <div
+      ref={rootRef}
+      onDragOver={(e) => {
+        if (!canReorder) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+      }}
+      onDrop={(e) => {
+        if (!canReorder) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const from = e.dataTransfer.getData("text/field-name");
+        if (from) reorderField(from, name);
+      }}
       className={`flex flex-col gap-1.5 w-full transition-all ${
-        isEditMode && !disableEdit
+        canReorder
           ? "p-2.5 rounded-2xl border border-amber-400/50 dark:border-amber-500/30 bg-amber-500/[0.02] dark:bg-amber-500/[0.01]"
           : "p-0 border border-transparent"
-      }`}
+      } ${dragging ? "opacity-60 ring-2 ring-amber-400/60" : ""}`}
     >
-      {isEditMode && !disableEdit && (
-        <div className="flex items-center justify-between mb-1 pb-1 border-b border-dashed border-amber-400/20">
-          <span className="text-[9px] font-extrabold text-amber-500 dark:text-amber-400 uppercase tracking-widest select-none">
-            Field: {name}
-          </span>
-          <div className="flex gap-1.5">
+      {canReorder && (
+        <div className="flex items-center justify-between mb-1 pb-1 border-b border-dashed border-amber-400/20 gap-2">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span
+              draggable
+              onDragStart={(e) => {
+                setDragging(true);
+                e.dataTransfer.setData("text/field-name", name);
+                e.dataTransfer.effectAllowed = "move";
+              }}
+              onDragEnd={() => setDragging(false)}
+              className="inline-flex text-amber-500/80 cursor-grab active:cursor-grabbing shrink-0"
+              title="Drag to reorder"
+            >
+              <GripVertical size={14} />
+            </span>
+            <span className="text-[9px] font-extrabold text-amber-500 dark:text-amber-400 uppercase tracking-widest select-none truncate">
+              Field: {name}
+            </span>
+          </div>
+          <div className="flex gap-1 shrink-0">
+            <button
+              type="button"
+              onClick={() => moveField(name, "up")}
+              className="p-1 text-slate-500 hover:text-[#005c3a] hover:bg-emerald-50 dark:hover:bg-emerald-950/20 rounded-md transition-colors"
+              title="Move up"
+            >
+              <ChevronUp size={12} />
+            </button>
+            <button
+              type="button"
+              onClick={() => moveField(name, "down")}
+              className="p-1 text-slate-500 hover:text-[#005c3a] hover:bg-emerald-50 dark:hover:bg-emerald-950/20 rounded-md transition-colors"
+              title="Move down"
+            >
+              <ChevronDown size={12} />
+            </button>
             <button
               type="button"
               onClick={() => setIsEditing(!isEditing)}
@@ -119,10 +237,10 @@ export const FieldWrapper: React.FC<FieldWrapperProps> = ({
             <button
               type="button"
               onClick={() => {
-                editField(name, tempLabel, tempPlaceholder);
+                editField(name, tempLabel.trim() || defaultLabel, tempPlaceholder);
                 setIsEditing(false);
               }}
-              className="px-2.5 py-1.5 text-[10px] font-extrabold uppercase tracking-wider bg-[#005c3a] text-white hover:bg-[#004d30] rounded-lg transition-colors"
+              className="px-2.5 py-1.5 text-[10px] font-extrabold uppercase tracking-wider bg-[#005c3a] text-white rounded-lg transition-colors"
             >
               Save
             </button>
@@ -132,6 +250,57 @@ export const FieldWrapper: React.FC<FieldWrapperProps> = ({
     </div>
   );
 };
+
+/** CSS grid marked for admin field drag / up-down reorder. */
+export function FormFieldsGrid({
+  children,
+  className = "grid grid-cols-1 md:grid-cols-2 gap-5",
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div data-form-fields-grid className={className}>
+      {children}
+    </div>
+  );
+}
+
+/** Render admin-added fields inside the same FormFieldsGrid as built-ins. */
+export function AddedFormFields({
+  formData,
+  errors,
+  disabled,
+  onChange,
+}: {
+  formData: Record<string, string>;
+  errors?: Record<string, string>;
+  disabled?: boolean;
+  onChange: (name: string, value: string, file?: File) => void;
+}) {
+  const { overrides } = useFormEdit();
+  if (!overrides.addedFields?.length) return null;
+  return (
+    <>
+      {overrides.addedFields.map((field) => (
+        <InputField
+          key={field.name}
+          name={field.name}
+          label={field.label}
+          type={
+            (field.type as "text" | "number" | "email" | "password" | "file" | "date") ||
+            "text"
+          }
+          placeholder={field.placeholder}
+          value={formData[field.name] || ""}
+          error={errors?.[field.name]}
+          disabled={disabled}
+          onChange={(val, file) => onChange(field.name, val, file)}
+        />
+      ))}
+    </>
+  );
+}
 
 interface BaseFieldProps {
   label: string;
@@ -851,6 +1020,11 @@ export const SubmitButton: React.FC<SubmitButtonProps> = ({
             >
               Add Field
             </button>
+          )}
+          {isEditMode && (
+            <span className="self-center text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide">
+              Drag ⋮⋮ or ↑↓ to reorder
+            </span>
           )}
         </div>
       )}

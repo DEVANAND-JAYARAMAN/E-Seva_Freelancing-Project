@@ -953,7 +953,7 @@ export function PdfPage() {
 
                   {/* Form Fields depend on service ID */}
                   <div className="space-y-5">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div data-form-fields-grid className="grid grid-cols-1 md:grid-cols-2 gap-5">
                       {/* Aadhaar to PAN Form */}
                       {activeServiceObj.id === "adhaar-to-pan" && (
                         <>
@@ -1147,7 +1147,7 @@ export function PdfPage() {
 
                   {/* Dynamically added admin fields */}
                   {overrides.addedFields && overrides.addedFields.length > 0 && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
+                    <div data-form-fields-grid className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
                       {overrides.addedFields.map((field) => (
                         <InputField
                           key={field.name}

@@ -153,7 +153,7 @@ export function PanCardServicePage() {
 
           {/* Form Fields Grid */}
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div data-form-fields-grid className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="md:col-span-2">
                 <SelectField
                   name="applicationType"
@@ -276,7 +276,7 @@ export function PanCardServicePage() {
               <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest mb-4">
                 Required Documents
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div data-form-fields-grid className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <InputField
                   name="aadhaarFront"
                   label="Aadhaar Card (Front)"
@@ -318,7 +318,7 @@ export function PanCardServicePage() {
                 <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 uppercase tracking-widest mb-4">
                   Additional Information
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div data-form-fields-grid className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {overrides.addedFields.map((field) => (
                     <InputField
                       key={field.name}
