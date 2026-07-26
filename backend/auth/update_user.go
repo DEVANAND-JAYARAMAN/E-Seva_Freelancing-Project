@@ -248,5 +248,67 @@ func DeleteUser(c *gin.Context) {
 		})
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
+	// Wipe partner service applications
+	appsOut, scanErr := db.DynamoClient.Scan(context.TODO(), &dynamodb.ScanInput{
+		TableName:        aws.String("ServiceApplications"),
+		FilterExpression: aws.String("retailerId = :rid"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":rid": &types.AttributeValueMemberS{Value: userId},
+		},
+	})
+	if scanErr != nil {
+		log.Printf("DeleteUser scan apps failed for %s: %v", userId, scanErr)
+	} else {
+		for _, item := range appsOut.Items {
+			pk, okPK := item["PK"].(*types.AttributeValueMemberS)
+			sk, okSK := item["SK"].(*types.AttributeValueMemberS)
+			if !okPK || !okSK {
+				continue
+			}
+			_, _ = db.DynamoClient.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
+				TableName: aws.String("ServiceApplications"),
+				Key: map[string]types.AttributeValue{
+					"PK": pk,
+					"SK": sk,
+				},
+			})
+		}
+	}
+
+	// Wipe wallet transactions for this user
+	txOut, txErr := db.DynamoClient.Query(context.TODO(), &dynamodb.QueryInput{
+		TableName:              aws.String("WalletTransactions"),
+		KeyConditionExpression: aws.String("PK = :pk"),
+		ExpressionAttributeValues: map[string]types.AttributeValue{
+			":pk": &types.AttributeValueMemberS{Value: "WALLET#" + userId},
+		},
+	})
+	if txErr != nil {
+		log.Printf("DeleteUser query wallet txs failed for %s: %v", userId, txErr)
+	} else {
+		for _, item := range txOut.Items {
+			sk, ok := item["SK"].(*types.AttributeValueMemberS)
+			if !ok {
+				continue
+			}
+			_, _ = db.DynamoClient.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
+				TableName: aws.String("WalletTransactions"),
+				Key: map[string]types.AttributeValue{
+					"PK": &types.AttributeValueMemberS{Value: "WALLET#" + userId},
+					"SK": sk,
+				},
+			})
+		}
+	}
+
+	// Remove wallet balance row
+	_, _ = db.DynamoClient.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
+		TableName: aws.String("Wallets"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: "WALLET#" + userId},
+			"SK": &types.AttributeValueMemberS{Value: "TYPE#Main"},
+		},
+	})
+
+	c.JSON(http.StatusOK, gin.H{"message": "User and related data deleted successfully"})
 }
