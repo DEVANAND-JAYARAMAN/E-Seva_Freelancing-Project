@@ -877,10 +877,6 @@ export function PdfPage() {
                       <h4 className="text-xs font-black text-emerald-555 group-hover:text-emerald-650 transition-colors capitalize line-clamp-2 leading-snug">
                         {service.name}
                       </h4>
-                      <div className="flex items-center gap-1 text-[10px] font-bold text-rose-500">
-                        <span>Amount:</span>
-                        <span>₹ {service.amount.toFixed(2)}</span>
-                      </div>
                     </div>
 
                     {/* Bottom interactive buttons matching layout exactly */}
