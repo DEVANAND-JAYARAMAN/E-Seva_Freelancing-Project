@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { X, Upload } from "lucide-react";
+import { createPortal } from "react-dom";
+import { X, Upload, ArrowLeft } from "lucide-react";
 import Swal from "sweetalert2";
 import type { StatusTicket, TicketStatus } from "./types";
 import { useAuth } from "../store/context/AuthContext";
@@ -222,6 +223,15 @@ export function StatusDetailModal({
     }
   }, [ticket, isOpen, isAdmin, user?.role]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [isOpen]);
+
   if (!isOpen || !ticket) return null;
 
   const formData =
@@ -430,56 +440,73 @@ export function StatusDetailModal({
               ? "text-rose-600"
               : "text-slate-600";
 
-  return (
-    <div className="fixed inset-0 z-50 flex bg-[#f0f4f8]/95 animate-fadeIn">
-      <div className="relative w-full h-full flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between px-5 py-3 border-b border-slate-200 bg-white shrink-0">
-          <h3 className="text-base font-bold text-slate-800">
-            Pending File Details
-          </h3>
+  const page = (
+    <div className="fixed inset-0 z-[200] flex flex-col bg-slate-50 dark:bg-[#030712]">
+      {/* Page header — full cover, not a floating modal */}
+      <header className="shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#090d16]">
+        <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3.5">
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex h-9 items-center justify-center gap-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold uppercase tracking-wider transition-colors"
+            >
+              <ArrowLeft size={14} />
+              <span>Back</span>
+            </button>
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg font-black text-slate-900 dark:text-white truncate">
+                File Details
+              </h1>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 truncate">
+                {ticket.serviceName} · {ticket.status}
+              </p>
+            </div>
+          </div>
           <button
             onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors"
+            className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 transition-colors shrink-0"
             type="button"
+            aria-label="Close"
           >
             <X size={16} />
           </button>
         </div>
+      </header>
 
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
-          <div className="mx-auto w-full max-w-4xl space-y-5">
+      <div className="flex-1 overflow-y-auto">
+        <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-5 sm:py-8 space-y-5">
             {/* Summary card — reference model */}
-            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+            <div className="bg-white dark:bg-[#090d16] rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
               <div className="grid grid-cols-1 sm:grid-cols-2">
-                <div className="col-span-1 sm:col-span-2 p-4 border-b border-slate-100">
+                <div className="col-span-1 sm:col-span-2 p-4 border-b border-slate-100 dark:border-slate-800">
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
                     Requested Service
                   </span>
-                  <span className="text-base font-bold text-slate-900 mt-0.5 block">
+                  <span className="text-base font-bold text-slate-900 dark:text-white mt-0.5 block">
                     {ticket.serviceName}
                   </span>
                 </div>
-                <div className="p-4 border-b border-r border-slate-100">
+                <div className="p-4 border-b border-r border-slate-100 dark:border-slate-800">
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
                     Retailer / Distributor
                   </span>
-                  <span className="text-sm font-bold text-slate-800 mt-0.5 block">
+                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5 block">
                     {ticket.retailerName}
                   </span>
                   <span className="text-xs text-slate-500 block">
                     {ticket.retailerMobile || "—"}
                   </span>
                 </div>
-                <div className="p-4 border-b border-slate-100">
+                <div className="p-4 border-b border-slate-100 dark:border-slate-800">
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
                     User Role
                   </span>
-                  <span className="text-sm font-bold text-slate-800 mt-0.5 block">
+                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5 block">
                     {ticket.userRole || "Retailer"}
                   </span>
                 </div>
-                <div className="p-4 border-b border-r border-slate-100">
+                <div className="p-4 border-b border-r border-slate-100 dark:border-slate-800">
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
                     Processing Charge
                   </span>
@@ -487,7 +514,7 @@ export function StatusDetailModal({
                     ₹{ticket.amount.toFixed(2)}
                   </span>
                 </div>
-                <div className="p-4 border-b border-slate-100">
+                <div className="p-4 border-b border-slate-100 dark:border-slate-800">
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
                     Current Status
                   </span>
@@ -499,11 +526,11 @@ export function StatusDetailModal({
                       : ticket.status.toUpperCase()}
                   </span>
                 </div>
-                <div className="p-4 border-r border-slate-100">
+                <div className="p-4 border-r border-slate-100 dark:border-slate-800">
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
                     Submission Date
                   </span>
-                  <span className="text-sm font-semibold text-slate-700 mt-0.5 block">
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 mt-0.5 block">
                     {ticket.createdDate}
                   </span>
                 </div>
@@ -511,7 +538,7 @@ export function StatusDetailModal({
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
                     Last Status Update
                   </span>
-                  <span className="text-sm font-semibold text-slate-700 mt-0.5 block">
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 mt-0.5 block">
                     {ticket.lastUpdated}
                   </span>
                 </div>
@@ -519,8 +546,8 @@ export function StatusDetailModal({
             </div>
 
             {/* Main form — thuruvancommunication.in model */}
-            <div className="bg-white rounded-xl border-2 border-sky-300 p-5 sm:p-6 shadow-sm">
-              <h2 className="text-lg font-bold text-slate-900 mb-5">
+            <div className="bg-white dark:bg-[#090d16] rounded-xl border-2 border-sky-300 dark:border-sky-800 p-5 sm:p-6 shadow-sm">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-5">
                 {ticket.serviceName}
               </h2>
 
@@ -872,12 +899,11 @@ export function StatusDetailModal({
                 </div>
               )}
 
-              {/* View-only remarks */}
               {!canEdit &&
                 !canReapply &&
                 ticket.remarks &&
                 ticket.remarks !== "No remarks." && (
-                  <div className="mt-5 pt-4 border-t border-slate-200">
+                  <div className="mt-5 pt-4 border-t border-slate-200 dark:border-slate-800">
                     <label className="text-xs font-semibold text-[#7a1f1f]">
                       Remarks
                     </label>
@@ -890,13 +916,12 @@ export function StatusDetailModal({
                   </div>
                 )}
             </div>
-          </div>
         </div>
       </div>
 
       {/* Preview overlay */}
       {previewUrl && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4">
+        <div className="fixed inset-0 z-[210] flex items-center justify-center bg-black/80 p-4">
           <div className="relative w-full max-w-5xl h-full flex items-center justify-center">
             {isImageFile(previewUrl) ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -924,4 +949,7 @@ export function StatusDetailModal({
       )}
     </div>
   );
+
+  if (typeof document === "undefined") return page;
+  return createPortal(page, document.body);
 }
