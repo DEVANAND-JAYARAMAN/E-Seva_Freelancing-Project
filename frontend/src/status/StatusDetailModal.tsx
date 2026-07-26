@@ -33,7 +33,7 @@ const FIELD_LABELS: Record<string, string> = {
   applicantName: "Applicant Name",
   doorNo: "Door Number",
   addressEnglish: "Address In English",
-  addressTamil: "முகவரி தமிழில்",
+  addressTamil: "?????? ???????",
   district: "District",
   taluk: "Taluk",
   postalArea: "Postal Area",
@@ -51,12 +51,50 @@ const FILE_FIELD_KEYS = new Set([
   "aadhaarCard",
 ]);
 
+/** Match submit-form order so Details is not alphabetical JSON key order. */
+const FIELD_DISPLAY_ORDER = [
+  "aadhaarNo",
+  "aadhaarNumber",
+  "mobileNo",
+  "mobileNumber",
+  "applicantName",
+  "doorNo",
+  "addressEnglish",
+  "addressTamil",
+  "district",
+  "taluk",
+  "postalArea",
+  "pinCode",
+  "photo",
+  "signature",
+  "aadhaarCard",
+  "aadhaarcard",
+  "aadhaar_card",
+];
+
 const TEXTAREA_KEYS = new Set([
   "addressenglish",
   "addresstamil",
   "address",
   "remarks",
 ]);
+
+function fieldSortIndex(key: string): number {
+  const exact = FIELD_DISPLAY_ORDER.indexOf(key);
+  if (exact >= 0) return exact;
+  const lower = key.toLowerCase();
+  const loose = FIELD_DISPLAY_ORDER.findIndex((k) => k.toLowerCase() === lower);
+  if (loose >= 0) return loose;
+  return FIELD_DISPLAY_ORDER.length + 100;
+}
+
+function sortFormEntries<T extends [string, unknown]>(entries: T[]): T[] {
+  return [...entries].sort((a, b) => {
+    const di = fieldSortIndex(a[0]) - fieldSortIndex(b[0]);
+    if (di !== 0) return di;
+    return a[0].localeCompare(b[0]);
+  });
+}
 
 const STATUS_OPTIONS: { value: TicketStatus; label: string }[] = [
   { value: "Pending", label: "Pending" },
@@ -240,11 +278,14 @@ export function StatusDetailModal({
       : ticket.formData || {};
   const documents = ticket.documents || [];
 
-  const textEntries = Object.entries(formData).filter(
-    ([key, value]) => !isFileLikeKey(key) && value !== undefined && value !== null,
+  const textEntries = sortFormEntries(
+    Object.entries(formData).filter(
+      ([key, value]) =>
+        !isFileLikeKey(key) && value !== undefined && value !== null,
+    ),
   );
-  const fileEntries = Object.entries(formData).filter(([key]) =>
-    isFileLikeKey(key),
+  const fileEntries = sortFormEntries(
+    Object.entries(formData).filter(([key]) => isFileLikeKey(key)),
   );
 
   const unmatchedDocs = documents.filter((doc) => {
@@ -422,7 +463,7 @@ export function StatusDetailModal({
         return;
       }
     } catch {
-      // Still try preview — CORS HEAD may fail even when GET/img works
+      // Still try preview ? CORS HEAD may fail even when GET/img works
     }
     setPreviewUrl(url);
   };
@@ -459,7 +500,7 @@ export function StatusDetailModal({
                 File Details
               </h1>
               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 truncate">
-                {ticket.serviceName} · {ticket.status}
+                {ticket.serviceName} � {ticket.status}
               </p>
             </div>
           </div>
@@ -476,7 +517,7 @@ export function StatusDetailModal({
 
       <div className="flex-1 overflow-y-auto">
         <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-5 sm:py-8 space-y-5">
-            {/* Summary card — reference model */}
+            {/* Summary card ? reference model */}
             <div className="bg-white dark:bg-[#090d16] rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
               <div className="grid grid-cols-1 sm:grid-cols-2">
                 <div className="col-span-1 sm:col-span-2 p-4 border-b border-slate-100 dark:border-slate-800">
@@ -495,7 +536,7 @@ export function StatusDetailModal({
                     {ticket.retailerName}
                   </span>
                   <span className="text-xs text-slate-500 block">
-                    {ticket.retailerMobile || "—"}
+                    {ticket.retailerMobile || "?"}
                   </span>
                 </div>
                 <div className="p-4 border-b border-slate-100 dark:border-slate-800">
@@ -511,7 +552,7 @@ export function StatusDetailModal({
                     Processing Charge
                   </span>
                   <span className="text-sm font-bold text-emerald-600 mt-0.5 block">
-                    ₹{ticket.amount.toFixed(2)}
+                    ?{ticket.amount.toFixed(2)}
                   </span>
                 </div>
                 <div className="p-4 border-b border-slate-100 dark:border-slate-800">
@@ -545,7 +586,7 @@ export function StatusDetailModal({
               </div>
             </div>
 
-            {/* Main form — thuruvancommunication.in model */}
+            {/* Main form ? thuruvancommunication.in model */}
             <div className="bg-white dark:bg-[#090d16] rounded-xl border-2 border-sky-300 dark:border-sky-800 p-5 sm:p-6 shadow-sm">
               <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-5">
                 {ticket.serviceName}
@@ -781,7 +822,7 @@ export function StatusDetailModal({
                       </select>
                     </div>
 
-                    {/* Remarks — Resubmit / Rejected */}
+                    {/* Remarks ? Resubmit / Rejected */}
                     {showRemarks && (
                       <div className="flex flex-col gap-1">
                         <label className="text-xs font-semibold text-[#7a1f1f]">
@@ -797,7 +838,7 @@ export function StatusDetailModal({
                       </div>
                     )}
 
-                    {/* Select Text / File — Process / Approved */}
+                    {/* Select Text / File ? Process / Approved */}
                     {showAckSelect && (
                       <div className="flex flex-col gap-1">
                         <label className="text-xs font-semibold text-[#7a1f1f]">
@@ -816,7 +857,7 @@ export function StatusDetailModal({
                       </div>
                     )}
 
-                    {/* Application No — Processing + Text */}
+                    {/* Application No ? Processing + Text */}
                     {showApplicationNo && (
                       <div className="flex flex-col gap-1">
                         <label className="text-xs font-semibold text-[#7a1f1f]">
@@ -832,7 +873,7 @@ export function StatusDetailModal({
                       </div>
                     )}
 
-                    {/* Ack text — Approved + Text */}
+                    {/* Ack text ? Approved + Text */}
                     {selectedStatus === "Approved" && ackType === "text" && (
                       <div className="flex flex-col gap-1">
                         <label className="text-xs font-semibold text-[#7a1f1f]">
@@ -848,7 +889,7 @@ export function StatusDetailModal({
                       </div>
                     )}
 
-                    {/* File upload — Process/Approved + File */}
+                    {/* File upload ? Process/Approved + File */}
                     {showAckSelect && ackType === "file" && (
                       <div className="flex flex-col gap-1">
                         <label className="text-xs font-semibold text-[#7a1f1f]">
