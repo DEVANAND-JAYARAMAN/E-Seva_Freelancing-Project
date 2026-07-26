@@ -24,8 +24,28 @@ export function DashboardPage({
 
   const loadStats = useCallback(() => {
     authFetch(apiUrl("admin/dashboard"), { cache: "no-store" })
-      .then((res) => res.json())
+      .then(async (res) => {
+        if (res.status === 401 || res.status === 403) {
+          await Swal.fire({
+            icon: "warning",
+            title: "Admin session expired",
+            text: "Please logout and login again with your real admin email and password.",
+            confirmButtonColor: "#005c3a",
+          });
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          window.location.href = "/auth/login";
+          return null;
+        }
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          console.error("Dashboard stats failed", errData);
+          return null;
+        }
+        return res.json();
+      })
       .then((data) => {
+        if (!data || data.error) return;
         setStats(data);
         if (typeof data?.adminWalletBalance === "number") {
           updateWallet(Number(data.adminWalletBalance));

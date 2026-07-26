@@ -347,13 +347,14 @@ func GetDashboardStats(c *gin.Context) {
 		for _, item := range outUsers.Items {
 			role := ""
 			if val, ok := item["role"].(*types.AttributeValueMemberS); ok {
-				role = val.Value
+				role = strings.ToLower(strings.TrimSpace(val.Value))
 			}
-			if role == "retailer" {
+			switch role {
+			case "retailer":
 				stats.Retailers++
-			} else if role == "distributor" {
+			case "distributor":
 				stats.Distributors++
-			} else if role == "customer" {
+			case "customer":
 				stats.Customers++
 			}
 		}

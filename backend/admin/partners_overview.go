@@ -62,25 +62,24 @@ type rawWalletTx struct {
 // and per-service amount details (Debit / Credit / Available Balance).
 func GetPartnersOverview(c *gin.Context) {
 	usersOut, err := db.DynamoClient.Scan(context.TODO(), &dynamodb.ScanInput{
-		TableName:        aws.String("Users"),
-		FilterExpression: aws.String("#r = :ret OR #r = :dis"),
-		ExpressionAttributeNames: map[string]string{
-			"#r": "role",
-		},
-		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":ret": &types.AttributeValueMemberS{Value: "retailer"},
-			":dis": &types.AttributeValueMemberS{Value: "distributor"},
-		},
+		TableName: aws.String("Users"),
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch partners"})
 		return
 	}
 
-	var users []models.User
-	if err := attributevalue.UnmarshalListOfMaps(usersOut.Items, &users); err != nil {
+	var allUsers []models.User
+	if err := attributevalue.UnmarshalListOfMaps(usersOut.Items, &allUsers); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode partners"})
 		return
+	}
+	var users []models.User
+	for _, u := range allUsers {
+		role := strings.ToLower(strings.TrimSpace(u.Role))
+		if role == "retailer" || role == "distributor" {
+			users = append(users, u)
+		}
 	}
 	auth.HydrateWalletBalances(users)
 
