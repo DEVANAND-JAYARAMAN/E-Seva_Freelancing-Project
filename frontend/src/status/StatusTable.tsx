@@ -2,13 +2,9 @@ import { useState } from "react";
 import {
   Search,
   Eye,
-  Edit2,
-  Trash2,
   AlertCircle,
   Phone,
   User,
-  ArrowUpRight,
-  HelpCircle,
 } from "lucide-react";
 import type { StatusTicket, TicketStatus } from "./types";
 import { useAuth } from "../store/context/AuthContext";
@@ -179,27 +175,17 @@ export function StatusTable({
                     </span>
                   </td>
 
-                  {/* Action Button */}
+                  {/* Action — single open button */}
                   <td className="py-4 px-6 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <button
-                        onClick={() => onSelectTicket(ticket, false)}
-                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200/60 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-[#005c3a] dark:text-emerald-400 transition-colors"
-                        title="View ticket details"
-                      >
-                        <Eye size={13} />
-                      </button>
-                      {isAdmin &&
-                        ticket.status !== "Rejected" && (
-                          <button
-                            onClick={() => onSelectTicket(ticket, true)}
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200/60 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-[#005c3a] dark:text-emerald-400 transition-colors"
-                            title="Edit status ticket details"
-                          >
-                            <Edit2 size={13} />
-                          </button>
-                        )}
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => onSelectTicket(ticket, isAdmin)}
+                      className="inline-flex h-8 items-center justify-center gap-1.5 px-3 rounded-lg border border-slate-200/60 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900 text-[#005c3a] dark:text-emerald-400 transition-colors text-[10px] font-extrabold uppercase tracking-wider"
+                      title={isAdmin ? "View & update status" : "View details"}
+                    >
+                      <Eye size={13} />
+                      <span>{isAdmin ? "Open" : "View"}</span>
+                    </button>
                   </td>
                 </tr>
               ))
