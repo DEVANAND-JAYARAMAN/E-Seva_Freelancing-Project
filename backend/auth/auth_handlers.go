@@ -3,10 +3,12 @@ package auth
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
+	"math/big"
 	"net/http"
 	"os"
 	"strconv"
@@ -41,8 +43,45 @@ type LoginRequest struct {
 	Password string `json:"password" binding:"required"`
 }
 
-func generateUserId() string {
-	return "USR" + time.Now().Format("20060102150405")
+// generateUserId creates a short simple ID:
+// Retailer → R48219, Distributor → D39120, Admin → A10234
+func generateUserId(role string) string {
+	prefix := "U"
+	switch strings.ToLower(strings.TrimSpace(role)) {
+	case "retailer":
+		prefix = "R"
+	case "distributor":
+		prefix = "D"
+	case "admin":
+		prefix = "A"
+	}
+	n, err := rand.Int(rand.Reader, big.NewInt(90000))
+	if err != nil {
+		return fmt.Sprintf("%s%05d", prefix, time.Now().Unix()%100000)
+	}
+	return fmt.Sprintf("%s%05d", prefix, n.Int64()+10000)
+}
+
+func userIdExists(userId string) bool {
+	out, err := db.DynamoClient.GetItem(context.TODO(), &dynamodb.GetItemInput{
+		TableName: aws.String("Users"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: "USER#" + userId},
+			"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+		},
+		ProjectionExpression: aws.String("PK"),
+	})
+	return err == nil && out.Item != nil
+}
+
+func nextUniqueUserId(role string) (string, error) {
+	for i := 0; i < 12; i++ {
+		id := generateUserId(role)
+		if !userIdExists(id) {
+			return id, nil
+		}
+	}
+	return "", errors.New("failed to allocate a unique user id")
 }
 
 func sendSignupWhatsAppMessage(mobile, role, userId, rawPassword string) {
@@ -143,7 +182,11 @@ func Signup(c *gin.Context) {
 		return
 	}
 
-	userId := generateUserId()
+	userId, err := nextUniqueUserId(req.Role)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create user id"})
+		return
+	}
 	now := time.Now().UTC().Format(time.RFC3339)
 
 	user := models.User{
