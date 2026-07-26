@@ -35,7 +35,6 @@ export function ServiceCard({
   logoUrl,
   onClick,
   layout = "vertical",
-  price,
   isManageMode = false,
   allowedRoles = [],
   onToggleRole,
@@ -44,31 +43,6 @@ export function ServiceCard({
   onEditClick,
   onDeleteClick,
 }: ServiceCardProps) {
-  const displayPrice = (() => {
-    if (!price) return null;
-    const retailer = Number(price.retailer || 0) || 0;
-    const distributor = Number(price.distributor || 0) || 0;
-    if (retailer <= 0 && distributor <= 0) return null;
-    if (isAdmin) {
-      return { label: "R / D", value: `₹${retailer} / ₹${distributor}` };
-    }
-    // Non-admin: show their role price; default retailer
-    const role =
-      typeof window !== "undefined"
-        ? (() => {
-            try {
-              const u = JSON.parse(localStorage.getItem("user") || "null");
-              return String(u?.role || "retailer").toLowerCase();
-            } catch {
-              return "retailer";
-            }
-          })()
-        : "retailer";
-    const amt = role === "distributor" ? distributor || retailer : retailer;
-    if (amt <= 0) return null;
-    return { label: "Charge", value: `₹${amt}` };
-  })();
-
   const handleEdit = async (e: MouseEvent) => {
     e.stopPropagation();
     if (onEditSave) {
@@ -195,11 +169,6 @@ export function ServiceCard({
               {subName}
             </p>
           )}
-          {displayPrice ? (
-            <p className="text-[11px] font-extrabold text-[#005c3a] dark:text-emerald-400 mt-1">
-              {displayPrice.value}
-            </p>
-          ) : null}
         </div>
       </article>
     );
@@ -237,11 +206,6 @@ export function ServiceCard({
             {subName}
           </p>
         )}
-        {displayPrice ? (
-          <p className="text-[11px] font-extrabold text-[#005c3a] dark:text-emerald-400">
-            {displayPrice.value}
-          </p>
-        ) : null}
       </div>
 
       {isManageMode && (
