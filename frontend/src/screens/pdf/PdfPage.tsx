@@ -201,6 +201,7 @@ export function PdfPage() {
   const [activeForm, setActiveForm] = useState<string | null>(null);
   const [activeListView, setActiveListView] = useState<string | null>(null); // To view the list for a specific service
   const [formData, setFormData] = useState<Record<string, string>>({});
+  const [pendingFiles, setPendingFiles] = useState<Record<string, File>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
@@ -479,7 +480,7 @@ export function PdfPage() {
     }
   };
 
-  const handleFieldChange = (name: string, value: string) => {
+  const handleFieldChange = (name: string, value: string, file?: File) => {
     setFormData((prev) => {
       const updated = { ...prev, [name]: value };
 
@@ -524,6 +525,17 @@ export function PdfPage() {
         });
       }
       return updated;
+    });
+
+    setPendingFiles((prev) => {
+      const next = { ...prev };
+      if (file) {
+        next[name] = file;
+      } else if (name.toLowerCase().includes("file") || name.toLowerCase().includes("upload") || name.toLowerCase().includes("photo") || name.toLowerCase().includes("signature") || name.toLowerCase().includes("card")) {
+        // Cleared file input
+        if (!value) delete next[name];
+      }
+      return next;
     });
   };
 
@@ -654,6 +666,37 @@ export function PdfPage() {
 
     if (user && service) {
       try {
+        // Upload binary files first so admin View can open /uploads/... paths
+        const updatedForm: Record<string, string> = { ...formData };
+        const documentPaths: string[] = [];
+
+        for (const [key, file] of Object.entries(pendingFiles)) {
+          const uploadBody = new FormData();
+          uploadBody.append("file", file);
+          const upRes = await authFetch(apiUrl("uploads"), {
+            method: "POST",
+            body: uploadBody,
+          });
+          const upData = await upRes.json().catch(() => ({}));
+          if (!upRes.ok || !upData.path) {
+            alert(
+              upData.error ||
+                `Failed to upload file for ${key}. Please try again.`,
+            );
+            setIsSubmitting(false);
+            return;
+          }
+          const path = String(upData.path);
+          updatedForm[key] = path;
+          documentPaths.push(path);
+        }
+
+        for (const v of Object.values(updatedForm)) {
+          if (typeof v === "string" && v.startsWith("/uploads/") && !documentPaths.includes(v)) {
+            documentPaths.push(v);
+          }
+        }
+
         const payload = new FormData();
         payload.append("retailerId", user.id);
         payload.append("retailerName", user.name || "Unknown");
@@ -664,13 +707,16 @@ export function PdfPage() {
         payload.append("cost", String(service.amount || 0));
         payload.append(
           "customerWhatsApp",
-          formData.mobileNo || formData.mobile || "",
+          updatedForm.mobileNo || updatedForm.mobile || "",
         );
         payload.append(
           "walletType",
           user.role === "distributor" ? "Distributor" : "Retailer",
         );
-        payload.append("formData", JSON.stringify(formData));
+        payload.append("formData", JSON.stringify(updatedForm));
+        if (documentPaths.length > 0) {
+          payload.append("documents", JSON.stringify(documentPaths));
+        }
 
         const res = await authFetch(apiUrl("services/request"), {
           method: "POST",
@@ -718,10 +764,11 @@ export function PdfPage() {
 
     setRequestLogs((prev) => [newRequest, ...prev]);
 
-    setTimeout(() => {
+	setTimeout(() => {
       setSubmissionSuccess(false);
       setActiveForm(null);
       setFormData({});
+      setPendingFiles({});
     }, 2500);
   };
 
@@ -884,6 +931,7 @@ export function PdfPage() {
                       <button
                         onClick={() => {
                           setFormData({});
+                          setPendingFiles({});
                           setErrors({});
                           setSubmissionSuccess(false);
                           setActiveForm(service.id);
@@ -1154,8 +1202,8 @@ export function PdfPage() {
                           value={formData[field.name] || ""}
                           error={errors[field.name]}
                           disabled={isSubmitting}
-                          onChange={(val) => {
-                            handleFieldChange(field.name, val);
+                          onChange={(val, file) => {
+                            handleFieldChange(field.name, val, file);
                           }}
                         />
                       ))}
@@ -1200,6 +1248,7 @@ export function PdfPage() {
               <button
                 onClick={() => {
                   setFormData({});
+                  setPendingFiles({});
                   setErrors({});
                   setSubmissionSuccess(false);
                   setActiveForm(activeListView);

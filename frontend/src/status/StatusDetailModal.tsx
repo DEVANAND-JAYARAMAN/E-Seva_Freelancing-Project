@@ -132,17 +132,23 @@ function resolveDocUrl(
   fieldIndex?: number,
 ): string | null {
   if (value) {
-    const direct = toPublicDocUrl(value);
-    if (value.startsWith("http") || value.startsWith("/uploads/") || value.startsWith("/api/")) {
-      return direct;
+    const trimmed = value.trim();
+    if (
+      trimmed.startsWith("http") ||
+      trimmed.startsWith("/uploads/") ||
+      trimmed.startsWith("/api/") ||
+      trimmed.startsWith("blob:") ||
+      trimmed.startsWith("data:")
+    ) {
+      return toPublicDocUrl(trimmed);
     }
     const match = documents.find(
       (d) =>
-        d === value ||
-        d.endsWith(`/${value}`) ||
-        getFileName(d) === value ||
-        getFileName(d).endsWith(`_${value}`) ||
-        getFileName(d).includes(value),
+        d === trimmed ||
+        d.endsWith(`/${trimmed}`) ||
+        getFileName(d) === trimmed ||
+        getFileName(d).endsWith(`_${trimmed}`) ||
+        getFileName(d).includes(trimmed),
     );
     if (match) return toPublicDocUrl(match);
   }

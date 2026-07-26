@@ -285,6 +285,15 @@ func CreateServiceRequest(c *gin.Context) {
 	for _, p := range req.Documents {
 		addDoc(p)
 	}
+	// Multipart clients may send documents as a JSON string field
+	if docsJSON := strings.TrimSpace(c.PostForm("documents")); docsJSON != "" {
+		var fromForm []string
+		if json.Unmarshal([]byte(docsJSON), &fromForm) == nil {
+			for _, p := range fromForm {
+				addDoc(p)
+			}
+		}
+	}
 	form, err := c.MultipartForm()
 	if err == nil {
 		files := form.File["documents"]
