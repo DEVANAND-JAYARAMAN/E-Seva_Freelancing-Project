@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { AgriStackPdfForm } from "./AgriStackPdfForm";
-import { useLocalStorage } from "../../../hooks/useLocalStorage";
+import { useServicePricing } from "../../../hooks/useServicePricing";
 import { PATHS } from "../../../routes/paths";
 
 export function AgriStackPdfPage() {
@@ -14,23 +14,15 @@ export function AgriStackPdfPage() {
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Read pricing matrix from localStorage
-  const [pricingConfig] = useLocalStorage<Record<string, any[]>>(
-    "thuruvan_service_pricing_matrix_v2",
-    {},
-  );
-
-  // Helper to resolve dynamic price from admin pricing matrix
-  const getServicePrice = () => {
-    const list = pricingConfig["agri-stack-pdf"];
-    if (list && Array.isArray(list)) {
-      const match = list.find((item) => item.id === "agri-main");
-      if (match && match.retailerPrice !== undefined) {
-        return Number(match.retailerPrice);
-      }
-    }
-    return 35.0; // Default price
-  };
+  // Read pricing from Service Payment API (role-based)
+  const { getCharge } = useServicePricing();
+  const getServicePrice = () =>
+    getCharge({
+      categoryId: "agri-stack-pdf",
+      serviceId: "agri-main",
+      serviceName: "Agri Stack PDF",
+      fallback: 35,
+    });
 
   const handleFormSubmit = (data: any) => {
     setIsSubmitting(true);

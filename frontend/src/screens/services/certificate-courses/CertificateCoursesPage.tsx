@@ -7,7 +7,7 @@ import { CheckCircle2, Plus } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { CertificateCoursesForm } from "./CertificateCoursesForm";
 import { ServiceCard } from "../ServiceCard";
-import { useLocalStorage } from "../../../hooks/useLocalStorage";
+import { useServicePricing } from "../../../hooks/useServicePricing";
 import { useAuth } from "../../../store/context/AuthContext";
 import Swal from "sweetalert2";
 
@@ -21,18 +21,13 @@ interface CertificateService {
 
 export function CertificateCoursesPage() {
   const { user } = useAuth();
+  const { getCharge } = useServicePricing();
   const isAdmin = user?.role === "admin";
   const [activeForm, setActiveForm] = useState<string | null>(null);
   const [selectedService, setSelectedService] =
     useState<CertificateService | null>(null);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Read pricing matrix from localStorage
-  const [pricingConfig] = useLocalStorage<Record<string, any[]>>(
-    "thuruvan_service_pricing_matrix_v2",
-    {},
-  );
 
   const [servicesList, setServicesList] = useCategoryServices<CertificateService>(
     "certificate-courses",
@@ -121,17 +116,14 @@ export function CertificateCoursesPage() {
     });
   };
 
-  // Helper to resolve dynamic price from admin pricing matrix
-  const getServicePrice = (service: CertificateService) => {
-    const list = pricingConfig["certificate-courses"];
-    if (list && Array.isArray(list)) {
-      const match = list.find((item) => item.id === service.priceKey);
-      if (match && match.retailerPrice !== undefined) {
-        return Number(match.retailerPrice);
-      }
-    }
-    return service.defaultPrice;
-  };
+  // Helper to resolve dynamic price from admin Service Payment matrix
+  const getServicePrice = (service: CertificateService) =>
+    getCharge({
+      categoryId: "certificate-courses",
+      serviceId: service.priceKey,
+      serviceName: service.name,
+      fallback: service.defaultPrice,
+    });
 
   const handleCardClick = (service: CertificateService) => {
     setSelectedService(service);

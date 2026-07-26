@@ -284,7 +284,8 @@ export const AddressCorrectionAbove18: React.FC<
         <ServicePaymentScreen
           serviceId="aadhaar_address_update"
           serviceName="Address Correction (above 18)"
-          retailerCharge={100} // Hardcoded or imported from config
+          retailerCharge={100} // Fallback; Service Payment matrix overrides
+          pricingCategoryId="aadhaar-card-address"
           formData={formData}
           files={selectedFiles}
           onBack={() => setPaymentPhase("form")}

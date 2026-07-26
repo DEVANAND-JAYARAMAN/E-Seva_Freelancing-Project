@@ -26,15 +26,16 @@ import (
 )
 
 type CreateServiceReq struct {
-	RetailerId       string  `form:"retailerId" binding:"required"`
-	RetailerName     string  `form:"retailerName"`
-	RetailerMobile   string  `form:"retailerMobile"`
-	ServiceId        string  `form:"serviceId" binding:"required"`
-	ServiceName      string  `form:"serviceName" binding:"required"`
-	Cost             float64 `form:"cost"`
-	CustomerWhatsApp string  `form:"customerWhatsApp"`
-	WalletType       string  `form:"walletType"` // "Retailer" or "Distributor" (needed for history)
-	FormData         string  `form:"formData"`
+	RetailerId         string  `form:"retailerId" binding:"required"`
+	RetailerName       string  `form:"retailerName"`
+	RetailerMobile     string  `form:"retailerMobile"`
+	ServiceId          string  `form:"serviceId" binding:"required"`
+	ServiceName        string  `form:"serviceName" binding:"required"`
+	PricingCategoryId  string  `form:"pricingCategoryId"`
+	Cost               float64 `form:"cost"`
+	CustomerWhatsApp   string  `form:"customerWhatsApp"`
+	WalletType         string  `form:"walletType"` // "Retailer" or "Distributor" (needed for history)
+	FormData           string  `form:"formData"`
 }
 
 type UpdateServiceStatusReq struct {
@@ -92,6 +93,11 @@ func CreateServiceRequest(c *gin.Context) {
 	if err := c.ShouldBind(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+
+	// Prefer Service Payment matrix price (by role) over client-submitted cost when found
+	if resolved, ok := ResolveServiceChargeFromPricing(req.RetailerId, req.PricingCategoryId, req.ServiceId, req.ServiceName); ok && resolved > 0 {
+		req.Cost = resolved
 	}
 
 	walletPK := "WALLET#" + req.RetailerId

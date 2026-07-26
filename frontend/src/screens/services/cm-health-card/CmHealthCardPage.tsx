@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { CmHealthCardForm } from "./CmHealthCardForm";
-import { useLocalStorage } from "../../../hooks/useLocalStorage";
+import { useServicePricing } from "../../../hooks/useServicePricing";
 import { ServiceCard } from "../ServiceCard";
 import { PATHS } from "../../../routes/paths";
 import { useAuth } from "../../../store/context/AuthContext";
@@ -21,15 +21,11 @@ interface HealthService {
 export function CmHealthCardPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { getCharge } = useServicePricing();
   const isAdmin = user?.role === "admin";
   const [activeForm, setActiveForm] = useState<string | null>(null);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const [pricingConfig] = useLocalStorage<Record<string, any[]>>(
-    "thuruvan_service_pricing_matrix_v2",
-    {},
-  );
 
   const [servicesList, setServicesList] = useCategoryServices<HealthService>(
     "cm-health-card",
@@ -80,17 +76,13 @@ export function CmHealthCardPage() {
     });
   };
 
-  // Helper to resolve dynamic price from admin pricing matrix
-  const getServicePrice = () => {
-    const list = pricingConfig["cm-health-card"];
-    if (list && Array.isArray(list)) {
-      const match = list.find((item) => item.id === "cm-main");
-      if (match && match.retailerPrice !== undefined) {
-        return Number(match.retailerPrice);
-      }
-    }
-    return 200.0; // Default price
-  };
+  // Helper to resolve dynamic price from admin Service Payment matrix
+  const getServicePrice = () =>
+    getCharge({
+      categoryId: "cm-health-card",
+      serviceId: "cm-main",
+      fallback: 200,
+    });
 
   const handleFormSubmit = (data: any) => {
     setIsSubmitting(true);

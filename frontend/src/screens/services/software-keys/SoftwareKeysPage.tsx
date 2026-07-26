@@ -1326,6 +1326,7 @@ export function SoftwareKeysPage() {
               <div className="w-full bg-slate-50 dark:bg-[#090d16] border-2 border-black dark:border-white rounded-3xl p-6 md:p-8 shadow-sm flex flex-col gap-6 relative overflow-hidden animate-in fade-in duration-200">
                 <div className="py-2">
                   <ServicePaymentScreen
+                    pricingCategoryId="software-keys"
                     serviceName={selectedSoftware.name}
                     retailerCharge={selectedSoftware.price}
                     formData={formData}
@@ -1357,6 +1358,7 @@ export function SoftwareKeysPage() {
               ) : paymentPhase === "payment" ? (
                 <div className="py-2">
                   <ServicePaymentScreen
+                    pricingCategoryId="software-keys"
                     serviceName={selectedSoftware.name}
                     retailerCharge={selectedSoftware.price}
                     formData={formData}

@@ -1,11 +1,20 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Wallet, CheckCircle2, AlertCircle } from "lucide-react";
 import { useAuth } from "../store/context/AuthContext";
 import Link from "next/link";
+import { apiUrl } from "../utils/apiBase";
+import {
+  fetchPricingMatrix,
+  resolveServiceCharge,
+  type PricingRole,
+} from "../utils/servicePricing";
 
 interface ServicePaymentScreenProps {
   serviceId?: string;
+  /** Service Payment catalog category id (e.g. gst, software-keys) */
+  pricingCategoryId?: string;
   serviceName: string;
+  /** Fallback if Service Payment matrix has no match */
   retailerCharge: number;
   formData?: Record<string, string>;
   files?: File[];
@@ -15,6 +24,7 @@ interface ServicePaymentScreenProps {
 
 export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
   serviceId,
+  pricingCategoryId,
   serviceName,
   retailerCharge,
   formData,
@@ -26,11 +36,38 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
   const [customerWhatsApp, setCustomerWhatsApp] = useState("");
 
   const [error, setError] = useState("");
+  const [resolvedCharge, setResolvedCharge] = useState(retailerCharge);
   const { user, updateWallet } = useAuth();
   const walletBalance = user?.walletBalance || 0;
+  const role = (user?.role || "retailer") as PricingRole;
+  const chargeLabel =
+    role === "distributor"
+      ? "Distributor Charge"
+      : role === "admin"
+        ? "Admin Charge"
+        : "Retailer Charge";
+
+  useEffect(() => {
+    let alive = true;
+    fetchPricingMatrix().then((matrix) => {
+      if (!alive) return;
+      setResolvedCharge(
+        resolveServiceCharge(matrix, {
+          categoryId: pricingCategoryId,
+          serviceId,
+          serviceName,
+          role,
+          fallback: retailerCharge,
+        }),
+      );
+    });
+    return () => {
+      alive = false;
+    };
+  }, [pricingCategoryId, serviceId, serviceName, role, retailerCharge]);
 
   const handlePaymentSubmit = async () => {
-    if (walletBalance < retailerCharge) {
+    if (walletBalance < resolvedCharge) {
       setError(`Insufficient wallet balance (₹${walletBalance.toFixed(2)}). Please add funds to your wallet to proceed.`);
       return;
     }
@@ -39,15 +76,16 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
     setIsSubmitting(true);
 
     try {
-      const apiUrl = `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api`;
-      
       const submitData = new FormData();
       submitData.append("retailerId", user?.id || "unknown_retailer");
       submitData.append("retailerName", user?.name || "");
       submitData.append("retailerMobile", user?.phone || "");
       submitData.append("serviceId", serviceId || serviceName.toLowerCase().replace(/\s+/g, "_"));
       submitData.append("serviceName", serviceName);
-      submitData.append("cost", String(retailerCharge));
+      if (pricingCategoryId) {
+        submitData.append("pricingCategoryId", pricingCategoryId);
+      }
+      submitData.append("cost", String(resolvedCharge));
       submitData.append("customerWhatsApp", customerWhatsApp.trim());
       submitData.append("walletType", "Main");
       
@@ -61,7 +99,7 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
         });
       }
 
-      const res = await fetch(`${apiUrl}/services/request`, {
+      const res = await fetch(apiUrl("services/request"), {
         method: "POST",
         body: submitData
       });
@@ -74,7 +112,7 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
       }
 
       // Update local wallet balance since payment is always via wallet
-      updateWallet(walletBalance - retailerCharge);
+      updateWallet(walletBalance - resolvedCharge);
 
       setIsSubmitting(false);
       onSuccess(customerWhatsApp.trim() || undefined);
@@ -101,10 +139,10 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
       <div className="flex flex-col gap-3 px-2">
         <div className="flex items-center justify-between p-4 bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/60 dark:border-slate-800 rounded-2xl">
           <span className="text-xs font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
-            Retailer Charge
+            {chargeLabel}
           </span>
           <span className="text-lg font-black text-slate-900 dark:text-white">
-            ₹{retailerCharge.toFixed(2)}
+            ₹{resolvedCharge.toFixed(2)}
           </span>
         </div>
 
@@ -144,7 +182,7 @@ export const ServicePaymentScreen: React.FC<ServicePaymentScreenProps> = ({
             </p>
           </div>
 
-          {walletBalance < retailerCharge && (
+          {walletBalance < resolvedCharge && (
             <Link href="/wallets" className="text-[10px] font-extrabold uppercase tracking-wider underline underline-offset-2 hover:text-rose-700 dark:hover:text-rose-300 w-fit">
               Go to Wallet to Add Funds
             </Link>

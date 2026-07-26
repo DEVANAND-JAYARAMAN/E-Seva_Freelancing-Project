@@ -328,6 +328,7 @@ export function DharsanPage() {
                 <div className="py-2">
                   <ServicePaymentScreen
                     serviceId="dharsan"
+                    pricingCategoryId="dharsan"
                     serviceName="Sabarimala Dharsan Booking"
                     retailerCharge={150}
                     formData={formData}

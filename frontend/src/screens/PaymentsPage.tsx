@@ -16,6 +16,7 @@ import {
 import { AppShell } from "../layouts/AppShell";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { useAuth } from "../store/context/AuthContext";
+import { apiUrl } from "../utils/apiBase";
 
 // Catalog item representing main services in grid
 export interface ServiceCatalogItem {
@@ -1627,9 +1628,7 @@ export function PaymentsPage() {
   // Load config from backend
 
   useEffect(() => {
-    fetch(
-      `${(process.env.NEXT_PUBLIC_API_URL || "").replace(/(?:\/api|\/)+$/, "")}/api/services/pricing`,
-    )
+    fetch(apiUrl("services/pricing"))
       .then((res) => res.json())
       .then((data) => {
         if (data && Object.keys(data).length > 0) {

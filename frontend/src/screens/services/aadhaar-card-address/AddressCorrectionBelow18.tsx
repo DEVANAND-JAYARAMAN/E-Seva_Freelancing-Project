@@ -298,7 +298,8 @@ export const AddressCorrectionBelow18: React.FC<
         <ServicePaymentScreen
           serviceId="address-correction-below-18"
           serviceName="Address Correction (Below 18-Minor)"
-          retailerCharge={100} // Hardcoded or imported from config
+          retailerCharge={100} // Fallback; Service Payment matrix overrides
+          pricingCategoryId="aadhaar-card-address"
           formData={formData}
           files={selectedFiles}
           onBack={() => setPaymentPhase("form")}

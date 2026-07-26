@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import { AppShell } from "../../../layouts/AppShell";
 import { PvcCardPrintForm } from "./PvcCardPrintForm";
-import { useLocalStorage } from "../../../hooks/useLocalStorage";
+import { useServicePricing } from "../../../hooks/useServicePricing";
 import { ServiceCard } from "../ServiceCard";
 import { PATHS } from "../../../routes/paths";
 import { useAuth } from "../../../store/context/AuthContext";
@@ -21,15 +21,11 @@ interface PvcService {
 export function PvcCardPrintPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { getCharge } = useServicePricing();
   const isAdmin = user?.role === "admin";
   const [activeForm, setActiveForm] = useState<string | null>(null);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const [pricingConfig] = useLocalStorage<Record<string, any[]>>(
-    "thuruvan_service_pricing_matrix_v2",
-    {},
-  );
 
   const [servicesList, setServicesList] = useCategoryServices<PvcService>(
     "pvc-card-print",
@@ -81,16 +77,12 @@ export function PvcCardPrintPage() {
   };
 
   // Helper to resolve dynamic price from admin pricing matrix
-  const getServicePrice = () => {
-    const list = pricingConfig["pvc-card-print"];
-    if (list && Array.isArray(list)) {
-      const match = list.find((item) => item.id === "pvc-main");
-      if (match && match.retailerPrice !== undefined) {
-        return Number(match.retailerPrice);
-      }
-    }
-    return 160.0; // Default price
-  };
+  const getServicePrice = () =>
+    getCharge({
+      categoryId: "pvc-card-print",
+      serviceId: "pvc-main",
+      fallback: 160,
+    });
 
   const handleFormSubmit = (data: any) => {
     setIsSubmitting(true);

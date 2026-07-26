@@ -25,6 +25,8 @@ import {
 } from "../../components/ServicePaymentScreen";
 import { AddServiceModal } from "./AddServiceModal";
 import { apiUrl } from "../../utils/apiBase";
+import { useServicePricing } from "../../hooks/useServicePricing";
+import { categoryCardPrices } from "../../utils/servicePricing";
 
 // Service item interface
 export interface EService {
@@ -1412,6 +1414,7 @@ function renderServiceImage(id: string, className = "w-14 h-14") {
 export function ServicesPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { matrix, getCharge } = useServicePricing();
   const [permissions, setPermissions] = useState<Record<string, string[]>>({});
   const [editingService, setEditingService] = useState<EService | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -1789,6 +1792,26 @@ export function ServicesPage() {
       price: { retailer: 120, distributor: 120 },
     },
   ]);
+
+  // Overlay Service Payment matrix prices onto Our Service cards
+  useEffect(() => {
+    if (!matrix || Object.keys(matrix).length === 0) return;
+    setServicesList((prev) =>
+      prev.map((s) => {
+        const fromMatrix = categoryCardPrices(matrix, s.id);
+        if (!fromMatrix) return s;
+        if (fromMatrix.retailer <= 0 && fromMatrix.distributor <= 0) return s;
+        return {
+          ...s,
+          price: {
+            retailer: fromMatrix.retailer,
+            distributor: fromMatrix.distributor,
+            officialCost: s.price?.officialCost,
+          },
+        };
+      }),
+    );
+  }, [matrix]);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
@@ -2325,9 +2348,16 @@ export function ServicesPage() {
               ) : paymentPhase === "payment" ? (
                 <div className="py-2">
                   <ServicePaymentScreen
+                    serviceId={selectedService.id}
+                    pricingCategoryId={selectedService.id}
                     serviceName={selectedService.name}
                     retailerCharge={
-                      Number(selectedService.price?.retailer) || 0
+                      getCharge({
+                        categoryId: selectedService.id,
+                        serviceName: selectedService.name,
+                        fallback:
+                          Number(selectedService.price?.retailer) || 0,
+                      })
                     }
                     formData={formData}
                     files={selectedFiles}
