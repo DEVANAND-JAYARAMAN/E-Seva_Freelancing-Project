@@ -427,145 +427,173 @@ export function StatusDetailModal({
     setPreviewUrl(url);
   };
 
-  const statusColor =
+  const statusLabel =
+    ticket.status === "Process" ? "PROCESSING" : ticket.status.toUpperCase();
+
+  const statusBadge =
     ticket.status === "Approved"
-      ? "text-emerald-600"
+      ? "bg-emerald-500/15 text-emerald-700 ring-emerald-500/30"
       : ticket.status === "Process"
-        ? "text-blue-600"
+        ? "bg-sky-500/15 text-sky-700 ring-sky-500/30"
         : ticket.status === "Pending"
-          ? "text-amber-600"
+          ? "bg-amber-500/15 text-amber-800 ring-amber-500/30"
           : ticket.status === "Resubmit"
-            ? "text-purple-600"
+            ? "bg-teal-500/15 text-teal-800 ring-teal-500/30"
             : ticket.status === "Rejected"
-              ? "text-rose-600"
-              : "text-slate-600";
+              ? "bg-rose-500/15 text-rose-700 ring-rose-500/30"
+              : "bg-slate-500/15 text-slate-700 ring-slate-500/30";
+
+  const fieldShell = (editable: boolean) =>
+    `w-full rounded-xl border px-3.5 py-2.5 text-sm tracking-tight focus:outline-none transition-shadow ${
+      editable
+        ? "border-slate-200 bg-white text-slate-900 shadow-sm focus:border-[#005c3a]/50 focus:ring-2 focus:ring-[#005c3a]/20"
+        : "border-slate-200/80 bg-slate-50/80 text-slate-800"
+    }`;
 
   const page = (
-    <div className="fixed inset-0 z-[200] flex flex-col bg-slate-50 dark:bg-[#030712]">
-      {/* Page header — full cover, not a floating modal */}
-      <header className="shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#090d16]">
-        <div className="flex items-center justify-between gap-3 px-4 sm:px-6 py-3.5">
-          <div className="flex items-center gap-3 min-w-0">
+    <div className="fixed inset-0 z-[200] flex flex-col bg-[#f3f6f4] dark:bg-[#030712]">
+      {/* Soft brand atmosphere */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -top-24 -right-16 h-72 w-72 rounded-full bg-[#005c3a]/[0.07] blur-3xl" />
+        <div className="absolute top-1/3 -left-20 h-80 w-80 rounded-full bg-emerald-400/[0.05] blur-3xl" />
+      </div>
+
+      <header className="relative shrink-0 border-b border-emerald-900/10 bg-gradient-to-r from-[#003d28] via-[#005c3a] to-[#0a7a4d] text-white shadow-lg shadow-emerald-950/20">
+        <div className="flex items-center justify-between gap-3 px-4 sm:px-8 py-4">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-9 items-center justify-center gap-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold uppercase tracking-wider transition-colors"
+              className="inline-flex h-10 items-center justify-center gap-1.5 px-3.5 rounded-xl bg-white/10 hover:bg-white/15 border border-white/20 text-white text-xs font-bold uppercase tracking-wider transition-colors backdrop-blur-sm"
             >
-              <ArrowLeft size={14} />
+              <ArrowLeft size={15} />
               <span>Back</span>
             </button>
             <div className="min-w-0">
-              <h1 className="text-base sm:text-lg font-black text-slate-900 dark:text-white truncate">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-100/80">
+                Services Status
+              </p>
+              <h1 className="text-lg sm:text-xl font-black tracking-tight truncate">
                 File Details
               </h1>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 truncate">
-                {ticket.serviceName} · {ticket.status}
-              </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-500 transition-colors shrink-0"
-            type="button"
-            aria-label="Close"
-          >
-            <X size={16} />
-          </button>
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <span
+              className={`hidden sm:inline-flex items-center px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider ring-1 ring-inset bg-white/15 text-white ring-white/25`}
+            >
+              {statusLabel}
+            </span>
+            <button
+              onClick={onClose}
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 hover:bg-white/20 border border-white/15 text-white transition-colors"
+              type="button"
+              aria-label="Close"
+            >
+              <X size={17} />
+            </button>
+          </div>
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto">
-        <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-5 sm:py-8 space-y-5">
-            {/* Summary card — reference model */}
-            <div className="bg-white dark:bg-[#090d16] rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
-              <div className="grid grid-cols-1 sm:grid-cols-2">
-                <div className="col-span-1 sm:col-span-2 p-4 border-b border-slate-100 dark:border-slate-800">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
+      <div className="relative flex-1 overflow-y-auto">
+        <div className="w-full max-w-5xl mx-auto px-4 sm:px-8 py-6 sm:py-8 space-y-6">
+          {/* Hero summary */}
+          <section className="relative overflow-hidden rounded-2xl border border-white/70 bg-white/90 dark:bg-[#090d16]/95 shadow-[0_20px_50px_-28px_rgba(0,60,40,0.45)] backdrop-blur">
+            <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#005c3a] via-emerald-400 to-teal-300" />
+            <div className="p-5 sm:p-7">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-slate-400">
                     Requested Service
-                  </span>
-                  <span className="text-base font-bold text-slate-900 dark:text-white mt-0.5 block">
+                  </p>
+                  <h2 className="mt-1 text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                     {ticket.serviceName}
-                  </span>
+                  </h2>
                 </div>
-                <div className="p-4 border-b border-r border-slate-100 dark:border-slate-800">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
+                <span
+                  className={`inline-flex self-start items-center px-3.5 py-1.5 rounded-full text-[11px] font-extrabold uppercase tracking-wider ring-1 ring-inset ${statusBadge}`}
+                >
+                  {statusLabel}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 p-3.5 sm:p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                     Retailer / Distributor
-                  </span>
-                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5 block">
+                  </p>
+                  <p className="mt-1.5 text-sm font-bold text-slate-900 dark:text-white truncate">
                     {ticket.retailerName}
-                  </span>
-                  <span className="text-xs text-slate-500 block">
+                  </p>
+                  <p className="text-xs font-semibold text-slate-500 mt-0.5">
                     {ticket.retailerMobile || "—"}
-                  </span>
+                  </p>
                 </div>
-                <div className="p-4 border-b border-slate-100 dark:border-slate-800">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 p-3.5 sm:p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                     User Role
-                  </span>
-                  <span className="text-sm font-bold text-slate-800 dark:text-slate-200 mt-0.5 block">
+                  </p>
+                  <p className="mt-1.5 text-sm font-bold text-slate-900 dark:text-white">
                     {ticket.userRole || "Retailer"}
-                  </span>
+                  </p>
                 </div>
-                <div className="p-4 border-b border-r border-slate-100 dark:border-slate-800">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
+                <div className="rounded-xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-100 dark:border-emerald-900/40 p-3.5 sm:p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-700/70 dark:text-emerald-400/70">
                     Processing Charge
-                  </span>
-                  <span className="text-sm font-bold text-emerald-600 mt-0.5 block">
+                  </p>
+                  <p className="mt-1.5 text-lg font-black text-emerald-700 dark:text-emerald-400">
                     ₹{ticket.amount.toFixed(2)}
-                  </span>
+                  </p>
                 </div>
-                <div className="p-4 border-b border-slate-100 dark:border-slate-800">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
-                    Current Status
-                  </span>
-                  <span
-                    className={`text-sm font-bold uppercase tracking-wide mt-0.5 block ${statusColor}`}
-                  >
-                    {ticket.status === "Process"
-                      ? "PROCESSING"
-                      : ticket.status.toUpperCase()}
-                  </span>
-                </div>
-                <div className="p-4 border-r border-slate-100 dark:border-slate-800">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
-                    Submission Date
-                  </span>
-                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 mt-0.5 block">
-                    {ticket.createdDate}
-                  </span>
-                </div>
-                <div className="p-4">
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">
-                    Last Status Update
-                  </span>
-                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-300 mt-0.5 block">
-                    {ticket.lastUpdated}
-                  </span>
+                <div className="rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800 p-3.5 sm:p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    Timeline
+                  </p>
+                  <p className="mt-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+                    Submitted {ticket.createdDate}
+                  </p>
+                  <p className="text-[11px] font-semibold text-slate-500 mt-0.5">
+                    Updated {ticket.lastUpdated}
+                  </p>
                 </div>
               </div>
             </div>
+          </section>
 
-            {/* Main form — thuruvancommunication.in model */}
-            <div className="bg-white dark:bg-[#090d16] rounded-xl border-2 border-sky-300 dark:border-sky-800 p-5 sm:p-6 shadow-sm">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white mb-5">
-                {ticket.serviceName}
-              </h2>
+          {/* Application data */}
+          <section className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#090d16] shadow-[0_16px_40px_-30px_rgba(15,23,42,0.45)] overflow-hidden">
+            <div className="flex items-center justify-between gap-3 px-5 sm:px-7 py-4 border-b border-slate-100 dark:border-slate-800 bg-gradient-to-r from-slate-50 to-white dark:from-slate-900/40 dark:to-transparent">
+              <div>
+                <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                  Application Data
+                </h3>
+                <p className="text-[11px] font-semibold text-slate-400 mt-0.5">
+                  Submitted fields and attached documents
+                </p>
+              </div>
+            </div>
 
+            <div className="p-5 sm:p-7">
               {canReapply &&
                 ticket.remarks &&
                 ticket.remarks !== "No remarks." && (
-                  <div className="mb-5 rounded-md border border-purple-200 bg-purple-50 px-4 py-3 text-sm text-purple-900">
-                    <span className="font-semibold">Admin asked to resubmit:</span>{" "}
+                  <div className="mb-6 rounded-xl border border-teal-200 bg-teal-50 px-4 py-3.5 text-sm text-teal-950">
+                    <span className="font-bold">Admin asked to resubmit:</span>{" "}
                     {ticket.remarks}
                   </div>
                 )}
 
-              {/* Form fields 2-col */}
               {textEntries.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-5">
                   {textEntries.map(([key, value]) => (
-                    <div key={key} className="flex flex-col gap-1">
-                      <label className="text-xs font-semibold text-[#7a1f1f]">
+                    <div
+                      key={key}
+                      className={`flex flex-col gap-1.5 ${
+                        isTextareaKey(key) ? "sm:col-span-2" : ""
+                      }`}
+                    >
+                      <label className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-slate-400">
                         {formatLabel(key)}
                       </label>
                       {isTextareaKey(key) ? (
@@ -582,11 +610,7 @@ export function StatusDetailModal({
                                   }))
                               : undefined
                           }
-                          className={`w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-800 resize-y focus:outline-none ${
-                            canReapply
-                              ? "bg-white focus:ring-2 focus:ring-sky-400"
-                              : "bg-[#e9ecef] cursor-default"
-                          }`}
+                          className={`${fieldShell(canReapply)} resize-y min-h-[88px]`}
                         />
                       ) : (
                         <input
@@ -602,165 +626,172 @@ export function StatusDetailModal({
                                   }))
                               : undefined
                           }
-                          className={`w-full rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-800 focus:outline-none ${
-                            canReapply
-                              ? "bg-white focus:ring-2 focus:ring-sky-400"
-                              : "bg-[#e9ecef] cursor-default"
-                          }`}
+                          className={fieldShell(canReapply)}
                         />
                       )}
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-slate-500 mb-2">
+                <p className="text-sm font-medium text-slate-500">
                   No application field data available for this request.
                 </p>
               )}
 
               {(fileEntries.length > 0 || unmatchedDocs.length > 0) && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4 mt-4">
-                  {fileEntries.map(([key, value], idx) => {
-                    const orderKeys = ["photo", "signature", "aadhaarcard"];
-                    const orderIdx = orderKeys.indexOf(key.toLowerCase());
-                    const viewSource = canReapply
-                      ? ticket.formData?.[key] || ""
-                      : value || "";
-                    const url = resolveDocUrl(
-                      viewSource,
-                      documents,
-                      orderIdx >= 0 ? orderIdx : idx,
-                    );
-                    const label = formatLabel(key);
-                    const pendingName = pendingFiles[key]?.name;
-                    return (
-                      <div key={key} className="flex flex-col gap-1">
-                        <label className="text-xs font-semibold text-[#7a1f1f]">
-                          {label}
-                        </label>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => openDoc(url, label)}
-                            className="inline-flex items-center justify-center px-4 py-1.5 rounded bg-[#8B1A1A] hover:bg-[#6d1414] text-white text-sm font-semibold"
-                          >
-                            View
-                          </button>
-                          {canReapply && (
-                            <label className="inline-flex items-center justify-center px-4 py-1.5 rounded bg-[#1e88e5] hover:bg-[#1565c0] text-white text-sm font-semibold cursor-pointer">
-                              Replace
-                              <input
-                                type="file"
-                                className="hidden"
-                                accept="image/*,.pdf,.doc,.docx"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (!file) return;
-                                  setPendingFiles((prev) => ({
-                                    ...prev,
-                                    [key]: file,
-                                  }));
-                                  setEditForm((prev) => ({
-                                    ...prev,
-                                    [key]: file.name,
-                                  }));
-                                }}
-                              />
-                            </label>
+                <div className="mt-7 pt-6 border-t border-slate-100 dark:border-slate-800">
+                  <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-slate-400 mb-4">
+                    Documents
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {fileEntries.map(([key, value], idx) => {
+                      const orderKeys = ["photo", "signature", "aadhaarcard"];
+                      const orderIdx = orderKeys.indexOf(key.toLowerCase());
+                      const viewSource = canReapply
+                        ? ticket.formData?.[key] || ""
+                        : value || "";
+                      const url = resolveDocUrl(
+                        viewSource,
+                        documents,
+                        orderIdx >= 0 ? orderIdx : idx,
+                      );
+                      const label = formatLabel(key);
+                      const pendingName = pendingFiles[key]?.name;
+                      return (
+                        <div
+                          key={key}
+                          className="flex flex-col gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40 p-4"
+                        >
+                          <label className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-slate-500">
+                            {label}
+                          </label>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => openDoc(url, label)}
+                              className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-[#005c3a] hover:bg-[#004d30] text-white text-xs font-bold shadow-sm shadow-emerald-900/10 transition-colors"
+                            >
+                              View
+                            </button>
+                            {canReapply && (
+                              <label className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold cursor-pointer transition-colors">
+                                Replace
+                                <input
+                                  type="file"
+                                  className="hidden"
+                                  accept="image/*,.pdf,.doc,.docx"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    setPendingFiles((prev) => ({
+                                      ...prev,
+                                      [key]: file,
+                                    }));
+                                    setEditForm((prev) => ({
+                                      ...prev,
+                                      [key]: file.name,
+                                    }));
+                                  }}
+                                />
+                              </label>
+                            )}
+                          </div>
+                          {canReapply && pendingName && (
+                            <p className="text-[11px] text-slate-500 truncate">
+                              New file: {pendingName}
+                            </p>
                           )}
                         </div>
-                        {canReapply && pendingName && (
-                          <p className="text-[11px] text-slate-500 truncate">
-                            New file: {pendingName}
-                          </p>
-                        )}
-                      </div>
-                    );
-                  })}
-                  {unmatchedDocs.map((doc, idx) => {
-                    const url = toPublicDocUrl(doc);
-                    const label =
-                      fileEntries.length > 0
-                        ? `Document ${idx + 1}`
-                        : idx === 0
-                          ? "Photo"
-                          : idx === 1
-                            ? "Signature"
-                            : idx === 2
-                              ? "Aadhaar Card"
-                              : `Document ${idx + 1}`;
-                    return (
-                      <div key={doc} className="flex flex-col gap-1">
-                        <label className="text-xs font-semibold text-[#7a1f1f]">
-                          {label}
-                        </label>
-                        <div>
+                      );
+                    })}
+                    {unmatchedDocs.map((doc, idx) => {
+                      const url = toPublicDocUrl(doc);
+                      const label =
+                        fileEntries.length > 0
+                          ? `Document ${idx + 1}`
+                          : idx === 0
+                            ? "Photo"
+                            : idx === 1
+                              ? "Signature"
+                              : idx === 2
+                                ? "Aadhaar Card"
+                                : `Document ${idx + 1}`;
+                      return (
+                        <div
+                          key={doc}
+                          className="flex flex-col gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/40 p-4"
+                        >
+                          <label className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-slate-500">
+                            {label}
+                          </label>
                           <button
                             type="button"
                             onClick={() => openDoc(url, label)}
-                            className="inline-flex items-center justify-center px-4 py-1.5 rounded bg-[#8B1A1A] hover:bg-[#6d1414] text-white text-sm font-semibold"
+                            className="inline-flex items-center justify-center self-start px-4 py-2 rounded-lg bg-[#005c3a] hover:bg-[#004d30] text-white text-xs font-bold shadow-sm transition-colors"
                           >
                             View
                           </button>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 
               {canReapply && (
-                <div className="flex justify-center mt-6">
+                <div className="flex justify-center mt-8">
                   <button
                     type="button"
                     disabled={resubmitting || !onResubmit}
                     onClick={handleReapply}
-                    className="min-w-[140px] px-8 py-2.5 rounded-md bg-[#1e88e5] hover:bg-[#1565c0] disabled:opacity-60 text-white text-sm font-bold shadow-sm"
+                    className="min-w-[160px] px-8 py-3 rounded-xl bg-[#005c3a] hover:bg-[#004d30] disabled:opacity-60 text-white text-sm font-extrabold shadow-lg shadow-emerald-900/15 transition-all"
                   >
                     {resubmitting ? "Reapplying..." : "Reapply"}
                   </button>
                 </div>
               )}
 
-              {/* Existing acknowledgement (view) */}
               {!canEdit &&
                 !canReapply &&
                 ((ticket.ackFiles && ticket.ackFiles.length > 0) ||
                   ticket.ackText) && (
-                  <div className="mt-5 pt-4 border-t border-slate-200 space-y-2">
-                    <label className="text-xs font-semibold text-[#7a1f1f]">
+                  <div className="mt-7 pt-6 border-t border-slate-100 dark:border-slate-800 space-y-3">
+                    <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-slate-400">
                       Acknowledgement
-                    </label>
+                    </p>
                     {ticket.ackText && (
                       <input
                         type="text"
                         readOnly
                         value={ticket.ackText}
-                        className="w-full rounded-md border border-slate-300 bg-[#e9ecef] px-3 py-2 text-sm text-slate-800"
+                        className={fieldShell(false)}
                       />
                     )}
-                    {ticket.ackFiles?.map((doc) => (
-                      <button
-                        key={doc}
-                        type="button"
-                        onClick={() =>
-                          openDoc(toPublicDocUrl(doc), getFileName(doc))
-                        }
-                        className="inline-flex items-center justify-center px-4 py-1.5 rounded bg-[#8B1A1A] hover:bg-[#6d1414] text-white text-sm font-semibold mr-2"
-                      >
-                        View {getFileName(doc)}
-                      </button>
-                    ))}
+                    <div className="flex flex-wrap gap-2">
+                      {ticket.ackFiles?.map((doc) => (
+                        <button
+                          key={doc}
+                          type="button"
+                          onClick={() =>
+                            openDoc(toPublicDocUrl(doc), getFileName(doc))
+                          }
+                          className="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-[#005c3a] hover:bg-[#004d30] text-white text-xs font-bold transition-colors"
+                        >
+                          View {getFileName(doc)}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 )}
 
-              {/* Admin workflow controls */}
               {canEdit && (
-                <div className="mt-6 pt-4 border-t border-slate-200">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-                    {/* Service Status */}
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-semibold text-[#7a1f1f]">
+                <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
+                  <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-slate-400 mb-4">
+                    Update Status
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-5">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-slate-400">
                         Service Status
                       </label>
                       <select
@@ -768,7 +799,7 @@ export function StatusDetailModal({
                         onChange={(e) =>
                           setSelectedStatus(e.target.value as TicketStatus)
                         }
-                        className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                        className={fieldShell(true)}
                       >
                         <option value="" disabled>
                           Select
@@ -781,10 +812,9 @@ export function StatusDetailModal({
                       </select>
                     </div>
 
-                    {/* Remarks — Resubmit / Rejected */}
                     {showRemarks && (
-                      <div className="flex flex-col gap-1">
-                        <label className="text-xs font-semibold text-[#7a1f1f]">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-slate-400">
                           Remarks
                         </label>
                         <input
@@ -792,15 +822,14 @@ export function StatusDetailModal({
                           value={remarks}
                           onChange={(e) => setRemarks(e.target.value)}
                           placeholder="Remarks"
-                          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                          className={fieldShell(true)}
                         />
                       </div>
                     )}
 
-                    {/* Select Text / File — Process / Approved */}
                     {showAckSelect && (
-                      <div className="flex flex-col gap-1">
-                        <label className="text-xs font-semibold text-[#7a1f1f]">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-slate-400">
                           Select
                         </label>
                         <select
@@ -808,7 +837,7 @@ export function StatusDetailModal({
                           onChange={(e) =>
                             setAckType(e.target.value as "text" | "file")
                           }
-                          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                          className={fieldShell(true)}
                         >
                           <option value="text">Text</option>
                           <option value="file">File</option>
@@ -816,10 +845,9 @@ export function StatusDetailModal({
                       </div>
                     )}
 
-                    {/* Application No — Processing + Text */}
                     {showApplicationNo && (
-                      <div className="flex flex-col gap-1">
-                        <label className="text-xs font-semibold text-[#7a1f1f]">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-slate-400">
                           Application No
                         </label>
                         <input
@@ -827,15 +855,14 @@ export function StatusDetailModal({
                           value={applicationNo}
                           onChange={(e) => setApplicationNo(e.target.value)}
                           placeholder="Application No"
-                          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                          className={fieldShell(true)}
                         />
                       </div>
                     )}
 
-                    {/* Ack text — Approved + Text */}
                     {selectedStatus === "Approved" && ackType === "text" && (
-                      <div className="flex flex-col gap-1">
-                        <label className="text-xs font-semibold text-[#7a1f1f]">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-slate-400">
                           Acknowledgement Text
                         </label>
                         <input
@@ -843,15 +870,14 @@ export function StatusDetailModal({
                           value={ackText}
                           onChange={(e) => setAckText(e.target.value)}
                           placeholder="Enter acknowledgement text"
-                          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                          className={fieldShell(true)}
                         />
                       </div>
                     )}
 
-                    {/* File upload — Process/Approved + File */}
                     {showAckSelect && ackType === "file" && (
-                      <div className="flex flex-col gap-1">
-                        <label className="text-xs font-semibold text-[#7a1f1f]">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-slate-400">
                           Upload File
                         </label>
                         <input
@@ -869,7 +895,7 @@ export function StatusDetailModal({
                         <button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
-                          className="inline-flex items-center justify-center gap-2 w-full rounded-md border border-dashed border-slate-400 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                          className="inline-flex items-center justify-center gap-2 w-full rounded-xl border border-dashed border-emerald-300 bg-emerald-50/50 px-3 py-2.5 text-sm font-bold text-emerald-800 hover:bg-emerald-50 transition-colors"
                         >
                           <Upload size={14} />
                           {ackFiles.length > 0
@@ -885,13 +911,12 @@ export function StatusDetailModal({
                     )}
                   </div>
 
-                  {/* Submit */}
-                  <div className="flex justify-center mt-6">
+                  <div className="flex justify-center mt-8">
                     <button
                       type="button"
                       disabled={saving}
                       onClick={handleSubmit}
-                      className="min-w-[140px] px-8 py-2.5 rounded-md bg-[#1e88e5] hover:bg-[#1565c0] disabled:opacity-60 text-white text-sm font-bold shadow-sm"
+                      className="min-w-[160px] px-8 py-3 rounded-xl bg-[#005c3a] hover:bg-[#004d30] disabled:opacity-60 text-white text-sm font-extrabold shadow-lg shadow-emerald-900/15 transition-all"
                     >
                       {saving ? "Saving..." : "Submit"}
                     </button>
@@ -903,44 +928,44 @@ export function StatusDetailModal({
                 !canReapply &&
                 ticket.remarks &&
                 ticket.remarks !== "No remarks." && (
-                  <div className="mt-5 pt-4 border-t border-slate-200 dark:border-slate-800">
-                    <label className="text-xs font-semibold text-[#7a1f1f]">
+                  <div className="mt-7 pt-6 border-t border-slate-100 dark:border-slate-800">
+                    <label className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-slate-400">
                       Remarks
                     </label>
                     <input
                       type="text"
                       readOnly
                       value={ticket.remarks}
-                      className="mt-1 w-full rounded-md border border-slate-300 bg-[#e9ecef] px-3 py-2 text-sm text-slate-800"
+                      className={`mt-1.5 ${fieldShell(false)}`}
                     />
                   </div>
                 )}
             </div>
+          </section>
         </div>
       </div>
 
-      {/* Preview overlay */}
       {previewUrl && (
-        <div className="fixed inset-0 z-[210] flex items-center justify-center bg-black/80 p-4">
+        <div className="fixed inset-0 z-[210] flex items-center justify-center bg-black/85 p-4 backdrop-blur-sm">
           <div className="relative w-full max-w-5xl h-full flex items-center justify-center">
             {isImageFile(previewUrl) ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={previewUrl}
                 alt="Preview"
-                className="max-w-full max-h-full object-contain rounded-xl shadow-2xl"
+                className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
               />
             ) : (
               <iframe
                 src={previewUrl}
                 title="Document preview"
-                className="w-full h-[85vh] bg-white rounded-xl"
+                className="w-full h-[85vh] bg-white rounded-2xl"
               />
             )}
             <button
               type="button"
               onClick={() => setPreviewUrl(null)}
-              className="absolute top-4 right-4 inline-flex h-11 w-11 items-center justify-center rounded-full bg-red-600 hover:bg-red-500 text-white shadow-xl"
+              className="absolute top-4 right-4 inline-flex h-11 w-11 items-center justify-center rounded-full bg-rose-600 hover:bg-rose-500 text-white shadow-xl"
             >
               <X size={18} />
             </button>
