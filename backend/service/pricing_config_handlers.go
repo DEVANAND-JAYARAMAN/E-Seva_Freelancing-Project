@@ -230,6 +230,109 @@ func ResolveServiceChargeFromPricing(userId, categoryId, serviceId, serviceName 
 	return 0, false
 }
 
+func parseMoneyValue(v interface{}) float64 {
+	switch t := v.(type) {
+	case float64:
+		return t
+	case int:
+		return float64(t)
+	case int64:
+		return float64(t)
+	case string:
+		f, _ := strconv.ParseFloat(strings.TrimSpace(t), 64)
+		return f
+	default:
+		return 0
+	}
+}
+
+func normPriceKey(s string) string {
+	s = strings.ToLower(strings.TrimSpace(s))
+	var b strings.Builder
+	prevSpace := false
+	for _, r := range s {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
+			b.WriteRune(r)
+			prevSpace = false
+		} else if !prevSpace {
+			b.WriteByte(' ')
+			prevSpace = true
+		}
+	}
+	return strings.TrimSpace(b.String())
+}
+
+// ResolveServiceChargeFromPdfPricing reads SETTING#pdfPricingConfig commission rows
+// and returns the role-based amount (retailer / distributor / admin).
+func ResolveServiceChargeFromPdfPricing(userId, serviceId, serviceName string) (float64, bool) {
+	cfg, err := loadSettingsConfig("SETTING#pdfPricingConfig")
+	if err != nil || cfg == nil {
+		return 0, false
+	}
+	rows := asConfigMaps(cfg)
+	if len(rows) == 0 || !isPdfCommissionPricingRow(rows[0]) {
+		return 0, false
+	}
+
+	role := "retailer"
+	uOut, uErr := db.DynamoClient.GetItem(context.TODO(), &dynamodb.GetItemInput{
+		TableName: aws.String("Users"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: "USER#" + userId},
+			"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+		},
+	})
+	if uErr == nil && uOut.Item != nil {
+		if v, ok := uOut.Item["role"].(*types.AttributeValueMemberS); ok && v.Value != "" {
+			role = strings.ToLower(v.Value)
+		}
+	}
+
+	pick := func(row map[string]interface{}) float64 {
+		key := "retailer"
+		if role == "distributor" {
+			key = "distributor"
+		} else if role == "admin" {
+			key = "admin"
+		}
+		if p := parseMoneyValue(row[key]); p > 0 {
+			return p
+		}
+		if p := parseMoneyValue(row["retailer"]); p > 0 {
+			return p
+		}
+		return 0
+	}
+
+	sid := normPriceKey(serviceId)
+	sname := normPriceKey(serviceName)
+
+	for _, row := range rows {
+		name, _ := row["serviceName"].(string)
+		n := normPriceKey(name)
+		if sname != "" && n == sname {
+			if p := pick(row); p > 0 {
+				return p, true
+			}
+		}
+	}
+	for _, row := range rows {
+		name, _ := row["serviceName"].(string)
+		n := normPriceKey(name)
+		if sid != "" && (n == sid || strings.Contains(n, sid) || strings.Contains(sid, n)) {
+			if p := pick(row); p > 0 {
+				return p, true
+			}
+		}
+		if sname != "" && n != "" && (strings.Contains(n, sname) || strings.Contains(sname, n)) {
+			if p := pick(row); p > 0 {
+				return p, true
+			}
+		}
+	}
+	return 0, false
+}
+
 // isPdfCommissionPricingRow detects admin commission-matrix rows
 // (PdfServicePage) vs retailer catalog cards (PdfPage: id/name/amount).
 func isPdfCommissionPricingRow(m map[string]interface{}) bool {

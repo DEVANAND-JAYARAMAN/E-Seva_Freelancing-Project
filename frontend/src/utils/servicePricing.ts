@@ -179,3 +179,101 @@ export async function fetchPricingMatrix(force = false): Promise<PricingMatrix> 
 export function getCachedPricingMatrix(): PricingMatrix {
   return memoryCache || readLocalMatrix();
 }
+
+/** Admin PDF Services payment row (`/pdf-service`). */
+export type PdfPricingRow = {
+  slNo?: number;
+  serviceName: string;
+  admin?: string | number;
+  othersiteAdmin?: string | number;
+  distributor?: string | number;
+  retailer?: string | number;
+  customer?: string | number;
+};
+
+function parsePdfMoney(v: unknown): number {
+  if (typeof v === "number") return Number.isFinite(v) ? v : 0;
+  if (typeof v === "string") {
+    const n = Number(String(v).replace(/,/g, "").trim());
+    return Number.isFinite(n) ? n : 0;
+  }
+  return 0;
+}
+
+export function pdfPriceForRole(row: PdfPricingRow | null | undefined, role: PricingRole): number {
+  if (!row) return 0;
+  if (role === "distributor") {
+    return parsePdfMoney(row.distributor) || parsePdfMoney(row.retailer) || 0;
+  }
+  if (role === "admin") {
+    return parsePdfMoney(row.admin) || parsePdfMoney(row.retailer) || 0;
+  }
+  if (role === "customer") {
+    return parsePdfMoney(row.customer) || parsePdfMoney(row.retailer) || 0;
+  }
+  return parsePdfMoney(row.retailer) || 0;
+}
+
+export function findPdfPricingRow(
+  rows: PdfPricingRow[],
+  serviceName: string,
+  serviceId?: string,
+): PdfPricingRow | null {
+  const sname = normalize(serviceName);
+  const sid = normalize(serviceId || "");
+  if (!rows.length) return null;
+
+  if (sname) {
+    const exact = rows.find((r) => normalize(r.serviceName) === sname);
+    if (exact) return exact;
+  }
+  if (sid) {
+    const byIdish = rows.find((r) => {
+      const n = normalize(r.serviceName);
+      return n === sid || n.includes(sid) || sid.includes(n);
+    });
+    if (byIdish) return byIdish;
+  }
+  if (sname) {
+    const partial = rows.find((r) => {
+      const n = normalize(r.serviceName);
+      return n.includes(sname) || sname.includes(n);
+    });
+    if (partial) return partial;
+  }
+  return null;
+}
+
+export async function fetchPdfPricingRows(force = false): Promise<PdfPricingRow[]> {
+  try {
+    const res = await authFetch(
+      `${apiUrl("services/pdf-pricing")}${force ? `?t=${Date.now()}` : ""}`,
+      { cache: "no-store" },
+    );
+    if (!res.ok) return [];
+    const data = await res.json();
+    if (!Array.isArray(data)) return [];
+    return data.filter(
+      (row: PdfPricingRow) =>
+        row && typeof row.serviceName === "string" && row.serviceName.trim() !== "",
+    );
+  } catch (e) {
+    console.error("Failed to fetch PDF pricing", e);
+    return [];
+  }
+}
+
+/** Apply admin PDF payment matrix amounts onto catalog cards by role. */
+export function applyPdfPricingToServices<T extends { id: string; name: string; amount: number }>(
+  services: T[],
+  rows: PdfPricingRow[],
+  role: PricingRole,
+): T[] {
+  if (!rows.length) return services;
+  return services.map((svc) => {
+    const row = findPdfPricingRow(rows, svc.name, svc.id);
+    const amount = pdfPriceForRole(row, role);
+    if (amount > 0) return { ...svc, amount };
+    return svc;
+  });
+}

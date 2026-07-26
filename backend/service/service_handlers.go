@@ -168,6 +168,8 @@ func CreateServiceRequest(c *gin.Context) {
 	// Prefer Service Payment matrix price (by role) over client-submitted cost when found
 	if resolved, ok := ResolveServiceChargeFromPricing(req.RetailerId, req.PricingCategoryId, req.ServiceId, req.ServiceName); ok && resolved > 0 {
 		req.Cost = resolved
+	} else if resolved, ok := ResolveServiceChargeFromPdfPricing(req.RetailerId, req.ServiceId, req.ServiceName); ok && resolved > 0 {
+		req.Cost = resolved
 	}
 
 	if req.Cost <= 0 {

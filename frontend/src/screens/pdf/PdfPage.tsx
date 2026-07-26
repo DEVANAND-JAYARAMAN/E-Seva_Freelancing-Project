@@ -26,6 +26,11 @@ import { useFormEdit } from "../../store/context/FormEditContext";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
 import { openServiceCardEditor } from "../../utils/serviceCardEditor";
 import { apiUrl, authFetch } from "../../utils/apiBase";
+import {
+  applyPdfPricingToServices,
+  fetchPdfPricingRows,
+  type PricingRole,
+} from "../../utils/servicePricing";
 
 // Interface for PDF services definition
 interface PdfService {
@@ -105,30 +110,44 @@ export function PdfPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   useEffect(() => {
-    const fetchServices = async () => {
+    const role = (user?.role || "retailer") as PricingRole;
+    let alive = true;
+
+    const load = async () => {
       try {
-        const response = await authFetch(
-          `${apiUrl("services/pdf-catalog")}?t=${Date.now()}`,
-        );
-        if (response.ok) {
-          const data = await response.json();
+        const [catalogRes, pricingRows] = await Promise.all([
+          authFetch(`${apiUrl("services/pdf-catalog")}?t=${Date.now()}`),
+          fetchPdfPricingRows(true),
+        ]);
+
+        let base = pdfServicesList;
+        if (catalogRes.ok) {
+          const data = await catalogRes.json();
           if (
             Array.isArray(data) &&
             data.length > 0 &&
             data.every(
-              (row: { name?: string; amount?: number }) =>
+              (row: { name?: string }) =>
                 typeof row?.name === "string" && row.name.trim() !== "",
             )
           ) {
-            setServicesList(data);
+            base = data;
           }
         }
+
+        if (!alive) return;
+        // Retailer / distributor (and others) always show admin PDF payment matrix rates
+        setServicesList(applyPdfPricingToServices(base, pricingRows, role));
       } catch (error) {
         console.error("Failed to fetch PDF services", error);
       }
     };
-    fetchServices();
-  }, []);
+
+    load();
+    return () => {
+      alive = false;
+    };
+  }, [user?.role]);
 
   const saveServicesToDb = async (updatedList: PdfService[]) => {
     try {
@@ -641,6 +660,7 @@ export function PdfPage() {
         payload.append("retailerMobile", user.phone || "");
         payload.append("serviceId", service.id);
         payload.append("serviceName", service.name);
+        payload.append("pricingCategoryId", "pdf-services");
         payload.append("cost", String(service.amount || 0));
         payload.append(
           "customerWhatsApp",
@@ -652,12 +672,7 @@ export function PdfPage() {
         );
         payload.append("formData", JSON.stringify(formData));
 
-        const apiUrl =
-          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"}`.replace(
-            /\/api$/,
-            "",
-          );
-        const res = await authFetch(`${apiUrl}/api/services/request`, {
+        const res = await authFetch(apiUrl("services/request"), {
           method: "POST",
           body: payload,
         });
