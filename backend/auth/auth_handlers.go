@@ -425,6 +425,11 @@ func GetDistributors(c *gin.Context) {
 	c.JSON(http.StatusOK, users)
 }
 
+// HydrateWalletBalances sets spendable Wallets.balance onto each user (exported for admin).
+func HydrateWalletBalances(users []models.User) {
+	hydrateWalletBalances(users)
+}
+
 // hydrateWalletBalances overwrites Users.walletBalance with Wallets.balance (spendable truth).
 func hydrateWalletBalances(users []models.User) {
 	if len(users) == 0 {

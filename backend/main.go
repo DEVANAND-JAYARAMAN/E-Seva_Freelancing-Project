@@ -134,6 +134,7 @@ func main() {
 		adminGroup := api.Group("/admin")
 		{
 			adminGroup.GET("/dashboard", admin.GetDashboardStats)
+			adminGroup.GET("/partners-overview", admin.GetPartnersOverview)
 			adminGroup.GET("/wallet/transactions", admin.GetAdminWalletTransactions)
 			adminGroup.GET("/daily-payments", admin.GetDailyPayments)
 			adminGroup.POST("/wallet/add-money", admin.AdminAddMoneyHandler)

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { AppShell } from "../../layouts/AppShell";
 import { ServiceQueue } from "./ServiceQueue";
+import { PartnersOverview } from "./PartnersOverview";
 import { StatsGrid } from "./StatsGrid";
 import { WalletSummary } from "./WalletSummary";
 import { useAuth } from "../../store/context/AuthContext";
@@ -59,6 +60,11 @@ export function DashboardPage({
           <div className="lg:col-span-3">
             <ServiceQueue />
           </div>
+        </section>
+
+        {/* Partners: retailers + distributors with services & wallet cuts */}
+        <section className="w-full" aria-label="Partners and services overview">
+          <PartnersOverview />
         </section>
       </section>
     </AppShell>
