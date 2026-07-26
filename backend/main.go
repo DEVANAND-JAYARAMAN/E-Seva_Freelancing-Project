@@ -159,6 +159,8 @@ func main() {
 				adminGroup.GET("/dashboard", admin.GetDashboardStats)
 				adminGroup.POST("/dashboard/reset", admin.ResetDashboardCounts)
 				adminGroup.POST("/dashboard/reset/", admin.ResetDashboardCounts)
+				adminGroup.POST("/dashboard/clear-reset", admin.ClearDashboardReset)
+				adminGroup.POST("/dashboard/clear-reset/", admin.ClearDashboardReset)
 				adminGroup.GET("/partners-overview", admin.GetPartnersOverview)
 				adminGroup.GET("/wallet/transactions", admin.GetAdminWalletTransactions)
 				adminGroup.GET("/daily-payments", admin.GetDailyPayments)

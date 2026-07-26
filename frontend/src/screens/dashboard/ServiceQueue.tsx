@@ -93,6 +93,13 @@ export function ServiceQueue({ since }: { since?: string }) {
       </div>
 
       <div className="space-y-4">
+        {servicesData.length === 0 ? (
+          <p className="text-sm text-slate-500 dark:text-slate-400 py-8 text-center">
+            {since
+              ? "No applications since Start New. Use “Show all counts” on the dashboard to include older files, or check Services Status."
+              : "No recent applications yet."}
+          </p>
+        ) : null}
         {servicesData.map((service) => {
           const statusStyle =
             statusClasses[service.status] ||

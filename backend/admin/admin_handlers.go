@@ -85,7 +85,8 @@ func afterReset(raw string, resetAt time.Time) bool {
 }
 
 // ResetDashboardCounts POST /api/admin/dashboard/reset
-// Start New: checkpoint status counts, zero admin Main Wallet, wipe retailers/distributors.
+// Start New: checkpoint status counts from now, zero admin + partner Main Wallets.
+// Does NOT delete service applications (logins and files stay).
 func ResetDashboardCounts(c *gin.Context) {
 	now := time.Now().UTC().Format(time.RFC3339)
 	item := map[string]types.AttributeValue{
@@ -110,7 +111,6 @@ func ResetDashboardCounts(c *gin.Context) {
 		log.Printf("Start New: zeroed admin wallet %s", adminId)
 	}
 
-	partnersWiped := 0
 	walletsZeroed := 0
 	usersOut, scanErr := db.DynamoClient.Scan(context.TODO(), &dynamodb.ScanInput{
 		TableName: aws.String("Users"),
@@ -140,20 +140,36 @@ func ResetDashboardCounts(c *gin.Context) {
 			if adminId != "" && idVal.Value == adminId {
 				continue
 			}
-			// Keep login; clear apps + set Main Wallet ₹0
-			auth.WipePartnerRelatedData(idVal.Value)
+			// Keep login + applications; only zero Main Wallet
 			auth.ZeroUserWallet(idVal.Value)
-			partnersWiped++
 			walletsZeroed++
 		}
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message":          "Started new — counts cleared, admin + partner wallets zeroed",
+		"message":          "Started new — dashboard counts from now, wallets zeroed (applications kept)",
 		"dashboardResetAt": now,
 		"adminWallet":      0,
-		"partnersWiped":    partnersWiped,
 		"walletsZeroed":    walletsZeroed,
+	})
+}
+
+// ClearDashboardReset POST /api/admin/dashboard/clear-reset
+// Remove the Start New checkpoint so all existing applications count again.
+func ClearDashboardReset(c *gin.Context) {
+	_, err := db.DynamoClient.DeleteItem(context.TODO(), &dynamodb.DeleteItemInput{
+		TableName: aws.String("Settings"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: "SETTING#dashboardReset"},
+			"SK": &types.AttributeValueMemberS{Value: "META"},
+		},
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to clear dashboard reset"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Dashboard now shows all application history",
 	})
 }
 

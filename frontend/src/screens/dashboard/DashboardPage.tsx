@@ -64,7 +64,7 @@ export function DashboardPage({
     const confirm = await Swal.fire({
       icon: "warning",
       title: "Start New?",
-      html: "This will clear dashboard counts to <b>0</b>, set admin <b>Main Wallet to ₹0</b>, and reset all <b>Retailer / Distributor</b> Main Wallets to ₹0 (login stays). Status cards start fresh from now.",
+      html: "Dashboard counts start from <b>now</b> (old files stay in Services Status). Admin + partner <b>Main Wallets → ₹0</b>. Logins stay.",
       showCancelButton: true,
       confirmButtonText: "Yes, Start New",
       cancelButtonText: "Cancel",
@@ -90,8 +90,54 @@ export function DashboardPage({
       await Swal.fire({
         icon: "success",
         title: "Started new",
-        text: "Wallet ₹0, partners cleared, counts start fresh.",
+        text: "Counts from now. Wallets ₹0. Applications kept.",
         timer: 1600,
+        showConfirmButton: false,
+      });
+    } catch (e) {
+      console.error(e);
+      await Swal.fire({
+        icon: "error",
+        title: "Network error",
+        text: "Could not reach server",
+      });
+    } finally {
+      setResetting(false);
+    }
+  };
+
+  const handleShowAllCounts = async () => {
+    const confirm = await Swal.fire({
+      icon: "question",
+      title: "Show all counts?",
+      text: "Dashboard will count every application again (not only after Start New).",
+      showCancelButton: true,
+      confirmButtonText: "Show all",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#0f766e",
+    });
+    if (!confirm.isConfirmed) return;
+
+    setResetting(true);
+    try {
+      const res = await authFetch(apiUrl("admin/dashboard/clear-reset"), {
+        method: "POST",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        await Swal.fire({
+          icon: "error",
+          title: "Restore failed",
+          text: data.error || "Could not restore dashboard counts",
+        });
+        return;
+      }
+      loadStats();
+      await Swal.fire({
+        icon: "success",
+        title: "Restored",
+        text: "Dashboard shows full application history again.",
+        timer: 1500,
         showConfirmButton: false,
       });
     } catch (e) {
@@ -132,15 +178,27 @@ export function DashboardPage({
               </p>
             ) : null}
           </div>
-          <button
-            type="button"
-            onClick={handleStartNew}
-            disabled={resetting}
-            className="inline-flex items-center justify-center gap-2 self-start sm:self-auto rounded-xl bg-[#0f766e] hover:bg-[#0d9488] disabled:opacity-60 text-white px-4 py-2.5 text-xs font-extrabold uppercase tracking-wide shadow-sm transition-colors"
-          >
-            <RotateCcw size={14} className={resetting ? "animate-spin" : ""} />
-            {resetting ? "Starting…" : "Start New"}
-          </button>
+          <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            {stats?.dashboardResetAt ? (
+              <button
+                type="button"
+                onClick={handleShowAllCounts}
+                disabled={resetting}
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-60 text-slate-800 dark:text-slate-100 px-4 py-2.5 text-xs font-extrabold uppercase tracking-wide shadow-sm transition-colors"
+              >
+                Show all counts
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={handleStartNew}
+              disabled={resetting}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#0f766e] hover:bg-[#0d9488] disabled:opacity-60 text-white px-4 py-2.5 text-xs font-extrabold uppercase tracking-wide shadow-sm transition-colors"
+            >
+              <RotateCcw size={14} className={resetting ? "animate-spin" : ""} />
+              {resetting ? "Starting…" : "Start New"}
+            </button>
+          </div>
         </div>
 
         <section
