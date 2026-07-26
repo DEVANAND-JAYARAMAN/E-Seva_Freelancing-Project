@@ -32,6 +32,80 @@ type DashboardStats struct {
 	TotalProfit        float64            `json:"totalProfit"`
 	ProfitByDate       map[string]float64 `json:"profitByDate"`
 	ProfitByService    map[string]float64 `json:"profitByService"`
+	DashboardResetAt   string             `json:"dashboardResetAt,omitempty"`
+}
+
+func loadDashboardResetAt() time.Time {
+	out, err := db.DynamoClient.GetItem(context.TODO(), &dynamodb.GetItemInput{
+		TableName: aws.String("Settings"),
+		Key: map[string]types.AttributeValue{
+			"PK": &types.AttributeValueMemberS{Value: "SETTING#dashboardReset"},
+			"SK": &types.AttributeValueMemberS{Value: "META"},
+		},
+	})
+	if err != nil || out.Item == nil {
+		return time.Time{}
+	}
+	// config may be map with resetAt
+	if cfg, ok := out.Item["config"].(*types.AttributeValueMemberM); ok {
+		if v, ok := cfg.Value["resetAt"].(*types.AttributeValueMemberS); ok {
+			if t, err := time.Parse(time.RFC3339, v.Value); err == nil {
+				return t
+			}
+			if t, err := time.Parse(time.RFC3339Nano, v.Value); err == nil {
+				return t
+			}
+		}
+	}
+	return time.Time{}
+}
+
+func afterReset(raw string, resetAt time.Time) bool {
+	if resetAt.IsZero() {
+		return true
+	}
+	if raw == "" {
+		return false
+	}
+	t, err := time.Parse(time.RFC3339, raw)
+	if err != nil {
+		t, err = time.Parse(time.RFC3339Nano, raw)
+	}
+	if err != nil {
+		// Fallback: compare date prefix YYYY-MM-DD
+		rs := resetAt.UTC().Format("2006-01-02")
+		if len(raw) >= 10 {
+			return raw[:10] >= rs
+		}
+		return false
+	}
+	return !t.Before(resetAt)
+}
+
+// ResetDashboardCounts POST /api/admin/dashboard/reset
+// Clears dashboard status/payment counts by setting a "start new" checkpoint.
+// Does not delete partners, wallets, or historical rows — only hides them from dashboard counts.
+func ResetDashboardCounts(c *gin.Context) {
+	now := time.Now().UTC().Format(time.RFC3339)
+	item := map[string]types.AttributeValue{
+		"PK": &types.AttributeValueMemberS{Value: "SETTING#dashboardReset"},
+		"SK": &types.AttributeValueMemberS{Value: "META"},
+		"config": &types.AttributeValueMemberM{Value: map[string]types.AttributeValue{
+			"resetAt": &types.AttributeValueMemberS{Value: now},
+		}},
+	}
+	_, err := db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
+		TableName: aws.String("Settings"),
+		Item:      item,
+	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to reset dashboard counts"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"message":          "Dashboard counts cleared — start new from now",
+		"dashboardResetAt": now,
+	})
 }
 
 func istToday() (loc *time.Location, todayStr string) {
@@ -69,6 +143,10 @@ func GetDashboardStats(c *gin.Context) {
 		ProfitByService: make(map[string]float64),
 	}
 	loc, todayStr := istToday()
+	resetAt := loadDashboardResetAt()
+	if !resetAt.IsZero() {
+		stats.DashboardResetAt = resetAt.UTC().Format(time.RFC3339)
+	}
 
 	dsOut, err := db.DynamoClient.Scan(context.TODO(), &dynamodb.ScanInput{
 		TableName: aws.String("DynamicServices"),
@@ -92,14 +170,17 @@ func GetDashboardStats(c *gin.Context) {
 	}
 
 	for _, item := range outApps.Items {
-		status := ""
-		if val, ok := item["status"].(*types.AttributeValueMemberS); ok {
-			status = val.Value
-		}
-
 		createdDate := ""
 		if val, ok := item["createdDate"].(*types.AttributeValueMemberS); ok {
 			createdDate = val.Value
+		}
+		if !afterReset(createdDate, resetAt) {
+			continue
+		}
+
+		status := ""
+		if val, ok := item["status"].(*types.AttributeValueMemberS); ok {
+			status = val.Value
 		}
 
 		cost := 0.0
@@ -187,6 +268,9 @@ func GetDashboardStats(c *gin.Context) {
 			createdAt := ""
 			if val, ok := item["createdAt"].(*types.AttributeValueMemberS); ok {
 				createdAt = val.Value
+			}
+			if !afterReset(createdAt, resetAt) {
+				continue
 			}
 			if dateKeyInLoc(createdAt, loc) != todayStr {
 				continue

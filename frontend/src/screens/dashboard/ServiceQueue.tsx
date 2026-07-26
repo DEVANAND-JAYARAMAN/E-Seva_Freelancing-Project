@@ -5,7 +5,7 @@ import { FileText, User, Wallet } from "lucide-react";
 import { useAuth } from "../../store/context/AuthContext";
 import { formatTxnDateTime } from "../../utils/formatters";
 
-export function ServiceQueue() {
+export function ServiceQueue({ since }: { since?: string }) {
   const { user } = useAuth();
   const [servicesData, setServicesData] = useState<any[]>([]);
 
@@ -14,12 +14,18 @@ export function ServiceQueue() {
     if (user?.role && user.role !== "admin") {
       url += `?userId=${user.id}`;
     }
-    
-    fetch(url)
+
+    fetch(url, { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
         const dataArray = Array.isArray(data) ? data : [];
-        const sorted = dataArray
+        const resetMs = since ? new Date(since).getTime() : 0;
+        const filtered = dataArray.filter((a: any) => {
+          if (!resetMs) return true;
+          const t = new Date(a.createdDate || a.CreatedDate || 0).getTime();
+          return !Number.isNaN(t) && t >= resetMs;
+        });
+        const sorted = filtered
           .sort(
             (a: any, b: any) =>
               new Date(b.createdDate || "").getTime() -
@@ -29,7 +35,7 @@ export function ServiceQueue() {
         setServicesData(sorted);
       })
       .catch(console.error);
-  }, [user?.id, user?.role]);
+  }, [user?.id, user?.role, since]);
 
   // Map status styles using tailwind
   const statusClasses: Record<string, string> = {
