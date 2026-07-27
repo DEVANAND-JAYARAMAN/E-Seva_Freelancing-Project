@@ -113,7 +113,6 @@ export function WalletPage() {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
-                  Authorization: `Bearer ${localStorage.getItem("token")}`,
                 },
                 body: JSON.stringify({
                   order_id: orderId,
@@ -149,7 +148,6 @@ export function WalletPage() {
                 method: "POST",
                 headers: {
                   "Content-Type": "application/json",
-                  Authorization: `Bearer ${localStorage.getItem("token")}`,
                 },
                 body: JSON.stringify({
                   order_id: orderId,
@@ -162,7 +160,6 @@ export function WalletPage() {
                 apiUrl(`wallet/recharge/status/${orderId}`),
                 {
                   headers: {
-                    Authorization: `Bearer ${localStorage.getItem("token")}`,
                   },
                 },
               );
@@ -241,7 +238,6 @@ export function WalletPage() {
             : `${apiUrl("wallet/transactions")}?userId=${encodeURIComponent(user?.id || "")}`;
         const res = await authFetch(endpoint, {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         });
         if (res.ok) {
@@ -392,7 +388,6 @@ export function WalletPage() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
           body: JSON.stringify({
             amount: amtNum,
@@ -500,7 +495,6 @@ export function WalletPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
         body: JSON.stringify({
           amount: amtNum,
@@ -608,7 +602,6 @@ export function WalletPage() {
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ userId }),

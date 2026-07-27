@@ -52,7 +52,6 @@ export function TransactionsPage() {
           `${baseUrl}/api/wallet/transactions?userId=${targetUserId}`,
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
           },
         );

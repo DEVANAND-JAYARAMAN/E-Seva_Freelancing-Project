@@ -10,7 +10,15 @@ import React, {
   useRef,
   type ReactNode,
 } from "react";
-import { apiUrl, authFetch } from "../../utils/apiBase";
+import {
+  apiUrl,
+  authFetch,
+  clearAuthSession,
+  getAuthToken,
+  getAuthUserRaw,
+  setAuthSession,
+  setAuthUserRaw,
+} from "../../utils/apiBase";
 
 export type UserRole = "admin" | "retailer" | "distributor" | "customer";
 
@@ -28,7 +36,12 @@ export function normalizeRole(role: unknown): UserRole {
   const r = String(role ?? "")
     .toLowerCase()
     .trim();
-  if (r === "admin" || r === "retailer" || r === "distributor" || r === "customer") {
+  if (
+    r === "admin" ||
+    r === "retailer" ||
+    r === "distributor" ||
+    r === "customer"
+  ) {
     return r;
   }
   return "retailer";
@@ -79,10 +92,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const storedToken = localStorage.getItem("token");
-        const storedUser = localStorage.getItem("user");
+        // Always remove old persistent login (browser close used to keep these)
+        try {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+        } catch {
+          /* ignore */
+        }
 
-        // Production never accepts demo/mock tokens (API will 401 anyway)
+        const storedToken = getAuthToken();
+        const storedUser = getAuthUserRaw();
+
         const host =
           typeof window !== "undefined" ? window.location.hostname : "";
         const isLocal = host === "localhost" || host === "127.0.0.1";
@@ -93,8 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             storedToken === "mock_token" ||
             !storedToken.includes("."))
         ) {
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
+          clearAuthSession();
           setUser(null);
           return;
         }
@@ -102,11 +121,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (storedToken && storedUser) {
           const parsed = parseStoredUser(storedUser);
           if (parsed) {
-            localStorage.setItem("user", JSON.stringify(parsed));
+            setAuthUserRaw(JSON.stringify(parsed));
             setUser(parsed);
           } else {
-            localStorage.removeItem("token");
-            localStorage.removeItem("user");
+            clearAuthSession();
           }
         }
       } catch (error) {
@@ -137,8 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             role: normalizeRole(role || "retailer"),
             walletBalance: 0,
           };
-          localStorage.setItem("token", "mock_local_token_123");
-          localStorage.setItem("user", JSON.stringify(realUser));
+          setAuthSession("mock_local_token_123", JSON.stringify(realUser));
           setUser(realUser);
           return;
         }
@@ -177,8 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           phone: data.user.mobile || data.user.phone || undefined,
         };
 
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(realUser));
+        setAuthSession(data.token, JSON.stringify(realUser));
         setUser(realUser);
       } catch (error) {
         console.error("Login failed:", error);
@@ -191,8 +207,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(() => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    clearAuthSession();
     setUser(null);
   }, []);
 
@@ -203,7 +218,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return prevUser;
       }
       const updatedUser = { ...prevUser, walletBalance: newBalance };
-      localStorage.setItem("user", JSON.stringify(updatedUser));
+      setAuthUserRaw(JSON.stringify(updatedUser));
       return updatedUser;
     });
   }, []);
@@ -223,7 +238,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // Prefer live wallet balance by userId (admin top-ups update this)
       if (current.id) {
         const balRes = await authFetch(
           `${apiUrl("wallet/balance")}?userId=${encodeURIComponent(current.id)}`,

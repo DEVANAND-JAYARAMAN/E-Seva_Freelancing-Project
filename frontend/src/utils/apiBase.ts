@@ -34,11 +34,67 @@ export function apiUrl(path: string): string {
   return url;
 }
 
+/**
+ * Auth is kept in sessionStorage so closing the browser/tab logs the user out.
+ * Refresh within the same tab keeps the session. Legacy localStorage keys are cleared.
+ */
+function authStore(): Storage | null {
+  if (typeof window === "undefined") return null;
+  return window.sessionStorage;
+}
+
+export function getAuthToken(): string | null {
+  const store = authStore();
+  if (!store) return null;
+  return store.getItem("token");
+}
+
+export function getAuthUserRaw(): string | null {
+  const store = authStore();
+  if (!store) return null;
+  return store.getItem("user");
+}
+
+export function setAuthSession(token: string, userJson: string): void {
+  const store = authStore();
+  if (!store) return;
+  store.setItem("token", token);
+  store.setItem("user", userJson);
+  // Drop old persistent login so reopen cannot restore without login
+  try {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+  } catch {
+    /* ignore */
+  }
+}
+
+export function setAuthUserRaw(userJson: string): void {
+  const store = authStore();
+  if (!store) return;
+  store.setItem("user", userJson);
+}
+
+export function clearAuthSession(): void {
+  try {
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
+  } catch {
+    /* ignore */
+  }
+  try {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+  } catch {
+    /* ignore */
+  }
+}
+
 /** Authorization headers from the logged-in session token. */
 export function authHeaders(extra?: HeadersInit): Headers {
   const headers = new Headers(extra || {});
   if (typeof window !== "undefined") {
-    const token = localStorage.getItem("token");
+    const token = getAuthToken();
     if (token && !headers.has("Authorization")) {
       headers.set("Authorization", `Bearer ${token}`);
     }

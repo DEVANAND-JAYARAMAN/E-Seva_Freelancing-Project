@@ -10,7 +10,7 @@ import { StatsGrid } from "./StatsGrid";
 import { WalletSummary } from "./WalletSummary";
 import { useAuth } from "../../store/context/AuthContext";
 import { DashboardPage2 } from "./DashboardPage2";
-import { apiUrl, authFetch } from "../../utils/apiBase";
+import { apiUrl, authFetch, clearAuthSession } from "../../utils/apiBase";
 
 export function DashboardPage({
   forceRole,
@@ -32,8 +32,7 @@ export function DashboardPage({
             text: "Please logout and login again with your real admin email and password.",
             confirmButtonColor: "#005c3a",
           });
-          localStorage.removeItem("token");
-          localStorage.removeItem("user");
+          clearAuthSession();
           window.location.href = "/auth/login";
           return null;
         }
