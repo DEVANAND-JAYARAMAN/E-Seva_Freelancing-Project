@@ -1,0 +1,43 @@
+name: Probe APIZONE Key
+on:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get EC2 IP
+        run: |
+          IP=$(curl -s https://daqpqxq9zg.execute-api.ap-south-1.amazonaws.com/prod/ip | jq -r .public_ip)
+          echo "EC2_IP=$IP" >> $GITHUB_ENV
+
+      - name: Probe key against APIZONE hosts from EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.EC2_IP }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_SSH_PORT }}
+          script: |
+            set -e
+            cd /opt/eservice/backend
+            set -a
+            . ./.env
+            set +a
+            KEY="$APIZONE_API_KEY"
+            echo "key_len=${#KEY} suffix=${KEY: -4}"
+            AADHAAR="914713393933"
+            for BASE in \
+              "https://kycapizone.in/api/" \
+              "https://live.kycapizone.in/api/" \
+              "https://apizone.info/api/" \
+              "https://www.apizone.info/api/"
+            do
+              URL="${BASE}panno/instant/aadhaar_to_pan.php?api_key=${KEY}&aadhaar_no=${AADHAAR}"
+              echo "---- ${BASE}panno/instant/aadhaar_to_pan.php ----"
+              curl -sS -m 40 -A "Mozilla/5.0" -H "Accept: application/json" "$URL" | head -c 400
+              echo
+            done
+            echo "---- balance fetch live ----"
+            curl -sS -m 20 -A "Mozilla/5.0" "https://live.kycapizone.in/api/v2/balance/fetch.php?api_key=${KEY}&mobile=9999999999" | head -c 400
+            echo

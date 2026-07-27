@@ -46,6 +46,7 @@ func candidateBaseURLs() []string {
 	primary := baseURL()
 	fallbacks := []string{
 		"https://kycapizone.in/api/",
+		"https://live.kycapizone.in/api/",
 		"https://apizone.info/api/",
 		"https://www.apizone.info/api/",
 	}
@@ -225,6 +226,9 @@ func AadhaarToPan(c *gin.Context) {
 			lastErr = "Failed to build upstream request"
 			continue
 		}
+		httpReq.Header.Set("User-Agent", "Mozilla/5.0 (compatible; ThuruvanESeva/1.0)")
+		httpReq.Header.Set("Accept", "application/json, text/plain, */*")
+		httpReq.Header.Set("Referer", "https://dashboard.apizone.info/")
 		resp, err := client.Do(httpReq)
 		if err != nil {
 			log.Printf("[APIZONE] aadhaar-to-pan request failed (%s): %v", endpoint, err)
@@ -268,10 +272,7 @@ func AadhaarToPan(c *gin.Context) {
 		if lastErr == "" {
 			lastErr = fmt.Sprintf("APIZONE rejected request (status_code=%d)", statusCode)
 		}
-		// Invalid key / insufficient balance — no point trying other hosts
-		if statusCode == 401 || statusCode == 403 || statusCode == 400 {
-			break
-		}
+		// Keep trying other hosts — some keys only work on live.* / apizone.info
 		log.Printf("[APIZONE] upstream fail host=%s status_code=%d msg=%s", endpoint, statusCode, lastErr)
 		upstream = nil
 	}
