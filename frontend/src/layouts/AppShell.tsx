@@ -2,7 +2,6 @@
 
 import { useState, type ReactNode } from "react";
 import { Sidebar } from "./Sidebar";
-import { CommandBar } from "../components/CommandBar";
 import { TopBar } from "./TopBar";
 import { BackendHealthChecker } from "../components/BackendHealthChecker";
 import { GlobalAlertsDisplay } from "../components/GlobalAlertsDisplay";
@@ -36,15 +35,11 @@ export function AppShell({
 
         {/* Outer content container */}
         <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto w-full space-y-6">
-          {/* Action and Search Command Bar (Desktop top header & mobile details) */}
-          {activePage === "Dashboard" && <CommandBar />}
-
           {/* Page content */}
           <div className="pt-2">
             <BackendHealthChecker>{children}</BackendHealthChecker>
           </div>
         </main>
-
       </div>
     </div>
   );
