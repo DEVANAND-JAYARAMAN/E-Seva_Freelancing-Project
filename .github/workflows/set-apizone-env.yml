@@ -22,16 +22,30 @@ jobs:
             set -e
             cd /opt/eservice/backend
             touch .env
-            # Remove old APIZONE lines if any
             grep -v '^APIZONE_' .env > .env.tmp || true
             mv .env.tmp .env
-            printf '%s\n' "APIZONE_BASE_URL=https://kycapizone.in/api/" "APIZONE_API_KEY=${{ secrets.APIZONE_API_KEY }}" >> .env
+            # Write key with no spaces/quotes
+            printf '%s\n' "APIZONE_BASE_URL=https://kycapizone.in/api/" >> .env
+            printf 'APIZONE_API_KEY=%s\n' "${{ secrets.APIZONE_API_KEY }}" >> .env
+            sed -i 's/\r$//' .env
             sed -i 's/^[[:space:]]*//' .env
-            echo "Current APIZONE lines:"
-            grep '^APIZONE_' .env | sed 's/APIZONE_API_KEY=.*/APIZONE_API_KEY=***/'
+            KEY_LINE=$(grep '^APIZONE_API_KEY=' .env | tail -n1)
+            KEY_VAL="${KEY_LINE#APIZONE_API_KEY=}"
+            KEY_LEN=${#KEY_VAL}
+            if [ "$KEY_LEN" -lt 20 ]; then
+              echo "ERROR: APIZONE_API_KEY missing or too short (len=$KEY_LEN). Update GitHub secret APIZONE_API_KEY first."
+              exit 1
+            fi
+            echo "APIZONE_BASE_URL=https://kycapizone.in/api/"
+            echo "APIZONE_API_KEY len=$KEY_LEN suffix=${KEY_VAL: -4}"
             sudo fuser -k 8080/tcp || true
             sleep 2
-            nohup ./eservice-backend > ./eservice.log 2>&1 &
+            # Export into process env (do not rely only on godotenv)
+            set -a
+            # shellcheck disable=SC1091
+            . ./.env
+            set +a
+            nohup env APIZONE_BASE_URL="$APIZONE_BASE_URL" APIZONE_API_KEY="$APIZONE_API_KEY" ./eservice-backend > ./eservice.log 2>&1 &
             sleep 3
-            pgrep -af eservice-backend || (echo "FAILED to start"; tail -n 40 ./eservice.log; exit 1)
-            echo "Backend restarted with APIZONE env"
+            pgrep -af eservice-backend || (echo "FAILED to start"; tail -n 50 ./eservice.log; exit 1)
+            echo "Backend restarted with APIZONE env (key len=$KEY_LEN)"

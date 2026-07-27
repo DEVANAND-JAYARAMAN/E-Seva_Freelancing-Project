@@ -687,10 +687,15 @@ export function PdfPage() {
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok || data.success === false) {
+          const hint =
+            typeof data.keyLen === "number"
+              ? `\n(Server key len=${data.keyLen}, ends …${data.keySuffix || "?"})`
+              : "";
           alert(
-            data.error ||
+            (data.error ||
               data.message ||
-              "Aadhaar to PAN lookup failed. Check Api Wallet balance / API key.",
+              "Aadhaar to PAN lookup failed. Check Api Wallet balance / API key.") +
+              hint,
           );
           setIsSubmitting(false);
           return;

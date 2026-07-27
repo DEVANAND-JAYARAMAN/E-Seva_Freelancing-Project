@@ -199,6 +199,10 @@ func AadhaarToPan(c *gin.Context) {
 		})
 		return
 	}
+	keyHint := map[string]interface{}{
+		"keyLen":    len(key),
+		"keySuffix": keySuffix(key),
+	}
 
 	client := &http.Client{Timeout: 45 * time.Second}
 	var (
@@ -278,10 +282,12 @@ func AadhaarToPan(c *gin.Context) {
 			msg = "APIZONE lookup failed"
 		}
 		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": msg,
-			"endpoint": usedURL,
-			"charged": false,
+			"success":   false,
+			"message":   msg,
+			"endpoint":  usedURL,
+			"charged":   false,
+			"keyLen":    keyHint["keyLen"],
+			"keySuffix": keyHint["keySuffix"],
 		})
 		return
 	}
@@ -306,11 +312,13 @@ func AadhaarToPan(c *gin.Context) {
 			msg = "APIZONE lookup failed"
 		}
 		c.JSON(http.StatusOK, gin.H{
-			"success":  false,
-			"message":  msg,
-			"upstream": upstream,
-			"endpoint": usedURL,
-			"charged":  false,
+			"success":   false,
+			"message":   msg,
+			"upstream":  upstream,
+			"endpoint":  usedURL,
+			"charged":   false,
+			"keyLen":    keyHint["keyLen"],
+			"keySuffix": keyHint["keySuffix"],
 		})
 		return
 	}
@@ -369,4 +377,12 @@ func truncate(s string, n int) string {
 		return s
 	}
 	return s[:n] + "..."
+}
+
+func keySuffix(key string) string {
+	key = strings.TrimSpace(key)
+	if len(key) <= 4 {
+		return key
+	}
+	return key[len(key)-4:]
 }
