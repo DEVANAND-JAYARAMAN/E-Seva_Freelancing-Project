@@ -11,38 +11,53 @@ jobs:
   credit_api_wallet:
     runs-on: ubuntu-latest
     steps:
-      - name: Configure AWS
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.ESEVA_AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.ESEVA_AWS_SECRET_ACCESS_KEY || secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-south-1
-
-      - name: Credit TYPE#API wallets
-        env:
-          AMT: ${{ github.event.inputs.amount }}
+      - name: Get EC2 IP
         run: |
-          set -e
-          echo "Crediting Api Wallet with ₹$AMT..."
-          USER_IDS=$(aws dynamodb scan --table-name Users --query "Items[*].PK.S" --output text)
-          COUNT=0
-          for USER_ID in $USER_IDS; do
-            if [ "$USER_ID" = "None" ] || [ -z "$USER_ID" ]; then
-              continue
+          IP=$(curl -s https://daqpqxq9zg.execute-api.ap-south-1.amazonaws.com/prod/ip | jq -r .public_ip)
+          echo "EC2_IP=$IP" >> $GITHUB_ENV
+
+      - name: Credit TYPE#API via EC2 instance role
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.EC2_IP }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_SSH_PORT }}
+          command_timeout: 15m
+          script: |
+            set -e
+            AMT="${{ github.event.inputs.amount }}"
+            if ! command -v aws >/dev/null 2>&1; then
+              echo "Installing AWS CLI v2..."
+              curl -sS "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip
+              sudo apt-get update -qq && sudo apt-get install -y -qq unzip >/dev/null
+              unzip -q /tmp/awscliv2.zip -d /tmp
+              sudo /tmp/aws/install -i /usr/local/aws-cli -b /usr/local/bin || sudo /tmp/aws/install --update
             fi
-            WALLET_PK=$(echo "$USER_ID" | sed 's/USER#/WALLET#/')
-            UID_PLAIN="${USER_ID#USER#}"
-            TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-            echo "API wallet: $WALLET_PK"
-            aws dynamodb update-item \
-              --table-name Wallets \
-              --key "{\"PK\":{\"S\":\"$WALLET_PK\"},\"SK\":{\"S\":\"TYPE#API\"}}" \
-              --update-expression "SET balance = if_not_exists(balance, :zero) + :amt, totalCredits = if_not_exists(totalCredits, :zero) + :amt, updatedAt = :ts, userId = if_not_exists(userId, :uid)" \
-              --expression-attribute-values "{\":amt\":{\"N\":\"$AMT\"},\":zero\":{\"N\":\"0\"},\":ts\":{\"S\":\"$TS\"},\":uid\":{\"S\":\"$UID_PLAIN\"}}"
-            TX_ID="TX#$(date -u +%Y%m%d%H%M%S%N)#API#MANUAL#$COUNT"
-            aws dynamodb put-item \
-              --table-name WalletTransactions \
-              --item "{\"PK\":{\"S\":\"$WALLET_PK\"},\"SK\":{\"S\":\"$TX_ID\"},\"id\":{\"S\":\"API-MANUAL-$COUNT\"},\"amount\":{\"N\":\"$AMT\"},\"type\":{\"S\":\"credit\"},\"status\":{\"S\":\"Success\"},\"walletType\":{\"S\":\"API\"},\"description\":{\"S\":\"Manual Api Wallet credit\"},\"createdAt\":{\"S\":\"$TS\"}}"
-            COUNT=$((COUNT+1))
-          done
-          echo "Done. Credited $COUNT Api Wallets with ₹$AMT each."
+            export PATH="/usr/local/bin:$PATH"
+            aws --version
+            echo "Crediting Api Wallet with ₹$AMT..."
+            USER_IDS=$(aws dynamodb scan --region ap-south-1 --table-name Users --query "Items[*].PK.S" --output text)
+            COUNT=0
+            for USER_ID in $USER_IDS; do
+              if [ "$USER_ID" = "None" ] || [ -z "$USER_ID" ]; then
+                continue
+              fi
+              WALLET_PK=$(echo "$USER_ID" | sed 's/USER#/WALLET#/')
+              UID_PLAIN="${USER_ID#USER#}"
+              TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+              echo "API wallet: $WALLET_PK"
+              aws dynamodb update-item \
+                --region ap-south-1 \
+                --table-name Wallets \
+                --key "{\"PK\":{\"S\":\"$WALLET_PK\"},\"SK\":{\"S\":\"TYPE#API\"}}" \
+                --update-expression "SET balance = if_not_exists(balance, :zero) + :amt, totalCredits = if_not_exists(totalCredits, :zero) + :amt, updatedAt = :ts, userId = if_not_exists(userId, :uid)" \
+                --expression-attribute-values "{\":amt\":{\"N\":\"$AMT\"},\":zero\":{\"N\":\"0\"},\":ts\":{\"S\":\"$TS\"},\":uid\":{\"S\":\"$UID_PLAIN\"}}"
+              TX_ID="TX#$(date -u +%Y%m%d%H%M%S)#API#MANUAL#$COUNT"
+              aws dynamodb put-item \
+                --region ap-south-1 \
+                --table-name WalletTransactions \
+                --item "{\"PK\":{\"S\":\"$WALLET_PK\"},\"SK\":{\"S\":\"$TX_ID\"},\"id\":{\"S\":\"API-MANUAL-$COUNT\"},\"amount\":{\"N\":\"$AMT\"},\"type\":{\"S\":\"credit\"},\"status\":{\"S\":\"Success\"},\"walletType\":{\"S\":\"API\"},\"description\":{\"S\":\"Manual Api Wallet credit\"},\"createdAt\":{\"S\":\"$TS\"}}"
+              COUNT=$((COUNT+1))
+            done
+            echo "Done. Credited $COUNT Api Wallets with ₹$AMT each."
