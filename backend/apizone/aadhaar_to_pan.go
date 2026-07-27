@@ -47,8 +47,6 @@ func candidateBaseURLs() []string {
 	fallbacks := []string{
 		"https://kycapizone.in/api/",
 		"https://live.kycapizone.in/api/",
-		"https://apizone.info/api/",
-		"https://www.apizone.info/api/",
 	}
 	seen := map[string]bool{}
 	out := make([]string, 0, 1+len(fallbacks))
@@ -207,10 +205,11 @@ func AadhaarToPan(c *gin.Context) {
 
 	client := &http.Client{Timeout: 45 * time.Second}
 	var (
-		upstream map[string]interface{}
-		rawBody  string
-		usedURL  string
-		lastErr  string
+		upstream    map[string]interface{}
+		rawBody     string
+		usedURL     string
+		lastErr     string
+		bestJSONErr string
 	)
 
 	for _, base := range candidateBaseURLs() {
@@ -272,13 +271,18 @@ func AadhaarToPan(c *gin.Context) {
 		if lastErr == "" {
 			lastErr = fmt.Sprintf("APIZONE rejected request (status_code=%d)", statusCode)
 		}
-		// Keep trying other hosts — some keys only work on live.* / apizone.info
+		if bestJSONErr == "" || statusCode == 401 || statusCode == 403 {
+			bestJSONErr = lastErr
+		}
 		log.Printf("[APIZONE] upstream fail host=%s status_code=%d msg=%s", endpoint, statusCode, lastErr)
 		upstream = nil
 	}
 
 	if upstream == nil {
-		msg := strings.TrimSpace(lastErr)
+		msg := strings.TrimSpace(bestJSONErr)
+		if msg == "" {
+			msg = strings.TrimSpace(lastErr)
+		}
 		if msg == "" {
 			msg = "APIZONE lookup failed"
 		}
