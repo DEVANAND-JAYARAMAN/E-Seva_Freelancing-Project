@@ -67,7 +67,7 @@ jobs:
             PORT=${{ secrets.PORT }}
             MUGAVAI_USERNAME=${{ secrets.MUGAVAI_USERNAME }}
             MUGAVAI_API_KEY=${{ secrets.MUGAVAI_API_KEY }}
-            APIZONE_BASE_URL=https://apizone.info/api/
+            APIZONE_BASE_URL=https://kycapizone.in/api/
             APIZONE_API_KEY=${{ secrets.APIZONE_API_KEY }}
             EOF
             sed -i 's/^[[:space:]]*//' .env

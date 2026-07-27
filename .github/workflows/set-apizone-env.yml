@@ -25,16 +25,13 @@ jobs:
             # Remove old APIZONE lines if any
             grep -v '^APIZONE_' .env > .env.tmp || true
             mv .env.tmp .env
-            cat >> .env <<EOF
-            APIZONE_BASE_URL=https://apizone.info/api/
-            APIZONE_API_KEY=${{ secrets.APIZONE_API_KEY }}
-            EOF
-            # Strip leading spaces from heredoc indentation
+            printf '%s\n' "APIZONE_BASE_URL=https://kycapizone.in/api/" "APIZONE_API_KEY=${{ secrets.APIZONE_API_KEY }}" >> .env
             sed -i 's/^[[:space:]]*//' .env
             echo "Current APIZONE lines:"
-            grep '^APIZONE_' .env || true
+            grep '^APIZONE_' .env | sed 's/APIZONE_API_KEY=.*/APIZONE_API_KEY=***/'
             sudo fuser -k 8080/tcp || true
             sleep 2
-            nohup /opt/eservice/backend/eservice-backend > /tmp/eservice.log 2>&1 &
-            sleep 2
-            pgrep -f eservice-backend && echo "Backend restarted with APIZONE env"
+            nohup ./eservice-backend > ./eservice.log 2>&1 &
+            sleep 3
+            pgrep -af eservice-backend || (echo "FAILED to start"; tail -n 40 ./eservice.log; exit 1)
+            echo "Backend restarted with APIZONE env"

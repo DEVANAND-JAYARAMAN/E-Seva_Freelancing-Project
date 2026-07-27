@@ -34,12 +34,38 @@ type aadhaarToPanReq struct {
 func baseURL() string {
 	b := strings.TrimSpace(os.Getenv("APIZONE_BASE_URL"))
 	if b == "" {
-		b = "https://apizone.info/api/"
+		b = "https://kycapizone.in/api/"
 	}
 	if !strings.HasSuffix(b, "/") {
 		b += "/"
 	}
 	return b
+}
+
+func candidateBaseURLs() []string {
+	primary := baseURL()
+	fallbacks := []string{
+		"https://kycapizone.in/api/",
+		"https://apizone.info/api/",
+		"https://www.apizone.info/api/",
+	}
+	seen := map[string]bool{}
+	out := make([]string, 0, 1+len(fallbacks))
+	for _, b := range append([]string{primary}, fallbacks...) {
+		b = strings.TrimSpace(b)
+		if b == "" {
+			continue
+		}
+		if !strings.HasSuffix(b, "/") {
+			b += "/"
+		}
+		if seen[b] {
+			continue
+		}
+		seen[b] = true
+		out = append(out, b)
+	}
+	return out
 }
 
 func apiKey() string {
@@ -174,33 +200,98 @@ func AadhaarToPan(c *gin.Context) {
 		return
 	}
 
-	endpoint := baseURL() + "panno/instant/aadhaar_to_pan.php"
-	q := url.Values{}
-	q.Set("api_key", key)
-	q.Set("aadhaar_no", aadhaar)
-	fullURL := endpoint + "?" + q.Encode()
-
 	client := &http.Client{Timeout: 45 * time.Second}
-	httpReq, err := http.NewRequest("GET", fullURL, nil)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to build upstream request"})
-		return
-	}
-	resp, err := client.Do(httpReq)
-	if err != nil {
-		log.Printf("[APIZONE] aadhaar-to-pan request failed: %v", err)
-		c.JSON(http.StatusBadGateway, gin.H{"error": "Could not reach APIZONE: " + err.Error()})
-		return
-	}
-	defer resp.Body.Close()
-	body, _ := io.ReadAll(resp.Body)
+	var (
+		upstream map[string]interface{}
+		rawBody  string
+		usedURL  string
+		lastErr  string
+	)
 
-	var upstream map[string]interface{}
-	_ = json.Unmarshal(body, &upstream)
+	for _, base := range candidateBaseURLs() {
+		endpoint := base + "panno/instant/aadhaar_to_pan.php"
+		q := url.Values{}
+		q.Set("api_key", key)
+		q.Set("aadhaar_no", aadhaar)
+		fullURL := endpoint + "?" + q.Encode()
+		usedURL = endpoint
+
+		httpReq, err := http.NewRequest("GET", fullURL, nil)
+		if err != nil {
+			lastErr = "Failed to build upstream request"
+			continue
+		}
+		resp, err := client.Do(httpReq)
+		if err != nil {
+			log.Printf("[APIZONE] aadhaar-to-pan request failed (%s): %v", endpoint, err)
+			lastErr = err.Error()
+			continue
+		}
+		body, _ := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		rawBody = string(body)
+
+		var parsed map[string]interface{}
+		if err := json.Unmarshal(body, &parsed); err != nil || parsed == nil {
+			lastErr = "Non-JSON response from " + endpoint
+			log.Printf("[APIZONE] non-json from %s status=%d body=%q", endpoint, resp.StatusCode, truncate(rawBody, 300))
+			continue
+		}
+		upstream = parsed
+
+		success := false
+		switch v := upstream["success"].(type) {
+		case bool:
+			success = v
+		case string:
+			success = strings.EqualFold(v, "true") || v == "1"
+		}
+		statusCode := 0
+		switch v := upstream["status_code"].(type) {
+		case float64:
+			statusCode = int(v)
+		case string:
+			fmt.Sscanf(v, "%d", &statusCode)
+		}
+		if success || statusCode == 100 {
+			break
+		}
+		msg := strings.TrimSpace(fmt.Sprintf("%v", upstream["message"]))
+		if msg == "<nil>" {
+			msg = ""
+		}
+		lastErr = msg
+		if lastErr == "" {
+			lastErr = fmt.Sprintf("APIZONE rejected request (status_code=%d)", statusCode)
+		}
+		// Invalid key / insufficient balance — no point trying other hosts
+		if statusCode == 401 || statusCode == 403 || statusCode == 400 {
+			break
+		}
+		log.Printf("[APIZONE] upstream fail host=%s status_code=%d msg=%s", endpoint, statusCode, lastErr)
+		upstream = nil
+	}
+
+	if upstream == nil {
+		msg := strings.TrimSpace(lastErr)
+		if msg == "" {
+			msg = "APIZONE lookup failed"
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"success": false,
+			"message": msg,
+			"endpoint": usedURL,
+			"charged": false,
+		})
+		return
+	}
 
 	success := false
-	if v, ok := upstream["success"].(bool); ok {
+	switch v := upstream["success"].(type) {
+	case bool:
 		success = v
+	case string:
+		success = strings.EqualFold(v, "true") || v == "1"
 	}
 	statusCode := 0
 	switch v := upstream["status_code"].(type) {
@@ -218,6 +309,7 @@ func AadhaarToPan(c *gin.Context) {
 			"success":  false,
 			"message":  msg,
 			"upstream": upstream,
+			"endpoint": usedURL,
 			"charged":  false,
 		})
 		return
@@ -235,6 +327,7 @@ func AadhaarToPan(c *gin.Context) {
 			"success":  false,
 			"message":  "PAN not found in upstream response",
 			"upstream": upstream,
+			"endpoint": usedURL,
 			"charged":  false,
 		})
 		return
@@ -266,6 +359,14 @@ func AadhaarToPan(c *gin.Context) {
 		"apiBalance": newBal,
 		"reference":  ref,
 		"upstream":   upstream,
+		"endpoint":   usedURL,
 		"charged":    true,
 	})
+}
+
+func truncate(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	return s[:n] + "..."
 }
