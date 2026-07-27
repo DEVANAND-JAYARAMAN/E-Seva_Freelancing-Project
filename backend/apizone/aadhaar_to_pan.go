@@ -34,7 +34,7 @@ type aadhaarToPanReq struct {
 func baseURL() string {
 	b := strings.TrimSpace(os.Getenv("APIZONE_BASE_URL"))
 	if b == "" {
-		b = "https://kycapizone.in/api/"
+		b = "https://apizone.info/api/"
 	}
 	if !strings.HasSuffix(b, "/") {
 		b += "/"

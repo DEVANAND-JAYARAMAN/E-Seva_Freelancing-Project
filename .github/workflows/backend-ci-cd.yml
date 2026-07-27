@@ -67,7 +67,10 @@ jobs:
             PORT=${{ secrets.PORT }}
             MUGAVAI_USERNAME=${{ secrets.MUGAVAI_USERNAME }}
             MUGAVAI_API_KEY=${{ secrets.MUGAVAI_API_KEY }}
+            APIZONE_BASE_URL=https://apizone.info/api/
+            APIZONE_API_KEY=${{ secrets.APIZONE_API_KEY }}
             EOF
+            sed -i 's/^[[:space:]]*//' .env
             
             # Kill existing process to avoid 'text file busy' errors
             sudo fuser -k 8080/tcp || true

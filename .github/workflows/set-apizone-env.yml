@@ -1,0 +1,40 @@
+name: Set APIZONE Env on EC2
+on:
+  workflow_dispatch:
+
+jobs:
+  set_env:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get EC2 IP
+        run: |
+          IP=$(curl -s https://daqpqxq9zg.execute-api.ap-south-1.amazonaws.com/prod/ip | jq -r .public_ip)
+          echo "EC2_IP=$IP" >> $GITHUB_ENV
+
+      - name: Patch .env and restart backend
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.EC2_IP }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_SSH_PORT }}
+          script: |
+            set -e
+            cd /opt/eservice/backend
+            touch .env
+            # Remove old APIZONE lines if any
+            grep -v '^APIZONE_' .env > .env.tmp || true
+            mv .env.tmp .env
+            cat >> .env <<EOF
+            APIZONE_BASE_URL=https://apizone.info/api/
+            APIZONE_API_KEY=${{ secrets.APIZONE_API_KEY }}
+            EOF
+            # Strip leading spaces from heredoc indentation
+            sed -i 's/^[[:space:]]*//' .env
+            echo "Current APIZONE lines:"
+            grep '^APIZONE_' .env || true
+            sudo fuser -k 8080/tcp || true
+            sleep 2
+            nohup /opt/eservice/backend/eservice-backend > /tmp/eservice.log 2>&1 &
+            sleep 2
+            pgrep -f eservice-backend && echo "Backend restarted with APIZONE env"
