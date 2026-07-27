@@ -9,7 +9,6 @@ import (
 	"eservice-backend/billing"
 	"eservice-backend/crm"
 	"eservice-backend/db"
-	"eservice-backend/developers"
 	"eservice-backend/notification"
 	"eservice-backend/service"
 	"eservice-backend/wallet"
@@ -154,13 +153,6 @@ func main() {
 				walletGroup.POST("/recharge/manual", auth.RequireAdmin(), wallet.ManualRecharge)
 				walletGroup.GET("/recharge/status/:order_id", wallet.CheckGatewayRechargeStatus)
 				walletGroup.POST("/recharge/confirm", service.ConfirmGatewayRecharge)
-			}
-
-			devGroup := secured.Group("/developers")
-			{
-				devGroup.GET("/api-key", developers.GetAPIKey)
-				devGroup.POST("/api-key/generate", developers.GenerateAPIKey)
-				devGroup.PUT("/api-key/whitelist", developers.SaveWhitelist)
 			}
 
 			adminGroup := secured.Group("/admin")
