@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"eservice-backend/admin"
+	"eservice-backend/apizone"
 	"eservice-backend/auth"
 	"eservice-backend/billing"
 	"eservice-backend/crm"
@@ -171,6 +172,8 @@ func main() {
 			}
 
 			secured.POST("/v1/wallet/recharge/gateway", service.RechargeGateway)
+			secured.POST("/v1/external-api/aadhaar-to-pan", apizone.AadhaarToPan)
+			secured.POST("/v1/external-api/aadhaar-to-pan/", apizone.AadhaarToPan)
 		}
 	}
 

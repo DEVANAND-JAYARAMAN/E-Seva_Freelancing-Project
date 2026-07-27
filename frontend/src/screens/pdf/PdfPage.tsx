@@ -97,7 +97,7 @@ const pdfServicesList: PdfService[] = [
 ];
 
 export function PdfPage() {
-  const { user } = useAuth();
+  const { user, updateApiWallet, refreshProfile } = useAuth();
   const { overrides, setFormScope } = useFormEdit();
   const isAdmin = user?.role === "admin";
 
@@ -205,6 +205,13 @@ export function PdfPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionSuccess, setSubmissionSuccess] = useState(false);
+  const [lookupResult, setLookupResult] = useState<{
+    pan?: string;
+    aadhaar?: string;
+    charge?: number;
+    apiBalance?: number;
+    message?: string;
+  } | null>(null);
 
   // Bind form field edits to the selected PDF service only
   useEffect(() => {
@@ -663,6 +670,71 @@ export function PdfPage() {
     }
 
     setIsSubmitting(true);
+    setLookupResult(null);
+
+    // Instant APIZONE lookup for Aadhaar → PAN (charges Api Wallet)
+    if (service.id === "adhaar-to-pan") {
+      try {
+        const res = await authFetch(apiUrl("v1/external-api/aadhaar-to-pan"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            aadhaar: formData.aadhaarNo,
+            serviceId: service.id,
+            serviceName: service.name,
+            cost: service.amount || 0,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data.success === false) {
+          alert(
+            data.error ||
+              data.message ||
+              "Aadhaar to PAN lookup failed. Check Api Wallet balance / API key.",
+          );
+          setIsSubmitting(false);
+          return;
+        }
+        if (typeof data.apiBalance === "number") {
+          updateApiWallet(Number(data.apiBalance));
+        }
+        void refreshProfile();
+        setLookupResult({
+          pan: String(data.pan || ""),
+          aadhaar: String(data.aadhaar || ""),
+          charge: Number(data.charge || service.amount || 0),
+          apiBalance: Number(data.apiBalance || 0),
+          message: String(data.message || "Success"),
+        });
+        setSubmissionSuccess(true);
+        setRequestLogs((prev) => [
+          {
+            id: `REQ-PDF-${Math.floor(1000 + Math.random() * 9000)}`,
+            serviceId: service.id,
+            serviceName: service.name,
+            details: `PAN: ${data.pan || "—"} · Aadhaar: XXXXXXXX${String(formData.aadhaarNo || "").slice(-4)}`,
+            amount: Number(data.charge || service.amount || 0),
+            date: new Date().toISOString().replace("T", " ").substring(0, 19),
+            status: "Approved",
+          },
+          ...prev,
+        ]);
+        setIsSubmitting(false);
+        setTimeout(() => {
+          setSubmissionSuccess(false);
+          setLookupResult(null);
+          setActiveForm(null);
+          setFormData({});
+          setPendingFiles({});
+        }, 12000);
+        return;
+      } catch (err) {
+        console.error(err);
+        alert("Failed to connect to API lookup");
+        setIsSubmitting(false);
+        return;
+      }
+    }
 
     if (user && service) {
       try {
@@ -764,8 +836,9 @@ export function PdfPage() {
 
     setRequestLogs((prev) => [newRequest, ...prev]);
 
-	setTimeout(() => {
+    setTimeout(() => {
       setSubmissionSuccess(false);
+      setLookupResult(null);
       setActiveForm(null);
       setFormData({});
       setPendingFiles({});
@@ -957,22 +1030,43 @@ export function PdfPage() {
           <div className="w-full">
             <div className="w-full bg-slate-50 dark:bg-[#090d16] border border-slate-100 dark:border-slate-900/60 rounded-3xl p-6 md:p-8 shadow-sm flex flex-col gap-6 relative overflow-hidden animate-in fade-in duration-200">
               {submissionSuccess ? (
-                <div className="py-16 flex flex-col items-center justify-center text-center gap-4">
-                  <span className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-400 animate-bounce">
+                <div className="py-12 flex flex-col items-center justify-center text-center gap-4">
+                  <span className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/20 text-[#005c3a] dark:text-emerald-400">
                     <CheckCircle2 size={44} className="stroke-[2.5]" />
                   </span>
-                  <div>
+                  <div className="space-y-3 max-w-lg">
                     <h5 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
-                      Search Request Submitted!
+                      {lookupResult?.pan
+                        ? "PAN Found"
+                        : "Search Request Submitted!"}
                     </h5>
-                    <p className="text-sm text-slate-400 dark:text-slate-555 mt-2 max-w-md leading-relaxed">
-                      Your search request for{" "}
-                      <span className="text-[#005c3a] dark:text-emerald-400 font-extrabold capitalize">
-                        &quot;{activeServiceObj.name}&quot;
-                      </span>{" "}
-                      has been registered. The generated document will appear in
-                      your ledger shortly.
-                    </p>
+                    {lookupResult?.pan ? (
+                      <div className="rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/80 dark:bg-emerald-950/30 px-5 py-4 text-left space-y-2">
+                        <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
+                          Aadhaar: {lookupResult.aadhaar || "—"}
+                        </p>
+                        <p className="text-xl font-black text-emerald-800 dark:text-emerald-300 tracking-wide">
+                          PAN: {lookupResult.pan}
+                        </p>
+                        <p className="text-xs font-bold text-slate-500">
+                          Charged ₹
+                          {(lookupResult.charge || 0).toFixed(2)} from Api
+                          Wallet
+                          {typeof lookupResult.apiBalance === "number"
+                            ? ` · Balance ₹${lookupResult.apiBalance.toFixed(2)}`
+                            : ""}
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-slate-400 dark:text-slate-500 mt-2 max-w-md leading-relaxed mx-auto">
+                        Your search request for{" "}
+                        <span className="text-[#005c3a] dark:text-emerald-400 font-extrabold capitalize">
+                          &quot;{activeServiceObj.name}&quot;
+                        </span>{" "}
+                        has been registered. The generated document will appear
+                        in your ledger shortly.
+                      </p>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -987,14 +1081,18 @@ export function PdfPage() {
                         {activeServiceObj.name}
                       </h2>
                       <p className="text-xs text-slate-450 dark:text-slate-500 mt-0.5">
-                        Submit candidate credentials to extract and print
-                        verified PDF records.
+                        {activeServiceObj.id === "adhaar-to-pan"
+                          ? "Enter Aadhaar number. PAN is fetched live via APIZONE and charged from Api Wallet."
+                          : "Submit candidate credentials to extract and print verified PDF records."}
                       </p>
                     </div>
                     <div className="text-xs font-bold text-slate-900 dark:text-white self-start sm:self-auto pt-1 sm:pt-1.5 select-none flex items-center gap-1.5">
                       <CreditCard size={13} className="text-emerald-500" />
                       <span>
-                        Service Charge : ₹ {activeServiceObj.amount.toFixed(2)}
+                        {activeServiceObj.id === "adhaar-to-pan"
+                          ? "Api Wallet Charge"
+                          : "Service Charge"}{" "}
+                        : ₹ {activeServiceObj.amount.toFixed(2)}
                       </span>
                     </div>
                   </div>
