@@ -22,6 +22,8 @@ const NAV_ORDER = [
   "Billing",
   "Daily Payments",
   "Wallet",
+  "API Key",
+  "API Documentation",
   "Notifications",
   "Server Control",
 ];
@@ -81,6 +83,16 @@ const NAV_ACCENT: Record<
     active: "from-emerald-500/25 to-green-500/10",
     bar: "bg-emerald-400",
   },
+  "API Key": {
+    chip: "from-sky-500 to-blue-600",
+    active: "from-sky-500/25 to-blue-500/10",
+    bar: "bg-sky-400",
+  },
+  "API Documentation": {
+    chip: "from-violet-500 to-indigo-600",
+    active: "from-violet-500/25 to-indigo-500/10",
+    bar: "bg-violet-400",
+  },
   Notifications: {
     chip: "from-amber-400 to-yellow-500",
     active: "from-amber-400/25 to-yellow-500/10",
@@ -108,6 +120,8 @@ export function Sidebar({ activePage, isOpen, onClose }: SidebarProps) {
     "Services Status",
     "Our Service",
     "Wallet",
+    "API Key",
+    "API Documentation",
   ];
 
   const displayItems = isAdmin

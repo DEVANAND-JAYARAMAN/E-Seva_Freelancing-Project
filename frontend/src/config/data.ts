@@ -15,6 +15,8 @@ import {
   Server,
   Bell,
   CalendarDays,
+  KeyRound,
+  BookOpen,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -56,6 +58,8 @@ export const navItems: NavItem[] = [
   { label: "Billing", href: "/billing", icon: Receipt },
   { label: "Daily Payments", href: "/daily-payments", icon: CalendarDays },
   { label: "Wallet", href: "/wallets", icon: Wallet },
+  { label: "API Key", href: "/developers/api-key", icon: KeyRound },
+  { label: "API Documentation", href: "/api-docs", icon: BookOpen },
   { label: "Notifications", href: "/admin/notifications", icon: Bell },
   { label: "Server Control", href: "/admin", icon: Server },
 ];
