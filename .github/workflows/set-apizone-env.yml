@@ -27,6 +27,7 @@ jobs:
             # Write key with no spaces/quotes
             printf '%s\n' "APIZONE_BASE_URL=https://kycapizone.in/api/" >> .env
             printf 'APIZONE_API_KEY=%s\n' "${{ secrets.APIZONE_API_KEY }}" >> .env
+            printf 'APIZONE_MOBILE=%s\n' "${{ secrets.APIZONE_MOBILE }}" >> .env
             sed -i 's/\r$//' .env
             sed -i 's/^[[:space:]]*//' .env
             KEY_LINE=$(grep '^APIZONE_API_KEY=' .env | tail -n1)
@@ -38,14 +39,15 @@ jobs:
             fi
             echo "APIZONE_BASE_URL=https://kycapizone.in/api/"
             echo "APIZONE_API_KEY len=$KEY_LEN suffix=${KEY_VAL: -4}"
+            MOB=$(grep '^APIZONE_MOBILE=' .env | tail -n1 | cut -d= -f2-)
+            echo "APIZONE_MOBILE set=$([ -n "$MOB" ] && echo yes || echo no)"
             sudo fuser -k 8080/tcp || true
             sleep 2
-            # Export into process env (do not rely only on godotenv)
             set -a
             # shellcheck disable=SC1091
             . ./.env
             set +a
-            nohup env APIZONE_BASE_URL="$APIZONE_BASE_URL" APIZONE_API_KEY="$APIZONE_API_KEY" ./eservice-backend > ./eservice.log 2>&1 &
+            nohup env APIZONE_BASE_URL="$APIZONE_BASE_URL" APIZONE_API_KEY="$APIZONE_API_KEY" APIZONE_MOBILE="$APIZONE_MOBILE" ./eservice-backend > ./eservice.log 2>&1 &
             sleep 3
             pgrep -af eservice-backend || (echo "FAILED to start"; tail -n 50 ./eservice.log; exit 1)
             echo "Backend restarted with APIZONE env (key len=$KEY_LEN)"

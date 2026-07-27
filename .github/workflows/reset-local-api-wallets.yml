@@ -1,0 +1,42 @@
+name: Reset Local Api Wallets
+on:
+  workflow_dispatch:
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get EC2 IP
+        run: |
+          IP=$(curl -s https://daqpqxq9zg.execute-api.ap-south-1.amazonaws.com/prod/ip | jq -r .public_ip)
+          echo "EC2_IP=$IP" >> $GITHUB_ENV
+
+      - name: Zero TYPE#API local balances
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ env.EC2_IP }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_SSH_PORT }}
+          command_timeout: 15m
+          script: |
+            set -e
+            export PATH="/usr/local/bin:$PATH"
+            echo "Zeroing local TYPE#API wallets (Api Wallet now syncs from APIZONE)..."
+            KEYS=$(aws dynamodb scan --region ap-south-1 --table-name Wallets \
+              --filter-expression "SK = :sk" \
+              --expression-attribute-values '{":sk":{"S":"TYPE#API"}}' \
+              --projection-expression "PK,SK" \
+              --output json)
+            COUNT=$(echo "$KEYS" | jq '.Items | length')
+            echo "Found $COUNT API wallet rows"
+            echo "$KEYS" | jq -c '.Items[]' | while read -r item; do
+              PK=$(echo "$item" | jq -r '.PK.S')
+              SK=$(echo "$item" | jq -r '.SK.S')
+              echo "Reset $PK / $SK -> 0"
+              aws dynamodb update-item --region ap-south-1 --table-name Wallets \
+                --key "{\"PK\":{\"S\":\"$PK\"},\"SK\":{\"S\":\"$SK\"}}" \
+                --update-expression "SET balance = :z, updatedAt = :ts" \
+                --expression-attribute-values "{\":z\":{\"N\":\"0\"},\":ts\":{\"S\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\"}}"
+            done
+            echo "Done."

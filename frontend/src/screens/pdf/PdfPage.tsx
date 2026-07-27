@@ -1054,11 +1054,12 @@ export function PdfPage() {
                           PAN: {lookupResult.pan}
                         </p>
                         <p className="text-xs font-bold text-slate-500">
-                          Charged ₹
-                          {(lookupResult.charge || 0).toFixed(2)} from Api
-                          Wallet
+                          APIZONE wallet refreshed
                           {typeof lookupResult.apiBalance === "number"
                             ? ` · Balance ₹${lookupResult.apiBalance.toFixed(2)}`
+                            : ""}
+                          {lookupResult.charge
+                            ? ` · Service ₹${lookupResult.charge.toFixed(2)}`
                             : ""}
                         </p>
                       </div>

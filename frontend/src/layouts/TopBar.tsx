@@ -180,8 +180,15 @@ export function TopBar({ onMenuClick, activePage }: TopBarProps) {
               </span>
               <button
                 type="button"
-                onClick={() => router.push("/wallets/?add=1&wallet=API")}
+                onClick={() =>
+                  window.open(
+                    "https://dashboard.apizone.co.in",
+                    "_blank",
+                    "noopener,noreferrer",
+                  )
+                }
                 className="rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[11px] sm:text-xs font-extrabold px-2.5 py-1.5 transition active:scale-95 whitespace-nowrap"
+                title="Recharge Api Wallet on APIZONE portal"
               >
                 Add Money
               </button>

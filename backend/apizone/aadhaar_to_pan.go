@@ -181,10 +181,19 @@ func AadhaarToPan(c *gin.Context) {
 		charge = 12
 	}
 
-	bal := apiWalletBalance(userId)
+	mobile := ResolveMobile(userId)
+	bal, balErr := FetchLiveBalance(mobile)
+	if balErr != nil {
+		// Fallback to local Api Wallet only if live sync unavailable
+		bal = apiWalletBalance(userId)
+		LogBalanceSyncError(balErr)
+	}
 	if bal < charge {
 		c.JSON(http.StatusPaymentRequired, gin.H{
-			"error":      fmt.Sprintf("Insufficient Api Wallet balance. Need ₹%.2f, have ₹%.2f", charge, bal),
+			"error": fmt.Sprintf(
+				"Insufficient Api Wallet (APIZONE) balance. Need ₹%.2f, have ₹%.2f. Recharge on APIZONE portal.",
+				charge, bal,
+			),
 			"apiBalance": bal,
 			"charge":     charge,
 		})
@@ -347,20 +356,11 @@ func AadhaarToPan(c *gin.Context) {
 	}
 
 	ref := fmt.Sprintf("A2P-%d", time.Now().Unix())
-	newBal, err := debitAPIWallet(
-		userId,
-		charge,
-		ref,
-		fmt.Sprintf("Aadhaar to PAN (%s)", serviceName),
-	)
-	if err != nil {
-		log.Printf("[APIZONE] debit API wallet failed for %s: %v", userId, err)
-		c.JSON(http.StatusPaymentRequired, gin.H{
-			"error":   "Api Wallet debit failed — please top up Api Wallet and retry",
-			"success": false,
-			"charged": false,
-		})
-		return
+	// APIZONE deducts from their merchant wallet on success — refresh live balance (no local debit)
+	newBal, balErr := FetchLiveBalance(mobile)
+	if balErr != nil {
+		LogBalanceSyncError(balErr)
+		newBal = bal // last known
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -374,6 +374,7 @@ func AadhaarToPan(c *gin.Context) {
 		"upstream":   upstream,
 		"endpoint":   usedURL,
 		"charged":    true,
+		"apiSource":  "apizone",
 	})
 }
 

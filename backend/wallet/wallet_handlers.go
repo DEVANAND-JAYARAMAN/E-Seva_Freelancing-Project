@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"eservice-backend/admin"
+	"eservice-backend/apizone"
 	"eservice-backend/auth"
 	"eservice-backend/db"
 	"eservice-backend/service"
@@ -424,6 +425,14 @@ func GetWalletBalance(c *gin.Context) {
 	}
 	bal := partnerBalanceAfterCredit(userId)
 	apiBal := walletBalanceByType(userId, "API")
+	apiSource := "local"
+	// Prefer live APIZONE merchant wallet for Api Wallet display
+	if live, err := apizone.FetchLiveBalance(apizone.ResolveMobile(userId)); err == nil {
+		apiBal = live
+		apiSource = "apizone"
+	} else {
+		apizone.LogBalanceSyncError(err)
+	}
 	// Fallback to Users.walletBalance if Main wallet row missing / zero, then ensure Wallets row exists
 	if bal == 0 {
 		uOut, err := db.DynamoClient.GetItem(context.TODO(), &dynamodb.GetItemInput{
@@ -457,6 +466,7 @@ func GetWalletBalance(c *gin.Context) {
 		"userId":     userId,
 		"balance":    bal,
 		"apiBalance": apiBal,
+		"apiSource":  apiSource,
 	})
 }
 
