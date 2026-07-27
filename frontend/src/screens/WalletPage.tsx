@@ -219,12 +219,16 @@ export function WalletPage() {
     }
 
     if (openAdd) {
+      const w = (params.get("wallet") || "Main").toUpperCase();
+      setSelectedWalletType(w === "API" ? "API" : "Main");
       setIsModalOpen(true);
+      window.history.replaceState({}, "", window.location.pathname);
     }
   }, [refreshProfile, updateWallet]);
 
   // Balances
   const mainBalance = user?.walletBalance || 0;
+  const apiBalance = user?.apiWalletBalance || 0;
 
   // Transactions list via API
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
@@ -262,7 +266,9 @@ export function WalletPage() {
 
   // Modal Form State
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const selectedWalletType = "Main";
+  const [selectedWalletType, setSelectedWalletType] = useState<"Main" | "API">(
+    "Main",
+  );
   const [amount, setAmount] = useState("");
   const [paymentMode, setPaymentMode] = useState<"UPI" | "QR">("UPI");
   const [upiId, setUpiId] = useState("");
@@ -345,7 +351,8 @@ export function WalletPage() {
   }, [transactions, searchTerm, typeFilter]);
 
   // Open Recharge Form Modal
-  const openRechargeModal = () => {
+  const openRechargeModal = (wallet: "Main" | "API" = "Main") => {
+    setSelectedWalletType(wallet);
     setAmount("");
     setUtrNumber("");
     setUpiId("");
@@ -397,6 +404,7 @@ export function WalletPage() {
             redirect_url:
               window.location.origin + "/wallets/?paid=1",
             user_id: user?.id || "",
+            wallet_type: selectedWalletType,
           }),
         });
         const data = await res.json();
@@ -407,6 +415,7 @@ export function WalletPage() {
             sessionStorage.setItem("wallet_recharge_amount", String(amtNum));
             localStorage.setItem("wallet_recharge_order", orderId);
             localStorage.setItem("wallet_recharge_amount", String(amtNum));
+            sessionStorage.setItem("wallet_recharge_type", selectedWalletType);
           } catch {
             /* ignore */
           }
@@ -678,11 +687,46 @@ export function WalletPage() {
                 Active Account
               </span>
               <button
-                onClick={() => openRechargeModal()}
+                onClick={() => openRechargeModal("Main")}
                 className="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-50 text-[#005c3a] hover:bg-emerald-50 text-[10px] font-extrabold rounded-lg transition-all duration-200 active:scale-95 shadow-sm"
               >
                 <Plus size={12} className="stroke-[3]" />
                 Recharge
+              </button>
+            </div>
+          </article>
+
+          {/* API Wallet Card */}
+          <article className="relative overflow-hidden bg-gradient-to-br from-rose-600 to-rose-800 dark:from-rose-950 dark:to-rose-900 text-white rounded-2xl px-4 py-3.5 shadow-md shadow-rose-900/10 flex flex-col justify-between min-h-[7.5rem] group">
+            <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 h-24 w-24 rounded-full bg-white/5 pointer-events-none group-hover:scale-110 transition-transform duration-500" />
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-[10px] font-extrabold tracking-widest text-rose-100/90 uppercase">
+                  API WALLET
+                </p>
+                <h3 className="text-xl font-black mt-1 tracking-tight">
+                  <span className="text-sm font-bold text-rose-200 mr-0.5">
+                    ₹
+                  </span>
+                  {apiBalance.toLocaleString("en-IN", {
+                    minimumFractionDigits: 2,
+                  })}
+                </h3>
+              </div>
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 text-white backdrop-blur-md">
+                <Wallet size={15} />
+              </span>
+            </div>
+            <div className="flex justify-between items-end mt-2.5">
+              <span className="text-[9px] font-bold text-rose-100 bg-white/10 px-2 py-0.5 rounded-md">
+                API Services
+              </span>
+              <button
+                onClick={() => openRechargeModal("API")}
+                className="inline-flex items-center gap-1 px-3 py-1.5 bg-white text-rose-700 hover:bg-rose-50 text-[10px] font-extrabold rounded-lg transition-all duration-200 active:scale-95 shadow-sm"
+              >
+                <Plus size={12} className="stroke-[3]" />
+                Add Money
               </button>
             </div>
           </article>

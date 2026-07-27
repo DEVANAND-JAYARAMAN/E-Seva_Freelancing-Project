@@ -385,11 +385,19 @@ func AdminCreditWallet(c *gin.Context) {
 }
 
 func partnerBalanceAfterCredit(userId string) float64 {
+	return walletBalanceByType(userId, "Main")
+}
+
+func walletBalanceByType(userId, walletType string) float64 {
+	sk := "TYPE#Main"
+	if strings.EqualFold(strings.TrimSpace(walletType), "API") {
+		sk = "TYPE#API"
+	}
 	out, err := db.DynamoClient.GetItem(context.TODO(), &dynamodb.GetItemInput{
 		TableName: aws.String("Wallets"),
 		Key: map[string]types.AttributeValue{
 			"PK": &types.AttributeValueMemberS{Value: "WALLET#" + userId},
-			"SK": &types.AttributeValueMemberS{Value: "TYPE#Main"},
+			"SK": &types.AttributeValueMemberS{Value: sk},
 		},
 	})
 	if err != nil || out.Item == nil {
@@ -403,7 +411,7 @@ func partnerBalanceAfterCredit(userId string) float64 {
 }
 
 // GetWalletBalance GET /api/wallet/balance?userId=...
-// Non-admins always get their own balance. Admins may query any userId.
+// Returns Main + API wallet balances. Non-admins always get their own.
 func GetWalletBalance(c *gin.Context) {
 	authUser := auth.UserID(c)
 	userId := strings.TrimSpace(c.Query("userId"))
@@ -415,7 +423,8 @@ func GetWalletBalance(c *gin.Context) {
 		return
 	}
 	bal := partnerBalanceAfterCredit(userId)
-	// Fallback to Users.walletBalance if wallet row missing / zero, then ensure Wallets row exists
+	apiBal := walletBalanceByType(userId, "API")
+	// Fallback to Users.walletBalance if Main wallet row missing / zero, then ensure Wallets row exists
 	if bal == 0 {
 		uOut, err := db.DynamoClient.GetItem(context.TODO(), &dynamodb.GetItemInput{
 			TableName: aws.String("Users"),
@@ -444,7 +453,11 @@ func GetWalletBalance(c *gin.Context) {
 			})
 		}
 	}
-	c.JSON(http.StatusOK, gin.H{"userId": userId, "balance": bal})
+	c.JSON(http.StatusOK, gin.H{
+		"userId":     userId,
+		"balance":    bal,
+		"apiBalance": apiBal,
+	})
 }
 
 // ResetWallet POST /api/wallet/reset?userId=...

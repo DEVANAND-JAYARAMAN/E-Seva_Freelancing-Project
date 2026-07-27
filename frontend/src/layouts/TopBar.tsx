@@ -168,25 +168,59 @@ export function TopBar({ onMenuClick, activePage }: TopBarProps) {
         </div>
       </div>
 
-      <div className="flex items-center gap-2.5 relative">
-        {user?.role &&
-          ["retailer", "distributor"].includes(user.role) &&
-          activePage !== "Dashboard" &&
-          activePage !== "Wallet" && (
-            <button
-              onClick={() => router.push("/wallets")}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-emerald-300/60 bg-gradient-to-r from-emerald-50 to-teal-50 dark:border-emerald-500/30 dark:from-emerald-950/40 dark:to-teal-950/30 hover:brightness-105 text-emerald-800 dark:text-emerald-300 transition-all active:scale-95 shadow-sm"
-              title="Go to Wallet"
-            >
-              <Wallet size={15} />
-              <span className="text-xs font-extrabold tracking-tight">
-                ₹
+      <div className="flex items-center gap-2 sm:gap-3 relative flex-wrap justify-end">
+        {user && (
+          <div className="hidden md:flex items-center gap-2 lg:gap-3">
+            <div className="flex items-center gap-2 rounded-xl border border-rose-200/80 dark:border-rose-800/50 bg-rose-50/90 dark:bg-rose-950/30 px-2.5 py-1.5 shadow-sm">
+              <span className="text-xs sm:text-sm font-extrabold text-rose-700 dark:text-rose-300 whitespace-nowrap">
+                Api Wallet :{" "}
+                {(user.apiWalletBalance || 0).toLocaleString("en-IN", {
+                  minimumFractionDigits: 2,
+                })}
+              </span>
+              <button
+                type="button"
+                onClick={() => router.push("/wallets/?add=1&wallet=API")}
+                className="rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-[11px] sm:text-xs font-extrabold px-2.5 py-1.5 transition active:scale-95 whitespace-nowrap"
+              >
+                Add Money
+              </button>
+            </div>
+            <div className="flex items-center gap-2 rounded-xl border border-emerald-300/70 dark:border-emerald-700/50 bg-emerald-50/90 dark:bg-emerald-950/30 px-2.5 py-1.5 shadow-sm">
+              <span className="text-xs sm:text-sm font-extrabold text-emerald-800 dark:text-emerald-300 whitespace-nowrap">
+                Wallet Amount :{" "}
                 {(user.walletBalance || 0).toLocaleString("en-IN", {
                   minimumFractionDigits: 2,
                 })}
               </span>
-            </button>
-          )}
+              <button
+                type="button"
+                onClick={() => router.push("/wallets/?add=1&wallet=Main")}
+                className="rounded-lg bg-[#0f766e] hover:bg-[#0d9488] text-white text-[11px] sm:text-xs font-extrabold px-2.5 py-1.5 transition active:scale-95 whitespace-nowrap"
+              >
+                Add Payment
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Mobile compact wallet */}
+        {user && (
+          <button
+            type="button"
+            onClick={() => router.push("/wallets")}
+            className="md:hidden flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-emerald-300/60 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300"
+            title="Wallets"
+          >
+            <Wallet size={14} />
+            <span className="text-[11px] font-extrabold">
+              ₹
+              {(user.walletBalance || 0).toLocaleString("en-IN", {
+                maximumFractionDigits: 0,
+              })}
+            </span>
+          </button>
+        )}
 
         <button
           onClick={toggleTheme}

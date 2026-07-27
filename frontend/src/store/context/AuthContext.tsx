@@ -28,6 +28,7 @@ export type User = {
   email: string;
   role: UserRole;
   walletBalance: number;
+  apiWalletBalance: number;
   phone?: string;
 };
 
@@ -59,6 +60,7 @@ type AuthContextType = {
   ) => Promise<void>;
   logout: () => void;
   updateWallet: (newBalance: number) => void;
+  updateApiWallet: (newBalance: number) => void;
   refreshProfile: () => Promise<void>;
 };
 
@@ -74,6 +76,7 @@ function parseStoredUser(raw: string): User | null {
       email: String(parsed.email || ""),
       role: normalizeRole(parsed.role),
       walletBalance: Number(parsed.walletBalance || 0),
+      apiWalletBalance: Number(parsed.apiWalletBalance || 0),
       phone: parsed.phone ? String(parsed.phone) : undefined,
     };
   } catch {
@@ -154,6 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             email: email,
             role: normalizeRole(role || "retailer"),
             walletBalance: 0,
+            apiWalletBalance: 0,
           };
           setAuthSession("mock_local_token_123", JSON.stringify(realUser));
           setUser(realUser);
@@ -191,6 +195,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           email: data.user.email,
           role: normalizeRole(data.role),
           walletBalance: data.user.walletBalance || 0,
+          apiWalletBalance: Number(data.user.apiWalletBalance || 0),
           phone: data.user.mobile || data.user.phone || undefined,
         };
 
@@ -223,6 +228,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const updateApiWallet = useCallback((newBalance: number) => {
+    setUser((prevUser) => {
+      if (!prevUser) return null;
+      if (Number(prevUser.apiWalletBalance || 0) === Number(newBalance)) {
+        return prevUser;
+      }
+      const updatedUser = { ...prevUser, apiWalletBalance: newBalance };
+      setAuthUserRaw(JSON.stringify(updatedUser));
+      return updatedUser;
+    });
+  }, []);
+
   const refreshProfile = useCallback(async () => {
     const current = userRef.current;
     if (!current?.id && !current?.email) return;
@@ -233,6 +250,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const data = await res.json();
           if (typeof data?.adminWalletBalance === "number") {
             updateWallet(Number(data.adminWalletBalance));
+          }
+        }
+        if (current.id) {
+          const balRes = await authFetch(
+            `${apiUrl("wallet/balance")}?userId=${encodeURIComponent(current.id)}`,
+            { cache: "no-store" },
+          );
+          if (balRes.ok) {
+            const balData = await balRes.json();
+            if (typeof balData?.apiBalance === "number") {
+              updateApiWallet(Number(balData.apiBalance));
+            }
           }
         }
         return;
@@ -247,8 +276,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const balData = await balRes.json();
           if (typeof balData?.balance === "number") {
             updateWallet(Number(balData.balance));
-            return;
           }
+          if (typeof balData?.apiBalance === "number") {
+            updateApiWallet(Number(balData.apiBalance));
+          }
+          return;
         }
       }
 
@@ -274,7 +306,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       console.error("Failed to refresh profile:", e);
     }
-  }, [updateWallet]);
+  }, [updateWallet, updateApiWallet]);
 
   const authContextValue = useMemo(
     () => ({
@@ -284,9 +316,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       login,
       logout,
       updateWallet,
+      updateApiWallet,
       refreshProfile,
     }),
-    [user, isLoading, login, logout, updateWallet, refreshProfile],
+    [user, isLoading, login, logout, updateWallet, updateApiWallet, refreshProfile],
   );
 
   return (

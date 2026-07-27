@@ -1258,6 +1258,7 @@ type RechargeGatewayReq struct {
 	CustomerEmail  string  `json:"customer_email"`
 	RedirectURL    string  `json:"redirect_url"`
 	UserID         string  `json:"user_id"`
+	WalletType     string  `json:"wallet_type"` // Main | API
 }
 
 type MugavaiCreateOrderReq struct {
@@ -1374,14 +1375,19 @@ func RechargeGateway(c *gin.Context) {
 	}
 	if authUser != "" {
 		now := time.Now().UTC().Format(time.RFC3339)
+		walletType := "Main"
+		if strings.EqualFold(strings.TrimSpace(req.WalletType), "API") {
+			walletType = "API"
+		}
 		metaItem := map[string]types.AttributeValue{
-			"PK":        &types.AttributeValueMemberS{Value: "ORDER#" + gatewayOrderID},
-			"SK":        &types.AttributeValueMemberS{Value: "META"},
-			"userId":    &types.AttributeValueMemberS{Value: authUser},
-			"amount":    &types.AttributeValueMemberN{Value: fmt.Sprintf("%.2f", req.Amount)},
-			"status":    &types.AttributeValueMemberS{Value: "Pending"},
-			"createdAt": &types.AttributeValueMemberS{Value: now},
+			"PK":           &types.AttributeValueMemberS{Value: "ORDER#" + gatewayOrderID},
+			"SK":           &types.AttributeValueMemberS{Value: "META"},
+			"userId":       &types.AttributeValueMemberS{Value: authUser},
+			"amount":       &types.AttributeValueMemberN{Value: fmt.Sprintf("%.2f", req.Amount)},
+			"status":       &types.AttributeValueMemberS{Value: "Pending"},
+			"createdAt":    &types.AttributeValueMemberS{Value: now},
 			"localOrderId": &types.AttributeValueMemberS{Value: orderId},
+			"walletType":   &types.AttributeValueMemberS{Value: walletType},
 		}
 		_, _ = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
 			TableName: aws.String("WalletTransactions"),
@@ -1390,13 +1396,14 @@ func RechargeGateway(c *gin.Context) {
 		// Also map local order id if gateway returned a different one
 		if gatewayOrderID != orderId {
 			alias := map[string]types.AttributeValue{
-				"PK":        &types.AttributeValueMemberS{Value: "ORDER#" + orderId},
-				"SK":        &types.AttributeValueMemberS{Value: "META"},
-				"userId":    &types.AttributeValueMemberS{Value: authUser},
-				"amount":    &types.AttributeValueMemberN{Value: fmt.Sprintf("%.2f", req.Amount)},
-				"status":    &types.AttributeValueMemberS{Value: "Pending"},
-				"createdAt": &types.AttributeValueMemberS{Value: now},
-				"aliasOf":   &types.AttributeValueMemberS{Value: gatewayOrderID},
+				"PK":         &types.AttributeValueMemberS{Value: "ORDER#" + orderId},
+				"SK":         &types.AttributeValueMemberS{Value: "META"},
+				"userId":     &types.AttributeValueMemberS{Value: authUser},
+				"amount":     &types.AttributeValueMemberN{Value: fmt.Sprintf("%.2f", req.Amount)},
+				"status":     &types.AttributeValueMemberS{Value: "Pending"},
+				"createdAt":  &types.AttributeValueMemberS{Value: now},
+				"aliasOf":    &types.AttributeValueMemberS{Value: gatewayOrderID},
+				"walletType": &types.AttributeValueMemberS{Value: walletType},
 			}
 			_, _ = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
 				TableName: aws.String("WalletTransactions"),
@@ -1623,11 +1630,20 @@ func creditGatewayOrder(actualOrderID, status, actualUTR string) (bool, string) 
 		})
 	}
 
+	walletType := "Main"
+	if wt, ok := meta.Item["walletType"].(*types.AttributeValueMemberS); ok && strings.EqualFold(strings.TrimSpace(wt.Value), "API") {
+		walletType = "API"
+	}
+	walletSK := "TYPE#Main"
+	if walletType == "API" {
+		walletSK = "TYPE#API"
+	}
+
 	_, err = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
 		TableName: aws.String("Wallets"),
 		Key: map[string]types.AttributeValue{
 			"PK": &types.AttributeValueMemberS{Value: "WALLET#" + userId},
-			"SK": &types.AttributeValueMemberS{Value: "TYPE#Main"},
+			"SK": &types.AttributeValueMemberS{Value: walletSK},
 		},
 		UpdateExpression: aws.String("SET balance = if_not_exists(balance, :zero) + :amt, totalCredits = if_not_exists(totalCredits, :zero) + :amt, updatedAt = :ts, userId = if_not_exists(userId, :uid)"),
 		ExpressionAttributeValues: map[string]types.AttributeValue{
@@ -1656,19 +1672,21 @@ func creditGatewayOrder(actualOrderID, status, actualUTR string) (bool, string) 
 		return false, "wallet credit failed"
 	}
 
-	_, _ = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
-		TableName: aws.String("Users"),
-		Key: map[string]types.AttributeValue{
-			"PK": &types.AttributeValueMemberS{Value: "USER#" + userId},
-			"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
-		},
-		UpdateExpression: aws.String("SET walletBalance = if_not_exists(walletBalance, :zero) + :amt, updatedAt = :ts"),
-		ExpressionAttributeValues: map[string]types.AttributeValue{
-			":amt":  &types.AttributeValueMemberN{Value: amountStr},
-			":zero": &types.AttributeValueMemberN{Value: "0"},
-			":ts":   &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
-		},
-	})
+	if walletType == "Main" {
+		_, _ = db.DynamoClient.UpdateItem(context.TODO(), &dynamodb.UpdateItemInput{
+			TableName: aws.String("Users"),
+			Key: map[string]types.AttributeValue{
+				"PK": &types.AttributeValueMemberS{Value: "USER#" + userId},
+				"SK": &types.AttributeValueMemberS{Value: "PROFILE"},
+			},
+			UpdateExpression: aws.String("SET walletBalance = if_not_exists(walletBalance, :zero) + :amt, updatedAt = :ts"),
+			ExpressionAttributeValues: map[string]types.AttributeValue{
+				":amt":  &types.AttributeValueMemberN{Value: amountStr},
+				":zero": &types.AttributeValueMemberN{Value: "0"},
+				":ts":   &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
+			},
+		})
+	}
 
 	txId := "TX#" + now.Format("20060102150405") + "#" + canonicalID
 	_, _ = db.DynamoClient.PutItem(context.TODO(), &dynamodb.PutItemInput{
@@ -1680,15 +1698,15 @@ func creditGatewayOrder(actualOrderID, status, actualUTR string) (bool, string) 
 			"type":        &types.AttributeValueMemberS{Value: "credit"},
 			"amount":      &types.AttributeValueMemberN{Value: amountStr},
 			"reference":   &types.AttributeValueMemberS{Value: actualUTR},
-			"description": &types.AttributeValueMemberS{Value: fmt.Sprintf("Wallet Recharge via Gateway (UTR: %s)", actualUTR)},
+			"description": &types.AttributeValueMemberS{Value: fmt.Sprintf("%s Wallet Recharge via Gateway (UTR: %s)", walletType, actualUTR)},
 			"status":      &types.AttributeValueMemberS{Value: "Success"},
-			"walletType":  &types.AttributeValueMemberS{Value: "Main"},
+			"walletType":  &types.AttributeValueMemberS{Value: walletType},
 			"createdAt":   &types.AttributeValueMemberS{Value: now.Format(time.RFC3339)},
 			"date":        &types.AttributeValueMemberS{Value: timeutil.FormatIST(now)},
 		},
 	})
 
-	log.Printf("[Payment Processing] Successfully credited ₹%.2f to user %s", creditAmount, userId)
+	log.Printf("[Payment Processing] Successfully credited ₹%.2f to user %s (%s)", creditAmount, userId, walletType)
 
 	admin.CreditAdminFromPartnerRecharge(
 		creditAmount,
